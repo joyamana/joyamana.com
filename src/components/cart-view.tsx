@@ -2,46 +2,103 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { getCatalogProducts } from "@/lib/commerce/catalog";
-import { localize } from "@/lib/commerce/types";
+import { useId, useState } from "react";
 import { formatPrice } from "@/lib/format";
+import {
+  cartErrorMessage,
+  isBlockingInventoryWarning,
+} from "@/lib/commerce/cart-types";
+import { isValidProductQuantity } from "@/lib/commerce/types";
 import type { Locale } from "@/lib/i18n/locales";
-import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
+import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
+import { ProductArt } from "./product-art";
 
 export function CartView({ locale }: { locale: Locale }) {
-  const { lines, removeItem, clear } = useCart();
-  const marketId = marketIdForLocale(locale);
-  const products = getCatalogProducts(marketId);
-  const rows = lines
-    .filter((line) => line.marketId === marketId)
-    .flatMap((line) => {
-      const product = products.find((item) => item.id === line.productId);
-      const variant = product?.variants.find(
-        (item) => item.id === line.variantId,
-      );
-      return product && variant ? [{ ...line, product, variant }] : [];
-    });
-  const subtotal = rows.reduce(
-    (sum, row) => sum + row.product.price * row.quantity,
-    0,
-  );
+  const {
+    cart,
+    checkout,
+    checkoutEnabled,
+    clear,
+    clearError,
+    error,
+    refresh,
+    removeItem,
+    status,
+    updateItem,
+  } = useCart();
+  const [checkoutFailed, setCheckoutFailed] = useState(false);
+  const checkoutErrorId = useId();
+  const busy = status !== "ready";
 
-  if (!rows.length) {
+  if (status === "loading") {
     return (
-      <div className="empty-state">
-        <p className="eyebrow">{uiText(locale, { en: "Test bag", es: "Bolsa de prueba", fr: "Panier d’essai" })}</p>
-        <h1>{uiText(locale, { en: "Your bag is empty.", es: "Tu bolsa está vacía.", fr: "Votre panier est vide." })}</h1>
-        <p>
+      <div className="empty-state" aria-live="polite">
+        <p className="eyebrow">
           {uiText(locale, {
-            en: "Items added here are local prototype data only.",
-            es: "Los artículos agregados aquí son solo datos locales del prototipo.",
-            fr: "Les articles ajoutés ici sont uniquement des données locales du prototype.",
+            en: "Shopify bag",
+            es: "Bolsa de Shopify",
+            fr: "Panier Shopify",
           })}
         </p>
-        <Link className="button button--primary" href={localePath(locale, "/collections")}>
-          {uiText(locale, { en: "Explore collections", es: "Explorar colecciones", fr: "Explorer les collections" })}
+        <h1>
+          {uiText(locale, {
+            en: "Loading your bag…",
+            es: "Cargando tu bolsa…",
+            fr: "Chargement de votre panier…",
+          })}
+        </h1>
+      </div>
+    );
+  }
+
+  if (!cart.lines.length) {
+    return (
+      <div className="empty-state">
+        <p className="eyebrow">
+          {uiText(locale, {
+            en: "Shopify bag",
+            es: "Bolsa de Shopify",
+            fr: "Panier Shopify",
+          })}
+        </p>
+        <h1>
+          {uiText(locale, {
+            en: "Your bag is empty.",
+            es: "Tu bolsa está vacía.",
+            fr: "Votre panier est vide.",
+          })}
+        </h1>
+        {error ? (
+          <div className="cart-feedback" role="alert">
+            <p>{error.message}</p>
+            <button className="text-button" type="button" onClick={() => refresh()}>
+              {uiText(locale, {
+                en: "Try again",
+                es: "Intentar de nuevo",
+                fr: "Réessayer",
+              })}
+            </button>
+          </div>
+        ) : (
+          <p>
+            {uiText(locale, {
+              en: "Products added here are stored in a Shopify Cart for this browser session.",
+              es: "Los productos agregados aquí se guardan en un carrito de Shopify para esta sesión del navegador.",
+              fr: "Les produits ajoutés ici sont conservés dans un panier Shopify pour cette session de navigateur.",
+            })}
+          </p>
+        )}
+        <Link
+          className="button button--primary"
+          href={localePath(locale, "/collections")}
+        >
+          {uiText(locale, {
+            en: "Explore products",
+            es: "Explorar productos",
+            fr: "Explorer les produits",
+          })}
         </Link>
       </div>
     );
@@ -49,63 +106,217 @@ export function CartView({ locale }: { locale: Locale }) {
 
   return (
     <div className="cart-layout">
-      <section>
-        {rows.map(({ product, variant, quantity }) => (
-          <article className="cart-line" key={`${product.id}:${variant.id}`}>
-            <div className="cart-line__art">
-              <Image
-                src={variant.image}
-                alt={localize(variant.imageAlt, locale)}
-                width={180}
-                height={180}
-              />
-            </div>
+      <section aria-label={uiText(locale, { en: "Bag items", es: "Artículos de la bolsa", fr: "Articles du panier" })}>
+        <header className="cart-heading">
+          <p className="eyebrow">
+            {uiText(locale, {
+              en: "Shopify bag",
+              es: "Bolsa de Shopify",
+              fr: "Panier Shopify",
+            })}
+          </p>
+          <h1>
+            {uiText(locale, {
+              en: "Your bag",
+              es: "Tu bolsa",
+              fr: "Votre panier",
+            })}
+          </h1>
+        </header>
+        {cart.warnings.map((warning) => (
+          <p className="cart-feedback" key={`${warning.code}:${warning.message}`} role="status">
+            {isBlockingInventoryWarning(warning.code)
+              ? cartErrorMessage(
+                  "UNAVAILABLE",
+                  locale === "es-US" ? "ES" : "EN",
+                )
+              : warning.message}
+          </p>
+        ))}
+        {error ? (
+          <p className="cart-feedback" role="alert">
+            {error.message}
+          </p>
+        ) : null}
+        {cart.lines.map((line) => {
+          const decreaseQuantity =
+            line.quantity - line.quantityRule.increment;
+          const increaseQuantity =
+            line.quantity + line.quantityRule.increment;
+
+          return (
+          <article className="cart-line" key={line.id}>
+            <Link
+              className="cart-line__art"
+              href={localePath(locale, `/products/${line.productHandle}`)}
+            >
+              {line.image ? (
+                <Image
+                  src={line.image.url}
+                  alt={line.image.altText || line.productTitle}
+                  width={line.image.width ?? 180}
+                  height={line.image.height ?? 180}
+                  sizes="150px"
+                />
+              ) : (
+                <ProductArt palette="pearl" compact />
+              )}
+            </Link>
             <div>
               <p className="microcopy">
-                {uiText(locale, { en: "Test item", es: "Artículo de prueba", fr: "Article d’essai" })} · {quantity}
+                {line.availableForSale
+                  ? uiText(locale, {
+                      en: "Available",
+                      es: "Disponible",
+                      fr: "Disponible",
+                    })
+                  : uiText(locale, {
+                      en: "Review availability",
+                      es: "Revisar disponibilidad",
+                      fr: "Vérifier la disponibilité",
+                    })}
               </p>
-              <h2>{localize(product.title, locale)}</h2>
-              <p>{localize(variant.title, locale)}</p>
+              <h2>
+                <Link href={localePath(locale, `/products/${line.productHandle}`)}>
+                  {line.productTitle}
+                </Link>
+              </h2>
+              {line.variantTitle !== "Default Title" ? (
+                <p>{line.variantTitle}</p>
+              ) : null}
               <p>
                 {formatPrice(
-                  product.price * quantity,
+                  line.totalPrice.amount,
                   locale,
-                  product.currency,
+                  line.totalPrice.currencyCode,
                 )}
               </p>
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => removeItem(product.id, variant.id, marketId)}
-              >
-                {uiText(locale, { en: "Remove", es: "Eliminar", fr: "Retirer" })}
-              </button>
+              <div className="cart-line__actions">
+                <div className="cart-quantity" aria-label={uiText(locale, { en: "Quantity", es: "Cantidad", fr: "Quantité" })}>
+                  <button
+                    type="button"
+                    disabled={
+                      busy ||
+                      !isValidProductQuantity(
+                        decreaseQuantity,
+                        line.quantityRule,
+                      )
+                    }
+                    aria-label={uiText(locale, { en: "Decrease quantity", es: "Disminuir cantidad", fr: "Diminuer la quantité" })}
+                    onClick={() => updateItem(line.id, decreaseQuantity)}
+                  >
+                    −
+                  </button>
+                  <span aria-live="polite">{line.quantity}</span>
+                  <button
+                    type="button"
+                    disabled={
+                      busy ||
+                      !isValidProductQuantity(
+                        increaseQuantity,
+                        line.quantityRule,
+                      )
+                    }
+                    aria-label={uiText(locale, { en: "Increase quantity", es: "Aumentar cantidad", fr: "Augmenter la quantité" })}
+                    onClick={() => updateItem(line.id, increaseQuantity)}
+                  >
+                    +
+                  </button>
+                </div>
+                <button
+                  className="text-button"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => removeItem(line.id)}
+                >
+                  {uiText(locale, {
+                    en: "Remove",
+                    es: "Eliminar",
+                    fr: "Retirer",
+                  })}
+                </button>
+              </div>
             </div>
           </article>
-        ))}
+          );
+        })}
       </section>
       <aside className="cart-summary">
-        <p className="eyebrow">{uiText(locale, { en: "Summary", es: "Resumen", fr: "Résumé" })}</p>
+        <p className="eyebrow">
+          {uiText(locale, { en: "Summary", es: "Resumen", fr: "Résumé" })}
+        </p>
         <h2>
-          {uiText(locale, { en: "Test subtotal", es: "Subtotal de prueba", fr: "Sous-total d’essai" })}{" "}
+          {uiText(locale, {
+            en: "Subtotal",
+            es: "Subtotal",
+            fr: "Sous-total",
+          })}{" "}
           {formatPrice(
-            subtotal,
+            cart.subtotal.amount,
             locale,
-            rows[0]?.product.currency || "USD",
+            cart.subtotal.currencyCode,
           )}
         </h2>
         <p>
           {uiText(locale, {
-            en: "Shopify checkout will be enabled after a store, approved policies, and real prices are connected.",
-            es: "El pago de Shopify se habilitará después de conectar una tienda, políticas y precios aprobados.",
-            fr: "Le paiement Shopify sera activé après la connexion d’une boutique, de politiques approuvées et de prix réels.",
+            en: "Discounts, tax, shipping, and the final total are confirmed by Shopify Checkout.",
+            es: "Los descuentos, impuestos, el envío y el total final se confirman en el pago de Shopify.",
+            fr: "Les réductions, taxes, frais d’expédition et le total final sont confirmés dans Shopify Checkout.",
           })}
         </p>
-        <button className="button button--primary button--wide" disabled>
-          {uiText(locale, { en: "Checkout not connected", es: "Pago aún no disponible", fr: "Paiement non connecté" })}
+        <button
+          aria-describedby={checkoutFailed ? checkoutErrorId : undefined}
+          className="button button--primary button--wide"
+          disabled={!checkoutEnabled || busy}
+          onClick={async () => {
+            clearError();
+            setCheckoutFailed(false);
+            const result = await checkout();
+            if (!result.ok) {
+              setCheckoutFailed(true);
+              return;
+            }
+            window.location.assign(result.checkoutUrl);
+          }}
+          type="button"
+        >
+          {checkoutEnabled
+            ? uiText(locale, {
+                en: "Checkout",
+                es: "Ir al pago",
+                fr: "Passer au paiement",
+              })
+            : uiText(locale, {
+                en: "Checkout pending approval",
+                es: "Pago pendiente de aprobación",
+                fr: "Paiement en attente d’approbation",
+              })}
         </button>
-        <button className="text-button" type="button" onClick={() => clear(marketId)}>
-          {uiText(locale, { en: "Clear test bag", es: "Vaciar bolsa de prueba", fr: "Vider le panier d’essai" })}
+        {!checkoutEnabled ? (
+          <p className="checkout-note">
+            {uiText(locale, {
+              en: "The Shopify Checkout integration is ready, but the release gate remains closed until operating policies and checkout settings are approved.",
+              es: "La integración con Shopify Checkout está lista, pero el acceso permanece cerrado hasta aprobar las políticas operativas y los ajustes de pago.",
+              fr: "L’intégration Shopify Checkout est prête, mais l’accès reste fermé jusqu’à l’approbation des politiques et paramètres de paiement.",
+            })}
+          </p>
+        ) : null}
+        {checkoutFailed && error ? (
+          <p className="action-error" id={checkoutErrorId} role="alert">
+            {error.message}
+          </p>
+        ) : null}
+        <button
+          className="text-button"
+          type="button"
+          disabled={busy}
+          onClick={() => clear()}
+        >
+          {uiText(locale, {
+            en: "Clear bag",
+            es: "Vaciar bolsa",
+            fr: "Vider le panier",
+          })}
         </button>
       </aside>
     </div>

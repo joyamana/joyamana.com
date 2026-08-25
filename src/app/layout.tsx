@@ -36,6 +36,10 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const checkoutEnabled =
+    process.env.COMMERCE_PROVIDER === "shopify" &&
+    process.env.SHOPIFY_CHECKOUT_ENABLED === "true";
+
   return (
     <html
       lang="en-US"
@@ -45,7 +49,7 @@ export default function RootLayout({
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
-        <CartProvider>{children}</CartProvider>
+        <CartProvider checkoutEnabled={checkoutEnabled}>{children}</CartProvider>
       </body>
     </html>
   );

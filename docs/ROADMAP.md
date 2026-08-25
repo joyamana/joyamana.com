@@ -2,7 +2,7 @@
 
 Status: Active planning  
 Owner: Project owner  
-Last updated: 2026-08-15
+Last updated: 2026-08-25
 
 Roadmap 按依赖和可验证结果排序，不承诺未经资源评估的日历日期。详细功能以
 MVP PRD 和领域规格为准。
@@ -47,11 +47,13 @@ MVP PRD 和领域规格为准。
 - 建立基础 layout、tokens、可访问导航和错误页。
 
 当前本地结果：Next.js 骨架、已启用的 US Market 路由、保留但不公开的 CA
-typed 配置、US mock catalog、七脉轮 PDP、本地 Cart、noindex/robots/sitemap、lint、
-typecheck、unit tests 和 production build已建立。Shopify Headless private token
-与 Storefront API 只读连接已于 2026-08-15 验证；当前 Shopify 仅返回 US/USD、
-English 且没有已发布商品，所以页面数据和 Cart 仍保留 mock。Vercel Preview、
-Playwright 与 CI 仍待外部账号或后续工程阶段。
+typed 配置、noindex/robots/sitemap、lint、typecheck、unit tests 和 production build
+已建立。Shopify Headless private token 与 Storefront API 已连接；Product、Variant、
+Money、Availability、Search 和非空 Collection 均通过显式 provider adapter 读取。
+2026-08-25 Storefront 可见 1 个真实商品，但尚无包含商品的 Collection。Shopify
+Cart 的创建、恢复、增改删、HttpOnly cookie、独立 Buy now Cart 与最新 Checkout URL
+代码已完成；因 Q-003A–Q-003F 和 Checkout 运营配置未批准，跳转门禁仍关闭。
+Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
 
 ### 退出条件
 
@@ -74,6 +76,12 @@ Playwright 与 CI 仍待外部账号或后续工程阶段。
 - 处理售罄、价格变化、库存冲突与 API 失败。
 - Webhook HMAC 验证与 Product/Collection cache invalidation。
 - Commerce integration 与 E2E 测试。
+
+2026-08-25 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 和 107 项 unit/
+integration tests 已完成；Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
+真实 Cart 合约 smoke 已覆盖 create、库存冲突 warning、update/remove 与 HTTPS
+Checkout URL。仍需 Shopify 发布真实 Collection、审核当前商品正文、发布人工审核的
+西语翻译、完成政策和 Checkout 运营验收，并补 webhook、Playwright 和支付测试。
 
 ### 退出条件
 

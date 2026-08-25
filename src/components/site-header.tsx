@@ -6,11 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { brand } from "@/config/brand";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
-import {
-  localePath,
-  marketIdForLocale,
-  stripLocalePrefix,
-} from "@/lib/i18n/locales";
+import { localePath, stripLocalePrefix } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 import { LanguageSwitch } from "./language-switch";
@@ -93,8 +89,7 @@ function BagIcon() {
 
 export function SiteHeader({ locale }: { locale: Locale }) {
   const copy = getCopy(locale);
-  const { countForMarket } = useCart();
-  const count = countForMarket(marketIdForLocale(locale));
+  const { count } = useCart();
   const pathname = usePathname();
   const basePath = stripLocalePrefix(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -175,7 +170,7 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           {brand.name}
         </Link>
         <nav className="desktop-nav" aria-label="Primary navigation">
-          <Link href={localePath(locale, "/collections/seven-chakra")}>
+          <Link href={localePath(locale, "/collections")}>
             {copy.nav.series}
           </Link>
           <Link href={localePath(locale, "/crystals")}>
@@ -242,7 +237,7 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           </div>
           <div className="mobile-menu__primary">
             <Link
-              href={localePath(locale, "/collections/seven-chakra")}
+              href={localePath(locale, "/collections")}
               onClick={() => closeMenu()}
             >
               {copy.nav.series}

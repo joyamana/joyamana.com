@@ -2,7 +2,7 @@
 
 Status: Draft — 核心架构已接受，工具细节待初始化时确认  
 Owner: Engineering  
-Last updated: 2026-08-02  
+Last updated: 2026-08-25
 Supersedes: 旧版 `TECH_SPEC.md` 与归档文档中的 Hydrogen/Oxygen 方案
 
 ## 1. 架构目标
@@ -155,6 +155,10 @@ tests/
   不建设 session 数据库。
 - Cart ID 视为敏感会话信息：不进入 URL、analytics 或应用日志。
 - 服务器端请求在 Shopify 要求时传递正确的 buyer IP/header，且不持久化 IP。
+- Vercel 部署只信任平台保护的 `x-vercel-forwarded-for` 并验证 IP 格式；其他部署
+  平台必须先定义 trusted-proxy 边界，不能直接转发客户端可伪造 header。
+- Storefront 请求设有限时中止，并分别归类 timeout、HTTP/GraphQL rate limit、
+  network、HTTP 与 GraphQL error；不得自动重放非幂等 Cart mutation。
 - Checkout 点击时重新获取最新 `checkoutUrl`，避免使用过期 URL。
 - Shopify Checkout 是最终价格、折扣、库存、税费和配送裁决者。
 
@@ -209,10 +213,10 @@ Content/SEO 规格。
 
 | 页面/数据 | 默认策略 | 原因 |
 |---|---|---|
-| Home / About / Policy | Static/ISR | 变化低、可缓存 |
+| Home / About / Policy | Static/ISR；含实时 Commerce 的 Home 当前 dynamic | 品牌内容变化低，价格/库存尚无获批陈旧窗口 |
 | Crystal Guide / Article | Static/ISR | 内容型、需完整 HTML |
-| Collection | ISR + cache tag | 商品集合会变化 |
-| Product | ISR + cache tag + webhook | 兼顾性能与商品更新 |
+| Collection | 当前 Dynamic / no-store；后续 ISR + cache tag | 尚未批准陈旧窗口，也未完成 webhook |
+| Product | 当前 Dynamic / no-store；后续 ISR + cache tag + webhook | 先保证价格与可售性实时一致 |
 | Cart | Dynamic / no-store | 会话和库存相关 |
 | Account（未来） | Dynamic / no-store | 私有客户数据 |
 | Search | Dynamic 或短缓存 | Query-specific，noindex |
@@ -223,6 +227,11 @@ Content/SEO 规格。
 - Metadata、JSON-LD 与可见 UI 应使用同一次数据读取或同一规范化实体。
 - 缓存键包含真实启用的 market 和 language。
 - 价格/库存允许的陈旧窗口在实现前由 Commerce owner 批准。
+- 2026-08-25 临时实现：在陈旧窗口、cache tags 和 Shopify webhook 获批并验收前，
+  Product、Collection 及包含实时商品的 Home 使用 request-time Server Rendering
+  与 `no-store`。这仍在初始响应输出完整 HTML，也避免把瞬时 Shopify 请求变成
+  production build 的发布依赖；sitemap 同样在请求时从 Catalog 生成。完成缓存失效
+  链路后再切回表中规划的 ISR。
 - 数据不可确认时展示可恢复错误，不显示缓存外的猜测值。
 - 不因“所有页面 SSR”把静态品牌和内容页强制改成每请求动态。
 
@@ -261,6 +270,8 @@ Content/SEO 规格。
 应用初始化后提交 `.env.example`，只包含变量名和说明。预期变量类别：
 
 - Canonical site URL
+- 开启 index gate 时，Canonical site URL 必须是非本地 HTTPS origin；配置缺失或
+  仍指向 localhost 时构建 fail closed，避免发布错误 canonical 与 sitemap。
 - Shopify store domain
 - Storefront API version
 - Storefront private/public token（按实际实现最小化）

@@ -166,7 +166,7 @@ Reason: 单一命名减少编辑、导航、Analytics 和用户理解歧义。
 ### D-017 / D-018 — 测试站 UI 与工程基线
 
 Working decision: 测试站使用 Next.js 内置 CSS 能力 + CSS variables/tokens、
-pnpm 11.21.0；当前固定 Node 24 LTS（`.nvmrc` 与 `package.json#engines`），并锁定
+pnpm 11.22.0；当前固定 Node 24 LTS（`.nvmrc` 与 `package.json#engines`），并锁定
 Next.js 与 Shopify Storefront API 版本，按季度审查升级。Node 26 在进入
 Active LTS 前只用于兼容性观察，不作为生产基线；进入 LTS 后再通过 CI、构建、
 路由、Shopify 集成和部署回归决定是否升级。  
@@ -177,6 +177,10 @@ Note: 不引入重型组件库；若未来改用 Tailwind，需说明迁移价�
 11.21.0。两者属于同一 major，依赖集合和 lockfile 格式不变；此调整修复新版
 pnpm 在读取旧 `packageManager` 固定值时尝试切换原生 executable、但 lockfile
 没有对应 pnpm executable identity 而导致命令无法启动的问题。
+
+2026-08-22 maintenance note: 将 pnpm 从 11.21.0 升级并固定到 11.22.0，与当前
+稳定版和部署环境保持一致。继续使用精确版本而不是 `latest` 或未固定的全局
+版本，避免本地、CI 与 Vercel 因包管理器自动升级产生不可复现的安装结果。
 
 pnpm 脚本前依赖校验使用 `verifyDepsBeforeRun: warn`。开发者在 manifest 或
 lockfile 变化后必须显式运行 `pnpm install --frozen-lockfile`；`pnpm dev`、检查和

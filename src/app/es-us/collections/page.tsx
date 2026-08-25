@@ -1,6 +1,8 @@
 import { CollectionsPage } from "@/components/pages/collections-page";
 import { buildMetadata } from "@/lib/seo";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = buildMetadata({
   title: "Colecciones — prototipo",
   description: "Explora el catálogo de prototipo compartido del mercado estadounidense.",

@@ -6,7 +6,6 @@ import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
-import { localize } from "@/lib/commerce/types";
 import { EditorialCard } from "@/components/editorial-card";
 import { ProductCard } from "@/components/product-card";
 
@@ -14,8 +13,8 @@ export async function HomePage({ locale }: { locale: Locale }) {
   const copy = getCopy(locale);
   const marketId = marketIdForLocale(locale);
   const [products, collections] = await Promise.all([
-    getProducts(marketId),
-    getCollections(),
+    getProducts(marketId, locale),
+    getCollections(marketId, locale),
   ]);
 
   return (
@@ -37,18 +36,21 @@ export async function HomePage({ locale }: { locale: Locale }) {
           <div className="button-row">
             <Link
               className="button button--light"
-              href={localePath(locale, "/collections/new-arrivals")}
+              href={localePath(locale, "/collections")}
             >
               {copy.home.cta}
             </Link>
             <Link
               className="button button--ghost-light"
-              href={localePath(locale, "/collections/seven-chakra")}
+              href={localePath(
+                locale,
+                products[0] ? `/products/${products[0].handle}` : "/collections",
+              )}
             >
               {uiText(locale, {
-                en: "View seven chakras",
-                es: "Ver siete chakras",
-                fr: "Voir les sept chakras",
+                en: "View the featured piece",
+                es: "Ver la pieza destacada",
+                fr: "Voir la pièce vedette",
               })}
             </Link>
           </div>
@@ -162,25 +164,27 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section
-        className="collection-strip"
-        aria-label={uiText(locale, {
-          en: "Collections",
-          es: "Colecciones",
-          fr: "Collections",
-        })}
-      >
-        {collections.map((collection, index) => (
-          <Link
-            key={collection.handle}
-            href={localePath(locale, `/collections/${collection.handle}`)}
-          >
-            <span>0{index + 1}</span>
-            {localize(collection.title, locale)}
-            <span>↗</span>
-          </Link>
-        ))}
-      </section>
+      {collections.length ? (
+        <section
+          className="collection-strip"
+          aria-label={uiText(locale, {
+            en: "Collections",
+            es: "Colecciones",
+            fr: "Collections",
+          })}
+        >
+          {collections.map((collection, index) => (
+            <Link
+              key={collection.handle}
+              href={localePath(locale, `/collections/${collection.handle}`)}
+            >
+              <span>0{index + 1}</span>
+              {collection.title}
+              <span>↗</span>
+            </Link>
+          ))}
+        </section>
+      ) : null}
     </>
   );
 }

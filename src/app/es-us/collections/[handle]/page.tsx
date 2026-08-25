@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { CollectionPage } from "@/components/pages/collection-page";
-import { getCollection, getCollections } from "@/lib/commerce/catalog";
+import { getCollection } from "@/lib/commerce/catalog";
 import { buildMetadata } from "@/lib/seo";
 
-export async function generateStaticParams() {
-  return (await getCollections()).map(({ handle }) => ({ handle }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -13,10 +11,13 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const { handle } = await params;
-  const collection = await getCollection(handle);
+  const collection = await getCollection(handle, "us", "es-US");
   return buildMetadata({
-    title: collection?.title["es-US"] || "Colección",
-    description: collection?.description["es-US"] || "Colección de prototipo.",
+    title: collection?.seoTitle || collection?.title || "Colección",
+    description:
+      collection?.seoDescription ||
+      collection?.description ||
+      "Colección de prototipo.",
     locale: "es-US",
     path: `/collections/${handle}`,
   });

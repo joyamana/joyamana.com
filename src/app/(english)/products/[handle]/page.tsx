@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { ProductPage } from "@/components/pages/product-page";
-import { getProduct, getProducts } from "@/lib/commerce/catalog";
+import { getProduct } from "@/lib/commerce/catalog";
 import { buildMetadata } from "@/lib/seo";
 
-export async function generateStaticParams() {
-  return (await getProducts()).map(({ handle }) => ({ handle }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -13,10 +11,11 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const { handle } = await params;
-  const product = await getProduct(handle);
+  const product = await getProduct(handle, "us", "en-US");
   return buildMetadata({
-    title: product?.title["en-US"] || "Product",
-    description: product?.description["en-US"] || "Prototype product.",
+    title: product?.seoTitle || product?.title || "Product",
+    description:
+      product?.seoDescription || product?.description || "Prototype product.",
     locale: "en-US",
     path: `/products/${handle}`,
   });

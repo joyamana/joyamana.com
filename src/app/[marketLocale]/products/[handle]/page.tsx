@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductPage } from "@/components/pages/product-page";
 import { getProduct, getProducts } from "@/lib/commerce/catalog";
-import { localize } from "@/lib/commerce/types";
 import {
   canadaLocaleFromSegment,
   enabledCanadaLocaleSegments,
@@ -10,7 +9,9 @@ import {
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateStaticParams() {
-  const products = await getProducts("ca");
+  if (enabledCanadaLocaleSegments.length === 0) return [];
+
+  const products = await getProducts("ca", "en-CA");
   return enabledCanadaLocaleSegments.flatMap((marketLocale) =>
     products.map(({ handle }) => ({ marketLocale, handle })),
   );
@@ -24,12 +25,10 @@ export async function generateMetadata({
   const { marketLocale, handle } = await params;
   const locale = canadaLocaleFromSegment(marketLocale);
   if (!locale) notFound();
-  const product = await getProduct(handle, "ca");
+  const product = await getProduct(handle, "ca", locale);
   return buildMetadata({
-    title: product ? localize(product.title, locale) : "Product",
-    description: product
-      ? localize(product.description, locale)
-      : "Prototype product.",
+    title: product?.title || "Product",
+    description: product?.description || "Prototype product.",
     locale,
     path: `/products/${handle}`,
   });

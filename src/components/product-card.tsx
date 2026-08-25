@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/lib/commerce/types";
-import { localize } from "@/lib/commerce/types";
-import { formatPrice } from "@/lib/format";
+import { formatPriceRange } from "@/lib/format";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
+import { uiText } from "@/lib/i18n/text";
+import { ProductArt } from "./product-art";
 
 export function ProductCard({
   product,
@@ -15,40 +16,51 @@ export function ProductCard({
   locale: Locale;
 }) {
   const copy = getCopy(locale);
+  const image =
+    product.featuredImage ?? product.images[0] ?? product.variants[0]?.image;
 
   return (
     <article className="product-card">
       <Link
         className="product-card__visual"
         href={localePath(locale, `/products/${product.handle}`)}
-        aria-label={`${copy.labels.viewPiece}: ${localize(product.title, locale)}`}
+        aria-label={`${copy.labels.viewPiece}: ${product.title}`}
       >
-        <Image
-          className="product-card__image"
-          src={product.variants[0].image}
-          alt={localize(product.variants[0].imageAlt, locale)}
-          width={1024}
-          height={1024}
-          sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 25vw"
-        />
-        <span className="sample-stamp">{copy.labels.developmentSample}</span>
+        {image ? (
+          <Image
+            className="product-card__image"
+            src={image.url}
+            alt={image.altText || product.title}
+            width={image.width}
+            height={image.height}
+            sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 25vw"
+          />
+        ) : (
+          <ProductArt palette="pearl" compact />
+        )}
+        {product.source === "mock" ? (
+          <span className="sample-stamp">{copy.labels.developmentSample}</span>
+        ) : null}
       </Link>
       <div className="product-card__body">
         <div>
           <p className="microcopy">
-            {product.model === "one-of-one"
-              ? copy.labels.exactPiece
-              : copy.labels.naturalVariation}
+            {product.availableForSale
+              ? uiText(locale, {
+                  en: "Available from Shopify",
+                  es: "Disponible en Shopify",
+                  fr: "Disponible sur Shopify",
+                })
+              : copy.labels.soldOut}
           </p>
           <h3>
             <Link href={localePath(locale, `/products/${product.handle}`)}>
-              {localize(product.title, locale)}
+              {product.title}
             </Link>
           </h3>
         </div>
         <p className="product-card__price">
-          {copy.labels.testPrice} ·{" "}
-          {formatPrice(product.price, locale, product.currency)}
+          {formatPriceRange(product.priceRange, locale)}
         </p>
       </div>
     </article>

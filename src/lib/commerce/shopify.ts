@@ -6,8 +6,14 @@
  * header and must never use a NEXT_PUBLIC_* environment variable.
  */
 
+import { isIP } from "node:net";
+import { headers } from "next/headers";
+
 interface ShopifyGraphQLError {
   message: string;
+  extensions?: {
+    code?: unknown;
+  };
 }
 
 interface ShopifyPayload<T> {
@@ -15,28 +21,85 @@ interface ShopifyPayload<T> {
   errors?: ShopifyGraphQLError[];
 }
 
-interface ShopifyFetchOptions {
-  revalidate?: number;
+export interface ShopifyFetchOptions {
+  buyerIp?: string | null;
+  cache?: "force-cache" | "no-store";
+  revalidate?: number | false;
+  tags?: string[];
+  timeoutMs?: number;
 }
 
-export class ShopifyRequestError extends Error {
-  readonly status?: number;
+function normalizeBuyerIp(value: string | null | undefined) {
+  const candidate = value?.split(",", 1)[0]?.trim();
+  return candidate && isIP(candidate) ? candidate : null;
+}
 
-  constructor(message: string, status?: number) {
+async function getTrustedBuyerIp() {
+  // Vercel supplies and protects this header. On other platforms we omit the
+  // value until that deployment's trusted-proxy boundary is configured.
+  if (process.env.VERCEL !== "1") return null;
+
+  try {
+    const requestHeaders = await headers();
+    return normalizeBuyerIp(requestHeaders.get("x-vercel-forwarded-for"));
+  } catch {
+    // Static builds, scripts, and tests are not buyer traffic.
+    return null;
+  }
+}
+
+export type ShopifyRequestErrorKind =
+  | "configuration"
+  | "network"
+  | "rate_limit"
+  | "timeout"
+  | "http"
+  | "graphql"
+  | "response";
+
+export class ShopifyRequestError extends Error {
+  readonly kind: ShopifyRequestErrorKind;
+  readonly status?: number;
+  readonly graphQLErrorCodes: string[];
+
+  constructor(
+    kind: ShopifyRequestErrorKind,
+    message: string,
+    options: { status?: number; graphQLErrorCodes?: string[] } = {},
+  ) {
     super(message);
     this.name = "ShopifyRequestError";
-    this.status = status;
+    this.kind = kind;
+    this.status = options.status;
+    this.graphQLErrorCodes = options.graphQLErrorCodes ?? [];
   }
 }
 
 function getShopifyConfig() {
-  const domain = process.env.SHOPIFY_STORE_DOMAIN;
-  const privateToken = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
-  const version = process.env.SHOPIFY_STOREFRONT_API_VERSION || "2026-07";
+  const domain = process.env.SHOPIFY_STORE_DOMAIN?.trim().toLowerCase();
+  const privateToken = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN?.trim();
+  const version = (
+    process.env.SHOPIFY_STOREFRONT_API_VERSION || "2026-07"
+  ).trim();
 
   if (!domain || !privateToken) {
     throw new ShopifyRequestError(
+      "configuration",
       "Shopify Storefront API credentials are not configured.",
+    );
+  }
+
+  if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(domain)) {
+    throw new ShopifyRequestError(
+      "configuration",
+      "SHOPIFY_STORE_DOMAIN must be a bare myshopify.com hostname.",
+    );
+  }
+
+  if (!/^\d{4}-(?:01|04|07|10)$/.test(version)) {
+    throw new ShopifyRequestError(
+      "configuration",
+      "SHOPIFY_STOREFRONT_API_VERSION must be a dated quarterly API version.",
     );
   }
 
@@ -49,36 +112,116 @@ export async function shopifyFetch<T>(
   options: ShopifyFetchOptions = {},
 ): Promise<T> {
   const { domain, privateToken, version } = getShopifyConfig();
-  const response = await fetch(
-    `https://${domain}/api/${version}/graphql.json`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Shopify-Storefront-Private-Token": privateToken,
-      },
-      body: JSON.stringify({ query, variables }),
-      next: { revalidate: options.revalidate ?? 300 },
+  const buyerIp =
+    options.buyerIp === undefined
+      ? await getTrustedBuyerIp()
+      : normalizeBuyerIp(options.buyerIp);
+  const request: RequestInit & {
+    next?: { revalidate: number | false; tags?: string[] };
+  } = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Shopify-Storefront-Private-Token": privateToken,
+      ...(buyerIp ? { "Shopify-Storefront-Buyer-IP": buyerIp } : {}),
     },
-  );
+    body: JSON.stringify({ query, variables }),
+    signal: AbortSignal.timeout(
+      Number.isFinite(options.timeoutMs) &&
+        (options.timeoutMs ?? 0) > 0 &&
+        (options.timeoutMs ?? 0) <= 30_000
+        ? (options.timeoutMs as number)
+        : 10_000,
+    ),
+  };
 
-  if (!response.ok) {
+  if (options.cache === "no-store") {
+    request.cache = "no-store";
+  } else {
+    request.cache = options.cache;
+    request.next = {
+      revalidate: options.revalidate ?? 300,
+      ...(options.tags?.length ? { tags: [...options.tags] } : {}),
+    };
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://${domain}/api/${version}/graphql.json`,
+      request,
+    );
+  } catch (error) {
+    if (
+      error instanceof DOMException &&
+      (error.name === "TimeoutError" || error.name === "AbortError")
+    ) {
+      throw new ShopifyRequestError(
+        "timeout",
+        "Shopify Storefront API request timed out.",
+      );
+    }
     throw new ShopifyRequestError(
-      `Shopify Storefront API returned ${response.status}.`,
-      response.status,
+      "network",
+      "Shopify Storefront API request failed before receiving a response.",
     );
   }
 
-  const payload = (await response.json()) as ShopifyPayload<T>;
-
-  if (!payload.data || payload.errors?.length) {
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new ShopifyRequestError(
+        "rate_limit",
+        "Shopify Storefront API rate limited the request.",
+        { status: response.status },
+      );
+    }
     throw new ShopifyRequestError(
-      payload.errors?.map((error) => error.message).join("; ") ||
-        "Shopify response did not contain data.",
+      "http",
+      `Shopify Storefront API returned ${response.status}.`,
+      { status: response.status },
+    );
+  }
+
+  let payload: ShopifyPayload<T>;
+  try {
+    payload = (await response.json()) as ShopifyPayload<T>;
+  } catch {
+    throw new ShopifyRequestError(
+      "response",
+      "Shopify Storefront API returned an unreadable response.",
+    );
+  }
+
+  if (payload.errors?.length) {
+    const graphQLErrorCodes = payload.errors.flatMap((error) => {
+      const code = error.extensions?.code;
+      return typeof code === "string" ? [code] : [];
+    });
+    const rateLimited = graphQLErrorCodes.includes("THROTTLED");
+    throw new ShopifyRequestError(
+      rateLimited ? "rate_limit" : "graphql",
+      rateLimited
+        ? "Shopify Storefront API rate limited the request."
+        : "Shopify Storefront API returned GraphQL errors.",
+      { graphQLErrorCodes },
+    );
+  }
+
+  if (!payload.data) {
+    throw new ShopifyRequestError(
+      "response",
+      "Shopify response did not contain data.",
     );
   }
 
   return payload.data;
+}
+
+export function shopifyMutation<T>(
+  mutation: string,
+  variables: Record<string, unknown> = {},
+) {
+  return shopifyFetch<T>(mutation, variables, { cache: "no-store" });
 }
 
 export interface ShopifyConnectionSnapshot {
@@ -133,6 +276,7 @@ const connectionQuery = `#graphql
 
 export function getShopifyConnectionSnapshot() {
   return shopifyFetch<ShopifyConnectionSnapshot>(connectionQuery, {}, {
+    buyerIp: null,
     revalidate: 60,
   });
 }

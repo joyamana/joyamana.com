@@ -1,39 +1,61 @@
 "use client";
 
-import { useState } from "react";
-import type { MarketId } from "@/config/markets";
+import { useId, useState } from "react";
 import { useCart } from "./cart-provider";
 
 export function AddToCart({
-  productId,
   variantId,
-  marketId,
+  quantity,
   available,
   label,
   unavailableLabel,
+  addedLabel = "Added",
 }: {
-  productId: string;
   variantId: string;
-  marketId: MarketId;
+  quantity: number;
   available: boolean;
   label: string;
   unavailableLabel: string;
+  addedLabel?: string;
 }) {
-  const { addItem } = useCart();
+  const { addItem, clearError, error, status } = useCart();
   const [added, setAdded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const errorId = useId();
+  const busy = status !== "ready";
 
   return (
-    <button
-      className="button button--primary button--wide"
-      type="button"
-      disabled={!available}
-      onClick={() => {
-        addItem(productId, variantId, marketId);
-        setAdded(true);
-        window.setTimeout(() => setAdded(false), 1600);
-      }}
-    >
-      {!available ? unavailableLabel : added ? "✓" : label}
-    </button>
+    <div className="purchase-action">
+      <button
+        aria-busy={busy}
+        aria-describedby={failed ? errorId : undefined}
+        className="button button--primary button--wide"
+        type="button"
+        disabled={!available || busy}
+        onClick={async () => {
+          clearError();
+          setFailed(false);
+          setAdded(false);
+          const success = await addItem(variantId, quantity);
+          if (!success) {
+            setFailed(true);
+            return;
+          }
+          setAdded(true);
+          window.setTimeout(() => setAdded(false), 1600);
+        }}
+      >
+        {!available
+          ? unavailableLabel
+          : added
+            ? `✓ ${addedLabel}`
+            : label}
+      </button>
+      {failed && error ? (
+        <p className="action-error" id={errorId} role="alert">
+          {error.message}
+        </p>
+      ) : null}
+    </div>
   );
 }

@@ -13,7 +13,7 @@ export async function SearchPage({
   query: string;
 }) {
   const marketId = marketIdForLocale(locale);
-  const results = await searchCatalog(query, marketId);
+  const results = await searchCatalog(query, marketId, locale);
 
   return (
     <section className="search-page">
@@ -42,9 +42,9 @@ export async function SearchPage({
         <div className="search-results">
           <p>
             {uiText(locale, {
-              en: `${results.length} prototype result(s) for “${query}”`,
-              es: `${results.length} resultado(s) de prueba para “${query}”`,
-              fr: `${results.length} résultat(s) prototype pour « ${query} »`,
+              en: `${results.length} Shopify catalog result(s) for “${query}”`,
+              es: `${results.length} resultado(s) del catálogo de Shopify para “${query}”`,
+              fr: `${results.length} résultat(s) du catalogue Shopify pour « ${query} »`,
             })}
           </p>
           <div className="product-grid product-grid--three">
@@ -54,7 +54,13 @@ export async function SearchPage({
           </div>
         </div>
       ) : (
-        <p>{uiText(locale, { en: "Try “bracelet” or “obsidian”.", es: "Prueba «pulsera» u «obsidiana».", fr: "Essayez « bracelet » ou « obsidienne »." })}</p>
+        <p>
+          {uiText(locale, {
+            en: "Search by product name or material.",
+            es: "Busca por nombre de producto o material.",
+            fr: "Recherchez par nom de produit ou matériau.",
+          })}
+        </p>
       )}
     </section>
   );

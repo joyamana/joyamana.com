@@ -1,58 +1,117 @@
+import { cache } from "react";
 import type { MarketId } from "@/config/markets";
-import { collections, marketCatalogs, products } from "./mock-data";
+import type { Locale } from "@/lib/i18n/locales";
+import type { Collection, Product, ProductCollection } from "./types";
+import {
+  getMockCollection,
+  getMockCollections,
+  getMockProducts,
+  searchMockProducts,
+} from "./mock-data";
+import {
+  getShopifyCollection,
+  getShopifyCollections,
+  getShopifyProduct,
+  getShopifyProducts,
+  searchShopifyProducts,
+} from "./shopify-catalog";
 
-export function getCatalogProducts(marketId: MarketId = "us") {
-  const catalog = marketCatalogs[marketId];
-  return products
-    .filter((product) => catalog.productHandles.includes(product.handle))
-    .map((product) => ({
-      ...product,
-      price: catalog.prices[product.handle],
-      currency: catalog.currency,
-      available: catalog.availability[product.handle],
-    }));
+export type CommerceProvider = "mock" | "shopify";
+
+export class CommerceProviderError extends Error {
+  readonly kind = "configuration";
+
+  constructor(message: string) {
+    super(message);
+    this.name = "CommerceProviderError";
+  }
 }
 
-export async function getProducts(marketId: MarketId = "us") {
-  return getCatalogProducts(marketId);
-}
+export function getCommerceProvider(): CommerceProvider {
+  const provider =
+    process.env.COMMERCE_PROVIDER?.trim().toLowerCase() || "shopify";
+  if (provider === "mock" || provider === "shopify") return provider;
 
-export async function getProduct(handle: string, marketId: MarketId = "us") {
-  return (
-    getCatalogProducts(marketId).find(
-      (product) => product.handle === handle,
-    ) ?? null
+  throw new CommerceProviderError(
+    "COMMERCE_PROVIDER must be either mock or shopify.",
   );
 }
 
-export async function getCollections() {
-  return collections;
+function assertEnabledUsLocale(locale: Locale) {
+  if (locale !== "en-US" && locale !== "es-US") {
+    throw new CommerceProviderError(
+      "The enabled US catalog only supports en-US and es-US.",
+    );
+  }
 }
 
-export async function getCollection(handle: string, marketId: MarketId = "us") {
-  const collection = collections.find((item) => item.handle === handle);
-  if (!collection) return null;
-  return {
-    ...collection,
-    products: getCatalogProducts(marketId).filter((product) =>
-      product.collectionHandles.includes(handle),
-    ),
-  };
+export async function getProducts(
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+): Promise<Product[]> {
+  // Canada is typed planning context only. Do not access any provider for it.
+  if (marketId === "ca") return [];
+  assertEnabledUsLocale(locale);
+
+  return getCommerceProvider() === "shopify"
+    ? getShopifyProducts(locale)
+    : getMockProducts(marketId, locale);
 }
 
-export async function searchCatalog(query: string, marketId: MarketId = "us") {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) return [];
+export const getProduct = cache(
+  async function getProduct(
+    handle: string,
+    marketId: MarketId = "us",
+    locale: Locale = "en-US",
+  ): Promise<Product | null> {
+    if (marketId === "ca") return null;
+    assertEnabledUsLocale(locale);
 
-  return getCatalogProducts(marketId).filter((product) =>
-    [
-      product.title["en-US"],
-      product.title["es-US"],
-      product.description["en-US"],
-      product.description["es-US"],
-      product.title["fr-CA"] || "",
-      product.description["fr-CA"] || "",
-      product.crystal,
-    ].some((value) => value.toLowerCase().includes(normalized)),
-  );
+    return getCommerceProvider() === "shopify"
+      ? getShopifyProduct(handle, locale)
+      : (getMockProducts(marketId, locale).find(
+          (product) => product.handle === handle,
+        ) ?? null);
+  },
+);
+
+export async function getCollections(
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+): Promise<Collection[]> {
+  if (marketId === "ca") return [];
+  assertEnabledUsLocale(locale);
+
+  return getCommerceProvider() === "shopify"
+    ? getShopifyCollections(locale)
+    : getMockCollections(marketId, locale);
+}
+
+export const getCollection = cache(
+  async function getCollection(
+    handle: string,
+    marketId: MarketId = "us",
+    locale: Locale = "en-US",
+  ): Promise<ProductCollection | null> {
+    if (marketId === "ca") return null;
+    assertEnabledUsLocale(locale);
+
+    return getCommerceProvider() === "shopify"
+      ? getShopifyCollection(handle, locale)
+      : getMockCollection(handle, marketId, locale);
+  },
+);
+
+export async function searchCatalog(
+  query: string,
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+): Promise<Product[]> {
+  if (marketId === "ca") return [];
+  assertEnabledUsLocale(locale);
+  if (!query.trim()) return [];
+
+  return getCommerceProvider() === "shopify"
+    ? searchShopifyProducts(query, locale)
+    : searchMockProducts(query, marketId, locale);
 }

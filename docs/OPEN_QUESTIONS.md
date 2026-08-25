@@ -2,7 +2,7 @@
 
 Status: Active — 不阻塞测试站工程骨架  
 Owner: Project owner  
-Last updated: 2026-08-16  
+Last updated: 2026-08-25
 Resolved input: `docs/BRAND_INPUTS.md`
 
 业务方已授权先建立可运行测试站。下列问题仍会阻塞真实商品接入、政策发布或
@@ -36,7 +36,8 @@ Resolved input: `docs/BRAND_INPUTS.md`
 - [x] Shopify store / development store
 - [x] Headless channel 与 private Storefront API access（2026-08-15 只读验证通过）
 - [x] 代表性 mock Product/Collection（七脉轮普通款，5 个概念选项）
-- [ ] Shopify Headless channel 中发布真实 Product/Variant/Collection
+- [x] Shopify Headless channel 中发布真实 Product/Variant（2026-08-25 可见 1 件）
+- [ ] Shopify Headless channel 中创建、填充并发布真实 Collection
 - [ ] 最终域名和 DNS
 - [ ] Vercel account/team
 - [ ] Logo、字体授权、颜色
@@ -70,6 +71,25 @@ Storefront token 无法验证、仍需 Shopify Admin 人工确认：
 - Customer Privacy、cookie banner、data-sharing opt-out 与实际第三方脚本清单。
 - Notification sender、发件域名认证、订单邮件、support/privacy 邮箱。
 - 正式域名、DNS、Checkout domain、像素/Analytics 和生产 Secret 分离。
+
+## Shopify storefront follow-up — 2026-08-25
+
+Storefront API 与安全的 Cart smoke 已确认：
+
+- Headless 可见 `aquamarine-bracelet-9-mm` 及 1 个可售 Variant，contextual price
+  为 USD；页面不得再使用 `$68` mock 价格或七脉轮 mock 商品作为运行时回退。
+- 本轮早期该商品 Shopify description 只有 `$14`；最终实时复核时已替换为完整
+  商品正文，当前页面未再出现该价格冲突。正文仍须在公开发布前由业务方审核。
+- Collection 仍只有空的默认 `frontpage`；Storefront 在有真实非空 Collection 前
+  只能展示 Shopify 全商品目录，具体 Collection URL 不得引用本地 mock。
+- US Spanish `@inContext(language: ES)` 当前回退为 English，说明西语翻译尚未在
+  Shopify 发布；`/es-us/` 继续 noindex，不能把 fallback 视为已审核翻译。
+- token 未获得 `quantityAvailable` scope；前端只使用 `availableForSale`，不展示或
+  猜测具体库存数。真实 Cart 请求增加数量时，Shopify 能返回库存不足 warning 并
+  保持可履约数量。
+- Cart create/update/remove 与 HTTPS `checkoutUrl` 合约可用；smoke 未创建订单，
+  测试商品行已移除。Buy now 与 Bag Checkout 的代码仍受
+  `SHOPIFY_CHECKOUT_ENABLED=false` 门禁保护。
 
 ## Before public launch
 
