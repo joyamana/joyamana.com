@@ -77,18 +77,21 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(3.2rem, 8vw, 8.5rem);
-  letter-spacing: -0.055em;
+  font-size: clamp(2.5rem, 4.5vw, 5rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
 }
 
 h2 {
-  font-size: clamp(2.4rem, 5vw, 5rem);
-  letter-spacing: -0.04em;
+  font-size: clamp(1.85rem, 2.8vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
 }
 
 h3 {
-  font-size: clamp(1.5rem, 2.4vw, 2.15rem);
-  letter-spacing: -0.025em;
+  font-size: clamp(1.3rem, 1.8vw, 1.8rem);
+  line-height: 1.03;
+  letter-spacing: -0.02em;
 }
 
 .skip-link {
@@ -415,6 +418,8 @@ h3 {
 .hero h1 {
   max-width: 800px;
   margin-bottom: 1.2rem;
+  font-size: clamp(3.2rem, 8vw, 8.5rem);
+  letter-spacing: -0.055em;
 }
 
 .hero__content > p:not(.eyebrow) {
@@ -778,7 +783,7 @@ h3 {
 .editorial-hub-hero h1 {
   max-width: 1100px;
   margin-bottom: 1.5rem;
-  font-size: clamp(4rem, 11vw, 10rem);
+  font-size: clamp(3rem, 7vw, 6rem);
 }
 
 .editorial-hub-hero > p:last-child {
@@ -824,7 +829,7 @@ h3 {
 
 .crystal-directory__item h2 {
   margin-bottom: 0.8rem;
-  font-size: clamp(2.3rem, 5vw, 5rem);
+  font-size: clamp(1.9rem, 3vw, 3rem);
 }
 
 .crystal-directory__item div > p:last-child,
@@ -861,7 +866,7 @@ h3 {
 .blog-featured h2 {
   max-width: 1000px;
   margin: clamp(3rem, 8vw, 7rem) 0 1.5rem;
-  font-size: clamp(3rem, 7vw, 7rem);
+  font-size: clamp(2.25rem, 4.5vw, 4rem);
 }
 
 .blog-index__list {
@@ -879,7 +884,7 @@ h3 {
 
 .blog-index__item h3 {
   margin-bottom: 0.8rem;
-  font-size: clamp(1.8rem, 3.5vw, 3.5rem);
+  font-size: clamp(1.6rem, 2.5vw, 2.25rem);
 }
 
 .text-link,
@@ -1061,7 +1066,7 @@ h3 {
 
 .product-detail__info h1 {
   margin-bottom: 1.4rem;
-  font-size: clamp(3rem, 5.5vw, 6rem);
+  font-size: clamp(2.5rem, 3.5vw, 4rem);
 }
 
 .display-price {
@@ -1269,7 +1274,7 @@ h3 {
 .article-page h1,
 .policy-page h1 {
   margin: 4rem 0 2rem;
-  font-size: clamp(3.5rem, 7vw, 7rem);
+  font-size: clamp(2.75rem, 4vw, 4.5rem);
 }
 
 .trust-page__header {
@@ -1300,7 +1305,7 @@ h3 {
 
 .article-body h2 {
   margin-top: 4rem;
-  font-size: 2.5rem;
+  font-size: 2rem;
 }
 
 .split-copy {
@@ -1335,7 +1340,7 @@ h3 {
 .about-hero h1 {
   max-width: 1100px;
   margin-bottom: 1.5rem;
-  font-size: clamp(4.5rem, 11vw, 10rem);
+  font-size: clamp(3rem, 7vw, 6rem);
 }
 
 .about-hero > p:last-child {
@@ -1358,7 +1363,7 @@ h3 {
 .about-perspective h2 {
   max-width: 780px;
   margin-bottom: 0;
-  font-size: clamp(3.5rem, 7vw, 7rem);
+  font-size: clamp(2.5rem, 4.5vw, 4rem);
 }
 
 .about-perspective__copy {
@@ -1410,7 +1415,7 @@ h3 {
 
 .about-principles__grid h3 {
   margin: clamp(4rem, 8vw, 7rem) 0 1rem;
-  font-size: clamp(2.2rem, 4vw, 4rem);
+  font-size: clamp(1.8rem, 2.8vw, 2.5rem);
 }
 
 .about-principles__grid p {
@@ -1479,7 +1484,7 @@ h3 {
 }
 
 .form-page h1 {
-  font-size: clamp(3.5rem, 6vw, 6.5rem);
+  font-size: clamp(2.75rem, 4vw, 4.5rem);
 }
 
 .form-page > div p:last-child {
@@ -1518,7 +1523,7 @@ textarea {
 }
 
 .policy-placeholder h2 {
-  font-size: 2.5rem;
+  font-size: 2rem;
 }
 
 .trust-page__status {
@@ -1537,7 +1542,7 @@ textarea {
 .trust-page__requirements h2 {
   max-width: 620px;
   margin-bottom: 2rem;
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-size: clamp(1.8rem, 3vw, 2.75rem);
 }
 
 .trust-page__requirements ul {
@@ -1627,7 +1632,7 @@ textarea {
 
 .cart-heading h1 {
   margin-bottom: 0;
-  font-size: clamp(3rem, 6vw, 6rem);
+  font-size: clamp(2.5rem, 3.5vw, 4rem);
 }
 
 .cart-line {
@@ -1703,7 +1708,7 @@ textarea {
 
 .empty-state h1 {
   max-width: 900px;
-  font-size: clamp(3rem, 7vw, 7rem);
+  font-size: clamp(2.5rem, 4vw, 4.5rem);
 }
 
 .empty-state--compact {
@@ -1712,7 +1717,7 @@ textarea {
 }
 
 .empty-state--compact h2 {
-  font-size: clamp(2rem, 4vw, 4rem);
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
 }
 
 .site-footer {
@@ -1736,8 +1741,8 @@ textarea {
   max-width: 400px;
   color: white;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 4rem);
-  line-height: 1;
+  font-size: clamp(1.75rem, 3vw, 3rem);
+  line-height: 1.04;
 }
 
 .footer-statement .footer-markets {
@@ -1836,7 +1841,13 @@ textarea {
 
 @media (max-width: 760px) {
   h1 {
-    font-size: clamp(3.2rem, 16vw, 5.6rem);
+    font-size: clamp(2.4rem, 10vw, 3.5rem);
+    line-height: 1.02;
+  }
+
+  .editorial-hub-hero h1,
+  .about-hero h1 {
+    font-size: clamp(2.75rem, 11vw, 4.5rem);
   }
 
   .prototype-bar {
