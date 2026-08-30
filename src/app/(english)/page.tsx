@@ -4,9 +4,9 @@ import { buildMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Modern crystal objects — prototype",
+  title: "Modern crystal jewelry and singular objects",
   description:
-    "A development prototype for modern crystal jewelry and one-of-a-kind objects.",
+    "Modern crystal jewelry and singular objects, selected for their form, symbolism, and natural character.",
   locale: "en-US",
 });
 

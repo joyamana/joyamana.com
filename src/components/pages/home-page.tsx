@@ -55,13 +55,6 @@ export async function HomePage({ locale }: { locale: Locale }) {
             </Link>
           </div>
         </div>
-        <p className="hero__credit">
-          {uiText(locale, {
-            en: "Prototype-generated editorial image",
-            es: "Imagen editorial generada para el prototipo",
-            fr: "Image éditoriale générée pour le prototype",
-          })}
-        </p>
       </section>
 
       <section className="section">
@@ -144,9 +137,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
           <div>
             <p className="eyebrow">
               {uiText(locale, {
-                en: "Editorial drafts",
-                es: "Borradores editoriales",
-                fr: "Brouillons éditoriaux",
+                en: "Journal",
+                es: "Historias",
+                fr: "Journal",
               })}
             </p>
             <h2>{copy.home.blog}</h2>

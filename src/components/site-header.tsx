@@ -310,7 +310,6 @@ export function SiteHeader({
 
   return (
     <>
-      <div className="prototype-bar">{copy.prototype}</div>
       <header className="site-header">
         <button
           aria-controls="mobile-site-menu"

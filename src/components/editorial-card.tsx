@@ -27,7 +27,7 @@ export function EditorialCard({
         className="text-link"
         href={localePath(locale, `${basePath}/${entry.handle}`)}
       >
-        {uiText(locale, { en: "Read draft", es: "Leer borrador", fr: "Lire le brouillon" })} →
+        {uiText(locale, { en: "Read", es: "Leer", fr: "Lire" })} →
       </Link>
     </article>
   );

@@ -19,9 +19,11 @@ Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
 | Apparel & Accessories > Jewelry > Rings | `/category/rings` |
 | Apparel & Accessories > Jewelry > Necklaces | `/category/necklaces` |
 | Apparel & Accessories > Jewelry > Earrings | `/category/earrings` |
+| Arts & Entertainment > Hobbies & Creative Arts > Collectibles > Rocks & Fossils > Gemstones | `/category/gemstones` |
 
-当前 Aquamarine bracelet 应由业务方在 Admin 核对并设置为 Bracelets。Product Type
-不是必填；标准 Category 已能准确表达时，不再机械重复 `Bracelet`。
+当前 Aquamarine bracelet 应由业务方在 Admin 核对并设置为 Bracelets；Palm Stone、
+Sphere、Guardian Figure 等当前商品使用 Gemstones。Product Type 不是公开 Category 的
+事实来源；标准 Category 已能准确表达时，不再机械重复类别。
 
 Category route 只在当前 Headless channel 至少有一个商品使用对应 taxonomy ID 时出现。
 代码不按标题、Tag 或 Product Type 推断归属。

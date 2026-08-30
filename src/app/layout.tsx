@@ -20,11 +20,11 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${brand.name} — Prototype`,
+    default: brand.name,
     template: `%s · ${brand.name}`,
   },
   description:
-    "A bilingual development prototype for a design-led crystal storefront.",
+    "Modern crystal jewelry and singular objects, selected for their form, symbolism, and natural character.",
   robots: siteConfig.indexable
     ? { index: true, follow: true }
     : { index: false, follow: false, noarchive: true },

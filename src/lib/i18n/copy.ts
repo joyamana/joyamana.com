@@ -2,8 +2,6 @@ import type { Locale } from "./locales";
 
 const copy = {
   "en-US": {
-    prototype:
-      "Storefront prototype — Shopify catalog data is live; policies and translations remain under review.",
     nav: {
       shop: "Shop",
       collections: "Collections",
@@ -25,7 +23,7 @@ const copy = {
         "Products, current prices, and availability come directly from the Joya Mana Shopify catalog.",
       principles: "Designed for clarity",
       principlesIntro:
-        "Beautiful objects need clear facts. The launch experience will distinguish exact pieces, natural variation, materials, dimensions, care, and fulfillment.",
+        "Beautiful objects need clear facts. We distinguish exact pieces, natural variation, materials, dimensions, care, and fulfillment.",
       blog: "From the blog",
     },
     labels: {
@@ -41,12 +39,10 @@ const copy = {
       shipping: "Shipping",
       related: "You may also notice",
       all: "All",
-      read: "Read draft",
+      read: "Read",
     },
   },
   "es-US": {
-    prototype:
-      "Prototipo de tienda — el catálogo de Shopify está activo; las políticas y traducciones siguen en revisión.",
     nav: {
       shop: "Comprar",
       collections: "Colecciones",
@@ -68,7 +64,7 @@ const copy = {
         "Los productos, precios actuales y disponibilidad provienen directamente del catálogo de Shopify de Joya Mana.",
       principles: "Diseñado con claridad",
       principlesIntro:
-        "Los objetos bellos también necesitan datos claros. La experiencia final distinguirá piezas exactas, variación natural, materiales, medidas, cuidado y entrega.",
+        "Los objetos bellos también necesitan datos claros. Distinguimos piezas exactas, variación natural, materiales, medidas, cuidado y entrega.",
       blog: "Del blog",
     },
     labels: {
@@ -84,12 +80,10 @@ const copy = {
       shipping: "Envío",
       related: "También podría interesarte",
       all: "Todo",
-      read: "Leer borrador",
+      read: "Leer",
     },
   },
   "fr-CA": {
-    prototype:
-      "Prototype de boutique — le catalogue Shopify est actif; les politiques et traductions restent à réviser.",
     nav: {
       shop: "Boutique",
       collections: "Collections",
@@ -111,7 +105,7 @@ const copy = {
         "Les produits, prix actuels et disponibilités proviennent directement du catalogue Shopify de Joya Mana.",
       principles: "Conçu avec clarté",
       principlesIntro:
-        "Les beaux objets ont aussi besoin de faits clairs. L’expérience finale distinguera les pièces exactes, les variations naturelles, les matériaux, les dimensions, l’entretien et la livraison.",
+        "Les beaux objets ont aussi besoin de faits clairs. Nous distinguons les pièces exactes, les variations naturelles, les matériaux, les dimensions, l’entretien et la livraison.",
       blog: "Du blog",
     },
     labels: {
@@ -127,7 +121,7 @@ const copy = {
       shipping: "Expédition",
       related: "Vous pourriez aussi remarquer",
       all: "Tout",
-      read: "Lire le brouillon",
+      read: "Lire",
     },
   },
 } as const;

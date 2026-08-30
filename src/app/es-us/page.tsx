@@ -4,9 +4,9 @@ import { buildMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Objetos modernos de cristal — prototipo",
+  title: "Joyería moderna con cristales y objetos singulares",
   description:
-    "Un prototipo en español para joyería moderna con cristales y objetos únicos del mercado estadounidense.",
+    "Joyería moderna con cristales y objetos singulares, seleccionados por su forma, simbolismo y carácter natural.",
   locale: "es-US",
 });
 

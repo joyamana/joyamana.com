@@ -49,6 +49,15 @@ export const productCategoryDefinitions = [
       "es-US": "Explora los pendientes con cristales disponibles actualmente en Joya Mana.",
     },
   },
+  {
+    handle: "gemstones",
+    taxonomyId: "gid://shopify/TaxonomyCategory/ae-2-2-6-2",
+    title: { "en-US": "Gemstones", "es-US": "Gemas" },
+    description: {
+      "en-US": "Explore gemstone objects currently available from Joya Mana.",
+      "es-US": "Explora los objetos de gemas disponibles actualmente en Joya Mana.",
+    },
+  },
 ] as const satisfies readonly ProductCategoryDefinition[];
 
 function enabledUsLocale(locale: Locale): "en-US" | "es-US" {

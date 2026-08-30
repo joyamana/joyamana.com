@@ -121,16 +121,6 @@ h3 {
   border: 0;
 }
 
-.prototype-bar {
-  padding: 0.45rem var(--page);
-  color: var(--paper);
-  background: var(--brand);
-  font-size: 0.68rem;
-  letter-spacing: 0.065em;
-  text-align: center;
-  text-transform: uppercase;
-}
-
 .site-header {
   position: relative;
   z-index: 20;
@@ -578,7 +568,7 @@ h3 {
 .hero {
   position: relative;
   display: flex;
-  min-height: min(760px, calc(100vh - 110px));
+  min-height: min(760px, calc(100vh - 78px));
   align-items: center;
   overflow: hidden;
   color: white;
@@ -617,18 +607,6 @@ h3 {
   margin-bottom: 2.1rem;
   color: rgba(255, 255, 255, 0.82);
   font-size: clamp(1rem, 1.5vw, 1.25rem);
-}
-
-.hero__credit {
-  position: absolute;
-  right: var(--page);
-  bottom: 1.4rem;
-  z-index: 2;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.48);
-  font-size: 0.63rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 .eyebrow,
@@ -2214,6 +2192,12 @@ textarea {
   font-size: clamp(2.5rem, 4vw, 4.5rem);
 }
 
+.empty-state > p:not(.eyebrow) {
+  max-width: 620px;
+  margin-bottom: 1.8rem;
+  color: var(--muted);
+}
+
 .empty-state--compact {
   min-height: 300px;
   padding: 3rem 0;
@@ -2367,10 +2351,6 @@ textarea {
     min-height: 54px;
   }
 
-  .prototype-bar {
-    text-align: left;
-  }
-
   .site-header {
     min-height: 68px;
   }
@@ -2404,12 +2384,6 @@ textarea {
   .hero__content {
     width: auto;
     margin: 0 var(--page);
-  }
-
-  .hero__credit {
-    right: auto;
-    left: var(--page);
-    bottom: 1rem;
   }
 
   .section-heading,

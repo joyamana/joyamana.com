@@ -86,8 +86,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           })}
         </Link>
         <p className="footer-note">
-          © {new Date().getFullYear()} {brand.name}.{" "}
-          {uiText(locale, { en: "Internal prototype.", es: "Prototipo interno.", fr: "Prototype interne." })}
+          © {new Date().getFullYear()} {brand.name}.
         </p>
       </div>
     </footer>
