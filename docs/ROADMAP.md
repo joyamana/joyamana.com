@@ -78,13 +78,18 @@ Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
 - Webhook HMAC 验证与 Product/Collection cache invalidation。
 - Commerce integration 与 E2E 测试。
 
-2026-08-30 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 和 109 项 unit/
+2026-08-30 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 和 116 项 unit/
 integration tests 已完成；Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
 真实 Cart 合约 smoke 已覆盖 create、库存冲突 warning、update/remove 与 HTTPS
 Checkout URL。仍需 Shopify 发布真实 Collection、审核当前商品正文、发布人工审核的
 西语翻译、完成政策和 Checkout 运营验收，并补 webhook、Playwright 和支付测试。
 2026-08-30 已批准 D-036：商品类别迁至 `/category/*`，原创设计系列保留
 `/collections/*`；实现与 Shopify Admin 结构化字段配置进入当前工作流。
+
+2026-08-30 Policy follow-up：Refund 与 Privacy 已由 Shopify Policy 服务端驱动，
+包含默认语言回退识别、安全 HTML 输出和按真实翻译状态控制索引；当前 Returns
+已有西语正文，Privacy 仍回退英文。Headless `Your Privacy Choices` 与 Customer
+Privacy API 同步仍是公开上线前待办。
 
 ### 退出条件
 

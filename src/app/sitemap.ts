@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/site";
 import {
+  getCommerceProvider,
   getDesignCollections,
   getProducts,
   productCategoriesForProducts,
 } from "@/lib/commerce/catalog";
 import { blogEntries, crystalGuides } from "@/lib/content/content";
 import { getPublishedTrustPagePaths } from "@/lib/content/trust-pages";
+import { getPublishedShopifyPolicyPaths } from "@/lib/content/shopify-policies";
 import { enabledLocales, localePath } from "@/lib/i18n/locales";
 
 export const dynamic = "force-dynamic";
@@ -24,17 +26,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
   const localizedCatalogs = await Promise.all(
     enabledLocales.map(async (locale) => {
-      const [collections, products] = await Promise.all([
+      const [collections, products, policyPaths] = await Promise.all([
         getDesignCollections("us", locale),
         getProducts("us", locale),
+        getCommerceProvider() === "shopify"
+          ? getPublishedShopifyPolicyPaths(locale)
+          : Promise.resolve([]),
       ]);
       const categories = productCategoriesForProducts(products, locale);
-      return { categories, collections, locale, products };
+      return { categories, collections, locale, policyPaths, products };
     }),
   );
 
   return localizedCatalogs.flatMap(
-    ({ categories, collections, locale, products }) => {
+    ({ categories, collections, locale, policyPaths, products }) => {
     const paths = [
       ...contentPaths,
       ...(products.length ? ["/shop"] : []),
@@ -43,6 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...collections.map(({ handle }) => `/collections/${handle}`),
       ...products.map(({ handle }) => `/products/${handle}`),
       ...getPublishedTrustPagePaths(locale),
+      ...policyPaths,
     ];
 
     return paths.map((path) => ({

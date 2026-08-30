@@ -94,6 +94,22 @@ Storefront API 与安全的 Cart smoke 已确认：
   测试商品行已移除。Buy now 与 Bag Checkout 的代码仍受
   `SHOPIFY_CHECKOUT_ENABLED=false` 门禁保护。
 
+## Shopify policy follow-up — 2026-08-30
+
+- Storefront API 当前可读取已发布的 Refund Policy 与 Privacy Policy；Shipping
+  Policy 和 Terms 仍未完成。
+- `/returns` 与 `/privacy` 已改为服务端读取 Shopify Policy，并对商家正文执行
+  HTML allowlist 清理；正文缺失或 API 不可用时不输出旧政策承诺，也不进入索引。
+- Shopify 当前返回真实西语 Refund Policy；Privacy Policy 的 `ES` context 仍回退
+  English。西语路由始终可访问，只有正文存在真实翻译时才允许进入 sitemap/index。
+- Shopify Customer privacy 当前显示：Cookie banner 使用 automated 判断且 US
+  销售地区不要求展示；Data sharing opt-out 已在 California、Colorado 等 15 个州
+  启用；Shopify Network Intelligence 为 Enabled。
+- Shopify Online Store 的 data-sharing opt-out 设置不会自动为 Next.js Headless
+  storefront 生成入口。正式公开前仍需使用独立 public Storefront token 接入
+  Customer Privacy API、提供 `Your Privacy Choices`，并核对同根 Checkout domain；
+  绝不能向浏览器暴露当前 server-only private token。
+
 ## Before public launch
 
 | ID | Decision | Current handling |
