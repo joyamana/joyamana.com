@@ -1,8 +1,9 @@
 import type { Locale } from "@/lib/i18n/locales";
-import { shopifyFetch } from "./shopify";
+import { shopifyFetch, type ShopifyFetchOptions } from "./shopify";
 import {
   isValidQuantityRule,
   type Collection,
+  type CollectionKind,
   type Money,
   type Product,
   type ProductCollection,
@@ -32,6 +33,15 @@ interface ShopifyImage {
 interface ShopifySeo {
   title: string | null;
   description: string | null;
+}
+
+interface ShopifyTaxonomyCategory {
+  id: string;
+  name: string;
+}
+
+interface ShopifyMetafield {
+  value: string;
 }
 
 interface ShopifyPageInfo {
@@ -67,6 +77,7 @@ export interface ShopifyProductNode {
   title: string;
   description: string;
   availableForSale: boolean;
+  category: ShopifyTaxonomyCategory | null;
   seo: ShopifySeo;
   featuredImage: ShopifyImage | null;
   images: { nodes: ShopifyImage[] };
@@ -84,6 +95,7 @@ interface ShopifyCollectionBase {
   description: string;
   seo: ShopifySeo;
   image: ShopifyImage | null;
+  collectionKind: ShopifyMetafield | null;
 }
 
 interface ShopifyCollectionSummaryNode extends ShopifyCollectionBase {
@@ -187,6 +199,10 @@ const productFields = `#graphql
     title
     description
     availableForSale
+    category {
+      id
+      name
+    }
     seo {
       title
       description
@@ -297,6 +313,9 @@ export const SHOPIFY_COLLECTIONS_QUERY = `#graphql
         image {
           ...CatalogImageFields
         }
+        collectionKind: metafield(namespace: "custom", key: "collection_kind") {
+          value
+        }
         products(first: 1) {
           nodes {
             id
@@ -331,6 +350,9 @@ export const SHOPIFY_COLLECTION_QUERY = `#graphql
       }
       image {
         ...CatalogImageFields
+      }
+      collectionKind: metafield(namespace: "custom", key: "collection_kind") {
+        value
       }
       products(first: $first, after: $after) {
         nodes {
@@ -610,8 +632,22 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
     featuredImage,
     images,
     variants,
+    category: node.category
+      ? { id: node.category.id, name: node.category.name }
+      : null,
     source: "shopify",
   };
+}
+
+function mapCollectionKind(
+  metafield: ShopifyMetafield | null | undefined,
+): CollectionKind | undefined {
+  const value = optionalText(metafield?.value);
+  return value === "category" ||
+    value === "design_series" ||
+    value === "merchandising"
+    ? value
+    : undefined;
 }
 
 function mapCollectionBase(node: ShopifyCollectionBase): Collection {
@@ -624,17 +660,21 @@ function mapCollectionBase(node: ShopifyCollectionBase): Collection {
     seoTitle: optionalText(node.seo.title),
     seoDescription: optionalText(node.seo.description),
     image,
+    kind: mapCollectionKind(node.collectionKind),
     source: "shopify",
   };
 }
 
-export async function getShopifyProducts(locale: Locale): Promise<Product[]> {
+export async function getShopifyProducts(
+  locale: Locale,
+  fetchOptions: ShopifyFetchOptions = { cache: "no-store" },
+): Promise<Product[]> {
   const context = shopifyContext(locale);
   const loadPage = (after: string | null) =>
     shopifyFetch<ShopifyProductsData>(
       SHOPIFY_PRODUCTS_QUERY,
       { ...context, first: PRODUCT_PAGE_SIZE, after },
-      { cache: "no-store" },
+      fetchOptions,
     );
   const firstPage = await loadPage(null);
   const nodes = await collectConnectionNodes(
@@ -693,13 +733,14 @@ export async function getShopifyProduct(
 
 export async function getShopifyCollections(
   locale: Locale,
+  fetchOptions: ShopifyFetchOptions = { cache: "no-store" },
 ): Promise<Collection[]> {
   const context = shopifyContext(locale);
   const loadPage = (after: string | null) =>
     shopifyFetch<ShopifyCollectionsData>(
       SHOPIFY_COLLECTIONS_QUERY,
       { ...context, first: COLLECTION_PAGE_SIZE, after },
-      { cache: "no-store" },
+      fetchOptions,
     );
   const firstPage = await loadPage(null);
   const nodes = await collectConnectionNodes(

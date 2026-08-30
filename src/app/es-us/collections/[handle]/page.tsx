@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CollectionPage } from "@/components/pages/collection-page";
-import { getCollection } from "@/lib/commerce/catalog";
+import { getDesignCollection } from "@/lib/commerce/catalog";
 import { buildMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const { handle } = await params;
-  const collection = await getCollection(handle, "us", "es-US");
+  const collection = await getDesignCollection(handle, "us", "es-US");
   return buildMetadata({
     title: collection?.seoTitle || collection?.title || "Colección",
     description:

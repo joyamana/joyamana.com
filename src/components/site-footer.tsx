@@ -35,6 +35,9 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       </div>
       <div>
         <p className="footer-heading">{uiText(locale, { en: "Explore", es: "Explorar", fr: "Explorer" })}</p>
+        <Link href={localePath(locale, "/shop")}>
+          {uiText(locale, { en: "Shop", es: "Comprar", fr: "Boutique" })}
+        </Link>
         <Link href={localePath(locale, "/collections")}>
           {uiText(locale, { en: "Collections", es: "Colecciones", fr: "Collections" })}
         </Link>

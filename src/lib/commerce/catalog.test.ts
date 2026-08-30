@@ -15,7 +15,10 @@ import {
   CommerceProviderError,
   getCollection,
   getCollections,
+  getDesignCollection,
+  getDesignCollections,
   getProduct,
+  getProductCategory,
   getProducts,
   searchCatalog,
 } from "./catalog";
@@ -63,6 +66,49 @@ describe("catalog provider facade", () => {
         "es-US",
       ))?.title,
     ).toBe("Pulsera Clásica de Siete Chakras — 8 mm");
+  });
+
+  it("builds category routes from Shopify taxonomy identity, not collection titles", async () => {
+    process.env.COMMERCE_PROVIDER = "mock";
+
+    await expect(getProductCategory("bracelets", "us", "en-US")).resolves.toMatchObject({
+      handle: "bracelets",
+      taxonomyId: "gid://shopify/TaxonomyCategory/aa-6-3",
+      title: "Bracelets",
+      products: [
+        expect.objectContaining({
+          handle: "seven-chakra-classic-bracelet-8mm",
+          category: {
+            id: "gid://shopify/TaxonomyCategory/aa-6-3",
+            name: "Bracelets",
+          },
+        }),
+      ],
+    });
+    await expect(getProductCategory("rings", "us", "en-US")).resolves.toBeNull();
+    await expect(getProductCategory("bracelets", "us", "es-US")).resolves.toMatchObject({
+      title: "Pulseras",
+      products: [
+        expect.objectContaining({
+          category: expect.objectContaining({ name: "Pulseras" }),
+        }),
+      ],
+    });
+  });
+
+  it("exposes only collections explicitly marked as design series", async () => {
+    process.env.COMMERCE_PROVIDER = "mock";
+
+    await expect(getDesignCollections("us", "en-US")).resolves.toEqual([
+      expect.objectContaining({
+        handle: "seven-chakra",
+        kind: "design_series",
+      }),
+    ]);
+    await expect(getDesignCollection("seven-chakra", "us", "en-US")).resolves.toMatchObject({
+      kind: "design_series",
+    });
+    await expect(getDesignCollection("new-arrivals", "us", "en-US")).resolves.toBeNull();
   });
 
   it("uses one enabled US catalog for English and Spanish", () => {

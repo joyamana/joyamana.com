@@ -5,7 +5,8 @@ const copy = {
     prototype:
       "Storefront prototype — Shopify catalog data is live; policies and translations remain under review.",
     nav: {
-      series: "Shop",
+      shop: "Shop",
+      collections: "Collections",
       crystals: "Crystal guide",
       blog: "Blog",
       about: "About",
@@ -47,7 +48,8 @@ const copy = {
     prototype:
       "Prototipo de tienda — el catálogo de Shopify está activo; las políticas y traducciones siguen en revisión.",
     nav: {
-      series: "Comprar",
+      shop: "Comprar",
+      collections: "Colecciones",
       crystals: "Guía de cristales",
       blog: "Blog",
       about: "Nosotros",
@@ -89,7 +91,8 @@ const copy = {
     prototype:
       "Prototype de boutique — le catalogue Shopify est actif; les politiques et traductions restent à réviser.",
     nav: {
-      series: "Boutique",
+      shop: "Boutique",
+      collections: "Collections",
       crystals: "Guide des cristaux",
       blog: "Blog",
       about: "À propos",

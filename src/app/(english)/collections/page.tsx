@@ -4,8 +4,8 @@ import { buildMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Collections — prototype",
-  description: "Browse the shared US prototype catalog.",
+  title: "Design collections",
+  description: "Explore original Joya Mana design series and their stories.",
   locale: "en-US",
   path: "/collections",
 });

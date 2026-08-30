@@ -2,8 +2,10 @@
 
 Status: Draft — Catalog 与运营政策待确认  
 Owner: Commerce / Operations  
-Last updated: 2026-08-02  
+Last updated: 2026-08-30
 Related: `MVP_PRD.md`, `TECH_SPEC.md`, `CUSTOMER_LIFECYCLE.md`
+
+Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
 
 ## 1. 原则
 
@@ -71,13 +73,22 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - GTIN/MPN 只在真实存在时提供，不为 Schema 或 feed 编造。
 - Product group/Variant ID 在 Shopify、Analytics 和 Schema mapper 中稳定。
 
-## 4. Collection
+## 4. Category 与 Collection
 
-- 只创建有真实购买意图、库存和独特说明的人工策划 Collection。
-- Collection 可以基于商品类型、晶体类型或礼赠场景，但不能无节制组合。
+- Shopify Standard Product Category 表达商品是什么；当前公开商品类别使用
+  `/category/{handle}`，只为至少有一个当前 US Catalog 可见商品的受支持类别开放。
+- `/collections/{handle}` 只表达具备独立名称、故事和视觉语言的原创设计系列；
+  Shopify Collection 必须有 `custom.collection_kind=design_series` 才能进入该路由。
+- 商品类别可以在 Shopify 以 automated Collection 辅助后台归集，但不得同时以
+  `/collections/bracelets` 和 `/category/bracelets` 暴露两个公开列表 URL。
+- 设计系列成员由 Product 的结构化 `custom.design_series` Metaobject reference
+  驱动 automated Collection；不得用自由文本 tag 猜测系列。
+- Merchandising Collection（New Arrivals、Gifts 等）继续作为运营分组，只有在真实
+  购买意图、库存和独特说明充分时才另行批准公开入口。
+- Collection 可以辅助晶体类型或礼赠场景，但不能无节制组合。
 - tags、vendor、自动筛选结果不自动变成可索引 landing page。
-- 每个主 Collection 需要唯一 title、intro、策展逻辑和至少一个有效商品。
-- 空或薄 Collection 不进入 sitemap；运营方决定隐藏、noindex 或补充。
+- 每个公开 Category/Collection 需要唯一 title、intro、策展逻辑和至少一个有效商品。
+- 空或薄 Category/Collection 不进入 sitemap；运营方决定隐藏、noindex 或补充。
 - 同一意图不能同时由多个不同 URL 竞争。
 
 ## 5. Media

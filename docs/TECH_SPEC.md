@@ -2,7 +2,7 @@
 
 Status: Draft — 核心架构已接受，工具细节待初始化时确认  
 Owner: Engineering  
-Last updated: 2026-08-25
+Last updated: 2026-08-30
 Supersedes: 旧版 `TECH_SPEC.md` 与归档文档中的 Hydrogen/Oxygen 方案
 
 ## 1. 架构目标
@@ -87,6 +87,8 @@ MVP 没有独立数据库、业务 API 服务、身份服务、PIM、搜索服�
 app/
   (storefront)/
     page.tsx
+    shop/page.tsx
+    category/[handle]/page.tsx
     products/[handle]/page.tsx
     collections/[handle]/page.tsx
     crystals/[handle]/page.tsx
@@ -200,6 +202,7 @@ type MarketContext = {
 
 - `NormalizedProduct`
 - `NormalizedVariant`
+- `NormalizedProductCategory`
 - `NormalizedCollection`
 - `NormalizedCrystal`
 - `NormalizedArticle`
@@ -215,7 +218,7 @@ Content/SEO 规格。
 |---|---|---|
 | Home / About / Policy | Static/ISR；含实时 Commerce 的 Home 当前 dynamic | 品牌内容变化低，价格/库存尚无获批陈旧窗口 |
 | Crystal Guide / Article | Static/ISR | 内容型、需完整 HTML |
-| Collection | 当前 Dynamic / no-store；后续 ISR + cache tag | 尚未批准陈旧窗口，也未完成 webhook |
+| Shop / Category / Collection | 当前 Dynamic / no-store；后续 ISR + cache tag | 尚未批准陈旧窗口，也未完成 webhook |
 | Product | 当前 Dynamic / no-store；后续 ISR + cache tag + webhook | 先保证价格与可售性实时一致 |
 | Cart | Dynamic / no-store | 会话和库存相关 |
 | Account（未来） | Dynamic / no-store | 私有客户数据 |
@@ -249,6 +252,13 @@ Content/SEO 规格。
   不改变 Market，Market 切换不得复用另一 Market 的 Cart。
 - 路径使用小写、短横线；推荐无尾斜杠并由重定向统一。
 - Shopify 标准 `/products/{handle}` 保留，避免无必要偏离。
+- `/shop` 展示全部在售 Product；`/category/{handle}` 由 Shopify Standard Product
+  Category 驱动；`/collections/{handle}` 只允许
+  `custom.collection_kind=design_series` 的非空设计系列。
+- 首批 Category route 通过稳定 Shopify taxonomy ID allowlist 映射公开 handle；
+  未知或无商品类别返回 404，不按产品标题、Product Type 或 tag 猜测。
+- `/collections/bracelets` 等已知类别旧路径永久重定向至 `/category/bracelets`，
+  防止重复 canonical。
 - Currency 不进入 URL；若未来一个 Market 支持多个 Currency，选择保存在
   会话/Shopify buyer context 中。
 

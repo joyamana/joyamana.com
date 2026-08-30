@@ -316,3 +316,137 @@ PDP/Collection schema 受 index gate 保护，Cart/Search 无论发布开关如�
 Q-003A–Q-003F、payment/guest checkout/branding/notification 等 Admin 验收完成后，
 才可将 `SHOPIFY_CHECKOUT_ENABLED` 设为 `true`。当前全站继续 `noindex`，Spanish 商品
 内容因 Shopify 未发布翻译而回退 English，Canada 继续 404。
+
+---
+
+# 商品类别与设计系列 URL 分离
+
+状态：Complete
+负责人：Codex
+最后更新：2026-08-30
+关联：D-002、D-007、D-009、D-013、D-023、D-024、D-036；
+`COMMERCE_SPEC.md`、`CONTENT_SEO_GEO_SPEC.md`
+
+## Objective
+
+让顾客通过 `/shop` 浏览全部商品、通过 `/category/{handle}` 按商品形态购物，并通过
+`/collections/{handle}` 进入具备独立叙事的原创设计系列；三者共用同一 Shopify
+Product/Variant、价格和库存，同时保持唯一 canonical、清晰导航和可验证类型边界。
+
+## Context
+
+当前 storefront 只有 `/collections` 与 `/collections/{handle}`，Collections hub 同时
+承担全部商品、后台 Collection 筛选和系列入口。Shopify Product mapper 尚未读取标准
+Category，Collection mapper 也未读取 `custom.collection_kind`。2026-08-25 实时审计
+显示 Headless channel 有一个商品但没有非空真实 Collection；全站仍由 noindex gate
+保护。
+
+## Scope
+
+- 包含：Product Category 数据映射；Collection kind 数据映射；`/shop`、
+  `/category/{handle}` 与收紧后的 `/collections/{handle}`；EN/ES 路由和文案；Header、
+  Footer、Home、PDP 内链；metadata、canonical、hreflang、Schema、sitemap；测试和文档。
+- 不包含：Admin API 写入、替业务方创建 Shopify Category/Metafield/Metaobject/
+  Collection、筛选 UI、翻译 slug、Canada 路由、开放 index 或 Checkout gate、完整系列
+  Campaign 内容模块。
+
+## Decisions and assumptions
+
+- Accepted：D-036 定义公开 URL 和事实来源边界。
+- Accepted：只有 `custom.collection_kind=design_series` 的非空 Shopify Collection
+  可出现在 `/collections` 和 `/collections/{handle}`。
+- Temporary：首批可导航商品类别使用 Shopify 稳定 taxonomy ID 映射 Bracelets、
+  Rings、Necklaces、Earrings；只显示至少有一个 Storefront-visible Product 的类别。
+- Blocking：业务方仍需在 Shopify 给商品设置 Product Category，并创建 Design Series
+  Metaobject、引用字段、Collection kind 与非空 automated Collection，真实系列页才会
+  出现。
+
+## Milestones
+
+1. [x] Product Category 与 Collection kind 进入 normalized commerce entity。
+2. [x] `/shop`、Category 和 Design Collection 页面及导航完成。
+3. [x] SEO 路径、Schema、sitemap 与重复 URL 防护完成。
+4. [x] 规格、后台配置说明和自动化验证完成。
+
+## Detailed approach
+
+在 commerce mapper 中读取 Shopify `Product.category` 和 Collection
+`custom.collection_kind`；category config 只保存稳定 taxonomy ID、公开 handle 和本地化
+展示文案，不复制商品归属。Category facade 从同一 normalized Product 集合按 taxonomy ID
+筛选；当前 Catalog 较小，沿用已有完整 cursor pagination，达到可测量规模瓶颈后再评估
+Shopify collection/search filter 查询。Design Collection facade 对 kind 做 fail-closed
+过滤，未知或缺失类型不进入公开系列路由。
+
+Shop hub 展示全部商品和真实非空类别；Collections hub 只列 Design Series。PDP breadcrumb
+优先链接已支持的 Product Category，否则回到 Shop。所有 locale 通过现有 `localePath`
+共享稳定 handle；filter/sort 参数不进入 sitemap。
+
+## Validation
+
+- Command：`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`。
+- Manual observation：EN/ES 的 `/shop`、非空 Category、Design Collection、PDP breadcrumb、
+  Header/Mobile/Footer 链接和未知 handle 404。
+- SEO/Commerce/Data：Category 与 Collection self-canonical；sitemap 不含空类别、普通
+  Shopify Collection 或重复类别 URL；JSON-LD 路径与可见页面一致；价格、库存仍只来自
+  normalized Shopify Product/Variant。
+- Rollback：回退 route/UI commit，并按 D-036 保留已公开 URL 的 redirect/canonical
+  迁移；不修改 Shopify 商品、库存或订单数据。
+
+## Progress log
+
+- 2026-08-30：业务方确认 `/category/bracelets` 与 `/collections/seven-chakra` 的双轴
+  URL；完成规范、现有路由、Shopify API 能力和工作区审查，接受 D-036 并开始实施。
+- 2026-08-30：Storefront Product mapper 增加标准 taxonomy Category，Collection
+  mapper 增加 `custom.collection_kind`；新增 Shop/Category 页面，并将系列 facade
+  收紧为仅接受 `design_series`。Header、Footer、Home、About、PDP breadcrumb 和 Cart
+  空状态已迁移至新信息架构。
+- 2026-08-30：Category/Collection metadata、EN/ES hreflang、CollectionPage/ItemList/
+  BreadcrumbList、动态 sitemap 和类别旧地址 308 已完成。真实 Shopify 抽查确认
+  `/shop`、`/category/bracelets` 为 200，`/collections/bracelets` 为 308，未标记的
+  `/collections/frontpage` 为 404；mock 抽查确认 EN/ES Seven Chakra 系列 200，
+  merchandising New Arrivals 404。
+- 2026-08-30：默认 noindex/Shopify build 与临时 indexable/mock build 均通过；后者
+  确认 canonical、双向 EN/ES alternate、JSON-LD 和 sitemap 只使用 `/shop`、
+  `/category/bracelets` 与 `/collections/seven-chakra`，不含类别别名或 merchandising。
+  最后已恢复默认 noindex/Shopify build。lint、typecheck、109 项 tests 与 production
+  build 通过；本机 Node 26 仍触发项目要求 Node 24 的 engine warning。
+- 2026-08-30：业务方确认数据驱动 Header：Shop 固定下拉；Design Collection 为 0 个
+  时隐藏、1–2 个直接显示、3 个及以上合并为 Collections 下拉。桌面 disclosure 与移动
+  accordion 已共用 Storefront 可见、非空的 Category/Design Collection 数据，并增加
+  阈值单元测试；D-036、MVP 和 Design System 已同步。Header 的分类结构使用 5 分钟
+  server-only 缓存，修复 production build 对每个页面重复请求 Shopify 的问题，不改变
+  价格、库存、Cart 或 Checkout 的实时数据边界。
+- 2026-08-30：Shop 桌面下拉改为 Header 下方全宽 disclosure，Shop 顶级文字只展开，
+  Shop All 在面板内跳转；增加激活下划线、轻遮罩、hover/click/keyboard/Escape 和遮罩
+  关闭。真实 Shopify 浏览器验收确认 1440px 面板贴合 Header、Bracelets 数据正确、遮罩
+  点击不误触底层页面；390px 移动端继续使用全屏 Menu + accordion。
+- 2026-08-30：根据视觉复核移除 Shop All 独立 overview 分区，改为 Shop All 与非空
+  Category 在同一横向信息组平铺；恢复离开顶级入口和面板整体区域后的自动收起，并用
+  120ms 缓冲避免穿越边界闪烁。Chrome 鼠标轨迹验收确认 hover 展开、进入面板保持、
+  离开区域后关闭均符合预期。
+
+## Risks
+
+- Risk：Shopify 未配置 Category 或 collection kind 时导航为空或系列 404。
+  - Mitigation：Shop 始终展示真实全部商品；Category/Collection 只按结构化数据开放，
+    并记录明确 Admin 待办，不按标题或 tag 猜测。
+- Risk：同一类别通过旧 Collection URL 和新 Category URL 重复。
+  - Mitigation：Collection route fail-closed 到 `design_series`；已知旧类别 handle 统一
+    redirect 到 `/category/*`。
+- Risk：完整 Catalog 客户端外的服务端筛选随 SKU 数增长变慢。
+  - Mitigation：沿用 server-only 全量 pagination；以真实性能和 Catalog 规模作为迁移到
+    category-specific Shopify query 的触发条件。
+
+## Outcome
+
+商品类别与原创设计系列的公开 URL 已完成分离。`/shop` 展示同一 Shopify Catalog 的
+全部商品；受支持且非空的标准 Product Category 生成 `/category/*`；只有显式
+`custom.collection_kind=design_series` 的非空 Collection 才进入 `/collections/*`。
+EN/ES 导航、PDP breadcrumb、metadata、Schema、sitemap 和类别旧地址重定向已一致。
+Header 的 Shop 固定提供 Shop All 与非空 Category；Design Collection 按 0 个隐藏、
+1–2 个直接展示、3 个及以上合并下拉的规则自适应。
+
+代码不会代替业务方写入 Shopify。真实 Design Collection 仍需按
+`docs/SHOPIFY_CATALOG_SETUP.md` 创建 Metaobject/reference、设置 collection kind、填充
+商品并发布到 Headless channel；完成前 Collections hub 正确显示空状态。全站 index
+gate 与 Checkout gate 均未改变。

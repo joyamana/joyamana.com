@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getCollection } from "@/lib/commerce/catalog";
+import { notFound, permanentRedirect } from "next/navigation";
+import { productCategoryDefinitionForHandle } from "@/config/catalog";
+import { getDesignCollection } from "@/lib/commerce/catalog";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
@@ -18,7 +19,11 @@ export async function CollectionPage({
   locale: Locale;
   handle: string;
 }) {
-  const collection = await getCollection(
+  if (productCategoryDefinitionForHandle(handle)) {
+    permanentRedirect(localePath(locale, `/category/${handle}`));
+  }
+
+  const collection = await getDesignCollection(
     handle,
     marketIdForLocale(locale),
     locale,
@@ -80,9 +85,9 @@ export async function CollectionPage({
       <header className="page-hero">
         <p className="eyebrow">
           {uiText(locale, {
-            en: "Shopify collection",
-            es: "Colección de Shopify",
-            fr: "Collection Shopify",
+            en: "Design collection",
+            es: "Colección de diseño",
+            fr: "Collection de design",
           })}
         </p>
         <h1>{collection.title}</h1>

@@ -2,7 +2,7 @@
 
 Status: Active planning  
 Owner: Project owner  
-Last updated: 2026-08-25
+Last updated: 2026-08-30
 
 Roadmap 按依赖和可验证结果排序，不承诺未经资源评估的日历日期。详细功能以
 MVP PRD 和领域规格为准。
@@ -70,6 +70,7 @@ Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
 ### 工作
 
 - Collection 查询和商品卡。
+- `/shop`、Product Category 与 Design Collection 双轴浏览。
 - PDP 数据映射、图库、Variant、Price、Availability。
 - Storefront Cart 创建、恢复、更新、删除和错误状态。
 - 获取最新 checkout URL 并跳转 Shopify hosted checkout。
@@ -77,11 +78,13 @@ Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
 - Webhook HMAC 验证与 Product/Collection cache invalidation。
 - Commerce integration 与 E2E 测试。
 
-2026-08-25 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 和 107 项 unit/
+2026-08-30 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 和 109 项 unit/
 integration tests 已完成；Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
 真实 Cart 合约 smoke 已覆盖 create、库存冲突 warning、update/remove 与 HTTPS
 Checkout URL。仍需 Shopify 发布真实 Collection、审核当前商品正文、发布人工审核的
 西语翻译、完成政策和 Checkout 运营验收，并补 webhook、Playwright 和支付测试。
+2026-08-30 已批准 D-036：商品类别迁至 `/category/*`，原创设计系列保留
+`/collections/*`；实现与 Shopify Admin 结构化字段配置进入当前工作流。
 
 ### 退出条件
 

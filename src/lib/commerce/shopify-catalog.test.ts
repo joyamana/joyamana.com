@@ -39,6 +39,10 @@ function productFixture(): ShopifyProductNode {
     title: "Seven-Chakra Bracelet",
     description: "A translated storefront description.",
     availableForSale: true,
+    category: {
+      id: "gid://shopify/TaxonomyCategory/aa-6-3",
+      name: "Bracelets",
+    },
     seo: {
       title: "Seven-Chakra Bracelet SEO",
       description: "Storefront SEO description.",
@@ -121,6 +125,10 @@ describe("Shopify catalog mapper and queries", () => {
         maxVariantPrice: { amount: "72.00", currencyCode: "USD" },
       },
       compareAtPrice: { amount: "75.00", currencyCode: "USD" },
+      category: {
+        id: "gid://shopify/TaxonomyCategory/aa-6-3",
+        name: "Bracelets",
+      },
       featuredImage: {
         url: "https://cdn.shopify.com/featured.jpg",
         width: 1200,
@@ -250,6 +258,7 @@ describe("Shopify catalog mapper and queries", () => {
               description: "",
               seo: { title: null, description: null },
               image: null,
+              collectionKind: null,
               products: { nodes: [] },
             },
           ],
@@ -271,6 +280,7 @@ describe("Shopify catalog mapper and queries", () => {
               width: 1600,
               height: 900,
             },
+            collectionKind: { value: "design_series" },
             products: { nodes: [{ id: "gid://shopify/Product/1" }] },
           },
         ]),
@@ -281,6 +291,7 @@ describe("Shopify catalog mapper and queries", () => {
         handle: "seven-chakra",
         title: "Seven Chakra",
         source: "shopify",
+        kind: "design_series",
         image: expect.objectContaining({
           altText: "Seven Chakra",
           width: 1600,
@@ -316,6 +327,7 @@ describe("Shopify catalog mapper and queries", () => {
         description: "",
         seo: { title: null, description: null },
         image: null,
+        collectionKind: null,
         products: connection([]),
       },
     });
@@ -331,6 +343,7 @@ describe("Shopify catalog mapper and queries", () => {
       description: "A real collection.",
       seo: { title: null, description: null },
       image: null,
+      collectionKind: { value: "category" },
       products: connection(
         [productFixture()],
         true,
@@ -349,6 +362,7 @@ describe("Shopify catalog mapper and queries", () => {
     const result = await getShopifyCollection("bracelets", "es-US");
 
     expect(result?.products).toHaveLength(2);
+    expect(result?.kind).toBe("category");
     expect(SHOPIFY_COLLECTION_QUERY).toContain(
       "products(first: $first, after: $after)",
     );

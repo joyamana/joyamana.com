@@ -92,7 +92,7 @@ export function CartView({ locale }: { locale: Locale }) {
         )}
         <Link
           className="button button--primary"
-          href={localePath(locale, "/collections")}
+          href={localePath(locale, "/shop")}
         >
           {uiText(locale, {
             en: "Explore products",

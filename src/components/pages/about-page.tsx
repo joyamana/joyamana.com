@@ -176,27 +176,27 @@ export function AboutPage({ locale }: { locale: Locale }) {
       <section className="about-cta">
         <p className="eyebrow">
           {uiText(locale, {
-            en: "The first collection",
-            es: "La primera colección",
-            fr: "La première collection",
+            en: "Design collections",
+            es: "Colecciones de diseño",
+            fr: "Collections de design",
           })}
         </p>
         <h2>
           {uiText(locale, {
-            en: "Seven Chakras, presented with clarity.",
-            es: "Siete Chakras, presentados con claridad.",
-            fr: "Sept Chakras, présentés avec clarté.",
+            en: "Each series begins with a distinct design idea.",
+            es: "Cada serie comienza con una idea de diseño propia.",
+            fr: "Chaque série commence par une idée de design distincte.",
           })}
         </h2>
         <div className="button-row">
           <Link
             className="button button--primary"
-            href={localePath(locale, "/collections/seven-chakra")}
+            href={localePath(locale, "/collections")}
           >
             {uiText(locale, {
-              en: "Discover Seven Chakras",
-              es: "Descubrir Siete Chakras",
-              fr: "Découvrir Sept Chakras",
+              en: "Explore collections",
+              es: "Explorar colecciones",
+              fr: "Explorer les collections",
             })}
           </Link>
           <Link

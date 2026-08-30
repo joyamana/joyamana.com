@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  localizeProductCategory,
+  productCategoryDefinitionForTaxonomyId,
+} from "@/config/catalog";
 import { getProduct, getProducts } from "@/lib/commerce/catalog";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
@@ -32,14 +36,28 @@ export async function ProductPage({
     es: "Inicio",
     fr: "Accueil",
   });
-  const collectionsLabel = uiText(locale, {
-    en: "Collections",
-    es: "Colecciones",
-    fr: "Collections",
+  const shopLabel = uiText(locale, {
+    en: "Shop",
+    es: "Comprar",
+    fr: "Boutique",
   });
+  const categoryDefinition = product.category
+    ? productCategoryDefinitionForTaxonomyId(product.category.id)
+    : undefined;
+  const category = categoryDefinition
+    ? localizeProductCategory(categoryDefinition, locale)
+    : null;
   const breadcrumbs: StructuredBreadcrumb[] = [
     { name: homeLabel, path: "/" },
-    { name: collectionsLabel, path: "/collections" },
+    { name: shopLabel, path: "/shop" },
+    ...(category
+      ? [
+          {
+            name: category.title,
+            path: `/category/${category.handle}`,
+          },
+        ]
+      : []),
     { name: product.title, path: `/products/${product.handle}` },
   ];
   const structuredData = serializeIndexableStructuredData(
@@ -64,9 +82,17 @@ export async function ProductPage({
       >
         <Link href={localePath(locale, "/")}>{homeLabel}</Link>
         <span>/</span>
-        <Link href={localePath(locale, "/collections")}>
-          {collectionsLabel}
-        </Link>
+        <Link href={localePath(locale, "/shop")}>{shopLabel}</Link>
+        {category ? (
+          <>
+            <span>/</span>
+            <Link
+              href={localePath(locale, `/category/${category.handle}`)}
+            >
+              {category.title}
+            </Link>
+          </>
+        ) : null}
         <span>/</span>
         <span>{product.title}</span>
       </nav>

@@ -3,6 +3,10 @@ import type { Locale } from "@/lib/i18n/locales";
 export type CurrencyCode = "USD" | "CAD";
 export type CommerceSource = "shopify" | "mock";
 export type ProductModel = "standard" | "one-of-one";
+export type CollectionKind =
+  | "category"
+  | "design_series"
+  | "merchandising";
 
 /**
  * Shopify MoneyV2 amounts remain decimal strings throughout the commerce
@@ -95,6 +99,11 @@ export interface ProductPriceRange {
   maxVariantPrice: Money;
 }
 
+export interface ProductCategory {
+  id: string;
+  name: string;
+}
+
 /**
  * A locale-specific, storefront-safe product entity. Shopify queries return a
  * single requested language, so commerce strings are deliberately not stored
@@ -113,6 +122,7 @@ export interface Product {
   featuredImage: ProductImage | null;
   images: ProductImage[];
   variants: ProductVariant[];
+  category: ProductCategory | null;
   model?: ProductModel;
   facts?: ProductFacts;
   source: CommerceSource;
@@ -126,6 +136,7 @@ export interface Collection {
   seoTitle?: string;
   seoDescription?: string;
   image: ProductImage | null;
+  kind?: CollectionKind;
   source: CommerceSource;
 }
 

@@ -2,7 +2,7 @@
 
 Status: Working — 测试站视觉方向已获批，生产资产待确认  
 Owner: Brand / Design  
-Last updated: 2026-08-03
+Last updated: 2026-08-30
 
 本文件定义体验和实现边界。测试站可使用下列可替换视觉方向；Logo、商品摄影和
 生产色值仍需在 Q-001、Q-005 确认后定稿。测试站字体使用开放授权字体，正式
@@ -141,9 +141,15 @@ focus 6.92:1。Accent 4.09:1 与 metal accent 3.04:1 不用于普通尺寸正文
   移入全屏 Menu 底部。Menu 必须锁定背景滚动并管理 Escape、焦点锁定和焦点返回。
 - Footer 提供完整国家/地区入口；未来可连接 `/choose-region`。
 - 不用国旗代表语言，也不用地球图标暗示 Header 可以切换 Market。
-- 当前 Header 主导航为 Seven Chakras、Crystal Guide、Blog、About；不显示
-  New。正式系列达到 3 个后，再评估 Collections 父级菜单或 mega menu；近期
-  商品达到 4–6 个且有稳定上新节奏后，再恢复 New。
+- 当前 Header 的 Shop 固定使用下拉，包含 Shop All 与真实非空 Category。原创设计系列
+  为 0 个时不显示 Header 入口，1–2 个时直接显示系列名，3 个及以上时合并为
+  Collections 下拉并包含 View All；桌面与移动端使用相同数据和阈值。桌面顶级文字只
+  负责 disclosure，面板从 Header 底部全宽展开，使用激活下划线、轻遮罩和克制过渡；
+  Shop All / View All 与其余条目在同一横向信息组中展示，不划分独立 overview 区。
+  不得复制第三方品牌素材，也不为当前少量目录强行加入 Editorial 图。下拉支持键盘
+  原生 disclosure、Escape、焦点离开关闭、桌面 hover、鼠标离开完整菜单区域后短延迟
+  自动关闭，以及点击遮罩关闭；移动端使用 accordion。暂不显示 New；近期商品达到
+  4–6 个且有稳定上新节奏后，再恢复 New。Category 与系列不得混入同一菜单。
 - Header 工具入口按 Search、Language、Bag 排列，Bag 始终最靠右。
 
 ### Foundation

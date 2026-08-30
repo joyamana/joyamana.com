@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getCollections, getProducts } from "@/lib/commerce/catalog";
+import { getDesignCollections, getProducts } from "@/lib/commerce/catalog";
 import { blogEntries } from "@/lib/content/content";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
@@ -14,7 +14,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
   const marketId = marketIdForLocale(locale);
   const [products, collections] = await Promise.all([
     getProducts(marketId, locale),
-    getCollections(marketId, locale),
+    getDesignCollections(marketId, locale),
   ]);
 
   return (
@@ -36,7 +36,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
           <div className="button-row">
             <Link
               className="button button--light"
-              href={localePath(locale, "/collections")}
+              href={localePath(locale, "/shop")}
             >
               {copy.home.cta}
             </Link>
@@ -44,7 +44,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
               className="button button--ghost-light"
               href={localePath(
                 locale,
-                products[0] ? `/products/${products[0].handle}` : "/collections",
+                products[0] ? `/products/${products[0].handle}` : "/shop",
               )}
             >
               {uiText(locale, {

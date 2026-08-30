@@ -25,6 +25,22 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
+  async redirects() {
+    return [
+      {
+        source:
+          "/collections/:handle(bracelets|rings|necklaces|earrings)",
+        destination: "/category/:handle",
+        permanent: true,
+      },
+      {
+        source:
+          "/es-us/collections/:handle(bracelets|rings|necklaces|earrings)",
+        destination: "/es-us/category/:handle",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

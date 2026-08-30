@@ -2,7 +2,7 @@
 
 Status: Draft — 依赖 Phase 0 决策  
 Owner: Product owner  
-Last updated: 2026-08-02  
+Last updated: 2026-08-30
 Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
 
 ## 1. 产品目标
@@ -19,16 +19,16 @@ Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
 
 ### J1：直接购物
 
-Landing/Home → Collection → Product → Add to cart → Cart → Shopify Checkout
+Landing/Home → Shop/Category/Design Collection → Product → Add to cart → Cart → Shopify Checkout
 
 ### J2：内容辅助购买
 
-Search/AI citation → Crystal Guide/Article → Related Product/Collection →
+Search/AI citation → Crystal Guide/Article → Related Product/Category/Collection →
 Product → Cart → Shopify Checkout
 
 ### J3：礼赠
 
-Home/Collection → Product → 查看包装、配送与退换政策 → Cart → Checkout
+Home/Category/Collection → Product → 查看包装、配送与退换政策 → Cart → Checkout
 
 ### J4：订单后服务
 
@@ -43,8 +43,10 @@ URL 名称在品牌命名确认前使用功能性路径：
 | Route | 目的 | Index |
 |---|---|---|
 | `/` | 品牌价值、主分类、主商品、教育入口、信任 | Yes |
-| `/collections` | 可选的人工策划分类总览 | Yes，内容充足时 |
-| `/collections/{handle}` | 单一购买意图的商品集合 | Yes |
+| `/shop` | 当前 US Catalog 全部在售商品 | Yes |
+| `/category/{handle}` | Bracelet、Ring 等稳定商品类别 | Yes，非空时 |
+| `/collections` | 原创设计系列总览 | Yes，内容充足时 |
+| `/collections/{handle}` | 单一原创设计系列及其商品 | Yes，非空且内容完整时 |
 | `/products/{handle}` | 单一商品或同组变体购买页 | Yes |
 | `/crystals` | 晶体知识枢纽 | Yes |
 | `/crystals/{slug}` | 单一晶体实体权威页 | Yes |
@@ -64,8 +66,8 @@ URL 名称在品牌命名确认前使用功能性路径：
 | `/cart` | 购物车 | No |
 | `/account/*` | 后续账户服务 | No |
 
-不要同时创建语义相同的 `/shop/*` 与 `/collections/*`。最终永久路径由
-`docs/DECISIONS.md` 记录。
+`/shop`、`/category/*` 与 `/collections/*` 的页面意图必须按 D-036 分离；不得为
+同一商品类别同时开放 `/category/bracelets` 与 `/collections/bracelets`。
 
 ## 4. 跨站需求
 
@@ -73,6 +75,11 @@ URL 名称在品牌命名确认前使用功能性路径：
 
 - Logo 链接首页。
 - 主导航最多呈现业务确认的核心入口。
+- Shop 固定为下拉菜单，首项为 `/shop` 的 Shop All，其余只展示当前 US Catalog 中
+  非空的受支持 Product Category。
+- 设计系列为 0 个时不显示 Header 入口；1–2 个时以系列名直接展示；3 个及以上时使用
+  Collections 下拉，并提供 `/collections` 的 View All。计数只接受已发布、非空且
+  `collection_kind=design_series` 的 Storefront Collection。
 - Cart 数量可访问且不会导致布局跳动。
 - 移动 Header 提供 Menu、居中 Wordmark、Search 与 Bag；Language 位于 Menu
   底部。Menu 支持背景滚动锁定、Escape、焦点锁定、焦点返回和 44px 触控目标。
@@ -116,18 +123,21 @@ URL 名称在品牌命名确认前使用功能性路径：
 - 无 JavaScript 时核心链接仍可访问。
 - 移动端首屏不被弹窗、视频或重型脚本阻断。
 
-### P-002 Collection
+### P-002 Shop、Category 与 Design Collection
 
 必须：
 
-- 唯一 H1、策展说明、商品网格、可理解的空状态。
+- Shop 提供全部在售商品；Category 提供稳定商品形态；Design Collection 提供原创
+  系列故事和对应商品。三者各有唯一 H1、说明、商品网格和可理解空状态。
 - 商品卡显示图片、名称、真实价格区间和可用状态。
 - 筛选只覆盖对真实目录有价值的属性。
 - 参数筛选/排序不进入 sitemap，不生成重复索引页。
 
 验收：
 
-- Collection 只包含当前 US catalog 可见商品。
+- Category/Collection 只包含当前 US catalog 可见商品。
+- Category 由 Product Category 驱动；Design Collection 只有显式
+  `collection_kind=design_series` 时公开，不按标题或 tag 猜测。
 - 商品卡与 PDP 价格一致。
 - 分页或加载更多可被键盘与 crawler 访问。
 

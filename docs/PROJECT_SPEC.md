@@ -2,7 +2,7 @@
 
 Status: Draft — 工作品牌已提供，生产输入仍待确认  
 Owner: Business owner  
-Last updated: 2026-08-14  
+Last updated: 2026-08-30
 Supersedes: 2026-08-02 之前的简版 `PROJECT_SPEC.md`
 
 ## 1. 项目定义
@@ -100,7 +100,8 @@ certified 等词。
 ### 必须交付
 
 - 响应式品牌首页。
-- 人工策划的 Collection 浏览。
+- `/shop` 全商品浏览、按 Shopify Product Category 的商品类别浏览，以及独立原创
+  Design Collection 浏览。
 - 商品详情、变体选择、价格、库存和加购。
 - Cart 管理与跳转 Shopify Checkout。
 - 游客结账路径、订单确认和 Shopify Order Status。

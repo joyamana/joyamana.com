@@ -24,6 +24,10 @@ const product: Product = {
     maxVariantPrice: { amount: "42.00", currencyCode: "USD" },
   },
   compareAtPrice: null,
+  category: {
+    id: "gid://shopify/TaxonomyCategory/aa-6-3",
+    name: "Bracelets",
+  },
   featuredImage: image,
   images: [image],
   variants: [

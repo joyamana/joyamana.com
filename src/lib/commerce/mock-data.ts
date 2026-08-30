@@ -33,6 +33,7 @@ interface MockProductSeed {
   title: LocalizedText;
   description: LocalizedText;
   model: ProductModel;
+  category: { id: string; name: LocalizedText };
   collectionHandles: string[];
   facts: {
     material: LocalizedText;
@@ -47,6 +48,7 @@ interface MockCollectionSeed {
   handle: string;
   title: LocalizedText;
   description: LocalizedText;
+  kind: Collection["kind"];
 }
 
 interface MockCatalog {
@@ -66,6 +68,7 @@ const collectionSeeds: MockCollectionSeed[] = [
       "es-US":
         "Una selección de prototipo con muestras de desarrollo recientes.",
     },
+    kind: "merchandising",
   },
   {
     id: "mock_collection_seven_chakra",
@@ -79,6 +82,7 @@ const collectionSeeds: MockCollectionSeed[] = [
       "es-US":
         "La primera serie de producto provisional del catálogo de prototipo de EE. UU.",
     },
+    kind: "design_series",
   },
 ];
 
@@ -97,6 +101,10 @@ const productSeeds: MockProductSeed[] = [
         "El primer diseño básico provisional: un concepto de pulsera de 22 cuentas con una secuencia de piedras de siete colores. La disposición, el ajuste, la construcción y los registros del proveedor requieren aprobación.",
     },
     model: "standard",
+    category: {
+      id: "gid://shopify/TaxonomyCategory/aa-6-3",
+      name: { "en-US": "Bracelets", "es-US": "Pulseras" },
+    },
     collectionHandles: ["new-arrivals", "seven-chakra"],
     facts: {
       material: {
@@ -285,6 +293,10 @@ export function getMockProducts(
           ],
           quantityRule: { ...DEFAULT_PRODUCT_QUANTITY_RULE },
         })),
+        category: {
+          id: seed.category.id,
+          name: localize(seed.category.name, locale),
+        },
         model: seed.model,
         facts: {
           material: localize(seed.facts.material, locale),
@@ -321,6 +333,7 @@ export function getMockCollections(
         title: localize(seed.title, locale),
         description: localize(seed.description, locale),
         image: image ?? null,
+        kind: seed.kind,
         source: "mock" as const,
       },
     ];

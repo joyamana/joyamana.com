@@ -2,7 +2,7 @@
 
 Status: Active  
 Owner: Project owner  
-Last updated: 2026-08-16
+Last updated: 2026-08-30
 
 本文件是项目决策的唯一权威记录。`Accepted` 才是已批准约束；`Proposed` 是
 可撤销默认值；`Pending` 不得被实现为已确认事实。
@@ -55,6 +55,7 @@ Last updated: 2026-08-16
 | D-033 | Header and content hubs | Accepted | 移除 New；Guide 资料目录；Blog 编辑层级 |
 | D-034 | Mobile nav and About | Accepted | 全屏移动 Menu；统一工具样式；About 品牌立场页 |
 | D-035 | Phase-one market visibility | Accepted | 第一阶段只显示 US；Canada 保留规划配置但不公开 |
+| D-036 | Catalog and series URLs | Accepted | Category 与设计系列分路由；Header 按真实目录自适应 |
 
 ## Accepted decisions
 
@@ -409,6 +410,61 @@ Decision:
 
 Reason: 隐藏桌面导航却不提供移动入口会形成导航断点；统一工具样式降低视觉噪声。
 About 应回答品牌为何存在及其商品标准，而不是用未经证实的传承叙事填充页面。
+
+### D-036 — 商品类别与设计系列使用独立 URL
+
+Status: Accepted
+Date: 2026-08-30
+Owner: Project owner
+Context: 业务方确认 Joya Mana 同时需要稳定商品类别（Bracelets、Rings 等）与具备
+独立故事和视觉的原创设计系列（例如 Seven Chakra）。两者的浏览意图、页面模板和
+维护方式不同，继续把所有商品分组都暴露为 `/collections/*` 会混淆消费者语义。
+
+Decision:
+
+- `/shop` 是全部在售商品入口。
+- `/category/{handle}` 只表达 Shopify Standard Product Category 对应的商品类别，
+  例如 `/category/bracelets`。
+- `/collections` 与 `/collections/{handle}` 只表达原创设计系列，
+  例如 `/collections/seven-chakra`。
+- 商品类别以 Shopify Product Category 为事实来源；设计系列成员以结构化
+  `custom.design_series` 商品引用驱动的 Shopify automated Collection 为事实来源。
+- Shopify Collection 使用 `custom.collection_kind` 区分 `design_series`、
+  `category` 与 `merchandising`；只有 `design_series` 可进入公开
+  `/collections/*` 系列路由。
+- Crystal 继续使用 `/crystals/*`，筛选参数不自动生成可索引 landing page。
+- en-US 使用根路径；es-US 继续在相同稳定英文 handle 前加 `/es-us/`，消费者标题、
+  描述和导航本地化，但当前不建立翻译 slug 映射。
+
+Reason: Category 回答“商品是什么”，Collection 回答“属于哪个设计世界”。拆分公开
+路径可以同时保留高效购物和品牌叙事，并避免把后台所有 Collection 自动暴露为品牌
+系列。稳定英文 handle 也与当前 Shopify shared catalog 和 locale 路由保持一致。
+
+Consequences:
+
+- Category 与 Design Collection 使用不同页面模板、breadcrumbs、metadata 和 sitemap
+  页面类型。
+- `/collections/bracelets` 等类别别名不得与 `/category/bracelets` 同时返回可索引
+  200；已公开的旧类别地址必须 301 到新的 Category URL。
+- Header 始终提供 Shop 下拉：`Shop All` 链接 `/shop`，其余只列当前 Catalog 中非空的
+  已支持 Product Category。设计系列按已发布、Storefront 可见、非空且
+  `collection_kind=design_series` 的 Collection 数量处理：0 个时不显示 Header 入口，
+  1–2 个时直接显示各系列名，3 个及以上时合并为 Collections 下拉，并提供
+  `View All` 到 `/collections`。桌面与移动端必须遵循同一规则。
+- Collections hub 即使暂时没有 Header 入口也保留真实空状态；Footer 可继续作为次级
+  入口，不虚构系列。
+- Product、Category、Design Collection、Crystal 和筛选组合仍指向同一 Shopify
+  Product/Variant，不复制 SKU、价格或库存。
+- 当前 `CONTENT_SEO_GEO_SPEC.md` 的信息架构和既有 Collection 路由需要同步迁移。
+
+Migration / rollback: 新增 `/shop` 与 `/category/*` 后再收紧 `/collections/*` 的
+类型门禁；sitemap、canonical、hreflang、breadcrumbs 和内部链接同批更新。若上线后
+回滚，必须保留反向 301 与 canonical 迁移记录，不能重新开放重复列表 URL。
+
+Supersedes: D-033 中 Header 只有单一 Shop/Seven Chakras 导航的部分、D-034 中 About
+硬编码未发布 Seven Chakras 详情 CTA 的部分，以及旧信息架构中把商品类别与设计系列
+统一暴露为 `/collections/{handle}` 的部分；D-033 的内容枢纽、New Arrivals 门禁和
+其他 UI 决策继续有效。
 
 ## Pending decision
 

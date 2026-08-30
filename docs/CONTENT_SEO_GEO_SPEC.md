@@ -2,7 +2,7 @@
 
 Status: Draft — 内容运营与 crawler policy 待确认  
 Owner: Content / SEO  
-Last updated: 2026-08-02  
+Last updated: 2026-08-30
 Supersedes: `docs/archive/` 中两份 SEO/GEO 架构总结的实施结论
 
 ## 1. 核心原则
@@ -25,19 +25,24 @@ GEO 不是一套独立于 SEO 的隐藏技术。本项目通过以下方式同�
 | 类型 | 回答的问题 | 商业角色 |
 |---|---|---|
 | Product | 这个具体商品是什么、是否适合、能否购买 | 转化 |
-| Collection | 哪一组在售商品满足同一购买意图 | 发现/比较 |
+| Shop | 当前有哪些在售商品 | 总览/发现 |
+| Category | 哪些商品属于同一稳定商品形态 | 发现/比较 |
+| Design Collection | 哪些商品属于同一原创设计世界 | 品牌叙事/发现 |
 | Crystal Guide | 某种晶体是什么、如何辨识/护理、传统含义是什么 | 权威实体 |
 | Article | 某个具体问题、比较、场景或方法 | 获取/教育 |
 | Brand/Trust | 谁在销售、真实承诺、如何服务 | 信任 |
 | Policy | 配送、退换、隐私和条款是什么 | 风险降低 |
 
 同一搜索意图只设一个主要 URL。Crystal Guide 不写成商品列表，Blog 不复制
-Guide 定义，Collection 不伪装成长篇知识页。
+Guide 定义，Category 不复制 Design Collection，设计系列页也不伪装成晶石知识页。
 
 ## 3. MVP 信息架构
 
 ```text
 /
+├── /shop
+├── /category
+│   └── /category/{handle}
 ├── /collections
 │   └── /collections/{handle}
 ├── /products/{handle}
@@ -66,8 +71,10 @@ Blog 是唯一栏目名称与路径。不得创建 `/journal`、Journal UI 别�
 
 `D-009` 的拟议默认：
 
-- Shopify Product/Collection + Metafields：商品与分类扩展内容，以及商品专属
-  Product Care 事实。
+- Shopify Product Category：商品形态及 `/category/*` 归属。
+- Shopify Product/Collection + Metafields：商品、设计系列商品归集、分类扩展内容，
+  以及商品专属 Product Care 事实。只有
+  `custom.collection_kind=design_series` 的 Collection 进入公开系列 URL。
 - Shopify Policies：Shipping、Returns/Refund、Privacy、Terms 的完整事实。
 - Shopify Pages：About、Contact、Disclaimer、Accessibility、FAQ、品牌级
   Product Care 与其他常规品牌页。
@@ -76,8 +83,9 @@ Next.js 使用稳定的品牌化 URL 呈现这些内容，不暴露 `/pages/*` �
 Policy URL。FAQ、Product Care 和其他 draft/薄弱页面在内容获批并达到独立页面
 价值前不进入 sitemap。
 - Shopify Blog/Article：文章正文和发布状态。
-- Shopify merchant-owned Metaobjects：Crystal、Author、Source、可复用 FAQ、
-  Site Settings 等结构化实体。
+- Shopify merchant-owned Metaobjects：Design Series、Crystal、Author、Source、
+  可复用 FAQ、Site Settings 等结构化实体。Design Series 保存系列故事与视觉；
+  对应 Shopify Collection 保存公开 URL、SEO 和商品归集，职责不得双写。
 
 只有满足 D-009 的升级触发条件才增加 Sanity 或其他 CMS。若升级，Commerce
 字段仍不复制到 CMS；内容 ID、预览、webhook、translation 和 migration 必须
@@ -113,6 +121,19 @@ Commerce 核心字段见 `COMMERCE_SPEC.md`。内容扩展包括：
 - visible FAQ
 - related Crystal/Article
 - source/reference（只有客观声明需要且可验证时）
+
+### Design Series
+
+- canonical name 与内部稳定 handle
+- tagline、short introduction、long story
+- hero、mobile hero、campaign/lookbook media
+- launch date 与 published status
+- material/design themes（品牌叙事，不替代商品事实）
+- 对应唯一 Shopify Collection reference
+- locale 与 visible markets
+
+Design Series Metaobject 不另行生成第二个可索引页面；公开 canonical 保持对应
+`/collections/{handle}`。SEO title/description 和商品成员归集由 Collection 维护。
 
 ### Crystal
 
@@ -226,14 +247,15 @@ FTC 当前要求广告中的明确和暗示性客观健康声明真实、不误�
 
 ```text
 Product ↔ Crystal Guide ↔ Article
-    \          |           /
-          Collection
+   | \         |           /
+Category   Design Collection
 ```
 
 - PDP 链接主要 Crystal Guide、政策和真正相关内容。
 - Guide 链接相关 Article 和当前在售 Product/Collection。
 - Article 链接主要 Crystal 实体、必要政策和人工选择商品。
-- Collection 链接其策展所需的 Guide，而非堆砌所有关键词。
+- Category 链接真正帮助筛选或选择的 Guide；Design Collection 链接其叙事所需的
+  Guide/Article，而非堆砌所有关键词。
 - Anchor text 描述目标，不使用重复、机械化关键词模板。
 - 自动相关内容只能先生成候选，发布前需业务规则或人工确认。
 
@@ -244,6 +266,10 @@ Product ↔ Crystal Guide ↔ Article
 - URL 只表达 language-region，不包含 Currency；币种切换不改变 canonical。
 - 小写、短横线、单一尾斜杠策略；推荐无尾斜杠。
 - Handle/slug 变更必须保留 301 映射。
+- `/category/{handle}` 是商品类别唯一公开 URL；已公开的
+  `/collections/bracelets` 等类别别名 301 到对应 Category，不得同时返回 200。
+- `/collections/{handle}` 只响应 `design_series`；未知、普通后台或 merchandising
+  Collection 不因 Shopify 可见就自动成为公开系列页。
 - 不在公开 URL 中暴露内部 GID、SKU 以外的敏感值或随机重复参数。
 - 不根据 IP 强制 301；可以提示并保存用户主动选择。
 - 未来只为真正上线的等价翻译/Market 页创建 `/en-ca/`、`/fr-ca/`、
@@ -267,7 +293,7 @@ Product ↔ Crystal Guide ↔ Article
 - `/cart`
 - `/account/*`、login、callback
 - Preview、draft、internal test
-- 空/薄 Collection
+- 空/薄 Category 或 Design Collection
 - filter、sort、tracking 和非独立 Variant 参数页
 - 任何未上线 market/locale
 
@@ -308,7 +334,8 @@ Product ↔ Crystal Guide ↔ Article
 |---|---|
 | Home | `Organization`, `WebSite`, `WebPage` |
 | Product | `Product` + `Offer`/适用 Variant 模型 + `BreadcrumbList` |
-| Collection | `CollectionPage`, visible `ItemList`, `BreadcrumbList` |
+| Shop / Category | `CollectionPage`, visible `ItemList`, `BreadcrumbList` |
+| Design Collection | `CollectionPage`, visible `ItemList`, `BreadcrumbList` |
 | Crystal Guide | `Article` 或 `WebPage`, `about`, `BreadcrumbList` |
 | Blog Article | `BlogPosting`/`Article`, real author, `BreadcrumbList` |
 | About | `AboutPage` |
