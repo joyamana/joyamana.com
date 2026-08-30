@@ -2,7 +2,7 @@
 
 Status: Active  
 Owner: Project owner  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
 本文件是项目决策的唯一权威记录。`Accepted` 才是已批准约束；`Proposed` 是
 可撤销默认值；`Pending` 不得被实现为已确认事实。
@@ -59,6 +59,7 @@ Last updated: 2026-08-30
 | D-037 | Public contact identity | Accepted | 客服、隐私与公开联系统一使用 `info@joyamana.com` |
 | D-038 | Contact form delivery | Working | Server Action + 可关闭的 Resend 薄适配层；不建客户数据库 |
 | D-039 | Phase-one service pages | Accepted | 当前不设 FAQ、Disclaimer、独立 Product Care 页面 |
+| D-040 | About subtree | Accepted | Content Page Metaobject 驱动独立 URL 与页内文字 tabs |
 
 ## Accepted decisions
 
@@ -504,6 +505,45 @@ Reason: 三个独立页面当前没有足够的必要内容或独立用户任务
 导航噪音并形成薄页面。
 Migration / rollback: 未来只有在出现真实重复问题、稳定的品牌级护理内容或 Terms
 无法覆盖的独立披露需求时，才重新评估页面、内容来源、导航与索引策略。
+
+### D-040 — About 子页面与页内导航
+
+Date: 2026-08-31
+Status: Accepted
+Owner: Project owner
+Context: About 除品牌总览外可能增加 Our Approach、Product Standards 等长期品牌
+主题。把这些内容都塞进一个超长页面会降低可维护性；把每个子页都加入 Header 又会
+增加主导航噪声。
+Decision:
+
+- `/about` 是 About hub、Header 的唯一 About 入口，也是页内导航第一项；直接子页使用
+  `/about/{handle}`，不建立更深的公开嵌套。
+- 0 个有效子页时不渲染空导航；至少 1 个有效子页时，所有 About 页面共享同一行克制
+  的文字 tabs。视觉表现为 tab，语义必须是 `<nav>` 与真实链接，当前页使用
+  `aria-current="page"`，不得用客户端隐藏 panel 代替独立 URL。
+- Shopify `content_page` Metaobject 是 About hub 与子页的内容事实来源。固定 root
+  `about` 的有序 `child_pages` 引用列表决定公开子页成员和顺序；未被 root 直接引用的
+  Content Page 不形成公开 About 路由。
+- 所有公开条目必须在 Storefront 可见且具备完整 title、body、last_updated、
+  seo_title；`navigation_title` 可覆盖 tab 文案，缺失时回退 title。`summary` 和
+  `seo_description` 建议人工填写；summary 只有明确填写时才作为 H1 下方导语展示，
+  seo_description 缺失时使用正文的安全纯文本摘要，不能因此暴露 HTML、脚本或未显示
+  内容。
+- en-US 与 es-US 共享稳定英文 handle。语言 fallback 可以提供阅读后备，但必须
+  noindex、不得进入 sitemap/hreflang，也不得出现在该语言的 root tabs 中。
+- 每页拥有独立 H1、metadata、canonical；About hub 使用 `AboutPage` Schema，子页使用
+  `WebPage` 与 `BreadcrumbList`。Header 不因 About 子页数量改成下拉菜单。
+
+Reason: 页内导航保持品牌关系和 Header 简洁，同时真实 URL 保留分享、返回、服务端
+HTML 与搜索语义。root 引用作为 allowlist，避免后台任意 Content Page 被意外公开。
+Consequences: 新增或下线子页需同时维护 root 引用、翻译、metadata、sitemap 和必要
+redirect。当前硬编码 About 工作文案只作为 Metaobject 尚未配置时的 noindex 迁移后备，
+不得成为生产事实来源。
+Migration / rollback: 删除 child 引用即可从 tabs 与 sitemap 下线；如果 URL 已正式
+发布，改 handle 或永久移除前必须提供明确 301/410 决策。回滚页内导航时仍保留已发布
+子页 URL，不能把所有地址批量跳转首页。
+Supersedes: D-034 中 About 固定页面布局与硬编码工作文案作为长期实现的部分；D-034
+关于未获批品牌事实和 claims 的限制继续有效。
 
 ## Pending decision
 

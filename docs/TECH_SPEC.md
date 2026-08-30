@@ -93,6 +93,8 @@ app/
     collections/[handle]/page.tsx
     crystals/[handle]/page.tsx
     blog/[handle]/page.tsx
+    about/page.tsx
+    about/[handle]/page.tsx
     cart/page.tsx
   api/
     webhooks/shopify/route.ts
@@ -206,6 +208,8 @@ type MarketContext = {
 - `NormalizedCollection`
 - `NormalizedCrystal`
 - `NormalizedArticle`
+- `NormalizedContentPage`
+- `AboutNavigation`（固定 root + 有序 direct-child 引用）
 - `NormalizedOrganization`
 - `NormalizedPolicy`
 
@@ -216,7 +220,7 @@ Content/SEO 规格。
 
 | 页面/数据 | 默认策略 | 原因 |
 |---|---|---|
-| Home / About / Policy | Static/ISR；含实时 Commerce 的 Home 当前 dynamic | 品牌内容变化低，价格/库存尚无获批陈旧窗口 |
+| Home / About subtree / Policy | Static/ISR；当前 Shopify 内容页使用 5 分钟 revalidate | 品牌内容变化低；About metadata、正文与 tabs 使用同一 root tree |
 | Crystal Guide / Article | Static/ISR | 内容型、需完整 HTML |
 | Shop / Category / Collection | 当前 Dynamic / no-store；后续 ISR + cache tag | 尚未批准陈旧窗口，也未完成 webhook |
 | Product | 当前 Dynamic / no-store；后续 ISR + cache tag + webhook | 先保证价格与可售性实时一致 |
@@ -259,6 +263,10 @@ Content/SEO 规格。
   未知或无商品类别返回 404，不按产品标题、Product Type 或 tag 猜测。
 - `/collections/bracelets` 等已知类别旧路径永久重定向至 `/category/bracelets`，
   防止重复 canonical。
+- `/about/{handle}` 只从固定 `about` Content Page 的直接 `child_pages` 引用解析；
+  未引用、错误类型、不完整或未知 handle 返回 404，不按所有 Metaobject 自动建路由。
+- About root 与子页在服务端输出同一有序页内导航；语言 fallback 保持 noindex 且不进入
+  sitemap/hreflang。
 - Currency 不进入 URL；若未来一个 Market 支持多个 Currency，选择保存在
   会话/Shopify buyer context 中。
 

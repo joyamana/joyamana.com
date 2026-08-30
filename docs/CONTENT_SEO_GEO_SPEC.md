@@ -51,6 +51,7 @@ Guide 定义，Category 不复制 Design Collection，设计系列页也不伪�
 ├── /blog
 │   └── /blog/{slug}
 ├── /about
+│   └── /about/{handle}
 ├── /contact
 ├── /shipping
 ├── /returns
@@ -66,19 +67,19 @@ Blog 是唯一栏目名称与路径。不得创建 `/journal`、Journal UI 别�
 
 ## 4. 内容事实来源
 
-`D-009` 的拟议默认：
+`D-009` 的已接受边界：
 
 - Shopify Product Category：商品形态及 `/category/*` 归属。
 - Shopify Product/Collection + Metafields：商品、设计系列商品归集、分类扩展内容，
   以及商品专属 Product Care 事实。只有
   `custom.collection_kind=design_series` 的 Collection 进入公开系列 URL。
 - Shopify Policies：Shipping、Returns/Refund、Privacy、Terms 的完整事实。
-- Shopify Pages：About、Contact 与其他获批常规品牌页。
-- Shopify Metaobjects：Accessibility 等需要由 Headless storefront 读取的结构化
-  品牌内容。
+- Shopify Pages：Contact 与其他获批的普通品牌页。
+- Shopify `content_page` Metaobjects：About hub、由 root 直接引用的 About 子页、
+  Accessibility，以及需要由 Headless storefront 读取的结构化品牌内容。
 
 Next.js 使用稳定的品牌化 URL 呈现这些内容，不暴露 `/pages/*` 或 Shopify 默认
-Policy URL。当前不设 FAQ、Disclaimer 或独立 Product Care URL；若未来恢复，必须先
+Policy/Metaobject URL。当前不设 FAQ、Disclaimer 或独立 Product Care URL；若未来恢复，必须先
 确认独立页面价值、内容来源和索引条件。
 - Shopify Blog/Article：文章正文和发布状态。
 - Shopify merchant-owned Metaobjects：Design Series、Crystal、Author、Source、
@@ -105,6 +106,24 @@ Policy URL。当前不设 FAQ、Disclaimer 或独立 Product Care URL；若未�
 - default market/locale
 
 缺失字段不输出，不用占位填充 Organization Schema。
+
+### Content Page / About
+
+所有 `content_page` 条目的必填基础字段为 `title`、`body`、`last_updated`、
+`seo_title`；`navigation_title`、`summary` 与 `seo_description` 为建议字段。前者缺失
+时回退 title；summary 只有明确填写时才显示，seo_description 缺失时从可见 rich text
+正文生成安全、有限长度的纯文本摘要。
+About 使用下列受控关系：
+
+- 固定 root handle 为 `about`；它对应 `/about`。
+- 只有 root 的有序 `child_pages`（Content Page Metaobject reference list）直接引用的
+  完整、Storefront 可见条目才能响应 `/about/{handle}`。
+- root 自动成为页内导航第一项；child 顺序与引用列表一致。重复、自引用、不完整、
+  非 `content_page` 或未引用条目全部 fail closed。
+- 当前只允许一层子页面；child 自身的引用不生成更深 URL。
+- 建议页内导航总项数不超过 5；超过时先重新评估目录模式，不静默截断内容。
+- en-US 与 es-US 共享英文 handle；正文与 SEO 未完成真实翻译的 fallback 页面不得进入
+  sitemap/hreflang。
 
 ### Product knowledge
 
@@ -256,6 +275,8 @@ Category   Design Collection
   Guide/Article，而非堆砌所有关键词。
 - Anchor text 描述目标，不使用重复、机械化关键词模板。
 - 自动相关内容只能先生成候选，发布前需业务规则或人工确认。
+- About 页内导航必须在初始 HTML 输出 `/about` 与 root 直接引用的可见子页链接；
+  不使用只在客户端切换的隐藏 panel。
 
 ## 9. URL 与重定向
 
@@ -268,6 +289,8 @@ Category   Design Collection
   `/collections/bracelets` 等类别别名 301 到对应 Category，不得同时返回 200。
 - `/collections/{handle}` 只响应 `design_series`；未知、普通后台或 merchandising
   Collection 不因 Shopify 可见就自动成为公开系列页。
+- `/about/{handle}` 只响应 `about.child_pages` 直接引用的 Content Page；其他
+  Content Page handle 返回 404。已公开 handle 变更必须保留明确 301 映射。
 - 不在公开 URL 中暴露内部 GID、SKU 以外的敏感值或随机重复参数。
 - 不根据 IP 强制 301；可以提示并保存用户主动选择。
 - 未来只为真正上线的等价翻译/Market 页创建 `/en-ca/`、`/fr-ca/`、
@@ -294,6 +317,7 @@ Category   Design Collection
 - 空/薄 Category 或 Design Collection
 - filter、sort、tracking 和非独立 Variant 参数页
 - 任何未上线 market/locale
+- 缺字段、未被 root 引用或使用默认语言 fallback 的 About 子页
 
 需要 crawler 读取 `noindex` 的页面不应同时在 robots.txt 中阻止抓取。
 
@@ -336,7 +360,8 @@ Category   Design Collection
 | Design Collection | `CollectionPage`, visible `ItemList`, `BreadcrumbList` |
 | Crystal Guide | `Article` 或 `WebPage`, `about`, `BreadcrumbList` |
 | Blog Article | `BlogPosting`/`Article`, real author, `BreadcrumbList` |
-| About | `AboutPage` |
+| About hub | `AboutPage` + `BreadcrumbList` |
+| About child | `WebPage` + `BreadcrumbList` |
 | Contact | `ContactPage` |
 | FAQ | `FAQPage`，仅当完整问答在 UI 可见且适用 |
 

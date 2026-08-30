@@ -41,6 +41,11 @@ Resolved input: `docs/BRAND_INPUTS.md`
 - [ ] 为商品设置准确 Shopify Standard Product Category（首件应核对 Bracelets）
 - [ ] 创建 Design Series Metaobject、Product `custom.design_series` reference、
   Collection `custom.collection_kind`，并将真实系列 Collection 标记为 `design_series`
+- [ ] 在现有 `content_page` definition 增加可选 `navigation_title`（single line）、
+  `summary`（multi-line）和 `child_pages`（Content Page Metaobject reference list），并
+  确认 Storefront access
+- [ ] 创建、审核并发布 root `about`；如需子页，将完整 child 加入
+  `about.child_pages`，按期望 tabs 顺序排列，并完成 en-US / es-US 正文与 SEO 审核
 - [ ] 最终域名和 DNS
 - [ ] Vercel account/team
 - [ ] Logo、字体授权、颜色

@@ -22,6 +22,15 @@ interface CollectionStructuredDataInput {
   breadcrumbs: StructuredBreadcrumb[];
 }
 
+interface AboutStructuredDataInput {
+  name: string;
+  description?: string;
+  path: string;
+  locale: Locale;
+  breadcrumbs: StructuredBreadcrumb[];
+  isRoot: boolean;
+}
+
 function absoluteStorefrontUrl(locale: Locale, path: string) {
   return new URL(localePath(locale, path), siteConfig.url).toString();
 }
@@ -168,6 +177,34 @@ export function buildCollectionStructuredData({
             },
           };
         }),
+      },
+      buildBreadcrumbList(pageUrl, locale, breadcrumbs),
+    ],
+  };
+}
+
+export function buildAboutStructuredData({
+  name,
+  description,
+  path,
+  locale,
+  breadcrumbs,
+  isRoot,
+}: AboutStructuredDataInput) {
+  const pageUrl = absoluteStorefrontUrl(locale, path);
+  const normalizedDescription = nonEmptyText(description);
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": isRoot ? "AboutPage" : "WebPage",
+        "@id": `${pageUrl}#web-page`,
+        url: pageUrl,
+        name,
+        ...(normalizedDescription
+          ? { description: normalizedDescription }
+          : {}),
       },
       buildBreadcrumbList(pageUrl, locale, breadcrumbs),
     ],

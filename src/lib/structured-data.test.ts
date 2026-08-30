@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Product } from "./commerce/types";
 import {
+  buildAboutStructuredData,
   buildCollectionStructuredData,
   buildProductStructuredData,
   serializeStructuredData,
@@ -188,6 +189,66 @@ describe("collection structured data", () => {
             {
               name: "Colecciones",
               item: "http://localhost:3000/es-us/collections",
+            },
+          ],
+        },
+      ],
+    });
+  });
+});
+
+describe("About structured data", () => {
+  it("uses AboutPage for the hub and WebPage with breadcrumbs for a child", () => {
+    const hub = buildAboutStructuredData({
+      name: "About Joya Mana",
+      description: "Our perspective and product standards.",
+      path: "/about",
+      locale: "en-US",
+      breadcrumbs: [
+        { name: "Home", path: "/" },
+        { name: "About", path: "/about" },
+      ],
+      isRoot: true,
+    });
+    const child = buildAboutStructuredData({
+      name: "Our Approach",
+      path: "/about/our-approach",
+      locale: "es-US",
+      breadcrumbs: [
+        { name: "Inicio", path: "/" },
+        { name: "Nosotros", path: "/about" },
+        { name: "Nuestro enfoque", path: "/about/our-approach" },
+      ],
+      isRoot: false,
+    });
+
+    expect(hub).toMatchObject({
+      "@graph": [
+        {
+          "@type": "AboutPage",
+          url: "http://localhost:3000/about",
+          name: "About Joya Mana",
+        },
+        { "@type": "BreadcrumbList" },
+      ],
+    });
+    expect(child).toMatchObject({
+      "@graph": [
+        {
+          "@type": "WebPage",
+          url: "http://localhost:3000/es-us/about/our-approach",
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { name: "Inicio", item: "http://localhost:3000/es-us" },
+            {
+              name: "Nosotros",
+              item: "http://localhost:3000/es-us/about",
+            },
+            {
+              name: "Nuestro enfoque",
+              item: "http://localhost:3000/es-us/about/our-approach",
             },
           ],
         },

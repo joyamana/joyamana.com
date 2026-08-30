@@ -42,11 +42,13 @@ export function buildMetadata({
   description,
   locale,
   path = "/",
+  alternateLocales = enabledLocales,
 }: {
   title: string;
   description: string;
   locale: Locale;
   path?: string;
+  alternateLocales?: readonly Locale[];
 }): Metadata {
   const localizedPath = localePath(locale, path);
   const canonical = new URL(localizedPath, siteConfig.url).toString();
@@ -60,7 +62,7 @@ export function buildMetadata({
       ? {
           canonical,
           languages: Object.fromEntries(
-            enabledLocales.map((enabledLocale) => [
+            alternateLocales.map((enabledLocale) => [
               enabledLocale,
               new URL(localePath(enabledLocale, path), siteConfig.url).toString(),
             ]),

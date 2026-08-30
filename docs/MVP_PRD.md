@@ -53,6 +53,7 @@ URL 名称在品牌命名确认前使用功能性路径：
 | `/blog` | Blog 文章枢纽；唯一栏目名称 | Yes，首发时有真实文章才开放 |
 | `/blog/{slug}` | 问题、比较、护理、礼赠等文章 | Yes |
 | `/about` | 品牌故事与真实承诺 | Yes |
+| `/about/{handle}` | 获批品牌子主题；只允许 root 直接引用的完整页面 | Yes，内容与语言审核后 |
 | `/contact` | 联系方式和客服预期 | Yes |
 | `/shipping` | 配送政策 | Yes |
 | `/returns` | 退换政策 | Yes |
@@ -83,6 +84,8 @@ URL 名称在品牌命名确认前使用功能性路径：
 - 语言切换器在 en-US 与 es-US 等价页之间切换；不得因此改变 US Catalog、
   商品 ID、USD 价格、库存或政策。
 - 当前只有一个 US Market，不显示伪造的国家或 Currency 选择器。
+- Header 始终保留单一 About 入口，不为 About 子页建立 Header dropdown；子页通过
+  `/about` 范围内共享的页内导航发现。
 
 ### FR-002 Footer
 
@@ -210,6 +213,11 @@ URL 名称在品牌命名确认前使用功能性路径：
 
 - About：先呈现获批品牌立场、内容原则和商品透明标准；团队、工艺、采购、历史
   和认证只在有真实资料时加入，不得用工作文案补成生产事实。
+- About 没有有效子页时不显示空 tab 栏；至少有 1 个子页时，以 `/about` 为第一项，
+  后续项按 `about.child_pages` 引用顺序展示。所有项必须是服务端 HTML 中的真实链接，
+  支持键盘并用 `aria-current` 标记当前页面。
+- 未知、未引用或不完整的 About child 返回 404；每个公开页有唯一 metadata、
+  canonical、breadcrumb 与适用 Schema。默认语言 fallback 不进入 sitemap/hreflang。
 - Contact：真实渠道、响应时间和必要地址信息。
 - Shipping/Returns：与 Shopify Checkout 和实际运营一致。
 - Privacy/Terms：由适格负责人批准，并记录更新时间。
