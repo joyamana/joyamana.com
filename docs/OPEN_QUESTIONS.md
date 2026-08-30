@@ -26,7 +26,7 @@ Resolved input: `docs/BRAND_INPUTS.md`
 | Q-003C | handling、carrier、运费、免邮门槛 | Checkout/shipping page |
 | Q-003D | 退换窗口、例外、运费、restocking、损坏/丢件 | Returns page |
 | Q-003E | 销售税、关税、进口费用责任 | Checkout/policy |
-| Q-003F | 法律实体、地址、客服/隐私邮箱、审批人 | Privacy/Terms/Organization |
+| Q-003F | 法律实体、地址、政策审批人 | Privacy/Terms/Organization |
 
 未解决前，测试站 Policy 页面必须显示为内部开发占位、全站保持 `noindex`，
 不得输出 Shipping/Return policy Schema。
@@ -45,7 +45,8 @@ Resolved input: `docs/BRAND_INPUTS.md`
 - [ ] Vercel account/team
 - [ ] Logo、字体授权、颜色
 - [ ] 真实商品摄影/视频
-- [ ] 支持邮箱和交易发件域名
+- [x] 公开客服/隐私邮箱确定为 `info@joyamana.com`
+- [ ] `info@joyamana.com` inbox、负责人/备援和交易发件域名认证
 - [ ] GA4 / GSC / Merchant Center
 - [ ] Email/CRM 与 Consent 方案
 

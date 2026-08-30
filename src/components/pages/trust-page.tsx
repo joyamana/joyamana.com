@@ -18,6 +18,11 @@ function sourceLabel(source: TrustContentSource, locale: Locale) {
       es: "Página de Shopify",
       fr: "Page Shopify",
     },
+    "shopify-metaobject": {
+      en: "Shopify Metaobject",
+      es: "Metaobjeto de Shopify",
+      fr: "Métaobjet Shopify",
+    },
     "shopify-product-metafields": {
       en: "Product metafields",
       es: "Metacampos de producto",

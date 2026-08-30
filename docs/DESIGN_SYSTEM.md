@@ -231,9 +231,8 @@ AI 生成图可用于明确标注的概念/编辑插画，但不得伪装商品�
 - 不使用假倒计时、假低库存、假 social proof 或 guilt copy。
 - Email popup 不在首屏立即遮挡核心内容；频率可控并易关闭。
 - Policy、contact、materials、care、origin/treatment 在需要处可发现。
-- Footer 的 Customer Care 提供 Contact、FAQ、Shipping、Returns & Refunds、
-  Product Care；Legal 提供 Privacy、Terms、Disclaimer、Accessibility。Draft
-  页面必须明确未发布状态，不展示虚构政策。
+- Footer 的 Customer Care 提供 Contact、Shipping、Returns & Refunds；Legal 提供
+  Privacy、Terms、Accessibility。当前不展示 FAQ、Disclaimer 或独立 Product Care。
 - Reviews 未上线时不显示空星级或占位 testimonial。
 
 ## 10. Motion

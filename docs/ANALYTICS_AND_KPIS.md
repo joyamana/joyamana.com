@@ -61,7 +61,7 @@ Last updated: 2026-08-02
 - `page_view` 按 page type 区分 Product/Collection/Crystal/Article/Policy。
 - 内容到商品点击记录 source entity 与 destination product。
 - 外部 source click 只记录匿名目标域/类型，避免泄露用户数据。
-- 阅读深度、FAQ 展开等微事件只有用于明确决策时才采集。
+- 阅读深度等微事件只有用于明确决策时才采集。
 
 ### Error and quality
 

@@ -59,13 +59,6 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         <Link href={localePath(locale, "/contact")}>
           {uiText(locale, { en: "Contact", es: "Contacto", fr: "Contact" })}
         </Link>
-        <Link href={localePath(locale, "/faq")}>
-          {uiText(locale, {
-            en: "FAQ",
-            es: "Preguntas frecuentes",
-            fr: "Questions fréquentes",
-          })}
-        </Link>
         <Link href={localePath(locale, "/shipping")}>
           {uiText(locale, { en: "Shipping", es: "Envío", fr: "Expédition" })}
         </Link>
@@ -76,13 +69,6 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             fr: "Retours et remboursements",
           })}
         </Link>
-        <Link href={localePath(locale, "/product-care")}>
-          {uiText(locale, {
-            en: "Product care",
-            es: "Cuidado del producto",
-            fr: "Entretien du produit",
-          })}
-        </Link>
       </div>
       <div>
         <p className="footer-heading">Legal</p>
@@ -91,13 +77,6 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         </Link>
         <Link href={localePath(locale, "/terms")}>
           {uiText(locale, { en: "Terms", es: "Términos", fr: "Conditions" })}
-        </Link>
-        <Link href={localePath(locale, "/disclaimer")}>
-          {uiText(locale, {
-            en: "Disclaimer",
-            es: "Aviso legal",
-            fr: "Avis de non-responsabilité",
-          })}
         </Link>
         <Link href={localePath(locale, "/accessibility")}>
           {uiText(locale, {

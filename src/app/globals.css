@@ -1682,14 +1682,55 @@ h3 {
   color: var(--muted);
 }
 
+.contact-intro {
+  align-self: start;
+}
+
+.contact-email {
+  display: inline-block;
+  margin: 0.5rem 0 1.5rem;
+  border-bottom: 1px solid currentColor;
+  font-family: var(--font-serif);
+  font-size: clamp(1.35rem, 2.2vw, 2rem);
+}
+
+.contact-order-note {
+  max-width: 560px;
+}
+
+.contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 2rem;
+}
+
+.contact-links a {
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .contact-form {
+  position: relative;
   display: grid;
   gap: 1.5rem;
 }
 
-.contact-form label {
+.contact-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.contact-form__field {
   display: grid;
   gap: 0.45rem;
+}
+
+.contact-form label {
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -1697,6 +1738,7 @@ h3 {
 }
 
 input,
+select,
 textarea {
   width: 100%;
   padding: 0.9rem;
@@ -1704,6 +1746,78 @@ textarea {
   border-radius: 0;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.35);
+}
+
+select {
+  min-height: 48px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+[aria-invalid="true"] {
+  border-color: #8f2f2f;
+}
+
+.contact-form__error {
+  color: #8f2f2f;
+  font-size: 0.78rem;
+}
+
+.contact-form__notice,
+.contact-form__status,
+.contact-email-fallback p {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.contact-form__notice {
+  margin: -0.25rem 0 0;
+}
+
+.contact-form__notice a {
+  border-bottom: 1px solid currentColor;
+}
+
+.contact-form__status {
+  padding: 1rem;
+  margin: 0;
+  border: 1px solid var(--line);
+}
+
+.contact-form__status--success {
+  color: var(--ink);
+  background: var(--paper-deep);
+}
+
+.contact-form__status--error {
+  color: #7d2929;
+}
+
+.contact-form__honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.contact-email-fallback {
+  align-self: start;
+  padding: clamp(2rem, 5vw, 4rem);
+  border: 1px solid var(--line);
+  background: var(--paper-deep);
+}
+
+.contact-email-fallback h2 {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+}
+
+.contact-email-fallback .button {
+  margin-top: 1rem;
 }
 
 .policy-placeholder {
@@ -2169,6 +2283,10 @@ textarea {
   .about-standard,
   .form-page,
   .cart-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-form__row {
     grid-template-columns: 1fr;
   }
 

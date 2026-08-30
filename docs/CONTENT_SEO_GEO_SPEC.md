@@ -52,13 +52,10 @@ Guide 定义，Category 不复制 Design Collection，设计系列页也不伪�
 │   └── /blog/{slug}
 ├── /about
 ├── /contact
-├── /faq
 ├── /shipping
 ├── /returns
 ├── /privacy
 ├── /terms
-├── /disclaimer
-├── /product-care
 ├── /accessibility
 ├── /search             noindex
 └── /cart               noindex
@@ -76,12 +73,13 @@ Blog 是唯一栏目名称与路径。不得创建 `/journal`、Journal UI 别�
   以及商品专属 Product Care 事实。只有
   `custom.collection_kind=design_series` 的 Collection 进入公开系列 URL。
 - Shopify Policies：Shipping、Returns/Refund、Privacy、Terms 的完整事实。
-- Shopify Pages：About、Contact、Disclaimer、Accessibility、FAQ、品牌级
-  Product Care 与其他常规品牌页。
+- Shopify Pages：About、Contact 与其他获批常规品牌页。
+- Shopify Metaobjects：Accessibility 等需要由 Headless storefront 读取的结构化
+  品牌内容。
 
 Next.js 使用稳定的品牌化 URL 呈现这些内容，不暴露 `/pages/*` 或 Shopify 默认
-Policy URL。FAQ、Product Care 和其他 draft/薄弱页面在内容获批并达到独立页面
-价值前不进入 sitemap。
+Policy URL。当前不设 FAQ、Disclaimer 或独立 Product Care URL；若未来恢复，必须先
+确认独立页面价值、内容来源和索引条件。
 - Shopify Blog/Article：文章正文和发布状态。
 - Shopify merchant-owned Metaobjects：Design Series、Crystal、Author、Source、
   可复用 FAQ、Site Settings 等结构化实体。Design Series 保存系列故事与视觉；

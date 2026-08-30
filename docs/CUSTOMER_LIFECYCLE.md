@@ -72,9 +72,13 @@ Landing page 必须与来源承诺一致，不用强制弹窗截断。
 MVP 自助与人工服务：
 
 - Order Status。
-- Shipping/Returns/FAQ。
+- Shipping/Returns。
 - Contact 渠道。
 - 损坏、丢件、退货和订单变更流程。
+
+公开客服与隐私联系统一使用 `info@joyamana.com`。Contact 表单只为本次服务请求
+投递必要字段，不创建营销订阅、不复制 Shopify Customer/Order，也不把 PII 写入
+Analytics。表单供应商未批准或不可用时，页面回退为直接 Email。
 
 上线前必须确定服务时段、响应承诺、责任人和升级路径。
 

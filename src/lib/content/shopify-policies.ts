@@ -2,7 +2,14 @@ import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
 import { shopifyFetch } from "@/lib/commerce/shopify";
 
-export type ShopifyPolicyKind = "returns" | "privacy";
+export const shopifyPolicyKinds = [
+  "shipping",
+  "returns",
+  "privacy",
+  "terms",
+] as const;
+
+export type ShopifyPolicyKind = (typeof shopifyPolicyKinds)[number];
 
 interface ShopifyPolicyNode {
   id: string;
@@ -15,6 +22,8 @@ interface ShopifyPoliciesData {
   shop: {
     refundPolicy: ShopifyPolicyNode | null;
     privacyPolicy: ShopifyPolicyNode | null;
+    shippingPolicy: ShopifyPolicyNode | null;
+    termsOfService: ShopifyPolicyNode | null;
   };
 }
 
@@ -50,6 +59,8 @@ export const SHOPIFY_POLICIES_QUERY = `#graphql
     shop {
       refundPolicy { id title url body }
       privacyPolicy { id title url body }
+      shippingPolicy { id title url body }
+      termsOfService { id title url body }
     }
   }
 `;
@@ -58,9 +69,14 @@ function selectedPolicy(
   data: ShopifyPoliciesData,
   kind: ShopifyPolicyKind,
 ) {
-  return kind === "returns"
-    ? data.shop.refundPolicy
-    : data.shop.privacyPolicy;
+  const policyByKind = {
+    shipping: data.shop.shippingPolicy,
+    returns: data.shop.refundPolicy,
+    privacy: data.shop.privacyPolicy,
+    terms: data.shop.termsOfService,
+  } satisfies Record<ShopifyPolicyKind, ShopifyPolicyNode | null>;
+
+  return policyByKind[kind];
 }
 
 async function fetchPolicies(locale: Locale) {
@@ -103,7 +119,7 @@ export async function getShopifyPolicies(
     locale === defaultLocale ? null : fetchPolicies(defaultLocale),
   ]);
   return Object.fromEntries(
-    (["returns", "privacy"] as const).map((kind) => {
+    shopifyPolicyKinds.map((kind) => {
       const requestedPolicy = selectedPolicy(requestedData, kind);
       if (!hasPublishedBody(requestedPolicy) || !requestedPolicy) {
         return [kind, null];
@@ -213,6 +229,14 @@ function safePolicyHref(value: string) {
   }
 }
 
+function isHttpsHref(value: string) {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Shopify policy bodies are merchant-authored HTML. Rebuild a deliberately
  * small allowlist and discard all source attributes before rendering it.
@@ -255,7 +279,21 @@ export function sanitizeShopifyPolicyHtml(source: string) {
       const href = safePolicyHref(
         hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3] ?? "",
       );
-      output += href ? `<a href="${escapeHtml(href)}">` : "<a>";
+      const targetMatch = parsed[3].match(
+        /\btarget\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i,
+      );
+      const target =
+        targetMatch?.[1] ?? targetMatch?.[2] ?? targetMatch?.[3] ?? "";
+      const opensNewTab = Boolean(
+        href && target === "_blank" && isHttpsHref(href),
+      );
+      output += href
+        ? `<a href="${escapeHtml(href)}"${
+            opensNewTab
+              ? ' target="_blank" rel="noopener noreferrer"'
+              : ""
+          }>`
+        : "<a>";
       continue;
     }
 

@@ -2,7 +2,7 @@ export const brand = {
   name: "Joya Mana",
   legalName: null,
   tagline: "Objects with presence.",
-  supportEmail: "hello@placeholder.invalid",
+  supportEmail: "info@joyamana.com",
   social: {
     instagram: null,
     pinterest: null,

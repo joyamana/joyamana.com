@@ -105,7 +105,7 @@ certified 等词。
 - 商品详情、变体选择、价格、库存和加购。
 - Cart 管理与跳转 Shopify Checkout。
 - 游客结账路径、订单确认和 Shopify Order Status。
-- About、Contact、FAQ、Shipping、Returns、Privacy、Terms。
+- About、Contact、Shipping、Returns、Privacy、Terms、Accessibility。
 - Crystal Guide 知识枢纽和可持续的晶体实体页模型。
 - `/blog` 内容模型；首发目标 5–10 篇经人工审核的 Guide/Article。
 - 基础站内 Search、Collection 与导航。

@@ -82,10 +82,11 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 - 不提前编码未来市场价格、语言、税费或配送业务逻辑。
 - Shopify hosted checkout，优先评估 Shopify Payments 及账户可用的钱包/支付。
 - 未确认政策不得发布，不得进入 policy Schema。
+- 客服、隐私请求和公开联系统一使用 `info@joyamana.com`；实际邮箱和发件域仍须在
+  生产开放前完成配置与验证。
 
 ### Working
 
-- 主要客服渠道为支持邮箱。
 - 不要求首发实时聊天。
 - 目标响应时间可在能力确认后采用 1–2 个工作日。
 - 品牌包装、基础护理卡、礼品留言作为候选。
@@ -97,7 +98,7 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 - handling time、carrier、运费、免邮门槛。
 - 退换窗口、例外、退货运费、restocking、损坏/丢件流程。
 - 销售税、关税、进口费用责任。
-- 法律实体、合规地址、客服/隐私邮箱和政策审批人。
+- 法律实体、合规地址和政策审批人。
 
 ## Content and claims
 

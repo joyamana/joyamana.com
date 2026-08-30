@@ -23,26 +23,30 @@ afterEach(() => {
 });
 
 describe("Shopify policies", () => {
-  it("queries both policy sources in the requested market context", () => {
+  it("queries all Shopify policy sources in the requested market context", () => {
     expect(SHOPIFY_POLICIES_QUERY).toContain(
       "@inContext(country: $country, language: $language)",
     );
     expect(SHOPIFY_POLICIES_QUERY).toContain("refundPolicy");
     expect(SHOPIFY_POLICIES_QUERY).toContain("privacyPolicy");
+    expect(SHOPIFY_POLICIES_QUERY).toContain("shippingPolicy");
+    expect(SHOPIFY_POLICIES_QUERY).toContain("termsOfService");
   });
 
   it("keeps safe policy structure while removing executable markup and attributes", () => {
     const sanitized = sanitizeShopifyPolicyHtml(
-      '<h1 onclick="bad()">Returns</h1><p>Keep &amp; read <a href="https://example.com" target="_blank" onclick="bad()">details</a>.</p><script>alert(1)</script><a href="javascript:bad()">bad</a><img src=x onerror=bad()>',
+      '<h1 onclick="bad()">Returns</h1><p>Keep &amp; read <a href="https://example.com" target="_blank" rel="opener" onclick="bad()">details</a>.</p><a href="/privacy" target="_blank">privacy</a><a href="mailto:info@example.com" target="_blank">email</a><a href="https://example.org" target="_top">same tab</a><script>alert(1)</script><a href="javascript:bad()" target="_blank">bad</a><img src=x onerror=bad()>',
     );
 
     expect(sanitized).toBe(
-      '<p>Keep &amp; read <a href="https://example.com">details</a>.</p><a>bad</a>',
+      '<p>Keep &amp; read <a href="https://example.com" target="_blank" rel="noopener noreferrer">details</a>.</p><a href="/privacy">privacy</a><a href="mailto:info@example.com">email</a><a href="https://example.org">same tab</a><a>bad</a>',
     );
     expect(sanitized).not.toContain("onclick");
     expect(sanitized).not.toContain("javascript:");
     expect(sanitized).not.toContain("alert(1)");
     expect(sanitized).not.toContain("<img");
+    expect(sanitized).not.toContain('rel="opener"');
+    expect(sanitized.match(/target="_blank"/g)).toHaveLength(1);
   });
 
   it("identifies Shopify default-language fallback for Spanish", async () => {
@@ -51,6 +55,16 @@ describe("Shopify policies", () => {
     const englishPolicies = {
       refundPolicy: policy("1", "Refund Policy", "<h1>Refund Policy</h1>"),
       privacyPolicy: policy("2", "Privacy Policy", "<h1>Privacy Policy</h1>"),
+      shippingPolicy: policy(
+        "3",
+        "Shipping Policy",
+        "<h1>Shipping Policy</h1>",
+      ),
+      termsOfService: policy(
+        "4",
+        "Terms of Service",
+        "<h1>Terms of Service</h1>",
+      ),
     };
     vi.stubGlobal(
       "fetch",
@@ -100,6 +114,8 @@ describe("Shopify policies", () => {
                       : "<h1>Refund Policy</h1>",
                   ),
                   privacyPolicy: null,
+                  shippingPolicy: null,
+                  termsOfService: null,
                 },
               },
             }),
@@ -113,5 +129,53 @@ describe("Shopify policies", () => {
       contentLocale: "es-US",
       usedDefaultLanguage: false,
     });
+  });
+
+  it("maps shipping and terms and publishes their English paths", async () => {
+    process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+    process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() =>
+        Promise.resolve(new Response(
+          JSON.stringify({
+            data: {
+              shop: {
+                refundPolicy: null,
+                privacyPolicy: null,
+                shippingPolicy: policy(
+                  "3",
+                  "Shipping Policy",
+                  "<h1>Shipping Policy</h1><p>Ships in 1–3 days.</p>",
+                ),
+                termsOfService: policy(
+                  "4",
+                  "Terms of Service",
+                  "<h1>Terms of Service</h1><p>Store terms.</p>",
+                ),
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        )),
+      ),
+    );
+
+    await expect(getShopifyPolicy("shipping", "en-US")).resolves.toMatchObject(
+      {
+        kind: "shipping",
+        title: "Shipping Policy",
+        html: "<p>Ships in 1–3 days.</p>",
+      },
+    );
+    await expect(getShopifyPolicy("terms", "en-US")).resolves.toMatchObject({
+      kind: "terms",
+      title: "Terms of Service",
+      html: "<p>Store terms.</p>",
+    });
+    await expect(getPublishedShopifyPolicyPaths("en-US")).resolves.toEqual([
+      "/shipping",
+      "/terms",
+    ]);
   });
 });

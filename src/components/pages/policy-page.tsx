@@ -7,6 +7,29 @@ import {
 import { uiText } from "@/lib/i18n/text";
 import { TrustPage } from "./trust-page";
 
+const policyTitles = {
+  shipping: {
+    en: "Shipping Policy",
+    es: "Política de envíos",
+    fr: "Politique d’expédition",
+  },
+  returns: {
+    en: "Returns & Refunds",
+    es: "Devoluciones y reembolsos",
+    fr: "Retours et remboursements",
+  },
+  privacy: {
+    en: "Privacy Policy",
+    es: "Política de privacidad",
+    fr: "Politique de confidentialité",
+  },
+  terms: {
+    en: "Terms of Service",
+    es: "Términos del servicio",
+    fr: "Conditions d’utilisation",
+  },
+} as const;
+
 export async function PolicyPage({
   locale,
   kind,
@@ -14,33 +37,20 @@ export async function PolicyPage({
   locale: Locale;
   kind: "shipping" | "returns" | "privacy" | "terms";
 }) {
-  if (
-    getCommerceProvider() !== "shopify" ||
-    (kind !== "returns" && kind !== "privacy")
-  ) {
+  if (getCommerceProvider() !== "shopify") {
     return <TrustPage locale={locale} kind={kind} />;
   }
 
   let policy;
   try {
-    policy = await getShopifyPolicy(kind as ShopifyPolicyKind, locale);
+    policy = await getShopifyPolicy(kind, locale);
   } catch {
     return <PolicyUnavailable locale={locale} kind={kind} />;
   }
 
   if (!policy) return <PolicyUnavailable locale={locale} kind={kind} />;
 
-  const pageTitle = uiText(locale, {
-    en: kind === "returns" ? "Returns & Refunds" : "Privacy Policy",
-    es:
-      kind === "returns"
-        ? "Devoluciones y reembolsos"
-        : "Política de privacidad",
-    fr:
-      kind === "returns"
-        ? "Retours et remboursements"
-        : "Politique de confidentialité",
-  });
+  const pageTitle = uiText(locale, policyTitles[kind]);
 
   return (
     <article className="policy-page policy-page--published">
@@ -77,17 +87,7 @@ function PolicyUnavailable({
   locale: Locale;
   kind: ShopifyPolicyKind;
 }) {
-  const title = uiText(locale, {
-    en: kind === "returns" ? "Returns & Refunds" : "Privacy Policy",
-    es:
-      kind === "returns"
-        ? "Devoluciones y reembolsos"
-        : "Política de privacidad",
-    fr:
-      kind === "returns"
-        ? "Retours et remboursements"
-        : "Politique de confidentialité",
-  });
+  const title = uiText(locale, policyTitles[kind]);
 
   return (
     <article className="policy-page">

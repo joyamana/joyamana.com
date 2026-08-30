@@ -56,6 +56,9 @@ Last updated: 2026-08-30
 | D-034 | Mobile nav and About | Accepted | 全屏移动 Menu；统一工具样式；About 品牌立场页 |
 | D-035 | Phase-one market visibility | Accepted | 第一阶段只显示 US；Canada 保留规划配置但不公开 |
 | D-036 | Catalog and series URLs | Accepted | Category 与设计系列分路由；Header 按真实目录自适应 |
+| D-037 | Public contact identity | Accepted | 客服、隐私与公开联系统一使用 `info@joyamana.com` |
+| D-038 | Contact form delivery | Working | Server Action + 可关闭的 Resend 薄适配层；不建客户数据库 |
+| D-039 | Phase-one service pages | Accepted | 当前不设 FAQ、Disclaimer、独立 Product Care 页面 |
 
 ## Accepted decisions
 
@@ -465,6 +468,42 @@ Supersedes: D-033 中 Header 只有单一 Shop/Seven Chakras 导航的部分、D
 硬编码未发布 Seven Chakras 详情 CTA 的部分，以及旧信息架构中把商品类别与设计系列
 统一暴露为 `/collections/{handle}` 的部分；D-033 的内容枢纽、New Arrivals 门禁和
 其他 UI 决策继续有效。
+
+### D-037 — 公开联系邮箱
+
+Date: 2026-08-30
+Decision: 客服、隐私请求和当前公开联系入口统一使用 `info@joyamana.com`。交易身份、
+客服沟通与营销同意继续分离；收到 Contact 请求不得自动加入营销列表。
+Consequence: 页面、配置和后续政策使用同一地址。生产开放前仍须完成真实邮箱开通、
+负责人/备援、域名认证和回复流程验收。
+
+### D-038 — Contact 表单投递边界
+
+Date: 2026-08-30
+Status: Working
+Decision: Contact 使用 Next.js Server Action 做服务端校验，通过可关闭的 Resend HTTP
+薄适配层投递到 `info@joyamana.com`；Next.js 不保存留言、不创建 Shopify Customer，
+表单提交不构成营销同意。未配置或未批准供应商时只显示可用的 Email 入口。
+Reason: Shopify Theme contact form 不属于当前 Headless storefront；完整 Helpdesk 对
+首发流量过重。直接 HTTP 适配无需客户端 SDK，并可在一个文件内替换供应商。
+Data boundary: Resend 会接收顾客姓名、邮箱、主题、可选订单号和留言；API key 仅服务端
+保存，表单正文和 PII 不进入应用日志或 Analytics。上线前须批准其隐私、保留期、成本，
+验证发送域，并在边缘/WAF 配置滥用限制。
+Migration / rollback: `CONTACT_FORM_ENABLED=false` 立即回退为 Email-only；更换供应商
+只替换投递适配层和 Secret，不改变表单、URL 或客户数据模型。
+
+### D-039 — 当前阶段精简服务页面
+
+Date: 2026-08-30
+Status: Accepted
+Decision: 当前阶段删除 FAQ、Disclaimer 和独立 Product Care 页面及所有导航入口，
+对应 URL 返回 404 且不进入 sitemap。水晶/灵性内容边界继续由 Terms 和内容场景内的
+简短提示承担；商品护理继续保留在 PDP 的商品事实中；真实客服问题通过 Contact、
+Shipping 和 Returns 处理。
+Reason: 三个独立页面当前没有足够的必要内容或独立用户任务，保留草稿入口会增加
+导航噪音并形成薄页面。
+Migration / rollback: 未来只有在出现真实重复问题、稳定的品牌级护理内容或 Terms
+无法覆盖的独立披露需求时，才重新评估页面、内容来源、导航与索引策略。
 
 ## Pending decision
 

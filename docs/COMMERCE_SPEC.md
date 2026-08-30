@@ -169,7 +169,7 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - sales tax 责任
 - international duties（MVP 原则上不承诺）
 
-确认后，Shopify 配置、Checkout、Policy page、PDP 摘要、FAQ 与 Schema 必须
+确认后，Shopify 配置、Checkout、Policy page、PDP 摘要与 Schema 必须
 一致。任何变更需同步所有消费者触点。
 
 ## 11. Email 与营销同意

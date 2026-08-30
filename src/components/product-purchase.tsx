@@ -371,19 +371,7 @@ export function ProductPurchase({
           {product.facts?.care ? (
             <div>
               <dt>{copy.labels.care}</dt>
-              <dd>
-                <p>{product.facts.care}</p>
-                <Link
-                  className="fact-list__link"
-                  href={localePath(locale, "/product-care")}
-                >
-                  {uiText(locale, {
-                    en: "View product care",
-                    es: "Ver cuidado del producto",
-                    fr: "Voir l’entretien du produit",
-                  })}
-                </Link>
-              </dd>
+              <dd>{product.facts.care}</dd>
             </div>
           ) : null}
           <div>

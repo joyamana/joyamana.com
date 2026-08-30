@@ -54,13 +54,10 @@ URL 名称在品牌命名确认前使用功能性路径：
 | `/blog/{slug}` | 问题、比较、护理、礼赠等文章 | Yes |
 | `/about` | 品牌故事与真实承诺 | Yes |
 | `/contact` | 联系方式和客服预期 | Yes |
-| `/faq` | 跨站真实常见问题 | Yes，避免与政策重复 |
 | `/shipping` | 配送政策 | Yes |
 | `/returns` | 退换政策 | Yes |
 | `/privacy` | 隐私政策 | Yes |
 | `/terms` | 使用/销售条款 | Yes |
-| `/disclaimer` | 材料事实、文化传统、象征意义与个人实践的边界 | Yes，内容获批后 |
-| `/product-care` | 稳定的品牌级护理指南；商品专属说明仍在 PDP | Yes，内容充足且获批后 |
 | `/accessibility` | Accessibility statement | Yes，内容获批后 |
 | `/search` | 站内搜索；仅在目录规模需要时启用 | No |
 | `/cart` | 购物车 | No |
@@ -216,10 +213,8 @@ URL 名称在品牌命名确认前使用功能性路径：
 - Contact：真实渠道、响应时间和必要地址信息。
 - Shipping/Returns：与 Shopify Checkout 和实际运营一致。
 - Privacy/Terms：由适格负责人批准，并记录更新时间。
-- FAQ：只回答真实高频问题，不复制整段政策或为 Schema 凑内容。
-- Disclaimer：不能替代页面本身准确、克制的 claims；正式措辞由负责人批准。
-- Product Care：品牌级指南与 Product metafields 的商品专属护理事实保持一致；
-  内容过薄时只在 PDP 展示，不公开空页面。
+- 当前不设 FAQ、Disclaimer 或独立 Product Care 页面；真实问题通过 Contact 与政策
+  页面处理，内容声明放在 Terms/相关内容场景，商品护理事实直接显示在 PDP。
 - Accessibility：只陈述实际措施、已知限制和真实支持渠道，不夸大符合程度。
 
 ## 6. Commerce 需求

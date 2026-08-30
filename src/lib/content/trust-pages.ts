@@ -7,9 +7,6 @@ export const trustPageKinds = [
   "returns",
   "privacy",
   "terms",
-  "disclaimer",
-  "product-care",
-  "faq",
   "accessibility",
 ] as const;
 
@@ -18,6 +15,7 @@ export type PublicationStatus = "draft" | "approved" | "published";
 export type TrustContentSource =
   | "shopify-policy"
   | "shopify-page"
+  | "shopify-metaobject"
   | "shopify-product-metafields";
 
 type LocalizedValue = { en: string; es: string; fr: string };
@@ -158,94 +156,10 @@ const definitions: Record<TrustPageKind, TrustPageDefinition> = {
       },
     ],
   },
-  disclaimer: {
-    handle: "disclaimer",
-    status: "draft",
-    targetSources: ["shopify-page"],
-    title: { en: "Disclaimer", es: "Aviso legal", fr: "Avis de non-responsabilité" },
-    purpose: {
-      en: "This page will clarify how the brand distinguishes material facts, cultural traditions, symbolism, and personal practice.",
-      es: "Esta página aclarará cómo la marca distingue los hechos materiales, las tradiciones culturales, el simbolismo y la práctica personal.",
-      fr: "Cette page précisera comment la marque distingue les faits matériels, les traditions culturelles, le symbolisme et la pratique personnelle.",
-    },
-    requiredInputs: [
-      {
-        en: "Approved wording for non-medical, non-diagnostic, and non-outcome claims",
-        es: "Texto aprobado sobre afirmaciones no médicas, no diagnósticas y sin garantía de resultados",
-        fr: "Texte approuvé concernant les allégations non médicales, non diagnostiques et sans garantie de résultat",
-      },
-      {
-        en: "Scope across product pages, Crystal Guide, Blog, and customer communications",
-        es: "Alcance en productos, Crystal Guide, Blog y comunicaciones con clientes",
-        fr: "Portée sur les produits, le Crystal Guide, le Blog et les communications clients",
-      },
-      {
-        en: "Content owner, review standard, sources, and escalation process",
-        es: "Responsable del contenido, estándar de revisión, fuentes y proceso de escalamiento",
-        fr: "Responsable du contenu, norme de révision, sources et processus d’escalade",
-      },
-    ],
-  },
-  "product-care": {
-    handle: "product-care",
-    status: "draft",
-    targetSources: ["shopify-page", "shopify-product-metafields"],
-    title: { en: "Product Care", es: "Cuidado del producto", fr: "Entretien du produit" },
-    purpose: {
-      en: "This page will provide stable brand-level care guidance, while each product page will show material-specific instructions.",
-      es: "Esta página ofrecerá una guía general de cuidado, mientras que cada producto mostrará instrucciones específicas de sus materiales.",
-      fr: "Cette page fournira des conseils d’entretien généraux, tandis que chaque produit affichera des instructions propres à ses matériaux.",
-    },
-    requiredInputs: [
-      {
-        en: "Verified stone, metal, spacer, cord, coating, treatment, and construction details",
-        es: "Detalles verificados de piedras, metales, separadores, cordón, recubrimientos, tratamientos y construcción",
-        fr: "Détails vérifiés sur les pierres, métaux, séparateurs, cordon, revêtements, traitements et fabrication",
-      },
-      {
-        en: "Approved cleaning, water, chemical, impact, sunlight, storage, and wear guidance",
-        es: "Guía aprobada de limpieza, agua, químicos, impactos, luz solar, almacenamiento y uso",
-        fr: "Conseils approuvés sur le nettoyage, l’eau, les produits chimiques, les chocs, le soleil, le rangement et le port",
-      },
-      {
-        en: "Product-specific exceptions and the support process for damage or repair questions",
-        es: "Excepciones por producto y proceso de soporte para daños o reparaciones",
-        fr: "Exceptions propres aux produits et processus de soutien pour les dommages ou réparations",
-      },
-    ],
-  },
-  faq: {
-    handle: "faq",
-    status: "draft",
-    targetSources: ["shopify-page"],
-    title: { en: "Frequently Asked Questions", es: "Preguntas frecuentes", fr: "Questions fréquentes" },
-    purpose: {
-      en: "This page will answer verified recurring questions without duplicating full policies or inventing social proof.",
-      es: "Esta página responderá preguntas recurrentes verificadas sin duplicar políticas completas ni inventar prueba social.",
-      fr: "Cette page répondra aux questions récurrentes vérifiées sans reproduire les politiques ni inventer de preuve sociale.",
-    },
-    requiredInputs: [
-      {
-        en: "Real pre-purchase and post-purchase questions observed by the business",
-        es: "Preguntas reales antes y después de la compra observadas por el negocio",
-        fr: "Questions réelles avant et après l’achat observées par l’entreprise",
-      },
-      {
-        en: "Approved concise answers with links to the authoritative product or policy page",
-        es: "Respuestas breves aprobadas con enlaces al producto o política autoritativa",
-        fr: "Réponses brèves approuvées avec liens vers le produit ou la politique faisant autorité",
-      },
-      {
-        en: "Content owner and review cadence so answers stay aligned with operations",
-        es: "Responsable y frecuencia de revisión para mantener las respuestas alineadas con las operaciones",
-        fr: "Responsable et fréquence de révision afin de maintenir les réponses alignées sur les opérations",
-      },
-    ],
-  },
   accessibility: {
     handle: "accessibility",
     status: "draft",
-    targetSources: ["shopify-page"],
+    targetSources: ["shopify-metaobject"],
     title: { en: "Accessibility", es: "Accesibilidad", fr: "Accessibilité" },
     purpose: {
       en: "This page will describe the storefront’s actual accessibility practices and a verified way to request assistance.",
