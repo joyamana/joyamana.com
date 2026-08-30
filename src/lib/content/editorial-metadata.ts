@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { getCommerceProvider } from "@/lib/commerce/catalog";
 import { enabledLocales, type Locale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
@@ -77,10 +76,6 @@ export async function buildEditorialIndexMetadata({
 }): Promise<Metadata> {
   const title = fallbackTitle(kind, locale);
   const description = fallbackDescription(kind, locale);
-  if (getCommerceProvider() !== "shopify") {
-    return buildNoIndexMetadata({ title, description });
-  }
-
   try {
     const index = await getShopifyEditorialIndex(kind, locale);
     if (
@@ -112,10 +107,6 @@ export async function buildEditorialArticleMetadata({
 }): Promise<Metadata> {
   const title = fallbackTitle(kind, locale);
   const description = fallbackDescription(kind, locale);
-  if (getCommerceProvider() !== "shopify") {
-    return buildNoIndexMetadata({ title, description });
-  }
-
   try {
     const article = await getShopifyEditorialArticle(kind, handle, locale);
     if (article && !article.usedDefaultLanguage) {

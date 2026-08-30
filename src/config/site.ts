@@ -47,7 +47,6 @@ export function resolveSiteUrl(value: string | undefined, allowIndexing: boolean
 export const siteConfig = {
   url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL, indexable),
   indexable,
-  commerceProvider: process.env.COMMERCE_PROVIDER || "shopify",
   defaultMarket: markets.us,
   markets,
 } as const;

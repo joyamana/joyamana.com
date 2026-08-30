@@ -1,7 +1,6 @@
 import type { Locale } from "@/lib/i18n/locales";
 
 export type CurrencyCode = "USD" | "CAD";
-export type CommerceSource = "shopify" | "mock";
 export type ProductModel = "standard" | "one-of-one";
 export type CollectionKind =
   | "category"
@@ -125,7 +124,6 @@ export interface Product {
   category: ProductCategory | null;
   model?: ProductModel;
   facts?: ProductFacts;
-  source: CommerceSource;
 }
 
 export interface Collection {
@@ -137,7 +135,6 @@ export interface Collection {
   seoDescription?: string;
   image: ProductImage | null;
   kind?: CollectionKind;
-  source: CommerceSource;
 }
 
 export interface ProductCollection extends Collection {
@@ -146,7 +143,7 @@ export interface ProductCollection extends Collection {
 
 /**
  * Content entities still use localized records. Commerce entities above do
- * not: their strings are already resolved by the Shopify/mock adapter.
+ * not: their strings are already resolved by the Shopify adapter.
  */
 export interface LocalizedText {
   "en-US": string;

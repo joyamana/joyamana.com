@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { TrustPage } from "@/components/pages/trust-page";
+import { AccessibilityPage } from "@/components/pages/accessibility-page";
 import { canadaLocaleFromSegment } from "@/lib/i18n/locales";
 
 export default async function Page({
@@ -9,5 +9,5 @@ export default async function Page({
 }) {
   const locale = canadaLocaleFromSegment((await params).marketLocale);
   if (!locale) notFound();
-  return <TrustPage locale={locale} kind="accessibility" />;
+  return <AccessibilityPage locale={locale} />;
 }

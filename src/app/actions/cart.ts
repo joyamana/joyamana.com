@@ -29,13 +29,6 @@ import {
 const cartCookieName = "joya-mana-shopify-cart-us";
 const cartCookieMaxAge = 60 * 60 * 24 * 10;
 
-function isShopifyProviderEnabled() {
-  return (
-    (process.env.COMMERCE_PROVIDER?.trim().toLowerCase() || "shopify") ===
-    "shopify"
-  );
-}
-
 function isCheckoutEnabled() {
   return process.env.SHOPIFY_CHECKOUT_ENABLED === "true";
 }
@@ -51,14 +44,7 @@ function failure(
   return toSafeCartFailure(new ShopifyCartError(code), language);
 }
 
-function requireShopifyProvider() {
-  if (!isShopifyProviderEnabled()) {
-    throw new ShopifyCartError("NOT_CONFIGURED");
-  }
-}
-
 function requireCheckout() {
-  requireShopifyProvider();
   if (!isCheckoutEnabled()) {
     throw new ShopifyCartError("CHECKOUT_DISABLED");
   }
@@ -106,7 +92,6 @@ export async function getCartAction(
   locale = "en-US",
 ): Promise<CartActionResult> {
   try {
-    requireShopifyProvider();
     const language = languageForLocale(locale);
     const { store, value } = await getCartCookie();
     if (!value) return { ok: true, cart: emptyCartView() };
@@ -132,7 +117,6 @@ export async function addCartLineAction(
   locale = "en-US",
 ): Promise<CartActionResult> {
   try {
-    requireShopifyProvider();
     assertValidCartQuantity(quantity);
     if (!isShopifyVariantId(merchandiseId)) {
       throw new ShopifyCartError("INVALID_INPUT");
@@ -164,7 +148,6 @@ export async function updateCartLineAction(
   locale = "en-US",
 ): Promise<CartActionResult> {
   try {
-    requireShopifyProvider();
     assertValidCartQuantity(quantity);
     if (!isShopifyCartLineId(lineId)) {
       throw new ShopifyCartError("INVALID_INPUT");
@@ -192,7 +175,6 @@ export async function removeCartLineAction(
   locale = "en-US",
 ): Promise<CartActionResult> {
   try {
-    requireShopifyProvider();
     if (!isShopifyCartLineId(lineId)) {
       throw new ShopifyCartError("INVALID_INPUT");
     }
@@ -214,7 +196,6 @@ export async function clearCartAction(
   locale = "en-US",
 ): Promise<CartActionResult> {
   try {
-    requireShopifyProvider();
     const language = languageForLocale(locale);
     const { store, cartId } = await requireCartCookie();
     const result = await clearShopifyCart(cartId, language);

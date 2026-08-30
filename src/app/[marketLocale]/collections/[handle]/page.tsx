@@ -6,7 +6,7 @@ import {
   canadaLocaleFromSegment,
   enabledCanadaLocaleSegments,
 } from "@/lib/i18n/locales";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
 
 export async function generateStaticParams() {
   if (enabledCanadaLocaleSegments.length === 0) return [];
@@ -26,9 +26,16 @@ export async function generateMetadata({
   const locale = canadaLocaleFromSegment(marketLocale);
   if (!locale) notFound();
   const collection = await getCollection(handle, "ca", locale);
+  const description = collection?.seoDescription || collection?.description;
+  if (!collection || !description) {
+    return buildNoIndexMetadata({
+      title: collection?.title || "Collection unavailable",
+      description: "This collection is not available.",
+    });
+  }
   return buildMetadata({
-    title: collection?.title || "Collection",
-    description: collection?.description || "Prototype collection.",
+    title: collection.seoTitle || collection.title,
+    description,
     locale,
     path: `/collections/${handle}`,
   });

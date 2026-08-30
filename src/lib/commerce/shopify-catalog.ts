@@ -635,7 +635,6 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
     category: node.category
       ? { id: node.category.id, name: node.category.name }
       : null,
-    source: "shopify",
   };
 }
 
@@ -661,7 +660,6 @@ function mapCollectionBase(node: ShopifyCollectionBase): Collection {
     seoDescription: optionalText(node.seo.description),
     image,
     kind: mapCollectionKind(node.collectionKind),
-    source: "shopify",
   };
 }
 

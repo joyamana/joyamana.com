@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { getCommerceProvider } from "@/lib/commerce/catalog";
 import { enabledLocales, type Locale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
@@ -46,13 +45,6 @@ export async function buildAboutMetadata({
     es: "Conoce la perspectiva y los estándares de producto de Joya Mana.",
     fr: "Découvrez la perspective et les normes produit de Joya Mana.",
   });
-
-  if (getCommerceProvider() !== "shopify") {
-    return buildNoIndexMetadata({
-      title: fallbackTitle,
-      description: fallbackDescription,
-    });
-  }
 
   try {
     const tree = await getShopifyAboutTree(locale);

@@ -1,10 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  getCommerceProvider,
-  getDesignCollections,
-  getProducts,
-} from "@/lib/commerce/catalog";
+import { getDesignCollections, getProducts } from "@/lib/commerce/catalog";
 import { getShopifyEditorialIndex } from "@/lib/content/shopify-editorial";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
@@ -184,7 +180,6 @@ export async function HomePage({ locale }: { locale: Locale }) {
 }
 
 async function getHomeBlog(locale: Locale) {
-  if (getCommerceProvider() !== "shopify") return [];
   try {
     const index = await getShopifyEditorialIndex("blog", locale);
     return (

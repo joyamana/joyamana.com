@@ -35,7 +35,7 @@ Resolved input: `docs/BRAND_INPUTS.md`
 
 - [x] Shopify store / development store
 - [x] Headless channel 与 private Storefront API access（2026-08-15 只读验证通过）
-- [x] 代表性 mock Product/Collection（七脉轮普通款，5 个概念选项）
+- [x] 历史代表性 mock Product/Collection 已完成迁移并从运行时代码删除
 - [x] Shopify Headless channel 中发布真实 Product/Variant（2026-08-25 可见 1 件）
 - [ ] Shopify Headless channel 中创建、填充并发布真实 Collection
 - [ ] 为商品设置准确 Shopify Standard Product Category（首件应核对 Bracelets）

@@ -61,6 +61,7 @@ Last updated: 2026-08-31
 | D-039 | Phase-one service pages | Accepted | 当前不设 FAQ、Disclaimer、独立 Product Care 页面 |
 | D-040 | About subtree | Accepted | Content Page Metaobject 驱动独立 URL 与页内文字 tabs |
 | D-041 | Editorial source model | Accepted | `/blog` 与 `/crystals` 分别读取 Shopify 原生 `blog`、`crystals` Blog |
+| D-042 | Shopify-only runtime | Accepted | 删除 mock provider 与本地正文 fallback；上游异常 fail closed |
 
 ## Accepted decisions
 
@@ -206,8 +207,8 @@ Consequence: 所有面向用户的品牌名称、metadata 和 wordmark 使用 Jo
 
 Decision: 数据模型同时支持 repeatable、natural-variation 和 one-of-a-kind。
 天然独件一物一图、一物一库存；标准商品披露天然差异。  
-Consequence: Mock 和 Shopify mapper 都必须保留 `kind`、exact-image 和库存
-语义，不能用复杂 Variant 混淆不同设计。
+Consequence: Shopify mapper 必须保留 `kind`、exact-image 和库存语义，不能用复杂
+Variant 混淆不同设计。
 
 ### D-021 — 政策发布门禁
 
@@ -222,8 +223,7 @@ Decision: 项目负责人最终审批；AI 可辅助草拟但不是作者或事�
 ### D-023 — 不可索引测试站
 
 Decision: 在 Shopify、域名、商品、政策均未准备时，可以建立可运行测试站。
-全站默认 `noindex`，使用明确标注的开发样本；Checkout 在 mock 模式不可用。
-只有完成生产门禁后才显式开启索引和 Product/Policy Schema。
+全站默认 `noindex`；只有完成生产门禁后才显式开启索引、Checkout 和适用 Schema。
 
 ### D-024 — Market、Language、URL、Currency 分离
 
@@ -579,6 +579,37 @@ Metaobject，应先定义字段、Article 到实体的迁移和旧 URL 保留方
 Supersedes: D-009 与 `CONTENT_SEO_GEO_SPEC.md` 中“Crystal 必须由 merchant-owned
 Metaobject 作为当前唯一正文来源”的部分；D-009 的 Shopify-first 边界与其他
 Metaobject 用途继续有效。
+
+### D-042 — Storefront 运行时只支持 Shopify
+
+Date: 2026-08-30
+Status: Accepted
+Owner: Project owner
+Context: 商品、Cart、Policy、About、Accessibility、Blog 与 Crystal Guide 已有正式
+Shopify 读取路径。继续保留 `COMMERCE_PROVIDER=mock`、本地样本 Catalog 和本地正文
+fallback 会形成第二事实来源，并可能在配置错误或上游缺失时把工作文案误当生产内容。
+Decision:
+
+- Storefront 运行时只支持 Shopify；删除 `COMMERCE_PROVIDER`、mock catalog、provider
+  分支和 mock 商品视觉标识。
+- Shopify 请求失败、条目缺失或字段不完整时 fail closed：详情页 404，hub/信任页显示
+  明确的暂不可用状态；不得回退到本地商品、价格、政策或品牌正文。
+- About、Policy 与 Accessibility 不再拥有本地正文 prototype。Shopify 默认语言
+  fallback 仍可作为语言阅读后备，但继续 noindex，且不进入对应 locale 的
+  sitemap/hreflang。
+- 商品缺图只显示中性的 “Image unavailable” 状态，不生成可能被误认为商品实拍的
+  本地概念图。
+- 按钮、错误消息、导航规则、layout 和其他 code-owned UI copy 继续保留在 Next.js；
+  它们不属于业务事实 fallback。
+
+Reason: 单一事实来源降低配置漂移、误价、错误政策和工作文案意外发布风险；Shopify
+不可用应被监控和修复，而不是由浏览器静默展示另一套数据。
+Consequences: 本地无离线 Commerce 演示模式；开发、测试和 Preview 需要 mock fetch
+或可用的 Shopify 测试商店。Checkout 仍使用独立 `SHOPIFY_CHECKOUT_ENABLED` 发布门禁。
+Migration / rollback: 回滚 Shopify adapter 通过代码版本完成，不恢复运行时 provider
+切换或本地业务数据副本。
+Supersedes: D-020 中要求同时维护 mock mapper 的部分、D-023 中 mock Checkout 条件，
+以及旧执行计划中的 `COMMERCE_PROVIDER` rollback。
 
 ## Pending decision
 

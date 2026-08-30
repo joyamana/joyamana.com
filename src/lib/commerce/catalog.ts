@@ -9,12 +9,6 @@ import type { MarketId } from "@/config/markets";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Collection, Product, ProductCollection } from "./types";
 import {
-  getMockCollection,
-  getMockCollections,
-  getMockProducts,
-  searchMockProducts,
-} from "./mock-data";
-import {
   getShopifyCollection,
   getShopifyCollections,
   getShopifyProduct,
@@ -22,14 +16,12 @@ import {
   searchShopifyProducts,
 } from "./shopify-catalog";
 
-export type CommerceProvider = "mock" | "shopify";
-
-export class CommerceProviderError extends Error {
+export class CatalogConfigurationError extends Error {
   readonly kind = "configuration";
 
   constructor(message: string) {
     super(message);
-    this.name = "CommerceProviderError";
+    this.name = "CatalogConfigurationError";
   }
 }
 
@@ -46,19 +38,9 @@ export interface CatalogNavigationData {
   collections: Collection[];
 }
 
-export function getCommerceProvider(): CommerceProvider {
-  const provider =
-    process.env.COMMERCE_PROVIDER?.trim().toLowerCase() || "shopify";
-  if (provider === "mock" || provider === "shopify") return provider;
-
-  throw new CommerceProviderError(
-    "COMMERCE_PROVIDER must be either mock or shopify.",
-  );
-}
-
 function assertEnabledUsLocale(locale: Locale) {
   if (locale !== "en-US" && locale !== "es-US") {
-    throw new CommerceProviderError(
+    throw new CatalogConfigurationError(
       "The enabled US catalog only supports en-US and es-US.",
     );
   }
@@ -72,9 +54,7 @@ export async function getProducts(
   if (marketId === "ca") return [];
   assertEnabledUsLocale(locale);
 
-  return getCommerceProvider() === "shopify"
-    ? getShopifyProducts(locale)
-    : getMockProducts(marketId, locale);
+  return getShopifyProducts(locale);
 }
 
 export const getProduct = cache(
@@ -86,11 +66,7 @@ export const getProduct = cache(
     if (marketId === "ca") return null;
     assertEnabledUsLocale(locale);
 
-    return getCommerceProvider() === "shopify"
-      ? getShopifyProduct(handle, locale)
-      : (getMockProducts(marketId, locale).find(
-          (product) => product.handle === handle,
-        ) ?? null);
+    return getShopifyProduct(handle, locale);
   },
 );
 
@@ -101,9 +77,7 @@ export async function getCollections(
   if (marketId === "ca") return [];
   assertEnabledUsLocale(locale);
 
-  return getCommerceProvider() === "shopify"
-    ? getShopifyCollections(locale)
-    : getMockCollections(marketId, locale);
+  return getShopifyCollections(locale);
 }
 
 export const getCollection = cache(
@@ -115,9 +89,7 @@ export const getCollection = cache(
     if (marketId === "ca") return null;
     assertEnabledUsLocale(locale);
 
-    return getCommerceProvider() === "shopify"
-      ? getShopifyCollection(handle, locale)
-      : getMockCollection(handle, marketId, locale);
+    return getShopifyCollection(handle, locale);
   },
 );
 
@@ -165,17 +137,7 @@ export async function getCatalogNavigationData(
   if (marketId === "ca") return { categories: [], collections: [] };
   assertEnabledUsLocale(locale);
 
-  if (getCommerceProvider() === "shopify") {
-    return getCachedShopifyCatalogNavigation(locale);
-  }
-
-  const products = getMockProducts(marketId, locale);
-  return {
-    categories: productCategoriesForProducts(products, locale),
-    collections: getMockCollections(marketId, locale).filter(
-      (collection) => collection.kind === "design_series",
-    ),
-  };
+  return getCachedShopifyCatalogNavigation(locale);
 }
 
 export const getDesignCollection = cache(
@@ -247,7 +209,5 @@ export async function searchCatalog(
   assertEnabledUsLocale(locale);
   if (!query.trim()) return [];
 
-  return getCommerceProvider() === "shopify"
-    ? searchShopifyProducts(query, locale)
-    : searchMockProducts(query, marketId, locale);
+  return searchShopifyProducts(query, locale);
 }

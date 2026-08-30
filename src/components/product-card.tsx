@@ -6,7 +6,6 @@ import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
-import { ProductArt } from "./product-art";
 
 export function ProductCard({
   product,
@@ -36,11 +35,14 @@ export function ProductCard({
             sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 25vw"
           />
         ) : (
-          <ProductArt palette="pearl" compact />
+          <span className="product-media-unavailable product-media-unavailable--compact">
+            {uiText(locale, {
+              en: "Image unavailable",
+              es: "Imagen no disponible",
+              fr: "Image indisponible",
+            })}
+          </span>
         )}
-        {product.source === "mock" ? (
-          <span className="sample-stamp">{copy.labels.developmentSample}</span>
-        ) : null}
       </Link>
       <div className="product-card__body">
         <div>

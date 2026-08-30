@@ -223,8 +223,8 @@ channel 已有 1 个可售商品 `aquamarine-bracelet-9-mm`，但只有空的默
 ## Detailed approach
 
 Catalog query 使用 `@inContext(country: US, language: ...)` 请求页面所需字段，先映射
-为薄的 TypeScript 实体，再由 UI、metadata 和 sitemap 共用。`COMMERCE_PROVIDER`
-明确选择 `shopify` 或 `mock`，Shopify 失败时展示错误而不静默回退到样本价格。
+为薄的 TypeScript 实体，再由 UI、metadata 和 sitemap 共用。运行时只支持 Shopify，
+Shopify 失败时展示错误而不静默回退到本地样本。
 Catalog、Collection 与 Search 使用完整 cursor pagination；PDP 继续取回全部 Variant，且
 PDP/Cart 的数量控件遵循 Shopify contextual `quantityRule`，并与已约定的 storefront
 安全上限 99 取交集。
@@ -246,7 +246,7 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
   状态；Variant 切换；数量增减与移除；Header count；Checkout 禁用说明。
 - Commerce/Data：UI 与 Cart 金额/币种/availability 均来自 Shopify；Cart ID、token
   不进入客户端 payload、URL、日志或 analytics；Buy now 不影响 Bag。
-- Rollback：将 `COMMERCE_PROVIDER` 恢复为 `mock` 可回到明确标注的开发样本；不对
+- Rollback：通过代码版本回滚 adapter；不恢复本地 Commerce provider，也不对
   Shopify 商品、Cart 或订单做数据回滚。
 
 ## Progress log
@@ -256,6 +256,9 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
   建立本执行计划并开始实施。
 - 2026-08-25：完成 Shopify Product/Variant/Money/Image/SEO、非空 Collection 与
   Search mapper；`COMMERCE_PROVIDER=shopify` 成为项目默认，Shopify 失败不回退 mock。
+- 2026-08-30：移除 `COMMERCE_PROVIDER`、本地 mock catalog 与本地内容正文 fallback；
+  Catalog、Cart、About、Policy、Accessibility 和 Editorial 运行时统一 Shopify-only，
+  上游缺失或异常时 fail closed。
 - 2026-08-25：完成 US EN/ES context 的 Cart create/read/add/update/remove/clear、
   HttpOnly cookie、warning/error、过期 add recovery、最新 Checkout URL 与独立 Buy now
   Cart；release gate 默认关闭。

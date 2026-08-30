@@ -54,7 +54,6 @@ const product: Product = {
       quantityRule: { minimum: 1, maximum: null, increment: 1 },
     },
   ],
-  source: "shopify",
 };
 
 describe("product structured data", () => {

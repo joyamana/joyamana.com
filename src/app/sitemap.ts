@@ -1,14 +1,12 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/site";
 import {
-  getCommerceProvider,
   getDesignCollections,
   getProducts,
   productCategoriesForProducts,
 } from "@/lib/commerce/catalog";
 import { getPublishedShopifyEditorialPaths } from "@/lib/content/shopify-editorial";
 import { getPublishedShopifyAboutPaths } from "@/lib/content/shopify-about-pages";
-import { getPublishedTrustPagePaths } from "@/lib/content/trust-pages";
 import { getPublishedShopifyPolicyPaths } from "@/lib/content/shopify-policies";
 import { getPublishedShopifyContentPagePaths } from "@/lib/content/shopify-content-pages";
 import { enabledLocales, localePath } from "@/lib/i18n/locales";
@@ -22,7 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/",
     "/contact",
   ];
-  const commerceProvider = getCommerceProvider();
   const localizedCatalogs = await Promise.all(
     enabledLocales.map(async (locale) => {
       const [
@@ -36,21 +33,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ] = await Promise.all([
         getDesignCollections("us", locale),
         getProducts("us", locale),
-        commerceProvider === "shopify"
-          ? getPublishedShopifyPolicyPaths(locale)
-          : Promise.resolve([]),
-        commerceProvider === "shopify"
-          ? getPublishedShopifyContentPagePaths(locale)
-          : Promise.resolve([]),
-        commerceProvider === "shopify"
-          ? getPublishedShopifyAboutPaths(locale)
-          : Promise.resolve([]),
-        commerceProvider === "shopify"
-          ? getPublishedShopifyEditorialPaths("blog", locale)
-          : Promise.resolve([]),
-        commerceProvider === "shopify"
-          ? getPublishedShopifyEditorialPaths("crystals", locale)
-          : Promise.resolve([]),
+        getPublishedShopifyPolicyPaths(locale),
+        getPublishedShopifyContentPagePaths(locale),
+        getPublishedShopifyAboutPaths(locale),
+        getPublishedShopifyEditorialPaths("blog", locale),
+        getPublishedShopifyEditorialPaths("crystals", locale),
       ]);
       const categories = productCategoriesForProducts(products, locale);
       return {
@@ -89,7 +76,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...categories.map(({ handle }) => `/category/${handle}`),
         ...collections.map(({ handle }) => `/collections/${handle}`),
         ...products.map(({ handle }) => `/products/${handle}`),
-        ...getPublishedTrustPagePaths(locale),
         ...policyPaths,
         ...contentPagePaths,
       ];

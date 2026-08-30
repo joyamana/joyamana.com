@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCommerceProvider } from "@/lib/commerce/catalog";
 import {
   getShopifyEditorialArticle,
   type EditorialKind,
@@ -23,7 +22,6 @@ export async function EditorialDetailPage({
   handle: string;
   kind: EditorialKind;
 }) {
-  if (getCommerceProvider() !== "shopify") notFound();
   const entry = await getShopifyEditorialArticle(kind, handle, locale);
   if (!entry) notFound();
   const basePath = kind === "blog" ? "/blog" : "/crystals";

@@ -92,7 +92,6 @@ function cookieStore(initialValue: string | null = null) {
 }
 
 beforeEach(() => {
-  process.env.COMMERCE_PROVIDER = "shopify";
   process.env.SHOPIFY_CHECKOUT_ENABLED = "false";
   process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
   delete process.env.SHOPIFY_CHECKOUT_DOMAIN;
@@ -206,18 +205,6 @@ describe("Bag server actions", () => {
     expect(mocks.removeLines).toHaveBeenCalledWith(oldCartId, [lineId], "EN");
     expect(mocks.clearCart).toHaveBeenCalledWith(oldCartId, "EN");
     expect(mocks.createCart).not.toHaveBeenCalled();
-  });
-
-  it("keeps Shopify Cart actions unavailable while the mock provider is active", async () => {
-    process.env.COMMERCE_PROVIDER = "mock";
-
-    const result = await addCartLineAction(merchandiseId, 1);
-
-    expect(result).toMatchObject({
-      ok: false,
-      error: { code: "NOT_CONFIGURED" },
-    });
-    expect(mocks.cookies).not.toHaveBeenCalled();
   });
 
   it("requests localized Cart merchandise for the US Spanish route", async () => {

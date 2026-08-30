@@ -13,7 +13,6 @@ import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
-import { ProductArt } from "./product-art";
 
 export function CartView({ locale }: { locale: Locale }) {
   const {
@@ -159,7 +158,13 @@ export function CartView({ locale }: { locale: Locale }) {
                   sizes="150px"
                 />
               ) : (
-                <ProductArt palette="pearl" compact />
+                <span className="product-media-unavailable product-media-unavailable--cart">
+                  {uiText(locale, {
+                    en: "Image unavailable",
+                    es: "Imagen no disponible",
+                    fr: "Image indisponible",
+                  })}
+                </span>
               )}
             </Link>
             <div>

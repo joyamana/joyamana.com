@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getCommerceProvider } from "@/lib/commerce/catalog";
 import {
   getShopifyEditorialIndex,
   type EditorialKind,
@@ -17,12 +16,10 @@ export async function EditorialIndexPage({
   kind: EditorialKind;
 }) {
   let index = null;
-  if (getCommerceProvider() === "shopify") {
-    try {
-      index = await getShopifyEditorialIndex(kind, locale);
-    } catch {
-      return <EditorialUnavailable kind={kind} locale={locale} />;
-    }
+  try {
+    index = await getShopifyEditorialIndex(kind, locale);
+  } catch {
+    return <EditorialUnavailable kind={kind} locale={locale} />;
   }
   if (!index?.articles.length) {
     return <EditorialUnavailable kind={kind} locale={locale} />;

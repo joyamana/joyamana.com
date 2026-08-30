@@ -1,11 +1,9 @@
 import type { Locale } from "@/lib/i18n/locales";
-import { getCommerceProvider } from "@/lib/commerce/catalog";
 import {
   getShopifyPolicy,
   type ShopifyPolicyKind,
 } from "@/lib/content/shopify-policies";
 import { uiText } from "@/lib/i18n/text";
-import { TrustPage } from "./trust-page";
 
 const policyTitles = {
   shipping: {
@@ -37,10 +35,6 @@ export async function PolicyPage({
   locale: Locale;
   kind: "shipping" | "returns" | "privacy" | "terms";
 }) {
-  if (getCommerceProvider() !== "shopify") {
-    return <TrustPage locale={locale} kind={kind} />;
-  }
-
   let policy;
   try {
     policy = await getShopifyPolicy(kind, locale);

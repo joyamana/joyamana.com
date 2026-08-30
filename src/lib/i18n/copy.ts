@@ -27,7 +27,6 @@ const copy = {
       blog: "From the blog",
     },
     labels: {
-      developmentSample: "Development sample",
       exactPiece: "Exact piece shown",
       naturalVariation: "Natural variation",
       testPrice: "Price",
@@ -68,7 +67,6 @@ const copy = {
       blog: "Del blog",
     },
     labels: {
-      developmentSample: "Muestra de desarrollo",
       exactPiece: "Pieza exacta en la foto",
       naturalVariation: "Variación natural",
       testPrice: "Precio",
@@ -109,7 +107,6 @@ const copy = {
       blog: "Du blog",
     },
     labels: {
-      developmentSample: "Échantillon de développement",
       exactPiece: "Pièce exacte présentée",
       naturalVariation: "Variation naturelle",
       testPrice: "Prix",

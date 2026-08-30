@@ -6,7 +6,7 @@ import {
   canadaLocaleFromSegment,
   enabledCanadaLocaleSegments,
 } from "@/lib/i18n/locales";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
 
 export async function generateStaticParams() {
   if (enabledCanadaLocaleSegments.length === 0) return [];
@@ -26,9 +26,15 @@ export async function generateMetadata({
   const locale = canadaLocaleFromSegment(marketLocale);
   if (!locale) notFound();
   const product = await getProduct(handle, "ca", locale);
+  if (!product) {
+    return buildNoIndexMetadata({
+      title: "Product unavailable",
+      description: "This product is not available.",
+    });
+  }
   return buildMetadata({
-    title: product?.title || "Product",
-    description: product?.description || "Prototype product.",
+    title: product.seoTitle || product.title,
+    description: product.seoDescription || product.description,
     locale,
     path: `/products/${handle}`,
   });

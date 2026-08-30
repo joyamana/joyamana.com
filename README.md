@@ -57,10 +57,12 @@ pnpm test
 pnpm build
 ```
 
-测试站默认使用 US 本地 mock catalog，并由 `NEXT_PUBLIC_SITE_INDEXABLE=false`
-保持全站不可索引。Canada 的 Cart、Catalog 和 Currency context 只保留未来
-隔离模型，不生成公开 URL。Shopify 真实商品、价格、本地化内容与已批准政策
-准备好之前，不得开启索引或 Checkout。
+测试站运行时只使用 Shopify Storefront API，并由
+`NEXT_PUBLIC_SITE_INDEXABLE=false` 保持全站不可索引。不存在本地 Commerce
+provider 或样本 Catalog fallback；Shopify 缺失、数据无效或请求失败时页面必须
+fail closed。Canada 的 Cart、Catalog 和 Currency context 只保留未来隔离模型，
+不生成公开 URL。正式内容、本地化内容与已批准政策准备好之前，不得开启索引或
+Checkout。
 
 ## 文档语言
 

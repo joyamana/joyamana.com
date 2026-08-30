@@ -1,14 +1,8 @@
 import type { Locale } from "@/lib/i18n/locales";
-import { getCommerceProvider } from "@/lib/commerce/catalog";
 import { getShopifyContentPage } from "@/lib/content/shopify-content-pages";
 import { uiText } from "@/lib/i18n/text";
-import { TrustPage } from "./trust-page";
 
 export async function AccessibilityPage({ locale }: { locale: Locale }) {
-  if (getCommerceProvider() !== "shopify") {
-    return <TrustPage locale={locale} kind="accessibility" />;
-  }
-
   let page;
   try {
     page = await getShopifyContentPage("accessibility", locale);

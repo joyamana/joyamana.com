@@ -16,7 +16,6 @@ import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { AddToCart } from "./add-to-cart";
 import { BuyNow } from "./buy-now";
-import { ProductArt } from "./product-art";
 
 function uniqueImages(images: Array<ProductImage | null | undefined>) {
   const seen = new Set<string>();
@@ -118,17 +117,14 @@ export function ProductPurchase({
                 sizes="(max-width: 760px) 100vw, 50vw"
               />
             ) : (
-              <ProductArt palette="pearl" />
-            )}
-            {product.source === "mock" ? (
-              <span className="sample-stamp">
+              <div className="product-media-unavailable">
                 {uiText(locale, {
-                  en: "Provided concept image",
-                  es: "Imagen conceptual proporcionada",
-                  fr: "Image conceptuelle fournie",
+                  en: "Product image unavailable",
+                  es: "Imagen del producto no disponible",
+                  fr: "Image du produit indisponible",
                 })}
-              </span>
-            ) : null}
+              </div>
+            )}
           </div>
           {galleryImages.length > 1 ? (
             <div
@@ -167,13 +163,11 @@ export function ProductPurchase({
       </div>
       <div className="product-detail__info">
         <p className="eyebrow">
-          {product.source === "shopify"
-            ? uiText(locale, {
-                en: "Live Shopify catalog",
-                es: "Catálogo activo de Shopify",
-                fr: "Catalogue Shopify actif",
-              })
-            : copy.labels.developmentSample}
+          {uiText(locale, {
+            en: "Shopify catalog",
+            es: "Catálogo de Shopify",
+            fr: "Catalogue Shopify",
+          })}
         </p>
         <h1>{product.title}</h1>
         <p className="display-price">

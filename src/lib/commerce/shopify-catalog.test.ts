@@ -118,7 +118,6 @@ describe("Shopify catalog mapper and queries", () => {
     const product = mapShopifyProduct(productFixture());
 
     expect(product).toMatchObject({
-      source: "shopify",
       title: "Seven-Chakra Bracelet",
       priceRange: {
         minVariantPrice: { amount: "68.50", currencyCode: "USD" },
@@ -290,7 +289,6 @@ describe("Shopify catalog mapper and queries", () => {
       expect.objectContaining({
         handle: "seven-chakra",
         title: "Seven Chakra",
-        source: "shopify",
         kind: "design_series",
         image: expect.objectContaining({
           altText: "Seven Chakra",

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { activeMarket, markets } from "@/config/markets";
+import type { Collection, Product, ProductCollection } from "./types";
 
 const shopifyCatalogMocks = vi.hoisted(() => ({
   getShopifyCollection: vi.fn(),
@@ -12,7 +13,6 @@ const shopifyCatalogMocks = vi.hoisted(() => ({
 vi.mock("./shopify-catalog", () => shopifyCatalogMocks);
 
 import {
-  CommerceProviderError,
   getCollection,
   getCollections,
   getDesignCollection,
@@ -23,92 +23,97 @@ import {
   searchCatalog,
 } from "./catalog";
 
-const originalEnv = { ...process.env };
+const product: Product = {
+  id: "gid://shopify/Product/1",
+  handle: "crystal-bracelet",
+  title: "Crystal Bracelet",
+  description: "A bracelet.",
+  availableForSale: true,
+  priceRange: {
+    minVariantPrice: { amount: "68.00", currencyCode: "USD" },
+    maxVariantPrice: { amount: "68.00", currencyCode: "USD" },
+  },
+  compareAtPrice: null,
+  featuredImage: null,
+  images: [],
+  variants: [],
+  category: {
+    id: "gid://shopify/TaxonomyCategory/aa-6-3",
+    name: "Bracelets",
+  },
+};
+
+const designCollection: Collection = {
+  id: "gid://shopify/Collection/1",
+  handle: "patron-saint",
+  title: "Patron Saint",
+  description: "A design series.",
+  image: null,
+  kind: "design_series",
+};
+
+const merchandisingCollection: Collection = {
+  ...designCollection,
+  id: "gid://shopify/Collection/2",
+  handle: "featured",
+  title: "Featured",
+  kind: "merchandising",
+};
 
 afterEach(() => {
-  process.env = { ...originalEnv };
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
-describe("catalog provider facade", () => {
-  it("normalizes the approved mock product without numeric commerce prices", async () => {
-    process.env.COMMERCE_PROVIDER = "mock";
-    const collection = await getCollection("seven-chakra", "us", "en-US");
-    const product = collection?.products[0];
+describe("Shopify catalog facade", () => {
+  it("builds category routes from Shopify taxonomy identity", async () => {
+    shopifyCatalogMocks.getShopifyProducts.mockResolvedValue([product]);
 
-    expect(collection?.products).toHaveLength(1);
-    expect(product).toMatchObject({
-      handle: "seven-chakra-classic-bracelet-8mm",
-      title: "Seven-Chakra Classic Bracelet — 8mm",
-      source: "mock",
-      priceRange: {
-        minVariantPrice: { amount: "68.00", currencyCode: "USD" },
-      },
-    });
-    expect(product?.variants[0]).toMatchObject({
-      availableForSale: true,
-      price: { amount: "68.00", currencyCode: "USD" },
-      image: { width: 1254, height: 1254 },
-      selectedOptions: [{ name: "Main stone", value: "White-pattern stone" }],
-    });
-  });
-
-  it("returns locale-specific mock commerce strings", async () => {
-    process.env.COMMERCE_PROVIDER = "mock";
-
-    expect(await searchCatalog("bracelet", "us", "en-US")).toHaveLength(1);
-    expect(await searchCatalog("pulsera", "us", "en-US")).toHaveLength(0);
-    expect(await searchCatalog("pulsera", "us", "es-US")).toHaveLength(1);
-    expect(
-      (await getProduct(
-        "seven-chakra-classic-bracelet-8mm",
-        "us",
-        "es-US",
-      ))?.title,
-    ).toBe("Pulsera Clásica de Siete Chakras — 8 mm");
-  });
-
-  it("builds category routes from Shopify taxonomy identity, not collection titles", async () => {
-    process.env.COMMERCE_PROVIDER = "mock";
-
-    await expect(getProductCategory("bracelets", "us", "en-US")).resolves.toMatchObject({
+    await expect(
+      getProductCategory("bracelets", "us", "en-US"),
+    ).resolves.toMatchObject({
       handle: "bracelets",
       taxonomyId: "gid://shopify/TaxonomyCategory/aa-6-3",
       title: "Bracelets",
-      products: [
-        expect.objectContaining({
-          handle: "seven-chakra-classic-bracelet-8mm",
-          category: {
-            id: "gid://shopify/TaxonomyCategory/aa-6-3",
-            name: "Bracelets",
-          },
-        }),
-      ],
+      products: [expect.objectContaining({ handle: "crystal-bracelet" })],
     });
-    await expect(getProductCategory("rings", "us", "en-US")).resolves.toBeNull();
-    await expect(getProductCategory("bracelets", "us", "es-US")).resolves.toMatchObject({
+    await expect(
+      getProductCategory("bracelets", "us", "es-US"),
+    ).resolves.toMatchObject({
       title: "Pulseras",
-      products: [
-        expect.objectContaining({
-          category: expect.objectContaining({ name: "Pulseras" }),
-        }),
-      ],
     });
+    await expect(
+      getProductCategory("rings", "us", "en-US"),
+    ).resolves.toBeNull();
   });
 
-  it("exposes only collections explicitly marked as design series", async () => {
-    process.env.COMMERCE_PROVIDER = "mock";
+  it("exposes only Shopify collections marked as design series", async () => {
+    shopifyCatalogMocks.getShopifyCollections.mockResolvedValue([
+      designCollection,
+      merchandisingCollection,
+    ]);
+    shopifyCatalogMocks.getShopifyCollection.mockImplementation(
+      async (handle: string) => {
+        const collection =
+          handle === "patron-saint"
+            ? designCollection
+            : handle === "featured"
+              ? merchandisingCollection
+              : null;
+        return collection
+          ? ({ ...collection, products: [] } satisfies ProductCollection)
+          : null;
+      },
+    );
 
     await expect(getDesignCollections("us", "en-US")).resolves.toEqual([
-      expect.objectContaining({
-        handle: "seven-chakra",
-        kind: "design_series",
-      }),
+      designCollection,
     ]);
-    await expect(getDesignCollection("seven-chakra", "us", "en-US")).resolves.toMatchObject({
-      kind: "design_series",
-    });
-    await expect(getDesignCollection("new-arrivals", "us", "en-US")).resolves.toBeNull();
+    await expect(
+      getDesignCollection("patron-saint", "us", "en-US"),
+    ).resolves.toMatchObject({ kind: "design_series" });
+    await expect(
+      getDesignCollection("featured", "us", "en-US"),
+    ).resolves.toBeNull();
   });
 
   it("uses one enabled US catalog for English and Spanish", () => {
@@ -120,8 +125,6 @@ describe("catalog provider facade", () => {
   });
 
   it("keeps planned Canada empty without consulting Shopify", async () => {
-    process.env.COMMERCE_PROVIDER = "shopify";
-
     await expect(getProducts("ca", "en-CA")).resolves.toEqual([]);
     await expect(getProduct("anything", "ca", "en-CA")).resolves.toBeNull();
     await expect(getCollections("ca", "fr-CA")).resolves.toEqual([]);
@@ -136,34 +139,43 @@ describe("catalog provider facade", () => {
     expect(shopifyCatalogMocks.searchShopifyProducts).not.toHaveBeenCalled();
   });
 
-  it("dispatches Shopify with the requested locale and never falls back on errors", async () => {
-    process.env.COMMERCE_PROVIDER = "shopify";
+  it("always dispatches Shopify with the requested locale", async () => {
+    shopifyCatalogMocks.getShopifyProducts.mockResolvedValue([product]);
+    shopifyCatalogMocks.getShopifyProduct.mockResolvedValue(product);
+    shopifyCatalogMocks.getShopifyCollections.mockResolvedValue([
+      designCollection,
+    ]);
+    shopifyCatalogMocks.searchShopifyProducts.mockResolvedValue([product]);
+
+    await expect(getProducts("us", "es-US")).resolves.toEqual([product]);
+    await expect(
+      getProduct("crystal-bracelet", "us", "en-US"),
+    ).resolves.toEqual(product);
+    await expect(getCollections("us", "es-US")).resolves.toEqual([
+      designCollection,
+    ]);
+    await expect(searchCatalog("crystal", "us", "es-US")).resolves.toEqual([
+      product,
+    ]);
+
+    expect(shopifyCatalogMocks.getShopifyProducts).toHaveBeenCalledWith("es-US");
+    expect(shopifyCatalogMocks.getShopifyProduct).toHaveBeenCalledWith(
+      "crystal-bracelet",
+      "en-US",
+    );
+    expect(shopifyCatalogMocks.getShopifyCollections).toHaveBeenCalledWith(
+      "es-US",
+    );
+    expect(shopifyCatalogMocks.searchShopifyProducts).toHaveBeenCalledWith(
+      "crystal",
+      "es-US",
+    );
+  });
+
+  it("propagates Shopify failures without a local fallback", async () => {
     const upstreamError = new Error("Shopify unavailable");
     shopifyCatalogMocks.getShopifyProducts.mockRejectedValueOnce(upstreamError);
 
-    await expect(getProducts("us", "es-US")).rejects.toBe(upstreamError);
-    expect(shopifyCatalogMocks.getShopifyProducts).toHaveBeenCalledWith("es-US");
-  });
-
-  it("rejects an unknown provider instead of silently using mock data", async () => {
-    process.env.COMMERCE_PROVIDER = "other";
-
-    await expect(getProducts()).rejects.toEqual(
-      expect.objectContaining<Partial<CommerceProviderError>>({
-        name: "CommerceProviderError",
-        kind: "configuration",
-        message: "COMMERCE_PROVIDER must be either mock or shopify.",
-      }),
-    );
-  });
-
-  it("defaults to Shopify when the provider is omitted", async () => {
-    delete process.env.COMMERCE_PROVIDER;
-    shopifyCatalogMocks.getShopifyProducts.mockResolvedValueOnce([]);
-
-    await expect(getProducts()).resolves.toEqual([]);
-    expect(shopifyCatalogMocks.getShopifyProducts).toHaveBeenCalledWith(
-      "en-US",
-    );
+    await expect(getProducts("us", "en-US")).rejects.toBe(upstreamError);
   });
 });

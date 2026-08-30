@@ -57,7 +57,6 @@ export type CartActionErrorCode =
   | "EMPTY_CART"
   | "INVALID_INPUT"
   | "INVALID_QUANTITY"
-  | "NOT_CONFIGURED"
   | "SHOPIFY_ERROR"
   | "UNAVAILABLE";
 
@@ -73,7 +72,6 @@ const cartErrorMessages: Record<
     EMPTY_CART: "Your bag is empty.",
     INVALID_INPUT: "The cart request was invalid.",
     INVALID_QUANTITY: "Choose a valid whole-number quantity.",
-    NOT_CONFIGURED: "Shopify commerce is not configured.",
     SHOPIFY_ERROR: "Shopify could not update the bag. Please try again.",
     UNAVAILABLE: "This item is no longer available in the requested quantity.",
   },
@@ -86,7 +84,6 @@ const cartErrorMessages: Record<
     EMPTY_CART: "Tu bolsa está vacía.",
     INVALID_INPUT: "La solicitud de la bolsa no es válida.",
     INVALID_QUANTITY: "Elige una cantidad válida en números enteros.",
-    NOT_CONFIGURED: "El comercio de Shopify no está configurado.",
     SHOPIFY_ERROR: "Shopify no pudo actualizar la bolsa. Inténtalo de nuevo.",
     UNAVAILABLE:
       "Este artículo ya no está disponible en la cantidad solicitada.",
