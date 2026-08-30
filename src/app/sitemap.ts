@@ -6,7 +6,7 @@ import {
   getProducts,
   productCategoriesForProducts,
 } from "@/lib/commerce/catalog";
-import { blogEntries, crystalGuides } from "@/lib/content/content";
+import { getPublishedShopifyEditorialPaths } from "@/lib/content/shopify-editorial";
 import { getPublishedShopifyAboutPaths } from "@/lib/content/shopify-about-pages";
 import { getPublishedTrustPagePaths } from "@/lib/content/trust-pages";
 import { getPublishedShopifyPolicyPaths } from "@/lib/content/shopify-policies";
@@ -20,11 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const contentPaths = [
     "/",
-    "/crystals",
-    "/blog",
     "/contact",
-    ...crystalGuides.map(({ handle }) => `/crystals/${handle}`),
-    ...blogEntries.map(({ handle }) => `/blog/${handle}`),
   ];
   const commerceProvider = getCommerceProvider();
   const localizedCatalogs = await Promise.all(
@@ -35,6 +31,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         policyPaths,
         contentPagePaths,
         aboutPaths,
+        blogPaths,
+        crystalPaths,
       ] = await Promise.all([
         getDesignCollections("us", locale),
         getProducts("us", locale),
@@ -47,13 +45,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         commerceProvider === "shopify"
           ? getPublishedShopifyAboutPaths(locale)
           : Promise.resolve([]),
+        commerceProvider === "shopify"
+          ? getPublishedShopifyEditorialPaths("blog", locale)
+          : Promise.resolve([]),
+        commerceProvider === "shopify"
+          ? getPublishedShopifyEditorialPaths("crystals", locale)
+          : Promise.resolve([]),
       ]);
       const categories = productCategoriesForProducts(products, locale);
       return {
         aboutPaths,
+        blogPaths,
         categories,
         collections,
         contentPagePaths,
+        crystalPaths,
         locale,
         policyPaths,
         products,
@@ -64,9 +70,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return localizedCatalogs.flatMap(
     ({
       aboutPaths,
+      blogPaths,
       categories,
       collections,
       contentPagePaths,
+      crystalPaths,
       locale,
       policyPaths,
       products,
@@ -74,6 +82,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const paths = [
         ...contentPaths,
         ...aboutPaths,
+        ...blogPaths,
+        ...crystalPaths,
         ...(products.length ? ["/shop"] : []),
         ...(collections.length ? ["/collections"] : []),
         ...categories.map(({ handle }) => `/category/${handle}`),

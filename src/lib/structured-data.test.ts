@@ -3,6 +3,7 @@ import type { Product } from "./commerce/types";
 import {
   buildAboutStructuredData,
   buildCollectionStructuredData,
+  buildEditorialStructuredData,
   buildProductStructuredData,
   serializeStructuredData,
 } from "./structured-data";
@@ -252,6 +253,55 @@ describe("About structured data", () => {
             },
           ],
         },
+      ],
+    });
+  });
+});
+
+describe("editorial structured data", () => {
+  it("uses BlogPosting for Blog and Article for Crystal Guide", () => {
+    const blog = buildEditorialStructuredData({
+      name: "How to choose clearly",
+      description: "A practical buying guide.",
+      path: "/blog/how-to-choose-clearly",
+      locale: "en-US",
+      breadcrumbs: [
+        { name: "Home", path: "/" },
+        { name: "Blog", path: "/blog" },
+      ],
+      kind: "blog",
+      author: "Tian Tian",
+      publishedAt: "2026-08-30T12:00:00Z",
+    });
+    const crystal = buildEditorialStructuredData({
+      name: "Amethyst",
+      description: "A material reference.",
+      path: "/crystals/amethyst",
+      locale: "es-US",
+      breadcrumbs: [
+        { name: "Inicio", path: "/" },
+        { name: "Guía de cristales", path: "/crystals" },
+      ],
+      kind: "crystals",
+      publishedAt: "2026-08-30T12:00:00Z",
+    });
+
+    expect(blog).toMatchObject({
+      "@graph": [
+        {
+          "@type": "BlogPosting",
+          author: { "@type": "Person", name: "Tian Tian" },
+        },
+        { "@type": "BreadcrumbList" },
+      ],
+    });
+    expect(crystal).toMatchObject({
+      "@graph": [
+        {
+          "@type": "Article",
+          url: "http://localhost:3000/es-us/crystals/amethyst",
+        },
+        { "@type": "BreadcrumbList" },
       ],
     });
   });

@@ -81,8 +81,9 @@ Blog 是唯一栏目名称与路径。不得创建 `/journal`、Journal UI 别�
 Next.js 使用稳定的品牌化 URL 呈现这些内容，不暴露 `/pages/*` 或 Shopify 默认
 Policy/Metaobject URL。当前不设 FAQ、Disclaimer 或独立 Product Care URL；若未来恢复，必须先
 确认独立页面价值、内容来源和索引条件。
-- Shopify Blog/Article：文章正文和发布状态。
-- Shopify merchant-owned Metaobjects：Design Series、Crystal、Author、Source、
+- Shopify Blog/Article：`blog` 承载 Blog，`crystals` 承载 Crystal Guide；Article
+  保存正文、发布状态、作者、日期、SEO，并按需使用 Metafields 保存结构化扩展。
+- Shopify merchant-owned Metaobjects：Design Series、Author、Source、
   可复用 FAQ、Site Settings 等结构化实体。Design Series 保存系列故事与视觉；
   对应 Shopify Collection 保存公开 URL、SEO 和商品归集，职责不得双写。
 
@@ -152,7 +153,11 @@ Commerce 核心字段见 `COMMERCE_SPEC.md`。内容扩展包括：
 Design Series Metaobject 不另行生成第二个可索引页面；公开 canonical 保持对应
 `/collections/{handle}`。SEO title/description 和商品成员归集由 Collection 维护。
 
-### Crystal
+### Crystal Guide Article
+
+使用 Shopify 原生 Blog `crystals` 中的 Article；Article handle 对应
+`/crystals/{handle}`。以下结构化字段可使用 Article Metafields，不另建一份同名
+Crystal Metaobject 正文：
 
 - canonical name
 - aliases
@@ -186,7 +191,7 @@ Design Series Metaobject 不另行生成第二个可索引页面；公开 canoni
 - real author
 - reviewer（只有真实审核发生时）
 - published / materially updated
-- related Crystal / Product / Collection
+- related Crystal Guide / Product / Collection
 - status
 - locale 与 visible markets
 

@@ -1,14 +1,12 @@
 import { EditorialIndexPage } from "@/components/pages/editorial-index-page";
-import { blogEntries } from "@/lib/content/content";
-import { buildMetadata } from "@/lib/seo";
+import { buildEditorialIndexMetadata } from "@/lib/content/editorial-metadata";
 
-export const metadata = buildMetadata({
-  title: "Blog — borrador",
-  description: "Artículos de desarrollo sobre objetos de cristal y compras claras.",
-  locale: "es-US",
-  path: "/blog",
-});
+export const dynamic = "force-dynamic";
+
+export function generateMetadata() {
+  return buildEditorialIndexMetadata({ kind: "blog", locale: "es-US" });
+}
 
 export default function Page() {
-  return <EditorialIndexPage locale="es-US" entries={blogEntries} kind="blog" />;
+  return <EditorialIndexPage locale="es-US" kind="blog" />;
 }

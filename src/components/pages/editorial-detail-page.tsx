@@ -1,51 +1,120 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { EditorialEntry } from "@/lib/content/content";
-import { localize } from "@/lib/commerce/types";
+import { getCommerceProvider } from "@/lib/commerce/catalog";
+import {
+  getShopifyEditorialArticle,
+  type EditorialKind,
+} from "@/lib/content/shopify-editorial";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import {
+  buildEditorialStructuredData,
+  serializeIndexableStructuredData,
+} from "@/lib/structured-data";
 
-export function EditorialDetailPage({
+export async function EditorialDetailPage({
   locale,
-  entries,
   handle,
   kind,
 }: {
   locale: Locale;
-  entries: EditorialEntry[];
   handle: string;
-  kind: "blog" | "crystals";
+  kind: EditorialKind;
 }) {
-  const entry = entries.find((item) => item.handle === handle);
+  if (getCommerceProvider() !== "shopify") notFound();
+  const entry = await getShopifyEditorialArticle(kind, handle, locale);
   if (!entry) notFound();
   const basePath = kind === "blog" ? "/blog" : "/crystals";
+  const indexLabel =
+    kind === "blog"
+      ? "Blog"
+      : uiText(locale, {
+          en: "Crystal guide",
+          es: "Guía de cristales",
+          fr: "Guide des cristaux",
+        });
+  const path = `${basePath}/${entry.handle}`;
+  const structuredData = entry.usedDefaultLanguage
+    ? null
+    : serializeIndexableStructuredData(
+        buildEditorialStructuredData({
+          name: entry.title,
+          description: entry.seoDescription,
+          path,
+          locale,
+          breadcrumbs: [
+            {
+              name: uiText(locale, {
+                en: "Home",
+                es: "Inicio",
+                fr: "Accueil",
+              }),
+              path: "/",
+            },
+            { name: indexLabel, path: basePath },
+            { name: entry.title, path },
+          ],
+          kind,
+          author: entry.author,
+          publishedAt: entry.publishedAt,
+          image: entry.image?.url,
+        }),
+      );
 
   return (
     <article className="article-page">
+      {structuredData ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: structuredData }}
+        />
+      ) : null}
       <Link className="back-link" href={localePath(locale, basePath)}>
         ← {uiText(locale, { en: "Back to index", es: "Volver al índice", fr: "Retour à l’index" })}
       </Link>
-      <p className="eyebrow">{localize(entry.category, locale)}</p>
-      <h1>{localize(entry.title, locale)}</h1>
-      <p className="article-disclaimer">
-        {uiText(locale, {
-          en: "Prototype draft and unreviewed translation. Do not publish.",
-          es: "Borrador de prototipo y traducción no revisada. No publicar.",
-          fr: "Brouillon prototype et traduction non révisée. Ne pas publier.",
-        })}
+      <p className="eyebrow">
+        {entry.tags[0] ||
+          uiText(locale, {
+            en: kind === "blog" ? "Article" : "Crystal guide",
+            es: kind === "blog" ? "Artículo" : "Guía de cristales",
+            fr: kind === "blog" ? "Article" : "Guide des cristaux",
+          })}
       </p>
-      <div className="article-body">
-        <p>{localize(entry.body, locale)}</p>
-        <h2>{uiText(locale, { en: "Before launch", es: "Antes del lanzamiento", fr: "Avant le lancement" })}</h2>
-        <p>
+      <h1 lang={entry.contentLocale}>{entry.title}</h1>
+      <div className="article-byline" lang={entry.contentLocale}>
+        {entry.author ? <span>{entry.author}</span> : null}
+        <time dateTime={entry.publishedAt}>
+          {new Intl.DateTimeFormat(entry.contentLocale, {
+            dateStyle: "long",
+            timeZone: "UTC",
+          }).format(new Date(entry.publishedAt))}
+        </time>
+      </div>
+      {entry.usedDefaultLanguage ? (
+        <p className="policy-language-notice">
           {uiText(locale, {
-            en: "A human editor must verify facts, sources, claim scope, links, translation quality, and relationships to real products.",
-            es: "Un editor humano debe verificar hechos, fuentes, alcance de afirmaciones, enlaces, traducción y relación con productos reales.",
-            fr: "Une personne responsable doit vérifier les faits, les sources, la portée des allégations, les liens, la traduction et les relations avec les produits réels.",
+            en: "This article is currently available in English.",
+            es: "Este artículo está disponible actualmente en inglés.",
+            fr: "Cet article est actuellement disponible en anglais.",
           })}
         </p>
-      </div>
+      ) : null}
+      {entry.image ? (
+        <Image
+          alt={entry.image.altText || ""}
+          className="article-image"
+          height={entry.image.height || 900}
+          src={entry.image.url}
+          width={entry.image.width || 1440}
+        />
+      ) : null}
+      <div
+        className="article-body"
+        dangerouslySetInnerHTML={{ __html: entry.contentHtml }}
+        lang={entry.contentLocale}
+      />
     </article>
   );
 }

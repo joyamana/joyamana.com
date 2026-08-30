@@ -31,6 +31,18 @@ interface AboutStructuredDataInput {
   isRoot: boolean;
 }
 
+interface EditorialStructuredDataInput {
+  name: string;
+  description: string;
+  path: string;
+  locale: Locale;
+  breadcrumbs: StructuredBreadcrumb[];
+  kind: "blog" | "crystals";
+  author?: string;
+  publishedAt: string;
+  image?: string;
+}
+
 function absoluteStorefrontUrl(locale: Locale, path: string) {
   return new URL(localePath(locale, path), siteConfig.url).toString();
 }
@@ -205,6 +217,41 @@ export function buildAboutStructuredData({
         ...(normalizedDescription
           ? { description: normalizedDescription }
           : {}),
+      },
+      buildBreadcrumbList(pageUrl, locale, breadcrumbs),
+    ],
+  };
+}
+
+export function buildEditorialStructuredData({
+  name,
+  description,
+  path,
+  locale,
+  breadcrumbs,
+  kind,
+  author,
+  publishedAt,
+  image,
+}: EditorialStructuredDataInput) {
+  const pageUrl = absoluteStorefrontUrl(locale, path);
+  const normalizedAuthor = nonEmptyText(author);
+  const normalizedImage = nonEmptyText(image);
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": kind === "blog" ? "BlogPosting" : "Article",
+        "@id": `${pageUrl}#article`,
+        url: pageUrl,
+        headline: name,
+        description,
+        datePublished: publishedAt,
+        ...(normalizedAuthor
+          ? { author: { "@type": "Person", name: normalizedAuthor } }
+          : {}),
+        ...(normalizedImage ? { image: normalizedImage } : {}),
       },
       buildBreadcrumbList(pageUrl, locale, breadcrumbs),
     ],

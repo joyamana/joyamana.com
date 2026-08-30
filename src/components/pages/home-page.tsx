@@ -1,7 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getDesignCollections, getProducts } from "@/lib/commerce/catalog";
-import { blogEntries } from "@/lib/content/content";
+import {
+  getCommerceProvider,
+  getDesignCollections,
+  getProducts,
+} from "@/lib/commerce/catalog";
+import { getShopifyEditorialIndex } from "@/lib/content/shopify-editorial";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
@@ -12,9 +16,10 @@ import { ProductCard } from "@/components/product-card";
 export async function HomePage({ locale }: { locale: Locale }) {
   const copy = getCopy(locale);
   const marketId = marketIdForLocale(locale);
-  const [products, collections] = await Promise.all([
+  const [products, collections, blog] = await Promise.all([
     getProducts(marketId, locale),
     getDesignCollections(marketId, locale),
+    getHomeBlog(locale),
   ]);
 
   return (
@@ -132,30 +137,26 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="section section--tint">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">
-              {uiText(locale, {
-                en: "Journal",
-                es: "Historias",
-                fr: "Journal",
-              })}
-            </p>
-            <h2>{copy.home.blog}</h2>
+      {blog.length ? (
+        <section className="section section--tint">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Blog</p>
+              <h2>{copy.home.blog}</h2>
+            </div>
           </div>
-        </div>
-        <div className="editorial-grid">
-          {blogEntries.map((entry) => (
-            <EditorialCard
-              key={entry.handle}
-              entry={entry}
-              locale={locale}
-              basePath="/blog"
-            />
-          ))}
-        </div>
-      </section>
+          <div className="editorial-grid">
+            {blog.map((entry) => (
+              <EditorialCard
+                key={entry.handle}
+                entry={entry}
+                locale={locale}
+                basePath="/blog"
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {collections.length ? (
         <section
@@ -180,4 +181,18 @@ export async function HomePage({ locale }: { locale: Locale }) {
       ) : null}
     </>
   );
+}
+
+async function getHomeBlog(locale: Locale) {
+  if (getCommerceProvider() !== "shopify") return [];
+  try {
+    const index = await getShopifyEditorialIndex("blog", locale);
+    return (
+      index?.articles
+        .filter((article) => !article.usedDefaultLanguage)
+        .slice(0, 3) ?? []
+    );
+  } catch {
+    return [];
+  }
 }

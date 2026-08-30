@@ -1,6 +1,5 @@
 import Link from "next/link";
-import type { EditorialEntry } from "@/lib/content/content";
-import { localize } from "@/lib/commerce/types";
+import type { StorefrontEditorialArticle } from "@/lib/content/shopify-editorial";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
@@ -10,19 +9,22 @@ export function EditorialCard({
   locale,
   basePath,
 }: {
-  entry: EditorialEntry;
+  entry: StorefrontEditorialArticle;
   locale: Locale;
   basePath: "/blog" | "/crystals";
 }) {
   return (
     <article className="editorial-card">
-      <p className="eyebrow">{localize(entry.category, locale)}</p>
+      <p className="eyebrow">
+        {entry.tags[0] ||
+          uiText(locale, { en: "Article", es: "Artículo", fr: "Article" })}
+      </p>
       <h3>
         <Link href={localePath(locale, `${basePath}/${entry.handle}`)}>
-          {localize(entry.title, locale)}
+          {entry.title}
         </Link>
       </h3>
-      <p>{localize(entry.excerpt, locale)}</p>
+      <p>{entry.excerpt}</p>
       <Link
         className="text-link"
         href={localePath(locale, `${basePath}/${entry.handle}`)}

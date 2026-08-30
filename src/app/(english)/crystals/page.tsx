@@ -1,16 +1,12 @@
 import { EditorialIndexPage } from "@/components/pages/editorial-index-page";
-import { crystalGuides } from "@/lib/content/content";
-import { buildMetadata } from "@/lib/seo";
+import { buildEditorialIndexMetadata } from "@/lib/content/editorial-metadata";
 
-export const metadata = buildMetadata({
-  title: "Crystal guide — draft",
-  description: "Unreviewed prototype crystal guide structure.",
-  locale: "en-US",
-  path: "/crystals",
-});
+export const dynamic = "force-dynamic";
+
+export function generateMetadata() {
+  return buildEditorialIndexMetadata({ kind: "crystals", locale: "en-US" });
+}
 
 export default function Page() {
-  return (
-    <EditorialIndexPage locale="en-US" entries={crystalGuides} kind="crystals" />
-  );
+  return <EditorialIndexPage locale="en-US" kind="crystals" />;
 }

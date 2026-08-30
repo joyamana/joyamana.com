@@ -116,6 +116,19 @@ Storefront API 与安全的 Cart smoke 已确认：
   Customer Privacy API、提供 `Your Privacy Choices`，并核对同根 Checkout domain；
   绝不能向浏览器暴露当前 server-only private token。
 
+## Shopify editorial follow-up — 2026-08-30
+
+- Storefront API 当前可读取原生 Blog `blog` 与 `crystals`；两者各有 1 篇已发布测试
+  Article，分别为 `hello-world` 与 `hello-for-crystal-guide`。
+- `/blog`、`/crystals`、各详情页和首页 Blog 推荐已切换为 Shopify Article，不再读取
+  本地 prototype entries；品牌 URL 不暴露 Shopify `/blogs/*`。
+- 两篇测试 Article 当前均无 excerpt、SEO、featured image 或 tags，正文只有一行测试
+  文字。前端会从正文生成安全摘要，但这些内容仍须替换为原创、审核完成的正式内容。
+- `@inContext(language: ES)` 当前对两个 Blog 均回退 English；西语页面提供阅读后备并
+  保持 noindex，不进入西语 sitemap/hreflang。
+- 当前全站 noindex 门禁不变。正式开放索引前还需完成 Article 内容审核、claim/source
+  检查、独立 SEO、图片 alt、翻译与相关商品关系。
+
 ## Before public launch
 
 | ID | Decision | Current handling |

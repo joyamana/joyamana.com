@@ -1,19 +1,33 @@
 import Link from "next/link";
-import type { EditorialEntry } from "@/lib/content/content";
-import { localize } from "@/lib/commerce/types";
+import { getCommerceProvider } from "@/lib/commerce/catalog";
+import {
+  getShopifyEditorialIndex,
+  type EditorialKind,
+  type StorefrontEditorialArticle,
+} from "@/lib/content/shopify-editorial";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 
-export function EditorialIndexPage({
+export async function EditorialIndexPage({
   locale,
-  entries,
   kind,
 }: {
   locale: Locale;
-  entries: EditorialEntry[];
-  kind: "blog" | "crystals";
+  kind: EditorialKind;
 }) {
+  let index = null;
+  if (getCommerceProvider() === "shopify") {
+    try {
+      index = await getShopifyEditorialIndex(kind, locale);
+    } catch {
+      return <EditorialUnavailable kind={kind} locale={locale} />;
+    }
+  }
+  if (!index?.articles.length) {
+    return <EditorialUnavailable kind={kind} locale={locale} />;
+  }
+
   const isBlog = kind === "blog";
   const title = isBlog
     ? "Blog"
@@ -27,31 +41,47 @@ export function EditorialIndexPage({
     <>
       <header className={`editorial-hub-hero editorial-hub-hero--${kind}`}>
         <p className="eyebrow">
-          {uiText(locale, {
-            en: "Unreviewed development content",
-            es: "Contenido sin revisar",
-            fr: "Contenu de développement non révisé",
-          })}
+          {isBlog
+            ? uiText(locale, {
+                en: "Stories & guidance",
+                es: "Historias y orientación",
+                fr: "Histoires et conseils",
+              })
+            : uiText(locale, {
+                en: "Material reference",
+                es: "Referencia de materiales",
+                fr: "Référence des matériaux",
+              })}
         </p>
         <h1 id={`${kind}-index-title`}>{title}</h1>
         <p>
-          {isBlog
-            ? uiText(locale, {
-                en: "Editorial notes on crystal objects, clear buying, and personal meaning. Every draft requires human review before publication.",
-                es: "Notas editoriales sobre objetos de cristal, compras claras y significado personal. Cada borrador requiere revisión humana antes de publicarse.",
-                fr: "Des notes éditoriales sur les objets en cristal, l’achat éclairé et le sens personnel. Chaque brouillon doit être révisé avant publication.",
-              })
-            : uiText(locale, {
-                en: "A considered index of material facts, visible character, and care. Every draft requires source verification before publication.",
-                es: "Un índice cuidado de datos materiales, carácter visible y cuidado. Cada borrador requiere verificar sus fuentes antes de publicarse.",
-                fr: "Un index raisonné des faits matériels, du caractère visible et de l’entretien. Chaque brouillon exige une vérification des sources avant publication.",
-              })}
+          {index.seoDescription ||
+            (isBlog
+              ? uiText(locale, {
+                  en: "Stories and practical guidance about crystal objects, clear buying, and personal meaning.",
+                  es: "Historias y orientación práctica sobre cristales, compras claras y significado personal.",
+                  fr: "Histoires et conseils pratiques sur les cristaux, l’achat éclairé et le sens personnel.",
+                })
+              : uiText(locale, {
+                  en: "A reference guide to crystal characteristics, care, and traditional associations.",
+                  es: "Una guía de referencia sobre las características, el cuidado y las asociaciones tradicionales de los cristales.",
+                  fr: "Un guide de référence sur les caractéristiques, l’entretien et les associations traditionnelles des cristaux.",
+                }))}
         </p>
       </header>
+      {index.usedDefaultLanguage ? (
+        <p className="policy-language-notice editorial-language-notice">
+          {uiText(locale, {
+            en: "This section is currently available in English.",
+            es: "Esta sección está disponible actualmente en inglés.",
+            fr: "Cette section est actuellement disponible en anglais.",
+          })}
+        </p>
+      ) : null}
       {isBlog ? (
-        <BlogIndex locale={locale} entries={entries} />
+        <BlogIndex locale={locale} entries={index.articles} />
       ) : (
-        <CrystalDirectory locale={locale} entries={entries} />
+        <CrystalDirectory locale={locale} entries={index.articles} />
       )}
     </>
   );
@@ -62,7 +92,7 @@ function CrystalDirectory({
   entries,
 }: {
   locale: Locale;
-  entries: EditorialEntry[];
+  entries: StorefrontEditorialArticle[];
 }) {
   return (
     <section
@@ -75,18 +105,18 @@ function CrystalDirectory({
             {String(index + 1).padStart(2, "0")}
           </span>
           <div>
-            <p className="eyebrow">{localize(entry.category, locale)}</p>
+            <p className="eyebrow">{entryCategory(entry, locale, "crystals")}</p>
             <h2>
               <Link
                 href={localePath(locale, `/crystals/${entry.handle}`)}
               >
-                {localize(entry.title, locale)}
+                {entry.title}
               </Link>
             </h2>
-            <p>{localize(entry.excerpt, locale)}</p>
+            <p>{entry.excerpt}</p>
           </div>
           <Link
-            aria-label={`${uiText(locale, { en: "Read", es: "Leer", fr: "Lire" })}: ${localize(entry.title, locale)}`}
+            aria-label={`${uiText(locale, { en: "Read", es: "Leer", fr: "Lire" })}: ${entry.title}`}
             className="editorial-arrow"
             href={localePath(locale, `/crystals/${entry.handle}`)}
           >
@@ -103,7 +133,7 @@ function BlogIndex({
   entries,
 }: {
   locale: Locale;
-  entries: EditorialEntry[];
+  entries: StorefrontEditorialArticle[];
 }) {
   const [featured, ...rest] = entries;
   if (!featured) return null;
@@ -113,26 +143,26 @@ function BlogIndex({
       <article className="blog-featured">
         <p className="eyebrow">
           {uiText(locale, {
-            en: "Featured draft",
-            es: "Borrador destacado",
-            fr: "Brouillon en vedette",
+            en: "Featured",
+            es: "Destacado",
+            fr: "À la une",
           })}{" "}
-          · {localize(featured.category, locale)}
+          · {entryCategory(featured, locale, "blog")}
         </p>
         <h2>
           <Link href={localePath(locale, `/blog/${featured.handle}`)}>
-            {localize(featured.title, locale)}
+            {featured.title}
           </Link>
         </h2>
-        <p>{localize(featured.excerpt, locale)}</p>
+        <p>{featured.excerpt}</p>
         <Link
           className="text-link"
           href={localePath(locale, `/blog/${featured.handle}`)}
         >
           {uiText(locale, {
-            en: "Read draft",
-            es: "Leer borrador",
-            fr: "Lire le brouillon",
+            en: "Read article",
+            es: "Leer artículo",
+            fr: "Lire l’article",
           })}{" "}
           →
         </Link>
@@ -140,17 +170,17 @@ function BlogIndex({
       <div className="blog-index__list">
         {rest.map((entry) => (
           <article className="blog-index__item" key={entry.handle}>
-            <p className="eyebrow">{localize(entry.category, locale)}</p>
+            <p className="eyebrow">{entryCategory(entry, locale, "blog")}</p>
             <div>
               <h3>
                 <Link href={localePath(locale, `/blog/${entry.handle}`)}>
-                  {localize(entry.title, locale)}
+                  {entry.title}
                 </Link>
               </h3>
-              <p>{localize(entry.excerpt, locale)}</p>
+              <p>{entry.excerpt}</p>
             </div>
             <Link
-              aria-label={`${uiText(locale, { en: "Read", es: "Leer", fr: "Lire" })}: ${localize(entry.title, locale)}`}
+              aria-label={`${uiText(locale, { en: "Read", es: "Leer", fr: "Lire" })}: ${entry.title}`}
               className="editorial-arrow"
               href={localePath(locale, `/blog/${entry.handle}`)}
             >
@@ -159,6 +189,60 @@ function BlogIndex({
           </article>
         ))}
       </div>
+    </section>
+  );
+}
+
+function entryCategory(
+  entry: StorefrontEditorialArticle,
+  locale: Locale,
+  kind: EditorialKind,
+) {
+  return (
+    entry.tags[0] ||
+    (kind === "blog"
+      ? uiText(locale, { en: "Article", es: "Artículo", fr: "Article" })
+      : uiText(locale, {
+          en: "Crystal guide",
+          es: "Guía de cristales",
+          fr: "Guide des cristaux",
+        }))
+  );
+}
+
+function EditorialUnavailable({
+  kind,
+  locale,
+}: {
+  kind: EditorialKind;
+  locale: Locale;
+}) {
+  const isBlog = kind === "blog";
+  return (
+    <section className="editorial-hub-hero">
+      <p className="eyebrow">
+        {isBlog
+          ? "Blog"
+          : uiText(locale, {
+              en: "Crystal guide",
+              es: "Guía de cristales",
+              fr: "Guide des cristaux",
+            })}
+      </p>
+      <h1>
+        {uiText(locale, {
+          en: "New stories are on the way.",
+          es: "Próximamente habrá nuevas historias.",
+          fr: "De nouvelles histoires arrivent bientôt.",
+        })}
+      </h1>
+      <p>
+        {uiText(locale, {
+          en: "Please check back soon.",
+          es: "Vuelve a visitarnos pronto.",
+          fr: "Revenez bientôt.",
+        })}
+      </p>
     </section>
   );
 }

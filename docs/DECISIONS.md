@@ -60,6 +60,7 @@ Last updated: 2026-08-31
 | D-038 | Contact form delivery | Working | Server Action + 可关闭的 Resend 薄适配层；不建客户数据库 |
 | D-039 | Phase-one service pages | Accepted | 当前不设 FAQ、Disclaimer、独立 Product Care 页面 |
 | D-040 | About subtree | Accepted | Content Page Metaobject 驱动独立 URL 与页内文字 tabs |
+| D-041 | Editorial source model | Accepted | `/blog` 与 `/crystals` 分别读取 Shopify 原生 `blog`、`crystals` Blog |
 
 ## Accepted decisions
 
@@ -544,6 +545,40 @@ Migration / rollback: 删除 child 引用即可从 tabs 与 sitemap 下线；如
 子页 URL，不能把所有地址批量跳转首页。
 Supersedes: D-034 中 About 固定页面布局与硬编码工作文案作为长期实现的部分；D-034
 关于未获批品牌事实和 claims 的限制继续有效。
+
+### D-041 — Blog 与 Crystal Guide 使用 Shopify 原生 Blog
+
+Date: 2026-08-30
+Status: Accepted
+Owner: Project owner
+Context: Shopify 已实际创建 handle 为 `blog` 与 `crystals` 的两个原生 Blog。当前
+编辑规模优先使用同一套 Article 草稿、发布、作者、日期、SEO 与翻译工作流，不再为
+Crystal Guide 同时维护第二套 Crystal Metaobject 正文。
+Decision:
+
+- Shopify Blog `blog` 是 `/blog` 与 `/blog/{article.handle}` 的内容事实来源。
+- Shopify Blog `crystals` 是 `/crystals` 与 `/crystals/{article.handle}` 的内容事实
+  来源；不暴露 Shopify `/blogs/*` URL。
+- 两类 Article 均通过 Storefront API 服务端读取。正文、摘要、图片、作者、发布日期、
+  tags 与 SEO 使用 Shopify 原生字段；未来需要 composition、hardness、care、sources、
+  related products 等结构化信息时，优先增加 Article Metafields。
+- 当前不建立一份同名 Crystal Metaobject 与 Article 双写。若商品需要引用 Guide，使用
+  Shopify 支持的 Article resource reference；只有出现独立于文章的跨渠道 Crystal
+  实体需求时，才另做迁移决策。
+- en-US 与 es-US 共享稳定英文 Article handle。未完成真实翻译的语言 fallback 可阅读，
+  但必须 noindex，且不得进入该语言的 sitemap/hreflang。
+
+Reason: 两个线上 Blog 已提供当前所需的编辑与发布能力，模型更少、运营路径更直接；
+Article Metafields 足以承载 MVP 的结构化扩展，而双写 Article 和 Metaobject 会制造事实
+来源冲突。
+Consequences: Next.js 的 Blog、Crystal Guide、首页推荐、metadata 与 sitemap 统一从
+Shopify Article 派生。修改 Blog handle 或已发布 Article handle 前必须安排明确的 URL
+迁移和 301。
+Migration / rollback: 本地 prototype entries 已移除。若未来升级为 Crystal
+Metaobject，应先定义字段、Article 到实体的迁移和旧 URL 保留方案，再切换唯一事实来源。
+Supersedes: D-009 与 `CONTENT_SEO_GEO_SPEC.md` 中“Crystal 必须由 merchant-owned
+Metaobject 作为当前唯一正文来源”的部分；D-009 的 Shopify-first 边界与其他
+Metaobject 用途继续有效。
 
 ## Pending decision
 

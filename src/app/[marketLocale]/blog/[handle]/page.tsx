@@ -1,16 +1,8 @@
 import { notFound } from "next/navigation";
 import { EditorialDetailPage } from "@/components/pages/editorial-detail-page";
-import { blogEntries } from "@/lib/content/content";
-import {
-  canadaLocaleFromSegment,
-  enabledCanadaLocaleSegments,
-} from "@/lib/i18n/locales";
+import { canadaLocaleFromSegment } from "@/lib/i18n/locales";
 
-export function generateStaticParams() {
-  return enabledCanadaLocaleSegments.flatMap((marketLocale) =>
-    blogEntries.map(({ handle }) => ({ marketLocale, handle })),
-  );
-}
+export const dynamic = "force-dynamic";
 
 export default async function Page({
   params,
@@ -23,7 +15,6 @@ export default async function Page({
   return (
     <EditorialDetailPage
       locale={locale}
-      entries={blogEntries}
       handle={handle}
       kind="blog"
     />

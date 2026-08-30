@@ -1,8 +1,19 @@
+import type { Metadata } from "next";
 import { EditorialDetailPage } from "@/components/pages/editorial-detail-page";
-import { blogEntries } from "@/lib/content/content";
+import { buildEditorialArticleMetadata } from "@/lib/content/editorial-metadata";
 
-export function generateStaticParams() {
-  return blogEntries.map(({ handle }) => ({ handle }));
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}): Promise<Metadata> {
+  return buildEditorialArticleMetadata({
+    handle: (await params).handle,
+    kind: "blog",
+    locale: "es-US",
+  });
 }
 
 export default async function Page({
@@ -13,7 +24,6 @@ export default async function Page({
   return (
     <EditorialDetailPage
       locale="es-US"
-      entries={blogEntries}
       handle={(await params).handle}
       kind="blog"
     />

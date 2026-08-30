@@ -1,8 +1,19 @@
+import type { Metadata } from "next";
 import { EditorialDetailPage } from "@/components/pages/editorial-detail-page";
-import { crystalGuides } from "@/lib/content/content";
+import { buildEditorialArticleMetadata } from "@/lib/content/editorial-metadata";
 
-export function generateStaticParams() {
-  return crystalGuides.map(({ handle }) => ({ handle }));
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}): Promise<Metadata> {
+  return buildEditorialArticleMetadata({
+    handle: (await params).handle,
+    kind: "crystals",
+    locale: "es-US",
+  });
 }
 
 export default async function Page({
@@ -13,7 +24,6 @@ export default async function Page({
   return (
     <EditorialDetailPage
       locale="es-US"
-      entries={crystalGuides}
       handle={(await params).handle}
       kind="crystals"
     />

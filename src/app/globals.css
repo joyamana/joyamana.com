@@ -1055,6 +1055,11 @@ h3 {
   font-size: clamp(1.6rem, 2.5vw, 2.25rem);
 }
 
+.editorial-language-notice {
+  max-width: var(--content);
+  margin: 2rem auto 0;
+}
+
 .text-link,
 .back-link {
   display: inline-block;
@@ -1471,9 +1476,51 @@ h3 {
   line-height: 1.55;
 }
 
-.article-body h2 {
+.article-byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: 2rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.article-image {
+  width: 100%;
+  height: auto;
+  margin-top: 3rem;
+}
+
+.article-body h2,
+.article-body h3,
+.article-body h4 {
   margin-top: 4rem;
+}
+
+.article-body h2 {
   font-size: 2rem;
+}
+
+.article-body h3 {
+  font-size: 1.65rem;
+}
+
+.article-body p,
+.article-body ul,
+.article-body ol,
+.article-body blockquote {
+  margin-bottom: 1.5rem;
+}
+
+.article-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.article-body a {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .split-copy {
