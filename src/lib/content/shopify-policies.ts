@@ -1,6 +1,7 @@
 import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
 import { shopifyFetch } from "@/lib/commerce/shopify";
+import { sanitizeShopifyHtml } from "./shopify-html";
 
 export const shopifyPolicyKinds = [
   "shipping",
@@ -161,145 +162,10 @@ export async function getPublishedShopifyPolicyPaths(locale: Locale) {
   });
 }
 
-const allowedTags = new Set([
-  "a",
-  "blockquote",
-  "br",
-  "em",
-  "h2",
-  "h3",
-  "h4",
-  "li",
-  "ol",
-  "p",
-  "strong",
-  "table",
-  "tbody",
-  "td",
-  "th",
-  "thead",
-  "tr",
-  "ul",
-]);
-
-function decodeHtmlEntities(value: string) {
-  return value.replace(
-    /&(?:#(\d+)|#x([\da-f]+)|(amp|apos|gt|lt|nbsp|quot));/gi,
-    (
-      entity,
-      decimal: string | undefined,
-      hex: string | undefined,
-      named: string | undefined,
-    ) => {
-      if (decimal) return String.fromCodePoint(Number.parseInt(decimal, 10));
-      if (hex) return String.fromCodePoint(Number.parseInt(hex, 16));
-      const values: Record<string, string> = {
-        amp: "&",
-        apos: "'",
-        gt: ">",
-        lt: "<",
-        nbsp: "\u00a0",
-        quot: '"',
-      };
-      return values[named?.toLowerCase() ?? ""] ?? entity;
-    },
-  );
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function safePolicyHref(value: string) {
-  const decoded = decodeHtmlEntities(value.trim());
-  if (decoded.startsWith("/") && !decoded.startsWith("//")) return decoded;
-
-  try {
-    const url = new URL(decoded);
-    return url.protocol === "https:" || url.protocol === "mailto:"
-      ? decoded
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function isHttpsHref(value: string) {
-  try {
-    return new URL(value).protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Shopify policy bodies are merchant-authored HTML. Rebuild a deliberately
  * small allowlist and discard all source attributes before rendering it.
  */
 export function sanitizeShopifyPolicyHtml(source: string) {
-  const withoutRawContent = source
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(
-      /<\s*(script|style|iframe|object|embed|svg|math|template|form)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi,
-      "",
-    )
-    .replace(/^\s*<h1\b[^>]*>[\s\S]*?<\/h1>\s*/i, "");
-  const tagPattern = /<[^>]*>/g;
-  let output = "";
-  let offset = 0;
-
-  for (const match of withoutRawContent.matchAll(tagPattern)) {
-    const index = match.index ?? 0;
-    output += escapeHtml(
-      decodeHtmlEntities(withoutRawContent.slice(offset, index)),
-    );
-    offset = index + match[0].length;
-
-    const parsed = match[0].match(/^<\s*(\/?)\s*([a-z0-9]+)\b([^>]*)>$/i);
-    if (!parsed) continue;
-    const closing = parsed[1] === "/";
-    const sourceTag = parsed[2].toLowerCase();
-    const tag = sourceTag === "h1" ? "h2" : sourceTag;
-    if (!allowedTags.has(tag)) continue;
-
-    if (closing) {
-      if (tag !== "br") output += `</${tag}>`;
-      continue;
-    }
-
-    if (tag === "a") {
-      const hrefMatch = parsed[3].match(
-        /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i,
-      );
-      const href = safePolicyHref(
-        hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3] ?? "",
-      );
-      const targetMatch = parsed[3].match(
-        /\btarget\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i,
-      );
-      const target =
-        targetMatch?.[1] ?? targetMatch?.[2] ?? targetMatch?.[3] ?? "";
-      const opensNewTab = Boolean(
-        href && target === "_blank" && isHttpsHref(href),
-      );
-      output += href
-        ? `<a href="${escapeHtml(href)}"${
-            opensNewTab
-              ? ' target="_blank" rel="noopener noreferrer"'
-              : ""
-          }>`
-        : "<a>";
-      continue;
-    }
-
-    output += tag === "br" ? "<br>" : `<${tag}>`;
-  }
-
-  output += escapeHtml(decodeHtmlEntities(withoutRawContent.slice(offset)));
-  return output.trim();
+  return sanitizeShopifyHtml(source, { removeLeadingH1: true });
 }

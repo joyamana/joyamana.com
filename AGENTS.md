@@ -135,18 +135,36 @@
 
 ## 当前仓库状态
 
-截至 2026-08-31，仓库包含 Next.js 16 App Router 测试站、pnpm 配置以及
+截至 2026-09-01，仓库包含 Next.js 16 App Router 测试站、pnpm 配置以及
 Shopify-only Storefront API 适配层。US en-US 根路径与 `/es-us/` 已共享同一
 Catalog/Cart；商品、Variant、Category、Design Collection、实时价格/可售性/可用数量、
-Bag 和独立 Buy now Cart 已接入。Policy、About subtree、Accessibility、Blog/
+Bag 和独立 Buy now Cart 已接入。Product `custom.product_model` 已映射；PDP 仅对明确
+`standard` / `natural_variation` 且符合严格库存条件的 1–3 件显示准确低库存，
+`one_of_one`、未知模型和 oversell 排除。PDP 商品描述读取经过 allowlist 清理的 Shopify
+`descriptionHtml`，纯文本字段继续用于 metadata/Schema 和后备。Policy、About subtree、Accessibility、Blog/
 Crystal Guide 也由 Shopify 驱动；Contact 表单仅在受控配置后才投递。本地 mock
 Catalog 和业务正文 fallback 已删除，上游缺失时 fail closed。
 
+当前 `Patron Saint` 已是非空、Headless 可见且标记为 `design_series` 的 Collection；
+基础系列路由有效，但 description/SEO 与 Design Series story/lookbook 链路尚未完成。
+Shipping/Returns 与 About EN/ES 正文已获业务方确认，每件商品附带专属 guidebook；
+Terms 后台占位符已修正。`info@joyamana.com` 可收信，当前正式客服模式为 Email-only，
+Contact 表单/Resend 后置。Blog/Crystal Guide 的两篇测试 Article 因暂无正式内容暂不处理，
+不得把它们视为正式内容或开放索引。
+
 Canada 只保留未启用的 typed 规划配置。仓库示例值及未配置时的代码默认值为全站
 noindex，并关闭 Shopify Checkout 和 Contact 投递；各部署环境必须单独核验。当前没有
-CI、Playwright/E2E、format check 或
-Shopify webhook 失效链路；西语人工审核、完整政策、Analytics/consent、真实支付与
-Production/Preview 验收仍未完成。
+CI、format check 或 Shopify webhook 失效链路。Playwright 按 D-043 暂时封存，只有
+复杂度触发后才重新评估；当前必须记录人工浏览器/Checkout smoke 的范围和结果。
 
-常用命令：`pnpm dev`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、
+Production storefront 已通过 Vercel 在 `https://www.joyamana.com` 公开响应，
+`https://checkout.joyamana.com` 已指向 Shopify Online Store；本地 `dev` 分支用于后续
+开发并已由 Vercel 构建受保护 Preview。Production 当前仍
+noindex；D-044 已确认 `https://www.joyamana.com` 为 canonical origin，apex 308 至
+`www`，当前公开 canonical/OG 已复核为 `www`。参数页 noindex、
+document-level locale、Policy/Accessibility hreflang、Search metadata、Header
+专用 query/故障降级和环境 preflight 已实现；完整政策、Commerce 西语 readiness、
+Analytics/consent、Commerce 西语 readiness、真实支付与发布验收尚未完成。
+
+常用命令：`pnpm dev`、`pnpm preflight`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、
 `pnpm build`。不得在实际运行前声称检查已通过。

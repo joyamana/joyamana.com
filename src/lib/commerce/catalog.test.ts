@@ -3,6 +3,7 @@ import { activeMarket, markets } from "@/config/markets";
 import type { Collection, Product, ProductCollection } from "./types";
 
 const shopifyCatalogMocks = vi.hoisted(() => ({
+  getShopifyCatalogNavigation: vi.fn(),
   getShopifyCollection: vi.fn(),
   getShopifyCollections: vi.fn(),
   getShopifyProduct: vi.fn(),
@@ -13,6 +14,7 @@ const shopifyCatalogMocks = vi.hoisted(() => ({
 vi.mock("./shopify-catalog", () => shopifyCatalogMocks);
 
 import {
+  catalogNavigationFromSnapshot,
   getCollection,
   getCollections,
   getDesignCollection,
@@ -28,6 +30,7 @@ const product: Product = {
   handle: "crystal-bracelet",
   title: "Crystal Bracelet",
   description: "A bracelet.",
+  descriptionHtml: "<p>A bracelet.</p>",
   availableForSale: true,
   priceRange: {
     minVariantPrice: { amount: "68.00", currencyCode: "USD" },
@@ -86,6 +89,30 @@ describe("Shopify catalog facade", () => {
     ).resolves.toBeNull();
   });
 
+  it("projects cached Header navigation without product commerce fields", () => {
+    expect(
+      catalogNavigationFromSnapshot(
+        {
+          productCategoryIds: ["gid://shopify/TaxonomyCategory/aa-6-3"],
+          collections: [
+            {
+              handle: "patron-saint",
+              title: "Patron Saint",
+              kind: "design_series",
+            },
+            { handle: "featured", title: "Featured", kind: "merchandising" },
+          ],
+        },
+        "es-US",
+      ),
+    ).toEqual({
+      categories: [{ handle: "bracelets", title: "Pulseras" }],
+      collections: [
+        { handle: "patron-saint", title: "Patron Saint", kind: "design_series" },
+      ],
+    });
+  });
+
   it("exposes only Shopify collections marked as design series", async () => {
     shopifyCatalogMocks.getShopifyCollections.mockResolvedValue([
       designCollection,
@@ -133,6 +160,7 @@ describe("Shopify catalog facade", () => {
 
     expect(markets.ca.status).toBe("planned");
     expect(shopifyCatalogMocks.getShopifyProducts).not.toHaveBeenCalled();
+    expect(shopifyCatalogMocks.getShopifyCatalogNavigation).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyProduct).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyCollections).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyCollection).not.toHaveBeenCalled();

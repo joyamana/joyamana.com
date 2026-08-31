@@ -42,9 +42,9 @@ export async function SearchPage({
         <div className="search-results">
           <p>
             {uiText(locale, {
-              en: `${results.length} Shopify catalog result(s) for “${query}”`,
-              es: `${results.length} resultado(s) del catálogo de Shopify para “${query}”`,
-              fr: `${results.length} résultat(s) du catalogue Shopify pour « ${query} »`,
+              en: `${results.length} product ${results.length === 1 ? "result" : "results"} for “${query}”`,
+              es: `${results.length} ${results.length === 1 ? "resultado de producto" : "resultados de productos"} para “${query}”`,
+              fr: `${results.length} ${results.length === 1 ? "résultat de produit" : "résultats de produits"} pour « ${query} »`,
             })}
           </p>
           <div className="product-grid product-grid--three">

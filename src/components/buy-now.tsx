@@ -5,6 +5,14 @@ import type { Locale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 
+export function checkoutDisabledNote(locale: Locale) {
+  return uiText(locale, {
+    en: "Buy now is temporarily unavailable. You can still add this item to your bag.",
+    es: "Comprar ahora no está disponible temporalmente. Aún puedes añadir este artículo a tu bolsa.",
+    fr: "L’achat immédiat est temporairement indisponible. Vous pouvez toujours ajouter cet article à votre panier.",
+  });
+}
+
 export function BuyNow({
   variantId,
   quantity,
@@ -50,15 +58,11 @@ export function BuyNow({
       <p className="checkout-note" id={noteId}>
         {checkoutEnabled
           ? uiText(locale, {
-              en: "Creates a separate one-item Shopify cart and leaves your bag unchanged.",
-              es: "Crea un carrito de Shopify independiente con este artículo y no cambia tu bolsa.",
-              fr: "Crée un panier Shopify distinct pour cet article sans modifier votre panier.",
+              en: "Starts checkout with this item without changing your bag.",
+              es: "Inicia el pago con este artículo sin cambiar tu bolsa.",
+              fr: "Commence le paiement avec cet article sans modifier votre panier.",
             })
-          : uiText(locale, {
-              en: "Checkout code is connected, but remains disabled until shipping, returns, tax, legal, and hosted-checkout settings are approved.",
-              es: "El código de pago está conectado, pero permanece desactivado hasta aprobar los ajustes de envío, devoluciones, impuestos, aspectos legales y pago alojado.",
-              fr: "Le paiement est connecté, mais reste désactivé jusqu’à l’approbation de l’expédition, des retours, des taxes, des paramètres juridiques et du paiement hébergé.",
-            })}
+          : checkoutDisabledNote(locale)}
       </p>
       {failed && error ? (
         <p className="action-error" id={errorId} role="alert">

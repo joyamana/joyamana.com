@@ -1,10 +1,19 @@
 import { EditorialIndexPage } from "@/components/pages/editorial-index-page";
 import { buildEditorialIndexMetadata } from "@/lib/content/editorial-metadata";
+import type { PageSearchParams } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export function generateMetadata() {
-  return buildEditorialIndexMetadata({ kind: "blog", locale: "es-US" });
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<PageSearchParams>;
+}) {
+  return buildEditorialIndexMetadata({
+    kind: "blog",
+    locale: "es-US",
+    searchParams: await searchParams,
+  });
 }
 
 export default function Page() {

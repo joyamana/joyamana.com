@@ -16,7 +16,9 @@ Last updated: 2026-08-31
 当前实施状态：仓库没有 GA4、Shopify Customer Events、consent UI 或自定义事件
 运行时；`NEXT_PUBLIC_GA4_ID` 只是未使用的预留环境变量。Google site
 verification metadata 已支持可选配置，但不等于 GSC 账户已验证。本文件下列
-事件、KPI 和验收项目均是 Phase 4 发布前要求。
+事件、KPI 和验收项目均是 Phase 4 完整发布、推广和可度量 Commerce 前要求。
+虽然 `https://www.joyamana.com` 已公开响应，当前访问尚没有这套 Analytics/consent
+运行时，因此不能用站内事件衡量真实流量、漏斗或购买转化。
 
 当前唯一必要 cookie 是 `joya-mana-shopify-cart-us`：只保存 Shopify Cart ID，
 `HttpOnly`、`SameSite=Lax`、`Path=/`、最长 10 天，Production 使用 `Secure`。它用于

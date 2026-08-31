@@ -1,30 +1,23 @@
 import type { Metadata } from "next";
 import { PolicyPage } from "@/components/pages/policy-page";
-import { getShopifyPolicy } from "@/lib/content/shopify-policies";
-import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
+import { buildPolicyPageMetadata } from "@/lib/content/service-page-metadata";
+import type { PageSearchParams } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const title = "Política de envíos";
-  const description =
-    "Consulta la política de envíos de Joya Mana para pedidos en Estados Unidos.";
-
-  try {
-    const policy = await getShopifyPolicy("shipping", "es-US");
-    if (policy && !policy.usedDefaultLanguage) {
-      return buildMetadata({
-        title,
-        description,
-        locale: "es-US",
-        path: "/shipping",
-      });
-    }
-  } catch {
-    // Keep a readable fallback route out of search results during API errors.
-  }
-
-  return buildNoIndexMetadata({ title, description });
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<PageSearchParams>;
+}): Promise<Metadata> {
+  return buildPolicyPageMetadata({
+    title: "Política de envíos",
+    description:
+      "Consulta la política de envíos de Joya Mana para pedidos en Estados Unidos.",
+    kind: "shipping",
+    locale: "es-US",
+    searchParams: await searchParams,
+  });
 }
 
 export default function Page() {

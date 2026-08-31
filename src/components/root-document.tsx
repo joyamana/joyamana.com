@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Manrope, Newsreader } from "next/font/google";
 import { brand } from "@/config/brand";
 import { siteConfig } from "@/config/site";
-import { CartProvider } from "@/components/cart-provider";
-import "./globals.css";
+import type { Locale } from "@/lib/i18n/locales";
+import { uiText } from "@/lib/i18n/text";
+import { CartProvider } from "./cart-provider";
 
 const newsreader = Newsreader({
   subsets: ["latin"],
@@ -17,7 +18,7 @@ const manrope = Manrope({
   display: "swap",
 });
 
-export const metadata: Metadata = {
+export const rootMetadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
     default: brand.name,
@@ -33,19 +34,27 @@ export const metadata: Metadata = {
     : undefined,
 };
 
-export default function RootLayout({
+export function RootDocument({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  locale,
+}: {
+  children: React.ReactNode;
+  locale: Locale;
+}) {
   const checkoutEnabled = process.env.SHOPIFY_CHECKOUT_ENABLED === "true";
 
   return (
     <html
-      lang="en-US"
+      lang={locale}
       className={`${newsreader.variable} ${manrope.variable}`}
     >
       <body>
         <a className="skip-link" href="#main-content">
-          Skip to content
+          {uiText(locale, {
+            en: "Skip to content",
+            es: "Saltar al contenido",
+            fr: "Aller au contenu",
+          })}
         </a>
         <CartProvider checkoutEnabled={checkoutEnabled}>{children}</CartProvider>
       </body>

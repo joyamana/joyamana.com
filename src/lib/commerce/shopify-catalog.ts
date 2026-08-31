@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n/locales";
+import { sanitizeShopifyHtml } from "@/lib/content/shopify-html";
 import { shopifyFetch, type ShopifyFetchOptions } from "./shopify";
 import {
   isValidQuantityRule,
@@ -17,6 +18,8 @@ const COLLECTION_PAGE_SIZE = 100;
 const SUMMARY_VARIANT_PAGE_SIZE = 1;
 const VARIANT_PAGE_SIZE = 100;
 const SEARCH_PAGE_SIZE = 24;
+const NAVIGATION_PRODUCT_PAGE_SIZE = 250;
+const NAVIGATION_COLLECTION_PAGE_SIZE = 100;
 
 interface ShopifyMoneyV2 {
   amount: string;
@@ -78,7 +81,9 @@ export interface ShopifyProductNode {
   handle: string;
   title: string;
   description: string;
+  descriptionHtml: string;
   availableForSale: boolean;
+  productModel: ShopifyMetafield | null;
   category: ShopifyTaxonomyCategory | null;
   seo: ShopifySeo;
   featuredImage: ShopifyImage | null;
@@ -136,6 +141,36 @@ interface ShopifySearchData {
     | ({ __typename: "Product" } & ShopifyProductNode)
     | { __typename: string; id: string }
   >;
+}
+
+interface ShopifyNavigationProductNode {
+  id: string;
+  category: { id: string } | null;
+}
+
+interface ShopifyNavigationCollectionNode {
+  id: string;
+  handle: string;
+  title: string;
+  collectionKind: ShopifyMetafield | null;
+  products: { nodes: Array<{ id: string }> };
+}
+
+interface ShopifyNavigationProductsData {
+  products: ShopifyConnection<ShopifyNavigationProductNode>;
+}
+
+interface ShopifyNavigationCollectionsData {
+  collections: ShopifyConnection<ShopifyNavigationCollectionNode>;
+}
+
+export interface ShopifyCatalogNavigationSnapshot {
+  productCategoryIds: string[];
+  collections: Array<{
+    handle: string;
+    title: string;
+    kind: CollectionKind | undefined;
+  }>;
 }
 
 export type ShopifyCatalogErrorKind = "unsupported-locale" | "invalid-data";
@@ -202,7 +237,11 @@ const productFields = `#graphql
     handle
     title
     description
+    descriptionHtml
     availableForSale
+    productModel: metafield(namespace: "custom", key: "product_model") {
+      value
+    }
     category {
       id
       name
@@ -394,6 +433,51 @@ export const SHOPIFY_SEARCH_QUERY = `#graphql
     }
   }
   ${productFields}
+`;
+
+export const SHOPIFY_NAVIGATION_PRODUCTS_QUERY = `#graphql
+  query CatalogNavigationProducts(
+    $country: CountryCode!
+    $language: LanguageCode!
+    $first: Int!
+    $after: String
+  ) @inContext(country: $country, language: $language) {
+    products(first: $first, after: $after) {
+      nodes {
+        id
+        category { id }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const SHOPIFY_NAVIGATION_COLLECTIONS_QUERY = `#graphql
+  query CatalogNavigationCollections(
+    $country: CountryCode!
+    $language: LanguageCode!
+    $first: Int!
+    $after: String
+  ) @inContext(country: $country, language: $language) {
+    collections(first: $first, after: $after) {
+      nodes {
+        id
+        handle
+        title
+        collectionKind: metafield(namespace: "custom", key: "collection_kind") {
+          value
+        }
+        products(first: 1) { nodes { id } }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
 `;
 
 function shopifyContext(locale: Locale) {
@@ -641,6 +725,7 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
     handle: node.handle,
     title: node.title,
     description: node.description,
+    descriptionHtml: sanitizeShopifyHtml(node.descriptionHtml),
     seoTitle: optionalText(node.seo.title),
     seoDescription: optionalText(node.seo.description),
     availableForSale: node.availableForSale,
@@ -658,10 +743,21 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
     featuredImage,
     images,
     variants,
+    model: mapProductModel(node.productModel),
     category: node.category
       ? { id: node.category.id, name: node.category.name }
       : null,
   };
+}
+
+function mapProductModel(
+  metafield: ShopifyMetafield | null | undefined,
+): Product["model"] {
+  const value = optionalText(metafield?.value);
+  if (value === "standard") return "standard";
+  if (value === "natural_variation") return "natural-variation";
+  if (value === "one_of_one") return "one-of-one";
+  return undefined;
 }
 
 function mapCollectionKind(
@@ -858,4 +954,61 @@ export async function searchShopifyProducts(
         ]
       : [],
   );
+}
+
+export async function getShopifyCatalogNavigation(
+  locale: Locale,
+  fetchOptions: ShopifyFetchOptions,
+): Promise<ShopifyCatalogNavigationSnapshot> {
+  const context = shopifyContext(locale);
+  const loadProductsPage = (after: string | null) =>
+    shopifyFetch<ShopifyNavigationProductsData>(
+      SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
+      { ...context, first: NAVIGATION_PRODUCT_PAGE_SIZE, after },
+      fetchOptions,
+    );
+  const loadCollectionsPage = (after: string | null) =>
+    shopifyFetch<ShopifyNavigationCollectionsData>(
+      SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
+      { ...context, first: NAVIGATION_COLLECTION_PAGE_SIZE, after },
+      fetchOptions,
+    );
+  const [firstProductsPage, firstCollectionsPage] = await Promise.all([
+    loadProductsPage(null),
+    loadCollectionsPage(null),
+  ]);
+  const [products, collections] = await Promise.all([
+    collectConnectionNodes(
+      firstProductsPage.products,
+      async (after) => (await loadProductsPage(after)).products,
+      "navigation products",
+    ),
+    collectConnectionNodes(
+      firstCollectionsPage.collections,
+      async (after) => (await loadCollectionsPage(after)).collections,
+      "navigation collections",
+    ),
+  ]);
+
+  return {
+    productCategoryIds: [
+      ...new Set(
+        products.flatMap((product) =>
+          product.category?.id ? [product.category.id] : [],
+        ),
+      ),
+    ],
+    collections: collections.flatMap((collection) => {
+      const handle = optionalText(collection.handle);
+      const title = optionalText(collection.title);
+      if (!handle || !title || collection.products.nodes.length === 0) return [];
+      return [
+        {
+          handle,
+          title,
+          kind: mapCollectionKind(collection.collectionKind),
+        },
+      ];
+    }),
+  };
 }

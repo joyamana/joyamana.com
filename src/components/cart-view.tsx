@@ -36,9 +36,9 @@ export function CartView({ locale }: { locale: Locale }) {
       <div className="empty-state" aria-live="polite">
         <p className="eyebrow">
           {uiText(locale, {
-            en: "Shopify bag",
-            es: "Bolsa de Shopify",
-            fr: "Panier Shopify",
+            en: "Your selection",
+            es: "Tu selección",
+            fr: "Votre sélection",
           })}
         </p>
         <h1>
@@ -57,9 +57,9 @@ export function CartView({ locale }: { locale: Locale }) {
       <div className="empty-state">
         <p className="eyebrow">
           {uiText(locale, {
-            en: "Shopify bag",
-            es: "Bolsa de Shopify",
-            fr: "Panier Shopify",
+            en: "Your selection",
+            es: "Tu selección",
+            fr: "Votre sélection",
           })}
         </p>
         <h1>
@@ -83,9 +83,9 @@ export function CartView({ locale }: { locale: Locale }) {
         ) : (
           <p>
             {uiText(locale, {
-              en: "Products added here are stored in a Shopify Cart for this browser session.",
-              es: "Los productos agregados aquí se guardan en un carrito de Shopify para esta sesión del navegador.",
-              fr: "Les produits ajoutés ici sont conservés dans un panier Shopify pour cette session de navigateur.",
+              en: "Items added here are saved for this browser session.",
+              es: "Los artículos añadidos aquí se guardan durante esta sesión del navegador.",
+              fr: "Les articles ajoutés ici sont enregistrés pour cette session de navigation.",
             })}
           </p>
         )}
@@ -109,9 +109,9 @@ export function CartView({ locale }: { locale: Locale }) {
         <header className="cart-heading">
           <p className="eyebrow">
             {uiText(locale, {
-              en: "Shopify bag",
-              es: "Bolsa de Shopify",
-              fr: "Panier Shopify",
+              en: "Your selection",
+              es: "Tu selección",
+              fr: "Votre sélection",
             })}
           </p>
           <h1>
@@ -268,9 +268,9 @@ export function CartView({ locale }: { locale: Locale }) {
         </h2>
         <p>
           {uiText(locale, {
-            en: "Discounts, tax, shipping, and the final total are confirmed by Shopify Checkout.",
-            es: "Los descuentos, impuestos, el envío y el total final se confirman en el pago de Shopify.",
-            fr: "Les réductions, taxes, frais d’expédition et le total final sont confirmés dans Shopify Checkout.",
+            en: "Discounts, tax, shipping, and the final total are confirmed at checkout.",
+            es: "Los descuentos, los impuestos, el envío y el total final se confirman al pagar.",
+            fr: "Les réductions, taxes, frais d’expédition et le total final sont confirmés au moment du paiement.",
           })}
         </p>
         <button
@@ -296,17 +296,17 @@ export function CartView({ locale }: { locale: Locale }) {
                 fr: "Passer au paiement",
               })
             : uiText(locale, {
-                en: "Checkout pending approval",
-                es: "Pago pendiente de aprobación",
-                fr: "Paiement en attente d’approbation",
+                en: "Checkout unavailable",
+                es: "Pago no disponible",
+                fr: "Paiement indisponible",
               })}
         </button>
         {!checkoutEnabled ? (
           <p className="checkout-note">
             {uiText(locale, {
-              en: "The Shopify Checkout integration is ready, but the release gate remains closed until operating policies and checkout settings are approved.",
-              es: "La integración con Shopify Checkout está lista, pero el acceso permanece cerrado hasta aprobar las políticas operativas y los ajustes de pago.",
-              fr: "L’intégration Shopify Checkout est prête, mais l’accès reste fermé jusqu’à l’approbation des politiques et paramètres de paiement.",
+              en: "Checkout is temporarily unavailable.",
+              es: "El pago no está disponible temporalmente.",
+              fr: "Le paiement est temporairement indisponible.",
             })}
           </p>
         ) : null}

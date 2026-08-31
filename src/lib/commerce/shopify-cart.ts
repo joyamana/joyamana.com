@@ -315,10 +315,10 @@ function safeWarningMessage(message: string) {
     /gid:\/\/shopify\/Cart\//i.test(message) ||
     /https:\/\/\S+(?:\/cart\/c\/|\/checkouts\/)/i.test(message)
   ) {
-    return "Shopify adjusted the cart. Review the updated items before checkout.";
+    return "Your bag was updated. Review the items before checkout.";
   }
 
-  return message.slice(0, 500);
+  return message.replace(/\bShopify\b/gi, "The store").slice(0, 500);
 }
 
 function mapWarnings(warnings: ShopifyCartWarning[]): CartWarningView[] {

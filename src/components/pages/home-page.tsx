@@ -1,35 +1,28 @@
-import Image from "next/image";
 import Link from "next/link";
-import { getDesignCollections, getProducts } from "@/lib/commerce/catalog";
-import { getShopifyEditorialIndex } from "@/lib/content/shopify-editorial";
+import Image from "next/image";
+import { getProducts } from "@/lib/commerce/catalog";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
-import { EditorialCard } from "@/components/editorial-card";
 import { ProductCard } from "@/components/product-card";
 
 export async function HomePage({ locale }: { locale: Locale }) {
   const copy = getCopy(locale);
   const marketId = marketIdForLocale(locale);
-  const [products, collections, blog] = await Promise.all([
-    getProducts(marketId, locale),
-    getDesignCollections(marketId, locale),
-    getHomeBlog(locale),
-  ]);
+  const products = await getProducts(marketId, locale);
 
   return (
     <>
       <section className="hero">
         <Image
           className="hero__image"
-          src="/images/bling-omen-editorial-hero.png"
+          src="/images/joya-mana-home-hero.webp"
           alt=""
           fill
           priority
           sizes="100vw"
         />
-        <div className="hero__veil" />
         <div className="hero__content">
           <p className="eyebrow">{copy.home.eyebrow}</p>
           <h1>{copy.home.title}</h1>
@@ -49,9 +42,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
               )}
             >
               {uiText(locale, {
-                en: "View the featured piece",
-                es: "Ver la pieza destacada",
-                fr: "Voir la pièce vedette",
+                en: "Discover a featured piece",
+                es: "Descubrir una pieza destacada",
+                fr: "Découvrir une pièce vedette",
               })}
             </Link>
           </div>
@@ -87,25 +80,37 @@ export async function HomePage({ locale }: { locale: Locale }) {
 
       <section className="manifesto">
         <div>
-          <p className="eyebrow">{copy.home.principles}</p>
+          <p className="eyebrow">
+            {uiText(locale, {
+              en: "Our intention",
+              es: "Nuestro propósito",
+              fr: "Notre intention",
+            })}
+          </p>
           <h2>
             {uiText(locale, {
-              en: "Natural does not have to mean vague.",
-              es: "Natural no tiene por qué significar ambiguo.",
-              fr: "Naturel ne veut pas dire ambigu.",
+              en: "A crystal can be a way back to yourself.",
+              es: "Un cristal puede ser una forma de volver a ti.",
+              fr: "Un cristal peut être un chemin de retour vers soi.",
             })}
           </h2>
         </div>
         <div>
-          <p>{copy.home.principlesIntro}</p>
+          <p>
+            {uiText(locale, {
+              en: "We see crystals not as substitutes for personal choice or action, but as meaningful objects that invite reflection, intention, and awareness.",
+              es: "No vemos los cristales como sustitutos de las decisiones o las acciones personales, sino como objetos significativos que invitan a la reflexión, la intención y la conciencia.",
+              fr: "Nous ne voyons pas les cristaux comme des substituts aux choix ou aux actions personnels, mais comme des objets porteurs de sens qui invitent à la réflexion, à l’intention et à la conscience.",
+            })}
+          </p>
           <dl className="principle-list">
             <div>
               <dt>01</dt>
               <dd>
                 {uiText(locale, {
-                  en: "An exact piece is shown as an exact piece.",
-                  es: "Una pieza exacta se muestra como pieza exacta.",
-                  fr: "Une pièce exacte est présentée comme telle.",
+                  en: "Pause and return to the present moment.",
+                  es: "Haz una pausa y vuelve al momento presente.",
+                  fr: "Faire une pause et revenir au moment présent.",
                 })}
               </dd>
             </div>
@@ -113,9 +118,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
               <dt>02</dt>
               <dd>
                 {uiText(locale, {
-                  en: "Natural variation is explained before purchase.",
-                  es: "La variación natural se explica antes de comprar.",
-                  fr: "La variation naturelle est expliquée avant l’achat.",
+                  en: "Listen more closely to what you are feeling.",
+                  es: "Escucha con más atención lo que estás sintiendo.",
+                  fr: "Écouter plus attentivement ce que l’on ressent.",
                 })}
               </dd>
             </div>
@@ -123,71 +128,26 @@ export async function HomePage({ locale }: { locale: Locale }) {
               <dt>03</dt>
               <dd>
                 {uiText(locale, {
-                  en: "Symbolism stays interpretation—not medical fact.",
-                  es: "El simbolismo se presenta como interpretación, no como hecho médico.",
-                  fr: "Le symbolisme reste une interprétation, pas un fait médical.",
+                  en: "Let awareness shape your choices and actions.",
+                  es: "Deja que la conciencia oriente tus decisiones y acciones.",
+                  fr: "Laisser la conscience guider ses choix et ses actions.",
                 })}
               </dd>
             </div>
           </dl>
+          <Link
+            className="text-link"
+            href={localePath(locale, "/about")}
+          >
+            {uiText(locale, {
+              en: "Read our story",
+              es: "Conoce nuestra historia",
+              fr: "Découvrir notre histoire",
+            })}{" "}
+            →
+          </Link>
         </div>
       </section>
-
-      {blog.length ? (
-        <section className="section section--tint">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Blog</p>
-              <h2>{copy.home.blog}</h2>
-            </div>
-          </div>
-          <div className="editorial-grid">
-            {blog.map((entry) => (
-              <EditorialCard
-                key={entry.handle}
-                entry={entry}
-                locale={locale}
-                basePath="/blog"
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {collections.length ? (
-        <section
-          className="collection-strip"
-          aria-label={uiText(locale, {
-            en: "Collections",
-            es: "Colecciones",
-            fr: "Collections",
-          })}
-        >
-          {collections.map((collection, index) => (
-            <Link
-              key={collection.handle}
-              href={localePath(locale, `/collections/${collection.handle}`)}
-            >
-              <span>0{index + 1}</span>
-              {collection.title}
-              <span>↗</span>
-            </Link>
-          ))}
-        </section>
-      ) : null}
     </>
   );
-}
-
-async function getHomeBlog(locale: Locale) {
-  try {
-    const index = await getShopifyEditorialIndex("blog", locale);
-    return (
-      index?.articles
-        .filter((article) => !article.usedDefaultLanguage)
-        .slice(0, 3) ?? []
-    );
-  } catch {
-    return [];
-  }
 }

@@ -11,9 +11,11 @@ import type { Collection, Product, ProductCollection } from "./types";
 import {
   getShopifyCollection,
   getShopifyCollections,
+  getShopifyCatalogNavigation,
   getShopifyProduct,
   getShopifyProducts,
   searchShopifyProducts,
+  type ShopifyCatalogNavigationSnapshot,
 } from "./shopify-catalog";
 
 export class CatalogConfigurationError extends Error {
@@ -34,8 +36,26 @@ export interface StorefrontProductCategory {
 }
 
 export interface CatalogNavigationData {
-  categories: StorefrontProductCategory[];
-  collections: Collection[];
+  categories: Array<{ handle: string; title: string }>;
+  collections: Array<{ handle: string; title: string }>;
+}
+
+export function catalogNavigationFromSnapshot(
+  navigation: ShopifyCatalogNavigationSnapshot,
+  locale: Locale,
+): CatalogNavigationData {
+  return {
+    categories: productCategoryDefinitions.flatMap((definition) => {
+      if (!navigation.productCategoryIds.includes(definition.taxonomyId)) {
+        return [];
+      }
+      const { handle, title } = localizeProductCategory(definition, locale);
+      return [{ handle, title }];
+    }),
+    collections: navigation.collections.filter(
+      (collection) => collection.kind === "design_series",
+    ),
+  };
 }
 
 function assertEnabledUsLocale(locale: Locale) {
@@ -110,18 +130,10 @@ const getCachedShopifyCatalogNavigation = unstable_cache(
       revalidate: 300,
       tags: ["shopify-catalog-navigation"],
     };
-    const [products, collections] = await Promise.all([
-      getShopifyProducts(locale, fetchOptions),
-      getShopifyCollections(locale, fetchOptions),
-    ]);
-    return {
-      categories: productCategoriesForProducts(products, locale),
-      collections: collections.filter(
-        (collection) => collection.kind === "design_series",
-      ),
-    };
+    const navigation = await getShopifyCatalogNavigation(locale, fetchOptions);
+    return catalogNavigationFromSnapshot(navigation, locale);
   },
-  ["shopify-catalog-navigation-v1"],
+  ["shopify-catalog-navigation-v2"],
   { revalidate: 300, tags: ["shopify-catalog-navigation"] },
 );
 

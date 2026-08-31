@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  getLowStockCount,
   getProductQuantityMaximum,
   isValidAvailableProductQuantity,
   isValidProductQuantity,
@@ -25,6 +26,50 @@ function uniqueImages(images: Array<ProductImage | null | undefined>) {
     seen.add(image.url);
     return true;
   });
+}
+
+export function productShippingReturnsSummary(locale: Locale) {
+  return uiText(locale, {
+    en: "Orders are typically prepared within 1–3 business days. Eligible returns may be requested within 15 days of delivery. Rates and delivery estimates are shown at checkout.",
+    es: "Los pedidos suelen prepararse en un plazo de 1 a 3 días hábiles. Las devoluciones elegibles pueden solicitarse dentro de los 15 días posteriores a la entrega. Las tarifas y las fechas estimadas de entrega se muestran al pagar.",
+    fr: "Les modalités d’expédition et de retour seront confirmées avant l’ouverture du marché canadien.",
+  });
+}
+
+export function lowStockMessage(locale: Locale, count: number) {
+  return uiText(locale, {
+    en: `Only ${count} left`,
+    es: count === 1 ? "Solo queda 1" : `Solo quedan ${count}`,
+    fr: count === 1 ? "Plus qu’un article" : `Plus que ${count} articles`,
+  });
+}
+
+export function ProductDescription({
+  description,
+  descriptionHtml,
+}: {
+  description: string;
+  descriptionHtml: string;
+}) {
+  if (descriptionHtml) {
+    return (
+      <div
+        className="product-description"
+        dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+      />
+    );
+  }
+
+  return (
+    <div className="product-description">
+      {description
+        .split(/\n{2,}/)
+        .filter(Boolean)
+        .map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+    </div>
+  );
 }
 
 export function ProductPurchase({
@@ -68,9 +113,9 @@ export function ProductPurchase({
         <h1>{product.title}</h1>
         <p>
           {uiText(locale, {
-            en: "This Shopify product does not have a purchasable variant.",
-            es: "Este producto de Shopify no tiene una variante disponible para comprar.",
-            fr: "Ce produit Shopify n’a pas de variante pouvant être achetée.",
+            en: "This product is not currently available for purchase.",
+            es: "Este producto no está disponible para comprar en este momento.",
+            fr: "Ce produit n’est pas disponible à l’achat pour le moment.",
           })}
         </p>
       </section>
@@ -99,6 +144,9 @@ export function ProductPurchase({
     selected.availableForSale &&
     quantityRuleSupported &&
     inventorySupportsMinimum;
+  const lowStockCount = available
+    ? getLowStockCount(product.model, selected)
+    : null;
   const unavailableLabel = quantityRuleSupported
     ? copy.labels.soldOut
     : uiText(locale, {
@@ -169,9 +217,9 @@ export function ProductPurchase({
       <div className="product-detail__info">
         <p className="eyebrow">
           {uiText(locale, {
-            en: "Shopify catalog",
-            es: "Catálogo de Shopify",
-            fr: "Catalogue Shopify",
+            en: "Joya Mana collection",
+            es: "Colección Joya Mana",
+            fr: "Collection Joya Mana",
           })}
         </p>
         <h1>{product.title}</h1>
@@ -181,14 +229,10 @@ export function ProductPurchase({
             <del>{formatMoney(selected.compareAtPrice, locale)}</del>
           ) : null}
         </p>
-        <div className="product-description">
-          {product.description
-            .split(/\n{2,}/)
-            .filter(Boolean)
-            .map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-        </div>
+        <ProductDescription
+          description={product.description}
+          descriptionHtml={product.descriptionHtml}
+        />
 
         {product.variants.length > 1 ? (
           <fieldset className="variant-picker">
@@ -299,10 +343,16 @@ export function ProductPurchase({
         ) : !quantityRuleSupported ? (
           <p className="action-error" role="status">
             {uiText(locale, {
-              en: "This Shopify quantity rule cannot be fulfilled through the online storefront.",
-              es: "Esta regla de cantidad de Shopify no se puede completar en la tienda en línea.",
-              fr: "Cette règle de quantité Shopify ne peut pas être appliquée sur la boutique en ligne.",
+              en: "This quantity option is not available online.",
+              es: "Esta opción de cantidad no está disponible en línea.",
+              fr: "Cette option de quantité n’est pas disponible en ligne.",
             })}
+          </p>
+        ) : null}
+
+        {lowStockCount !== null ? (
+          <p className="low-stock-note" aria-live="polite">
+            {lowStockMessage(locale, lowStockCount)}
           </p>
         ) : null}
 
@@ -345,9 +395,9 @@ export function ProductPurchase({
             <dd>
               {available
                 ? uiText(locale, {
-                    en: "Available for sale in the US Shopify catalog.",
-                    es: "Disponible para la venta en el catálogo de Shopify de EE. UU.",
-                    fr: "Disponible à la vente dans le catalogue Shopify des États-Unis.",
+                    en: "Available for purchase in the United States.",
+                    es: "Disponible para comprar en Estados Unidos.",
+                    fr: "Disponible à l’achat aux États-Unis.",
                   })
                 : unavailableLabel}
             </dd>
@@ -396,11 +446,7 @@ export function ProductPurchase({
             </dt>
             <dd>
               <p>
-                {uiText(locale, {
-                  en: "Rates, timing, fulfillment origin, and return terms are pending approval and will be confirmed in Shopify Checkout.",
-                  es: "Las tarifas, los plazos, el origen del envío y las condiciones de devolución están pendientes de aprobación y se confirmarán en el pago de Shopify.",
-                  fr: "Les tarifs, délais, l’origine d’expédition et les conditions de retour sont en attente d’approbation et seront confirmés dans Shopify Checkout.",
-                })}
+                {productShippingReturnsSummary(locale)}
               </p>
               <span className="fact-list__links">
                 <Link

@@ -76,16 +76,15 @@ MVP 自助与人工服务：
 - Contact 渠道。
 - 损坏、丢件、退货和订单变更流程。
 
-公开客服与隐私联系统一使用 `info@joyamana.com`。Contact 表单只为本次服务请求
-投递必要字段，不创建营销订阅、不复制 Shopify Customer/Order，也不把 PII 写入
-Analytics。表单供应商未批准或不可用时，页面回退为直接 Email。
+公开客服与隐私联系统一使用 `info@joyamana.com`，且 inbox 已确认可以收信。当前
+正式支持方式为 Email-only。未来如另行启用 Contact 表单，只为本次服务请求投递
+必要字段，不创建营销订阅、不复制 Shopify Customer/Order，也不把 PII 写入 Analytics。
 
 上线前必须确定服务时段、响应承诺、责任人和升级路径。
 
-当前 storefront 页面只展示 Email 入口，并已有 Contact 表单校验、Server Action
-和可关闭的 Resend 薄适配；仓库示例值及未配置时 `CONTACT_FORM_ENABLED` 默认为
-关闭。Email inbox、负责人/备援与服务流程仍未验收，不能仅因页面显示地址就视为
-可运营客服渠道。
+当前 storefront 页面只展示 Email 入口；仓库示例值及未配置时
+`CONTACT_FORM_ENABLED` 默认为关闭。Contact 表单、Resend 与滥用防护已明确延后，
+不是当前上线条件。负责人/备援、出站投递与服务流程仍需补充验收。
 
 ## 5. Customer Account（Post-MVP）
 

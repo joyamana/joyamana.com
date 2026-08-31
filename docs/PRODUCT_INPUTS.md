@@ -2,7 +2,7 @@
 
 Status: Active input record — 历史概念与当前 Shopify 测试商品分离
 Owner: Project owner  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Source: `构思中的系列.docx`（业务方提供，2026-08-03）
 
 Additional sources: 业务方提供的 5 张七脉轮系列概念图（2026-08-03）。
@@ -11,21 +11,24 @@ Additional sources: 业务方提供的 5 张七脉轮系列概念图（2026-08-0
 Shopify Headless channel 当前发布的 Product/Variant、价格、库存和媒体为准；
 生产首发 assortment 仍需负责人单独批准。
 
-## 当前 Shopify 测试 Catalog
+## 当前 Shopify Catalog
 
 截至最近一次记录的 Storefront 审计：
 
-- Headless channel 可见 `aquamarine-bracelet-9-mm`，当时有 1 个可售
-  Variant。商品、价格、媒体和 availability 均由 Shopify 实时提供，文档不
-  复制它们作为长期事实。
+- Headless channel 当前可见多件 Bracelet 与 Gemstone 商品；商品、价格、媒体和
+  availability 均由 Shopify 实时提供，文档不复制动态清单作为长期事实。
 - 2026-08-30 实时抽查时该商品可通过 `/category/bracelets` 发现；生产
   发布前仍需在 Shopify Admin 重新核对 Standard Product Category。
 - 2026-08-31 已可读 `quantityAvailable`、`currentlyNotInStock` 和 contextual
-  `quantityRule`；PDP 和 Bag 只用它们限制可履约数量，不展示虚假紧迫文案。
+  `quantityRule`。2026-09-01 起 PDP 可在明确 `standard`/`natural_variation` 模型且
+  符合严格库存条件时显示 1–3 件准确低库存；One-Of-A-Kind、未知模型和 backorder
+  不显示。
 - Shopify Spanish context 在最近审计时仍回退 English，不得视为已审校西语
   商品内容。
-- 该商品用于验证 Shopify-only storefront，不因“已发布到测试店”自动成为
-  获批的正式首发商品。
+- 这些商品用于运行 Shopify-only storefront；正式首发 assortment 仍需负责人按
+  Q-002C 明确批准，不能只凭 Headless 已发布自动推断。
+- 业务方确认每件商品随附一份 Joya Mana 专属 guidebook；这是已确认 package
+  contents。礼盒、礼品留言与其他包装配置仍属独立待定范围。
 
 ## 历史七脉轮原型输入
 

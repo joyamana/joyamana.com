@@ -118,9 +118,9 @@ export async function ShopPage({ locale }: { locale: Locale }) {
             </h2>
             <p>
               {uiText(locale, {
-                en: "Publish products to the Headless channel in Shopify to show them here.",
-                es: "Publica productos en el canal Headless de Shopify para mostrarlos aquí.",
-                fr: "Publiez des produits sur le canal Headless de Shopify pour les afficher ici.",
+                en: "New pieces will appear here as soon as they are available.",
+                es: "Nuevas piezas aparecerán aquí en cuanto estén disponibles.",
+                fr: "De nouvelles pièces apparaîtront ici dès qu’elles seront disponibles.",
               })}
             </p>
           </div>

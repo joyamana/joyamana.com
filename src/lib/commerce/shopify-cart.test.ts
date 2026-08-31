@@ -106,7 +106,7 @@ describe("Shopify Cart mapper and validation", () => {
         {
           code: "MERCHANDISE_NOT_ENOUGH_STOCK",
           message:
-            "Shopify adjusted the cart. Review the updated items before checkout.",
+            "Your bag was updated. Review the items before checkout.",
         },
       ],
     });
@@ -399,7 +399,7 @@ describe("Shopify Checkout boundary", () => {
       ok: false,
       error: {
         code: "SHOPIFY_ERROR",
-        message: "Shopify could not update the bag. Please try again.",
+        message: "Your bag could not be updated. Please try again.",
       },
     });
     expect(JSON.stringify(failure)).not.toContain("cart-secret");

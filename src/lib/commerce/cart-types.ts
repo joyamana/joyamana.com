@@ -70,11 +70,11 @@ const cartErrorMessages: Record<
     CART_EXPIRED: "Your bag expired. Add the item again to start a new bag.",
     CART_NOT_FOUND: "Your bag could not be found.",
     CHECKOUT_DISABLED: "Checkout is not available yet.",
-    CHECKOUT_URL_INVALID: "Shopify returned an invalid checkout destination.",
+    CHECKOUT_URL_INVALID: "Checkout is temporarily unavailable. Please try again.",
     EMPTY_CART: "Your bag is empty.",
     INVALID_INPUT: "The cart request was invalid.",
     INVALID_QUANTITY: "Choose a valid whole-number quantity.",
-    SHOPIFY_ERROR: "Shopify could not update the bag. Please try again.",
+    SHOPIFY_ERROR: "Your bag could not be updated. Please try again.",
     UNAVAILABLE: "This item is no longer available in the requested quantity.",
   },
   ES: {
@@ -82,11 +82,12 @@ const cartErrorMessages: Record<
       "Tu bolsa venció. Añade el artículo de nuevo para comenzar otra.",
     CART_NOT_FOUND: "No se pudo encontrar tu bolsa.",
     CHECKOUT_DISABLED: "El pago aún no está disponible.",
-    CHECKOUT_URL_INVALID: "Shopify devolvió un destino de pago no válido.",
+    CHECKOUT_URL_INVALID:
+      "El pago no está disponible temporalmente. Inténtalo de nuevo.",
     EMPTY_CART: "Tu bolsa está vacía.",
     INVALID_INPUT: "La solicitud de la bolsa no es válida.",
     INVALID_QUANTITY: "Elige una cantidad válida en números enteros.",
-    SHOPIFY_ERROR: "Shopify no pudo actualizar la bolsa. Inténtalo de nuevo.",
+    SHOPIFY_ERROR: "No se pudo actualizar tu bolsa. Inténtalo de nuevo.",
     UNAVAILABLE:
       "Este artículo ya no está disponible en la cantidad solicitada.",
   },

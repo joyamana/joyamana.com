@@ -74,9 +74,9 @@ export async function CollectionsPage({ locale }: { locale: Locale }) {
             </h2>
             <p>
               {uiText(locale, {
-                en: "A series appears here only after its non-empty Shopify collection is marked as design_series.",
-                es: "Una serie aparece aquí solo cuando su colección de Shopify contiene productos y está marcada como design_series.",
-                fr: "Une série apparaît ici uniquement lorsque sa collection Shopify contient des produits et porte le type design_series.",
+                en: "A new design series will appear here when it is ready.",
+                es: "Una nueva serie de diseño aparecerá aquí cuando esté lista.",
+                fr: "Une nouvelle série de design apparaîtra ici lorsqu’elle sera prête.",
               })}
             </p>
           </div>

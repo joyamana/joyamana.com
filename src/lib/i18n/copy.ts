@@ -12,19 +12,15 @@ const copy = {
       cart: "Bag",
     },
     home: {
-      eyebrow: "A study in natural character",
-      title: "Objects with presence.",
+      eyebrow: "Crystal jewelry · Singular pieces",
+      title: "Natural forms. Personal meaning.",
       intro:
-        "Modern crystal jewelry and singular pieces, selected for their form, symbolism, and giftability.",
-      cta: "Shop the catalog",
+        "Modern crystal jewelry and singular pieces selected for their natural character—objects that invite reflection, intention, and everyday ritual.",
+      cta: "Explore Joya Mana",
       secondaryCta: "View one-of-one pieces",
       featured: "Selected forms",
       featuredIntro:
-        "Products, current prices, and availability come directly from the Joya Mana Shopify catalog.",
-      principles: "Designed for clarity",
-      principlesIntro:
-        "Beautiful objects need clear facts. We distinguish exact pieces, natural variation, materials, dimensions, care, and fulfillment.",
-      blog: "From the blog",
+        "Current products, prices, and availability are shown below.",
     },
     labels: {
       exactPiece: "Exact piece shown",
@@ -52,19 +48,15 @@ const copy = {
       cart: "Bolsa",
     },
     home: {
-      eyebrow: "Un estudio del carácter natural",
-      title: "Objetos con presencia.",
+      eyebrow: "Joyería con cristales · Piezas singulares",
+      title: "Formas naturales. Significado personal.",
       intro:
-        "Joyería moderna con cristales y piezas singulares, elegidas por su forma, simbolismo y capacidad de convertirse en regalo.",
-      cta: "Comprar el catálogo",
+        "Joyería moderna con cristales y piezas singulares, elegidas por su carácter natural: objetos que invitan a la reflexión, la intención y los rituales cotidianos.",
+      cta: "Descubrir Joya Mana",
       secondaryCta: "Ver piezas únicas",
       featured: "Formas seleccionadas",
       featuredIntro:
-        "Los productos, precios actuales y disponibilidad provienen directamente del catálogo de Shopify de Joya Mana.",
-      principles: "Diseñado con claridad",
-      principlesIntro:
-        "Los objetos bellos también necesitan datos claros. Distinguimos piezas exactas, variación natural, materiales, medidas, cuidado y entrega.",
-      blog: "Del blog",
+        "A continuación se muestran los productos, precios y disponibilidad actuales.",
     },
     labels: {
       exactPiece: "Pieza exacta en la foto",
@@ -92,19 +84,15 @@ const copy = {
       cart: "Panier",
     },
     home: {
-      eyebrow: "Une étude du caractère naturel",
-      title: "Des objets qui ont une présence.",
+      eyebrow: "Bijoux en cristal · Pièces singulières",
+      title: "Formes naturelles. Sens personnel.",
       intro:
-        "Bijoux modernes en cristaux et pièces singulières, choisis pour leur forme, leur symbolisme et leur potentiel de cadeau.",
-      cta: "Voir le catalogue",
+        "Bijoux modernes en cristal et pièces singulières choisis pour leur caractère naturel : des objets qui invitent à la réflexion, à l’intention et aux rituels du quotidien.",
+      cta: "Découvrir Joya Mana",
       secondaryCta: "Voir les pièces uniques",
       featured: "Formes sélectionnées",
       featuredIntro:
-        "Les produits, prix actuels et disponibilités proviennent directement du catalogue Shopify de Joya Mana.",
-      principles: "Conçu avec clarté",
-      principlesIntro:
-        "Les beaux objets ont aussi besoin de faits clairs. Nous distinguons les pièces exactes, les variations naturelles, les matériaux, les dimensions, l’entretien et la livraison.",
-      blog: "Du blog",
+        "Les produits, prix et disponibilités actuels sont présentés ci-dessous.",
     },
     labels: {
       exactPiece: "Pièce exacte présentée",

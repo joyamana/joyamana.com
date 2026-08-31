@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { enabledLocales, type Locale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
-import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
+import {
+  buildMetadata,
+  buildNoIndexMetadata,
+  type PageSearchParams,
+} from "@/lib/seo";
 import {
   aboutPageForHandle,
   getShopifyAboutTree,
@@ -31,9 +35,11 @@ async function publishedAlternateLocales(handle?: string) {
 export async function buildAboutMetadata({
   handle,
   locale,
+  searchParams,
 }: {
   handle?: string;
   locale: Locale;
+  searchParams?: PageSearchParams;
 }): Promise<Metadata> {
   const fallbackTitle = uiText(locale, {
     en: "About Joya Mana",
@@ -56,6 +62,7 @@ export async function buildAboutMetadata({
         locale,
         path: handle ? `/about/${page.handle}` : "/about",
         alternateLocales: await publishedAlternateLocales(handle),
+        searchParams,
       });
     }
   } catch {

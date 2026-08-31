@@ -2,7 +2,7 @@
 
 Status: Working — Catalog/Cart 核心切片已实现，生产 Catalog 与 hardening 待完成
 Owner: Commerce / Operations  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Related: `MVP_PRD.md`, `TECH_SPEC.md`, `CUSTOMER_LIFECYCLE.md`
 
 Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
@@ -18,11 +18,13 @@ Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
 ## 2. Catalog 模型与当前状态
 
 D-020 已接受同时支持 repeatable、natural-variation 和 one-of-a-kind 这组业务边界。
-当前代码只有 `standard | one-of-one` 的可选类型预留，Shopify mapper 与消费者 UI
-尚未实现正式 model metafield、natural-variation 语义或 exact/representative image
-披露。正式首发 assortment、七脉轮资料和每个 SKU 的准确商品事实仍分别受
-Q-002C/Q-002A 阻塞；Q-002B 另行决定包装与礼赠体验。当前 Headless 测试店可见的
-Aquamarine 商品只用于验证数据流，不等于已获批的生产首发清单。
+当前代码读取 Product `custom.product_model`，并将 `standard`、`natural_variation`、
+`one_of_one` 映射为明确的消费者模型；字段缺失或值无效时 fail closed。正式商品仍需
+在 Shopify 逐件填充该字段。exact/representative image 披露尚未实现。正式首发
+assortment、七脉轮资料和每个 SKU 的准确商品事实仍分别受
+Q-002C/Q-002A 阻塞；Q-002B 仍决定礼盒、包装成本与礼品留言，但每件商品附带专属
+guidebook 已获业务方确认。当前 Headless Catalog 的商品用于运行数据流，不因已发布
+自动成为获批的生产首发清单。
 
 ### Repeatable product
 
@@ -74,8 +76,8 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - shipping/returns policy reference
 - related Guide/Article
 
-当前 Shopify mapper 已覆盖 Product/Variant、SEO、媒体、Category、价格、可售性、
-库存数量和 quantity rule，但尚未读取 product model、exact/representative image、
+当前 Shopify mapper 已覆盖 Product/Variant、SEO、经过 allowlist 清理的格式化商品描述、
+媒体、Category、价格、可售性、库存数量、quantity rule 和 product model，但尚未读取 exact/representative image、
 materials、dimensions、care、origin/treatment、package contents 或 related content
 等 Product knowledge metafields。这些字段的 definition、填充、翻译和映射是正式
 商品发布阻塞，不能用本地文案补齐。
@@ -96,6 +98,9 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
   `/category/{handle}`，只为至少有一个当前 US Catalog 可见商品的受支持类别开放。
 - `/collections/{handle}` 只表达具备独立名称、故事和视觉语言的原创设计系列；
   Shopify Collection 必须有 `custom.collection_kind=design_series` 才能进入该路由。
+- 当前 `Patron Saint` 已满足非空、Headless 可见和 `design_series` 类型门禁；其
+  description/SEO 为空，Metaobject reference 与 story/lookbook 尚未接入，因此只完成
+  基础商品系列页，不代表完整系列叙事验收。
 - 商品类别可以在 Shopify 以 automated Collection 辅助后台归集，但不得同时以
   `/collections/bracelets` 和 `/category/bracelets` 暴露两个公开列表 URL。
 - 设计系列成员由 Product 的结构化 `custom.design_series` Metaobject reference
@@ -143,8 +148,10 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
 - `currentlyNotInStock=true` 表示 Shopify 可能允许继续销售；
   `quantityAvailable=null` 表示没有可供前端确定的精确上限。两者都不得被误判为
   库存 0，Cart warning/user error 和 Checkout 是并发变化的最终裁决。
-- 具体库存数只用于防止无法履约的数量选择，不输出“仅剩 X 件”等紧迫性
-  营销。
+- PDP 只在 Product 明确标记为 `standard` 或 `natural_variation`、当前 Variant 可售、
+  不允许超卖、库存为已知整数、步进为 1，且剩余数量为 1–3 时显示准确的
+  `Only X left`。`one_of_one`、字段缺失、库存未知、库存大于 3 或 backorder 均不显示；
+  不在商品卡使用该提示，不使用红色警告、倒计时或虚构紧迫性。
 - PDP Variant 选择器显示 Shopify 返回的 contextual variant price；内部供应商
   名称、素材名和文件名不得作为消费者文案或客户端商品字段。
 
@@ -161,8 +168,9 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
 
 当前代码已实现上述 Bag Cart 生命周期、HttpOnly cookie、过期 Cart 的 add
 recovery、独立 Buy now Cart 和服务端 Checkout URL 校验。它们已通过 mapper/
-Server Action 测试与历史 live contract smoke，但尚未有 Playwright 跨页/跨设备/
-支付完成 E2E。
+Server Action 测试与历史 live contract smoke，但尚未完成自动化跨页/跨设备/支付
+E2E。Playwright 按 D-043 暂缓；在重新批准前以有记录的人工浏览器/Checkout smoke
+验收关键流程，且不得将其表述为自动化 E2E。
 
 ### 错误处理
 

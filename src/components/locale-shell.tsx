@@ -16,7 +16,7 @@ export async function LocaleShell({
   const { categories, collections } = await getCatalogNavigationData(
     marketId,
     locale,
-  );
+  ).catch(() => ({ categories: [], collections: [] }));
   const categoryLinks: CatalogNavigationLink[] = categories.map(
     ({ handle, title }) => ({
       href: localePath(locale, `/category/${handle}`),

@@ -2,12 +2,13 @@
 
 Status: Working — 核心技术切片已实现，完整 MVP 与发布验收未完成
 Owner: Product owner  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
 
 当前实现已覆盖 Shopify Catalog/Cart、主要路由和部分内容/SEO adapter，但正式
-Product knowledge、商品模型披露、内容到商品关系、Home Email opt-in、完整 Schema、
-西语 document-level language、Analytics/consent、webhook 与浏览器/支付 E2E 仍是缺口。
+Product knowledge、exact/representative image 披露、内容到商品关系、Home Email opt-in、
+完整 Schema、Analytics/consent、webhook 与浏览器/支付 E2E 仍是缺口。Product
+`custom.product_model` 已映射并用于可信低库存门禁；西语 document-level language 已修复。
 
 ## 1. 产品目标
 
@@ -119,8 +120,8 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 必须：
 
 - 一句话说明真实品牌价值，不使用未确认定位词。
-- 明确的主购买入口与主内容入口。
-- 展示真实商品或 Collection，不放不可购买占位卡。
+- 明确的主购买入口与 About 品牌内容入口。
+- 展示真实商品，不放不可购买占位卡；Blog 推荐和 Design Collection 不进入首页。
 - 提供来源、工艺、包装或服务信任信息，但仅限已确认事实。
 - 适量 Email opt-in；不得遮挡首屏或强制互动。
 
@@ -153,11 +154,17 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 必须：
 
 - 商品名称、图库、价格、变体、库存、数量、Add to bag 与 Buy now。
+- 对明确 repeatable 模型，只在所选 Variant 的准确、非 oversell 库存为 1–3 时显示
+  `Only X left`；One-Of-A-Kind、未知模型和商品卡不显示。
 - 材料、尺寸/重量、颜色、包含物、护理、来源/处理披露。
 - 天然差异、独件状态或图片代表性说明，取决于商品模型。
 - Shipping/Returns 摘要并链接完整政策。
 - 相关 Crystal Guide、文章或商品，只有真实关联才展示。
 - 准确 Product/Offer 结构化数据。
+
+当前 US PDP 使用已确认的政策摘要：订单通常在 1–3 个工作日内处理，符合条件的
+退货可在收货后 15 天内申请，实际运费与预计送达日期在 Shopify Checkout 显示。
+税务、法律、支付和 hosted Checkout 仍由独立发布门禁控制。
 
 验收：
 
