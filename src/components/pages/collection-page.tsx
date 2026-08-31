@@ -56,6 +56,7 @@ export async function CollectionPage({
       locale,
       breadcrumbs,
     }),
+    { locale, path: `/collections/${collection.handle}` },
   );
 
   return (

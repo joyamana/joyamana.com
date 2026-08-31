@@ -9,6 +9,17 @@ const policyMocks = vi.hoisted(() => ({
 
 vi.mock("./shopify-content-pages", () => contentMocks);
 vi.mock("./shopify-policies", () => policyMocks);
+vi.mock("@/config/indexing", () => ({
+  indexingPolicy: {
+    locales: { "en-US": true, "es-US": true },
+    groups: {
+      core: true,
+      commerce: true,
+      policies: true,
+      editorial: true,
+    },
+  },
+}));
 
 afterEach(() => {
   vi.resetAllMocks();

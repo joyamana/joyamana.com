@@ -86,6 +86,7 @@ export function AboutContentPage({
             breadcrumbs,
             isRoot,
           }),
+          { locale, path },
         )
       : null;
 

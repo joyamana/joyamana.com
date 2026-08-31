@@ -8,6 +8,18 @@ import {
   serializeStructuredData,
 } from "./structured-data";
 
+vi.mock("@/config/indexing", () => ({
+  indexingPolicy: {
+    locales: { "en-US": true, "es-US": true },
+    groups: {
+      core: true,
+      commerce: true,
+      policies: true,
+      editorial: true,
+    },
+  },
+}));
+
 const image = {
   url: "https://cdn.shopify.com/s/files/product.jpg",
   altText: "Aquamarine bracelet on a neutral background",
@@ -333,14 +345,22 @@ describe("structured data serialization", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "false");
     vi.resetModules();
     const noindexModule = await import("./structured-data");
-    expect(noindexModule.serializeIndexableStructuredData({ ok: true })).toBeNull();
+    expect(
+      noindexModule.serializeIndexableStructuredData(
+        { ok: true },
+        { locale: "en-US", path: "/products/test" },
+      ),
+    ).toBeNull();
 
     vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://joyamana.com");
     vi.resetModules();
     const indexableModule = await import("./structured-data");
-    expect(indexableModule.serializeIndexableStructuredData({ ok: true })).toBe(
-      '{"ok":true}',
-    );
+    expect(
+      indexableModule.serializeIndexableStructuredData(
+        { ok: true },
+        { locale: "en-US", path: "/products/test" },
+      ),
+    ).toBe('{"ok":true}');
   });
 });

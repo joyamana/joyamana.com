@@ -2,7 +2,7 @@
 
 Status: Working — Shopify 内容/SEO 技术边界已实现，正式内容与 crawler policy 待批准
 Owner: Content / SEO  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Supersedes: `docs/archive/` 中两份 SEO/GEO 架构总结的实施结论
 
 ## 1. 核心原则
@@ -102,8 +102,8 @@ Policy、About、Accessibility 和 Article 的西语请求命中 Shopify 默认�
 及 Policy/Accessibility 的 alternate 均按每种语言的真实 readiness 过滤，不输出指向
 fallback 西语页的 hreflang。
 当前 Commerce Product/Collection response 也没有等价的“是否回退默认语言”标记；
-全站 gate 只能在所有西语商品/系列已审核时开启，且发布前仍需增加可持续验证的
-Commerce translation readiness 门禁或同等运营检查。
+在所有西语商品/系列完成审核及可持续 translation readiness 验证前，保持 es-US 或
+Commerce 索引子门禁关闭；其他已验收语言/页面组不再被这一局部缺口阻塞。
 
 ## 5. 内容模型
 
@@ -353,6 +353,13 @@ Category   Design Collection
 
 需要 crawler 读取 `noindex` 的页面不应同时在 robots.txt 中阻止抓取。
 
+索引发布采用 D-045 的三层门禁：部署环境总开关，以及版本控制的
+`src/config/indexing.ts` 中的语言开关和页面组开关。页面组为 Core
+（Home、Contact、About、Accessibility）、Commerce（Shop、Category、Collection、
+Product）、Policies（Shipping、Returns、Privacy、Terms）和 Editorial（Blog、Crystal
+Guide）。三层开关同时开启后，页面仍须通过自身内容/翻译 readiness；未知路径默认
+noindex。metadata、hreflang、Schema 与 sitemap 共用同一页面组判断。
+
 ### Sitemap
 
 - 只包含 200、canonical、indexable、published、当前市场可见的 URL。
@@ -380,21 +387,19 @@ Category   Design Collection
 - 当前不输出 `x-default`，因为 `/` 是明确的 en-US 页面而非 Global 入口。
 - 未来若按 D-027 增加 `/choose-region`，再评估将其作为 `x-default`。
 
-当前 `buildMetadata` 可为 Commerce 页生成 EN/ES alternate，动态 sitemap 也会在
-index gate 开启时聚合两种语言的 Product/Collection。由于 Commerce adapter 尚不能
-自动识别默认语言 fallback，在完成上述 translation readiness 检查前不得开启
-`NEXT_PUBLIC_SITE_INDEXABLE`。
+当前 `buildMetadata` 只为同一路径中已打开语言与页面组门禁的等价页生成 alternate，
+动态 sitemap 也按相同规则聚合路径。由于 Commerce adapter 尚不能自动识别默认语言
+fallback，在完成 translation readiness 检查前必须保持 es-US 或 Commerce 子门禁关闭；
+这不再阻塞已审核的 en-US Core/Policies 范围。
 
 Policy/Accessibility 的 fallback 页自身与 sitemap 已按 readiness 保护，英文
 counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参数请求会 canonical
 到 clean URL，同时输出 `noindex, nofollow, noarchive` 并移除 hreflang；clean URL
 保持自身正常索引规则。
 
-2026-08-31 外部检查确认 Production sitemap 为空，当前 deployment 首页 `og:url` 仍为
-`https://joyamana.vercel.app`。D-044 已确认 `https://www.joyamana.com` 为唯一
-canonical origin、apex 308 至 `www`，Vercel 环境值也已设置；当前代码部署后须验证
-canonical/OG。域名对齐后仍须等待 Commerce translation readiness、Schema 和内容退出
-条件完成，不能顺手开启全站索引。
+2026-09-01 已复核 Production canonical 与 `og:url` 使用
+`https://www.joyamana.com`，apex 308 至 `www`。当前 Production 总门禁仍关闭；未来按
+D-045 只打开已完成验收的语言/页面组，不把域名对齐误作内容索引批准。
 
 ## 12. Structured data
 

@@ -1,4 +1,4 @@
-import { siteConfig } from "@/config/site";
+import { isIndexingEnabledFor, siteConfig } from "@/config/site";
 import type { Product } from "@/lib/commerce/types";
 import { localePath, type Locale } from "@/lib/i18n/locales";
 
@@ -265,7 +265,12 @@ export function serializeStructuredData(value: unknown) {
     .replace(/\u2029/g, "\\u2029");
 }
 
-/** Returns no markup while the prototype-wide noindex gate is closed. */
-export function serializeIndexableStructuredData(value: unknown) {
-  return siteConfig.indexable ? serializeStructuredData(value) : null;
+/** Returns no markup unless the page's master, locale, and group gates are open. */
+export function serializeIndexableStructuredData(
+  value: unknown,
+  { locale, path }: { locale: Locale; path: string },
+) {
+  return isIndexingEnabledFor(locale, path)
+    ? serializeStructuredData(value)
+    : null;
 }

@@ -705,6 +705,51 @@ Consequence: Vercel Production 必须设置
 `NEXT_PUBLIC_SITE_URL=https://www.joyamana.com`，build preflight 对 Production 强制
 校验该值；Preview 保持 noindex。修改环境值后必须 redeploy 并从公开 HTML 复核。
 
+### D-045 — 索引门禁按语言与页面组细分
+
+Date: 2026-09-01
+Status: Accepted
+Owner: Project owner
+Context: 单一 `NEXT_PUBLIC_SITE_INDEXABLE` 会要求英语、西语、Commerce、Policy 和
+Editorial 同时满足发布条件；当前测试 Article、西语商品 fallback 等局部缺口会阻止
+已审核页面独立开放索引。
+Alternatives: 保留单一全站开关会继续形成不必要的全有或全无阻塞；为每条 URL 建立
+环境变量过于繁琐且容易漂移；把语言和页面组也放入环境变量会增加各部署环境之间的
+不可见差异，且仍需 redeploy；仅依赖 sitemap 不足以控制页面 robots 与 Schema。
+Decision: 保留 `NEXT_PUBLIC_SITE_INDEXABLE` 作为部署级紧急总开关，并在版本控制的
+`src/config/indexing.ts` 中维护 en-US/es-US 语言门禁及 Core、Commerce、Policies、
+Editorial 页面组门禁。页面只有在总开关、语言开关和所属页面组开关同时开启，且页面
+自身内容 readiness 通过时才可 index、进入 sitemap、输出 hreflang/Schema。未知或未来
+新增路径默认 noindex；Cart、Search 和参数页的永久 noindex 规则不变。
+Reason: 可以先开放真实完成的范围，同时让测试内容、未审校语言和未验收 Commerce
+继续 fail closed，并确保 metadata、sitemap、hreflang 与 Schema 使用同一判断。
+Consequences: 细分策略可在 Git 中 review、测试和回滚，但策略变更仍需部署才生效；
+Vercel 各环境只需分别管理总开关，Preview 仍禁止打开总开关。只打开总开关不会开放
+任何仓库策略仍关闭的页面。Product/Collection 缺少自动翻译识别时，可以保持 es-US
+或 Commerce 门禁关闭。
+Migration / rollback: 移除六个旧的细分索引环境变量，仓库策略默认均为 false，因此
+部署不会意外开放索引。先提交并部署已验收的细分策略，最后打开 Production 总开关并
+redeploy；紧急回退时关闭总开关即可恢复全站 noindex。
+
+### D-046 — 当前阶段接受五分钟内容缓存窗口
+
+Date: 2026-09-01
+Status: Accepted
+Owner: Project owner
+Context: Policy、About、Accessibility、Article 与 Header 导航使用 5 分钟缓存；项目
+尚无 Shopify webhook/cache invalidation 链路。
+Alternatives: 立即实现 Shopify webhook HMAC、幂等和 tag invalidation；建立受保护的
+手动 revalidation endpoint；或接受明确的短陈旧窗口。
+Decision: 当前阶段不实现 webhook 或手动 revalidation endpoint。内容/导航更新后等待
+至少 5 分钟再做发布验收，并把窗口写入操作记录；价格、库存、PDP、Cart 与 Checkout
+继续维持现有实时/no-store 边界，不扩大缓存范围。
+Reason: 当前内容更新频率低，明确等待窗口的运营成本小于新增安全端点和 secret 管理；
+交易事实不依赖该缓存。
+Consequences: 紧急 Policy/Article 下线最多可能短时显示旧内容。若更新频率、紧急下线
+需求或多人发布增加，再重新评估 webhook 或受保护的按 tag 手动失效。
+Migration / rollback: 无运行时代码迁移；继续使用当前 300 秒配置。未来实施失效链路时
+必须验证 HMAC/鉴权、幂等、最小 tag 范围和失败降级。
+
 ## Pending decision
 
 ### D-016 — AI crawler policy

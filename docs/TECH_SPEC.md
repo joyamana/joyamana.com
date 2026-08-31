@@ -39,7 +39,8 @@ Browser / Search crawler / AI Search crawler
 ```
 
 MVP 没有独立数据库、业务 API 服务、身份服务、PIM、搜索服务或队列。
-Shopify webhook/cache invalidation 是发布前规划能力，尚未实现，不属于上图当前链路。
+Shopify webhook/cache invalidation 按 D-046 当前后置，不属于上图运行链路；低频内容与
+导航接受明确的 5 分钟陈旧窗口。
 
 ## 3. 职责与数据所有权
 
@@ -53,7 +54,7 @@ Shopify webhook/cache invalidation 是发布前规划能力，尚未实现，不
 | Pages/Blog/structured content | Shopify（D-009 Accepted） | Pages/Blog + Metafields/Metaobjects |
 | Rendering/routing/UI | Next.js | 品牌体验、内容组合、交互 |
 | Metadata/Schema | Next.js mapper | 与 UI 共用规范化实体 |
-| Cache/revalidation | Next.js | 当前低频内容及 Header Catalog fetch 使用 5 分钟缓存；Shopify webhook 待实现 |
+| Cache/revalidation | Next.js | 当前低频内容及 Header Catalog fetch 使用 5 分钟缓存；D-046 接受该窗口并后置 webhook |
 | Analytics | 获批工具 | 事件最小化，不成为商业事实来源 |
 
 禁止在 CMS、前端常量或 Analytics 中复制可变化的价格、库存和政策事实。
@@ -83,7 +84,7 @@ Shopify webhook/cache invalidation 是发布前规划能力，尚未实现，不
 - Playwright/browser automation（D-043：当前阶段封存；复杂度触发后再评估）
 - CI、Vercel Preview 与自动化 promotion pipeline；Production 已公开部署
 - format check/coverage gate
-- Shopify webhook HMAC + cache invalidation
+- Shopify webhook HMAC + cache invalidation（D-046：按触发条件后置）
 
 依赖和 API 版本只以 `package.json`、lockfile 和 `.env.example` 中的当前固定值为准；
 Shopify Storefront API 至少每季度检查 deprecated 字段和升级窗口。
@@ -152,10 +153,12 @@ src/
 - Checkout 点击时重新获取最新 `checkoutUrl`，避免使用过期 URL。
 - Shopify Checkout 是最终价格、折扣、库存、税费和配送裁决者。
 
-### Webhooks 与缓存失效（发布前待实现）
+### Webhooks 与缓存失效（D-046：当前后置）
 
-- 实现后，Product、Collection 和相关内容更新应通过已验证 Shopify webhook
-  触发 tag/path revalidation。
+- 当前不实现 webhook 或手动 revalidation endpoint；Policy、About、Accessibility、
+  Article 与 Header 导航更新后等待至少 5 分钟再验收。
+- 未来达到 D-046 触发条件后，Product、Collection 和相关内容更新可通过已验证 Shopify
+  webhook 触发最小范围 tag/path revalidation。
 - Webhook 必须使用原始请求体按 Shopify 当前要求验证 HMAC，并在解析为业务
   对象或执行任何副作用前拒绝无效请求。
 - Handler 应幂等；只记录事件类型、资源 ID、结果和时间，不记录 secret 或
@@ -226,14 +229,14 @@ Content/SEO 规格。
 - Header navigation 上游失败时 Locale shell 降级为空的动态目录链接，保留 Shop all、
   Search、Bag、语言切换和页面主体；不恢复本地 Catalog，也不让 Header 数据故障触发
   全页 error boundary。
-- 当前实现：在陈旧窗口、cache tags 和 Shopify webhook 获批并验收前，
+- 当前实现：按 D-046 接受内容/导航的 5 分钟陈旧窗口；
   Product、Collection 及包含实时商品的 Home 使用 request-time Server Rendering
   与 `no-store`。这仍在初始响应输出完整 HTML，也避免把瞬时 Shopify 请求变成
-  production build 的发布依赖；sitemap 同样在请求时从 Catalog 生成。完成缓存失效
-  链路后再评估 ISR 或更广的 tag cache，不预先承诺切换。
+  production build 的发布依赖；sitemap 同样在请求时从 Catalog 生成。未来达到
+  D-046 触发条件后再评估 webhook、ISR 或更广的 tag cache，不预先承诺切换。
 - 数据不可确认时展示可恢复错误，不显示缓存外的猜测值。
 - About、Policy、Accessibility、Blog/Article 当前也是 dynamic route + 5 分钟 cached
-  fetch；这是现状而非永久要求，完成 webhook/陈旧窗口验收后再评估 ISR。
+  fetch；发布操作必须等待该窗口，未来达到 D-046 触发条件后再评估失效端点或 ISR。
 
 ## 9. 路由与国际化
 
@@ -264,8 +267,8 @@ Content/SEO 规格。
   HTML 的 `<html lang>` 与当前 locale 一致。语言切换跨 root layout 会发生完整文档
   navigation，这是换取正确 document metadata 的明确边界。
 - Product/Collection 目前无法从 Storefront response 自动识别 Spanish 是真实翻译
-  还是 English fallback。全站 index gate 开启前必须补 Commerce translation readiness
-  验证，否则 metadata alternate 与 sitemap 会把 fallback URL 当成西语页面。
+  还是 English fallback。完成 Commerce translation readiness 验证前保持 es-US 或
+  Commerce 索引子门禁关闭，避免 metadata alternate 与 sitemap 引用 fallback URL。
 - Currency 不进入 URL；若未来一个 Market 支持多个 Currency，选择保存在
   会话/Shopify buyer context 中。
 
@@ -284,11 +287,13 @@ Content/SEO 规格。
 
 ## 10. 环境与配置
 
-当前 `.env.example` 只包含变量名和说明，分为：
+当前 `.env.example` 只包含部署环境变量名和说明，分为：
 
-- `NEXT_PUBLIC_SITE_URL` 与 `NEXT_PUBLIC_SITE_INDEXABLE`；开启 index gate 时
-  canonical URL 必须是非本地 HTTPS origin，配置缺失或
-  仍指向 localhost 时构建 fail closed，避免发布错误 canonical 与 sitemap。
+- `NEXT_PUBLIC_SITE_URL` 与部署级 `NEXT_PUBLIC_SITE_INDEXABLE` 索引总开关；en-US/es-US
+  语言门禁和 Core/Commerce/Policies/Editorial 页面组门禁统一维护在版本控制的
+  `src/config/indexing.ts`。页面需同时通过总开关、语言和页面组三层控制。打开总开关时
+  canonical URL 必须是非本地 HTTPS origin，配置缺失或仍指向 localhost 时构建 fail
+  closed，避免发布错误 canonical 与 sitemap。
 - `SHOPIFY_STORE_DOMAIN`、`SHOPIFY_STOREFRONT_ACCESS_TOKEN` 与
   `SHOPIFY_STOREFRONT_API_VERSION`；当前 token 仅在服务端使用。
 - `SHOPIFY_CHECKOUT_ENABLED` 与可选 `SHOPIFY_CHECKOUT_DOMAIN`。
@@ -327,14 +332,15 @@ Vercel 部署必须提供 canonical origin 与 Shopify credential；Production o
 - 富文本使用受控组件渲染；不直接注入未消毒 HTML。
 - JSON-LD 使用安全序列化，防止 `</script>` 等注入。
 - Server Action/Route Handler 验证输入、Origin、方法和权限；对可滥用端点限流。
-- Webhook 验证签名、防重复处理，并限制 payload。
+- 若未来实施 Webhook，必须验证签名、防重复处理，并限制 payload。
 - Cookie 使用最小范围、`Secure`、`HttpOnly` 和合理 `SameSite`。
 - 不在日志记录 Email、地址、完整订单、token、Cart ID 或支付信息。
 - 第三方脚本经过隐私、性能、数据接收方和 consent 审查。
 - 仅申请 Shopify 所需 scopes，并建立 token rotation 流程。
 
-上述 webhook、限流与 token rotation 是发布安全要求，不是当前已完成能力；Contact
-已有输入/Origin/honeypot 边界，但生产 rate limit/WAF 仍在开放清单中。
+Webhook 按 D-046 后置；未来实施时上述安全边界是启用条件。限流与 token rotation
+仍是发布安全要求；Contact 已有输入/Origin/honeypot 边界，但生产 rate limit/WAF
+仍在开放清单中。
 - 生产错误对用户使用安全消息，详细堆栈仅进入受限服务端日志。
 
 法律文本和 consent 适用范围需要合格专业人士确认；工程实现不得假设某个州

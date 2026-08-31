@@ -297,10 +297,14 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
   lint、typecheck 与 147 项 Vitest 在 Node 26.7.0 上通过；因超出项目固定的
   Node 24 范围，仍需在 Node 24/CI 重验。
 - 2026-09-01：映射 Product `custom.product_model`，增加严格 fail-closed 的 PDP
-  `Only X left`（阈值 3），并以 170 项 Vitest、lint、typecheck 和 production build
+  `Only X left`（阈值 3），并以 180 项 Vitest、lint、typecheck 和 production build
   完成验证。正式商品仍需由运营在 Shopify 填充模型字段。
 - 2026-09-01：PDP 改读并安全渲染 Shopify `descriptionHtml`，保留标题、段落、列表、
   链接、强调和表格等语义格式；纯文本 `description` 继续服务 metadata/Schema 和后备。
+- 2026-09-01：按 D-045 增加部署级索引总开关，以及 `src/config/indexing.ts` 中
+  en-US/es-US + 四页面组的版本控制门禁，未知路径 fail closed；按 D-046 后置 webhook
+  并接受内容/导航 5 分钟窗口。六个细分索引环境变量已移除，preflight、metadata、
+  sitemap、hreflang、Schema 和文档已同步；当前为 29 个测试文件、181 项 Vitest。
 
 ## Risks
 
@@ -491,7 +495,8 @@ Header 的 Shop 固定提供 Shop All 与非空 Category；Design Collection 按
 Shopify 发布非空 `Patron Saint` Collection，并设置
 `custom.collection_kind=design_series`；它已进入 Header、Collections hub 和详情页。
 仍需按 `docs/SHOPIFY_CATALOG_SETUP.md` 补全 description/SEO、Design Series
-Metaobject/reference 与 story/lookbook。全站 index gate 与 Checkout gate 均未改变。
+Metaobject/reference 与 story/lookbook。Post-completion update（2026-09-01）：索引已按
+D-045 拆分为部署级总开关与仓库内语言/页面组门禁；Checkout gate 未改变。
 
 ---
 
@@ -607,7 +612,8 @@ Contact Server Action 只接收回复当次请求所需字段，不创建 Custom
 代码边界已完成。Post-completion update（2026-08-31）：Shipping/Returns、About EN/ES、
 Terms 占位符、guidebook 与 Contact inbox 已获业务确认；Contact 表单明确后置。正式
 Article/Crystal Guide 内容、Commerce 西语翻译、剩余法律/税务复核、隐私选择入口、
-webhook 和发布门禁仍是上线工作，不由 `Complete` 状态自动批准。
+发布门禁仍是上线工作，不由 `Complete` 状态自动批准。Post-completion update
+（2026-09-01）：webhook 按 D-046 后置，不再作为当前上线工作。
 
 ---
 
@@ -834,8 +840,8 @@ Owner: Engineering
 ## Risks
 
 - Risk：Shopify 内容缓存使已修复 Terms 在公开页面短时显示旧版本。
-  - Mitigation：直接 Storefront API 已验证；公开验收等待 5 分钟窗口或实现失效端点。
+  - Mitigation：直接 Storefront API 已验证；按 D-046 公开验收固定等待 5 分钟窗口。
 - Risk：把测试 Article 的“暂缓”误写成可以被索引。
-  - Mitigation：全站 gate 保持关闭；未来细粒度 gate 必须持续排除未正式发布内容。
+  - Mitigation：索引总门禁与 Editorial 子门禁保持关闭；D-045 持续排除未正式发布内容。
 - Risk：把 Collection 基础门禁完成误写成完整系列体验完成。
   - Mitigation：文档分别列明 description/SEO、Metaobject/reference 和 story/lookbook 缺口。

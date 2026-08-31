@@ -49,6 +49,7 @@ export async function CategoryPage({
       locale,
       breadcrumbs,
     }),
+    { locale, path: `/category/${category.handle}` },
   );
 
   return (
