@@ -44,11 +44,11 @@ Last updated: 2026-08-31
 | D-022 | Content governance | Accepted | 人工审批、AI 非事实来源 |
 | D-023 | Prototype | Accepted | 可继续初始化全站 noindex 测试站 |
 | D-024 | Market model | Accepted | Market、Language、URL、Currency 分离 |
-| D-025 | Prototype product | Accepted | 首件仅上架七脉轮普通款 |
+| D-025 | Prototype product | Superseded | 仅本地运行时样本由 D-042 取代；正式 assortment 转 Q-002C |
 | D-026 | Canada prototype | Superseded | 曾启用 CA 测试路由；由 D-035 取代 |
 | D-027 | Global selector | Accepted | 当前不建 Global Site，保留低成本选择页扩展 |
 | D-028 | Header navigation v1 | Superseded | 地区与语言合并入口 |
-| D-029 | Header navigation | Accepted | Header 只切语言；Footer 切 Market；直达 Seven Chakras |
+| D-029 | Header navigation | Accepted | Header 只切当前 Market 语言；目录导航已由 D-036 修订 |
 | D-030 | PDP layout and actions | Accepted | 桌面 50/50；Add to bag 主 CTA + Buy now 次 CTA |
 | D-031 | Variant selector | Accepted | 左侧款式名，右侧当前 Market 的价格 |
 | D-032 | Header utility actions | Accepted | Search/Bag 使用图标；英文 Cart 改为 Bag |
@@ -203,6 +203,10 @@ Consequence: 所有面向用户的品牌名称、metadata 和 wordmark 使用 Jo
 页面继续明确处于 prototype 状态，不得把工作定位中的候选差异升级为已验证
 商品声明。
 
+2026-08-31 maintenance note: 当前 US UI 没有可见的 prototype badge；测试状态由
+`noindex`、Checkout/Contact release gates 和受控环境表达。若 D-019 的“明确”意指
+客户可见标签，该项尚未实现，需先确认不会与品牌测试或可用性目标冲突。
+
 ### D-020 — 标准商品与天然独件并存
 
 Decision: 数据模型同时支持 repeatable、natural-variation 和 one-of-a-kind。
@@ -247,12 +251,19 @@ profile 的显式引用；currency selection 使用会话/Shopify context，不�
 
 ### D-025 — 测试站首件商品
 
+Status: Superseded（仅 runtime sample）；正式 assortment 未决（Q-002C）。
+
 Decision: 测试站暂时只上架「七脉轮普通款」，按标准商品建模。工作规格为
 8mm、22 颗，七彩石列表来自 `docs/PRODUCT_INPUTS.md`。业务方已提供的白纹石、
 黑曜石、蓝纹石、蜜蜡玉、粉晶 5 张概念图建模为同一 Product 下的 5 个主石
 选项；每款 15 颗主石 + 7 颗七彩石。  
 Consequence: 其他构思系列不进入 Catalog；“11”的含义、准确组合、价格、腕围、
 线材、供应链和质量信息未确认前不补充其他 Variant 或生产声明。
+
+Superseded note: 这些资料现只是历史概念输入和测试 fixture 来源，不再是
+storefront 运行时 Catalog。D-042 后可见商品完全由 Shopify Headless channel 的
+实际发布结果决定；当前 Aquamarine 商品是测试商店事实，不因此自动成为
+已批准的正式首发 assortment。
 
 ### D-026 — 加拿大测试 Market（Superseded by D-035）
 
@@ -318,6 +329,9 @@ Consequence: Header 选择 Market 时保留当前页面路径；若目标 Market
 
 ### D-029 — Header 只展示当前 Market 的语言
 
+Amended by: D-035 与 D-036。D-029 的语言/Market 分离原则继续有效；
+直达 Seven Chakras 和 Footer Market 切换不再描述当前单一 US 导航。
+
 Decision:
 
 - Header 右侧使用中性语言线性图标和当前语言代码，例如 `EN`、`ES`、`FR`。
@@ -326,8 +340,8 @@ Decision:
 - 国家/地区选择保留在 Footer；未来可将 Footer 与非阻断地区提示连接至
   `/choose-region`。
 - 页面以 `USD` / `CAD`、Shipping、Returns 和 Footer 当前地区等信息明确 Market。
-- 当前主导航继续直达 Seven Chakras；正式系列达到 3 个后再评估 Collections
-  父级菜单。
+- Catalog 导航按 D-036 使用 Shop/Category 与数据驱动的 Design Collection；
+  不再固定直达未发布的 Seven Chakras。
 
 Reason: 降低 Header 视觉噪声，同时避免把语言选择误作 Market 选择。语言图标只
 辅助识别，不能替代可读语言代码和 accessible name。
@@ -349,8 +363,10 @@ Decision:
 - 生产 Buy now 使用当前所选 Variant、数量、Market buyer identity 创建独立
   单商品 Shopify Cart，并跳转其最新 `checkoutUrl`；不得把现有 Bag 中其他商品
   意外带入，也不得清空或改写现有 Bag。
-- 测试站未连接 Shopify、真实价格与获批政策时，Buy now 只展示禁用状态及明确
-  原因，不模拟付款或订单成功。
+- Shopify 商品/Cart 已接入，但真实价格、库存、政策或 Checkout 运营验收
+  任一未通过时，未获批公开部署必须保持 `SHOPIFY_CHECKOUT_ENABLED=false`；
+  受保护 local/Preview 可为受控 E2E 临时启用，但不等于 production 批准。Buy now
+  在门禁关闭时展示禁用状态及明确原因，不模拟付款或订单成功。
 
 Reason: 50/50 保持 Apple 式清晰的媒体/决策平衡；双层级操作同时服务继续浏览与
 高意向快速结账，而不制造 CTA 竞争。
@@ -359,10 +375,10 @@ Reason: 50/50 保持 Apple 式清晰的媒体/决策平衡；双层级操作同�
 
 Decision: PDP Variant 选择项左侧显示本地化消费者款式名，右侧显示当前 Market
 下该 Variant 的格式化价格。供应商名称、中文素材名、文件名和其他内部来源字段
-不得进入消费者 UI 或客户端商品 payload。当前五个测试款式同价，因此 US 均显示
-`$68 USD`、CA 均显示 `$92 CAD`；全站价格必须显式包含 currency code，避免
-USD/CAD 共用 `$` 符号造成歧义。Shopify 接入后以所选 ProductVariant 的
-contextual price 为准并同步更新 PDP 主价格。
+不得进入消费者 UI 或客户端商品 payload。全站价格必须使用所选
+ProductVariant 的 Shopify contextual price，并显式包含 currency code；选择后
+同步更新 PDP 主价格。历史本地 `$68 USD` / `$92 CAD` 排版值已被 D-035
+和 D-042 取代，不得用于运行时。
 
 Reason: 价格是购买选择所需信息；内部素材名称既无消费者价值，也可能造成语言和
 商品身份误解。
@@ -383,11 +399,16 @@ Reason: 图标提高工具入口的扫读速度；Bag 更符合当前珠宝品�
 
 ### D-033 — Header 精简与内容枢纽差异化
 
+Amended by: D-036 已取代固定 Seven Chakras/New 目录入口；内容枢纽的差异化
+原则继续有效。
+
 Decision:
 
-- Header 主导航当前为 Seven Chakras、Crystal Guide、Blog、About；移除 New，
-  但保留 `/collections/new-arrivals` 路由供 Footer、活动或未来恢复使用。
-- New 仅在有稳定上新节奏且至少有 4–6 个近期商品时恢复，避免与唯一主系列重复。
+- Header 主导航当前由 Shop/Category 和可见 Design Collection 数据驱动，
+  并保留 Crystal Guide、Blog、About；不固定展示 Seven Chakras 或 New。
+- New 只在有稳定上新节奏且至少有 4–6 个近期商品时重新评估。当前
+  `/collections/*` 只允许 `design_series`，因此不保留可公开的
+  `/collections/new-arrivals` 默认路由；未来恢复需同时决定唯一 URL 与索引意图。
 - Header 工具顺序固定为 Search、Language、Bag，Bag 保持最右侧。
 - Crystal Guide 使用居中标题、简短定位和带分隔线的极简资料目录，强调检索。
 - Blog 使用居中标题、一个 Featured article 和其余编辑列表，强调内容层级。
@@ -399,19 +420,22 @@ SEO/GEO 内部链接质量。
 
 ### D-034 — 移动导航、Header 工具样式与 About
 
+Amended by: D-036 的数据驱动 Catalog 导航与 D-040 的 Shopify About subtree。
+
 Decision:
 
 - 导航折叠后 Header 使用对称三栏：左侧 Menu、居中 Wordmark、右侧 Search/Bag。
-  Menu 打开全屏导航，包含 Seven Chakras、Crystal Guide、Blog、About；Language
-  移至 Menu 底部，国家/地区仍留在 Footer。
+  Menu 打开全屏导航，包含 D-036 产生的 Shop/Category/Design Collection、
+  Crystal Guide、Blog、About；Language 移至 Menu 底部，国家/地区仍留在 Footer。
 - 移动 Menu 锁定背景滚动，支持 Escape、焦点锁定、关闭后焦点返回和 44px
   触控目标。
 - 桌面 Search、Language、Bag 统一为无边框线性图标 + 文字，使用相同高度、字号、
   描边、间距、hover 和 focus；顺序为 Search、Language、Bag。
-- About 使用居中品牌 Hero、品牌立场、Form/Meaning/Clarity 三原则、商品透明
-  标准和 Seven Chakras/Crystal Guide CTA。
+- About 布局与内容以 D-040 的 `content_page` root/direct-child tree 为准；不再
+  固定 Form/Meaning/Clarity 或 Seven Chakras CTA。
 - 未有获批资料前不展示或暗示创始人、悠久历史、工作室、手工工艺、产地、团队、
-  采购承诺或责任认证；页面持续标注为 working story。
+  采购承诺或责任认证。D-040/D-042 后页面只输出完整的 Shopify 内容；缺失时
+  fail closed，不要求或注入本地 `working story` 标记。
 
 Reason: 隐藏桌面导航却不提供移动入口会形成导航断点；统一工具样式降低视觉噪声。
 About 应回答品牌为何存在及其商品标准，而不是用未经证实的传承叙事填充页面。
@@ -466,7 +490,7 @@ Migration / rollback: 新增 `/shop` 与 `/category/*` 后再收紧 `/collection
 类型门禁；sitemap、canonical、hreflang、breadcrumbs 和内部链接同批更新。若上线后
 回滚，必须保留反向 301 与 canonical 迁移记录，不能重新开放重复列表 URL。
 
-Supersedes: D-033 中 Header 只有单一 Shop/Seven Chakras 导航的部分、D-034 中 About
+Supersedes: D-029 和 D-033 中 Header 固定直达 Seven Chakras 的部分、D-034 中 About
 硬编码未发布 Seven Chakras 详情 CTA 的部分，以及旧信息架构中把商品类别与设计系列
 统一暴露为 `/collections/{handle}` 的部分；D-033 的内容枢纽、New Arrivals 门禁和
 其他 UI 决策继续有效。
@@ -538,8 +562,8 @@ Decision:
 Reason: 页内导航保持品牌关系和 Header 简洁，同时真实 URL 保留分享、返回、服务端
 HTML 与搜索语义。root 引用作为 allowlist，避免后台任意 Content Page 被意外公开。
 Consequences: 新增或下线子页需同时维护 root 引用、翻译、metadata、sitemap 和必要
-redirect。当前硬编码 About 工作文案只作为 Metaobject 尚未配置时的 noindex 迁移后备，
-不得成为生产事实来源。
+redirect。D-042 已删除当时的硬编码 About 迁移后备；Metaobject 未配置、
+不完整或请求失败时必须 fail closed。
 Migration / rollback: 删除 child 引用即可从 tabs 与 sitemap 下线；如果 URL 已正式
 发布，改 handle 或永久移除前必须提供明确 301/410 决策。回滚页内导航时仍保留已发布
 子页 URL，不能把所有地址批量跳转首页。
@@ -608,8 +632,8 @@ Consequences: 本地无离线 Commerce 演示模式；开发、测试和 Preview
 或可用的 Shopify 测试商店。Checkout 仍使用独立 `SHOPIFY_CHECKOUT_ENABLED` 发布门禁。
 Migration / rollback: 回滚 Shopify adapter 通过代码版本完成，不恢复运行时 provider
 切换或本地业务数据副本。
-Supersedes: D-020 中要求同时维护 mock mapper 的部分、D-023 中 mock Checkout 条件，
-以及旧执行计划中的 `COMMERCE_PROVIDER` rollback。
+Supersedes: D-025 的本地七脉轮运行时样本、D-040 的临时 About 正文后备、
+D-023 中 mock Checkout 条件，以及旧执行计划中的 `COMMERCE_PROVIDER` rollback。
 
 ## Pending decision
 

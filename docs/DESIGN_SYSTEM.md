@@ -2,10 +2,11 @@
 
 Status: Working — 测试站视觉方向已获批，生产资产待确认  
 Owner: Brand / Design  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
 本文件定义体验和实现边界。测试站可使用下列可替换视觉方向；Logo、商品摄影和
-生产色值仍需在 Q-001、Q-005 确认后定稿。测试站字体使用开放授权字体，正式
+生产色值仍需按 `OPEN_QUESTIONS.md` 的 Assets and accounts 清单定稿。
+测试站字体使用开放授权字体，正式
 品牌上线前仍需确认字体组合是否作为长期品牌资产。
 
 ## 1. 体验原则
@@ -106,7 +107,7 @@ focus 6.92:1。Accent 4.09:1 与 metal accent 3.04:1 不用于普通尺寸正文
 - Mobile-first，关键断点由内容和组件行为决定，不按设备型号堆断点。
 - 主要触控目标至少满足 WCAG 2.2 相关要求，并为相邻目标留足空间。
 - 不允许横向滚动、遮挡 sticky header 或被浏览器 UI 覆盖。
-- Product media、price、variant 和 Add to cart 在小屏保持清晰顺序。
+- Product media、price、variant 和 Add to bag 在小屏保持清晰顺序。
 - PDP 图库内层使用上方主图、下方横向缩略图。桌面整个 50% 媒体面板（含背景
   和留白）以一个视口高度仅在 PDP 范围内 sticky；内层图库不单独 sticky，进入
   相关商品区前释放。移动端关闭整个面板 sticky。
@@ -195,6 +196,9 @@ focus 6.92:1。Accent 4.09:1 与 metal accent 3.04:1 不用于普通尺寸正文
 
 - Crystal Guide：居中标题和定位说明，下方为极简资料目录、细分隔线和清晰入口。
 - Blog：居中标题和定位说明，下方为一个 Featured article 与其余编辑列表。
+- Home 当前使用本地 `bling-omen-editorial-hero.png` 作为测试期装饰性 editorial
+  placeholder（空 alt），不是商品实拍或获批生产品牌资产；公开上线前替换或移除，
+  并清理旧品牌文件名。
 - 没有获批编辑摄影时优先使用排版层级，不制造占位图片；获得真实资产后 Blog
   可升级为图片主导的 Featured story。
 - 极简不等于空页；索引链接、摘要和分类必须输出在服务端 HTML。
@@ -203,8 +207,8 @@ About 视觉与内容规则：
 
 - 正式 Content Page 在共享页内文字 tabs 后直接进入克制宽度的左对齐正文；H1 是正文
   第一层级，不另建纯文字 Hero 或 Page Header 区块。Summary 只有后台明确填写且不重复
-  正文时才显示为 H1 下方导语。现有工作文案的品牌立场、Form/Meaning/Clarity、商品
-  透明标准和 CTA 只作为迁移后备。
+  正文时才显示为 H1 下方导语。D-042 后已无本地 About 正文后备；上游缺失时
+  显示暂不可用，不用 Form/Meaning/Clarity 等旧工作文案补齐。
 - About 没有子页时不显示单独一项的 tab 栏；出现子页后 root 永远是第一项。使用文字
   与细下划线表达当前项，不使用 pill/button 外观。
 - 桌面保持单行居中；移动端保持 44px 以上触控目标并允许横向滚动，focus 状态清晰。

@@ -2,10 +2,14 @@
 
 Status: Active planning  
 Owner: Project owner  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
 Roadmap 按依赖和可验证结果排序，不承诺未经资源评估的日历日期。详细功能以
 MVP PRD 和领域规格为准。
+
+当前阶段判断：Phase 2 的 Catalog/Cart 核心纵切面已完成，但 Commerce hardening、
+生产数据与退出条件未完成；Phase 3 的 Shopify 内容、路由与 SEO 技术基础正在进行。
+Phase 4 尚未开始。
 
 ## Phase 0 — 决策与资料准备（测试站所需部分完成）
 
@@ -49,10 +53,12 @@ MVP PRD 和领域规格为准。
 当前本地结果：Next.js 骨架、已启用的 US Market 路由、保留但不公开的 CA
 typed 配置、noindex/robots/sitemap、lint、typecheck、unit tests 和 production build
 已建立。Shopify Headless private token 与 Storefront API 已连接；Product、Variant、
-Money、Availability、Search 和非空 Collection 均通过显式 provider adapter 读取。
-2026-08-25 Storefront 可见 1 个真实商品，但尚无包含商品的 Collection。Shopify
+Money、Availability、Search 和非空 Collection 均通过 Shopify-only adapter 读取，
+本地 provider/fallback 已删除。
+2026-08-25 Storefront 可见 1 个 Headless 测试商品，但尚无包含商品的 Collection。Shopify
 Cart 的创建、恢复、增改删、HttpOnly cookie、独立 Buy now Cart 与最新 Checkout URL
-代码已完成；因 Q-003A–Q-003F 和 Checkout 运营配置未批准，跳转门禁仍关闭。
+代码已完成；因 Q-003A–Q-003F 和 Checkout 运营配置未批准，仓库示例值、未配置时
+默认值和任何未获批公开部署都必须保持跳转门禁关闭；各环境值单独验收。
 Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
 
 ### 退出条件
@@ -61,7 +67,7 @@ Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
 - Preview 可安全读取测试 Shopify 数据且不被索引。
 - 无 token 暴露到客户端 bundle 或日志。
 
-## Phase 2 — Commerce vertical slice
+## Phase 2 — Commerce vertical slice（核心切片完成，hardening/生产验收阻塞）
 
 ### 目标
 
@@ -78,11 +84,17 @@ Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
 - Webhook HMAC 验证与 Product/Collection cache invalidation。
 - Commerce integration 与 E2E 测试。
 
-2026-08-30 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 和 116 项 unit/
-integration tests 已完成；Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
+2026-08-31 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 已完成；仓库共有
+147 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
 真实 Cart 合约 smoke 已覆盖 create、库存冲突 warning、update/remove 与 HTTPS
-Checkout URL。仍需 Shopify 发布真实 Collection、审核当前商品正文、发布人工审核的
+Checkout URL。Storefront 现会读取 `quantityAvailable` 与 `currentlyNotInStock`，
+并把它们与 contextual quantity rule 用于 PDP/Bag 数量上限；不产生稀缺营销。
+仍需定义/映射 Product knowledge metafields（材料、尺寸/护理、来源/处理、包装与关联内容）、
+商品模型与 exact/representative image disclosure、
+Shopify 发布真实 Design Collection、审核当前商品正文、发布人工审核的
 西语翻译、完成政策和 Checkout 运营验收，并补 webhook、Playwright 和支付测试。
+Header 导航还需从当前缓存完整 Product/Collection response 收窄为导航专用 query/
+projection，避免缓存或误用无关商业字段。
 2026-08-30 已批准 D-036：商品类别迁至 `/category/*`，原创设计系列保留
 `/collections/*`；实现与 Shopify Admin 结构化字段配置进入当前工作流。
 
@@ -93,12 +105,12 @@ Privacy API 同步仍是公开上线前待办。
 
 ### 退出条件
 
-- Home/Collection → PDP → Cart → Checkout 路径通过。
+- Home/Category/Design Collection → PDP → Bag → Checkout 路径通过。
 - UI、Cart、Shopify 的价格和库存一致。
 - 游客无需账户即可进入 Checkout。
 - Commerce 关键失败均有可恢复体验。
 
-## Phase 3 — Brand, content and discovery
+## Phase 3 — Brand, content and discovery（实施中）
 
 ### 目标
 
@@ -113,6 +125,26 @@ Privacy API 同步仍是公开上线前待办。
 - 建立 Product ↔ Crystal ↔ Article 的人工关联与内链。
 - 配置 Search Console、Merchant Center 和获批 crawler policy。
 - 只有核心基础全部通过后再评估 `llms.txt`。
+
+2026-08-31 实施结果：
+
+- Shipping/Returns/Privacy/Terms 已从 Shopify Policies 服务端读取；当前
+  Refund/Privacy 有上游正文，Shipping/Terms 缺失时显示暂不可用。这些正文仍
+  未通过业务/法律发布批准。
+- About hub/direct children 与 Accessibility 已使用 Shopify `content_page`；
+  Blog 和 Crystal Guide 已使用 Shopify Blog/Article。不完整、未引用或未翻译内容
+  fail closed/noindex，本地正文 fallback 已删除。
+- Product、Shop/Category/Design Collection、About 与 Article 的 metadata/
+  适用 Schema/sitemap 映射已完成并受全站 index gate 保护。
+- Contact 已有公开 Email 地址入口和可关闭的 Resend Server Action，但 inbox/服务流程
+  与生产投递尚未验收；仓库示例值及未配置时表单门禁默认关闭。
+- 当前 Search 仅检索 Product；Home Organization/WebSite、ContactPage Schema、
+  完整 Design Series Metaobject 故事模块、正式内容/西语审核、GSC/Merchant Center
+  与 crawler policy 仍待完成。
+- Commerce Product/Collection 的 Spanish fallback 无自动识别，且 root `<html lang>`
+  仍固定 `en-US`；Policy/Accessibility 英文页的 hreflang 也尚未过滤未就绪 es-US
+  fallback，参数请求尚无独立 `noindex`。这些 translation/metadata/document-level
+  locale 缺口必须在开放索引前解决。
 
 ### 退出条件
 

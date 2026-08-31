@@ -1,8 +1,8 @@
 # Technical Specification
 
-Status: Draft — 核心架构已接受，工具细节待初始化时确认  
+Status: Working — 当前工程基线已实现，发布基础设施与 E2E 待完成
 Owner: Engineering  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Supersedes: 旧版 `TECH_SPEC.md` 与归档文档中的 Hydrogen/Oxygen 方案
 
 ## 1. 架构目标
@@ -20,13 +20,13 @@ Supersedes: 旧版 `TECH_SPEC.md` 与归档文档中的 Hydrogen/Oxygen 方案
 Browser / Search crawler / AI Search crawler
                     |
                     v
-          Next.js App Router on Vercel
-          ├─ Server Components / SSG / ISR
+          Next.js App Router (Vercel target; current local validation)
+          ├─ Server Components / dynamic rendering
           ├─ Client Components for interaction
           ├─ Server Actions / thin Route Handlers
           ├─ Metadata / JSON-LD / sitemap / robots
-          ├─ Analytics + consent boundary
-          └─ Verified webhook cache invalidation
+          ├─ Analytics + consent boundary (planned)
+          └─ Short server cache for low-volatility content/navigation
                     |
                     v
                  Shopify
@@ -39,6 +39,7 @@ Browser / Search crawler / AI Search crawler
 ```
 
 MVP 没有独立数据库、业务 API 服务、身份服务、PIM、搜索服务或队列。
+Shopify webhook/cache invalidation 是发布前规划能力，尚未实现，不属于上图当前链路。
 
 ## 3. 职责与数据所有权
 
@@ -52,7 +53,7 @@ MVP 没有独立数据库、业务 API 服务、身份服务、PIM、搜索服�
 | Pages/Blog/structured content | Shopify（D-009 Accepted） | Pages/Blog + Metafields/Metaobjects |
 | Rendering/routing/UI | Next.js | 品牌体验、内容组合、交互 |
 | Metadata/Schema | Next.js mapper | 与 UI 共用规范化实体 |
-| Cache/revalidation | Next.js/Vercel | Shopify webhook + 兜底 revalidate |
+| Cache/revalidation | Next.js | 当前低频内容及 Header Catalog fetch 使用 5 分钟缓存；Shopify webhook 待实现 |
 | Analytics | 获批工具 | 事件最小化，不成为商业事实来源 |
 
 禁止在 CMS、前端常量或 Analytics 中复制可变化的价格、库存和政策事实。
@@ -67,68 +68,50 @@ MVP 没有独立数据库、业务 API 服务、身份服务、PIM、搜索服�
 - Shopify Storefront API
 - Vercel
 
-### Proposed at scaffold
+### Current implementation
 
-- pnpm
-- 当前 Node LTS，通过 `.nvmrc` 或等效文件固定
-- 当前稳定 Next.js，精确 lockfile
-- Tailwind CSS + CSS variables/tokens
-- Vitest + Testing Library
-- Playwright
-- GraphQL typed document/code generation
+- Next.js 16.2.12 + React/React DOM 19.2.4
+- pnpm 11.22.0 + frozen lockfile
+- Node 24 production target（`.nvmrc` 与 `package.json#engines`）
+- Next.js global CSS + CSS variables/tokens，无 Tailwind/UI kit
+- Vitest 3 + Node test environment，未安装 Testing Library
+- 手写且集中的 Storefront GraphQL document 与显式 TypeScript response/normalized types，
+  无 GraphQL code generation
 
-不在规划文档中提前写死尚未安装的包版本。初始化当天核对官方文档，固定实际
-版本并记录在 lockfile；Shopify Storefront API 版本用环境/代码常量显式固定，
-至少每季度检查 deprecated 字段和升级窗口。
+### Deferred quality/infrastructure
 
-## 5. 推荐目录
+- Playwright/browser E2E
+- CI 与 Vercel Preview/Production pipeline
+- format check/coverage gate
+- Shopify webhook HMAC + cache invalidation
+
+依赖和 API 版本只以 `package.json`、lockfile 和 `.env.example` 中的当前固定值为准；
+Shopify Storefront API 至少每季度检查 deprecated 字段和升级窗口。
+
+## 5. 当前目录边界
 
 ```text
-app/
-  (storefront)/
-    page.tsx
-    shop/page.tsx
-    category/[handle]/page.tsx
-    products/[handle]/page.tsx
-    collections/[handle]/page.tsx
-    crystals/[handle]/page.tsx
-    blog/[handle]/page.tsx
-    about/page.tsx
-    about/[handle]/page.tsx
-    cart/page.tsx
-  api/
-    webhooks/shopify/route.ts
-  robots.ts
-  sitemap.ts
-  manifest.ts
-components/
-  ui/
-  layout/
-  commerce/
-  content/
-  seo/
-lib/
-  shopify/
-  commerce/
-  content/
-  markets/
-  seo/
-  security/
-  analytics/
-graphql/
-  fragments/
-  queries/
-  mutations/
-types/
-styles/
-tests/
-  unit/
-  integration/
-  e2e/
+src/
+├── app/
+│   ├── (english)/           # en-US root routes
+│   ├── es-us/               # explicit US Spanish routes
+│   ├── [marketLocale]/      # reject/planned locale boundary
+│   ├── actions/              # Cart and Contact server actions
+│   ├── robots.ts
+│   └── sitemap.ts
+├── components/                  # shared layout, interaction and pages
+├── config/                      # brand, site, market and category allowlists
+└── lib/
+    ├── commerce/                # Shopify client, catalog, cart, normalized types
+    ├── content/                 # Policy/About/Content Page/Editorial adapters
+    ├── i18n/
+    ├── navigation/
+    ├── seo.ts
+    └── structured-data.ts
 ```
 
-目录按职责建立，不为未来功能创建空模块。若实际 Next.js 版本的约定变化，
-初始化时以当前官方文档为准并更新本规格。
+测试与被测模块就近放置为 `*.test.ts(x)`。当前没有 `api/webhooks`、独立
+`graphql/`、`analytics/` 或 `tests/e2e/` 目录；不为未来功能创建空模块。
 
 ## 6. Shopify 集成
 
@@ -151,6 +134,9 @@ tests/
 - Query 只请求页面需要字段，避免一个“万能商品查询”。
 - 金额使用 Shopify `MoneyV2` 和集中 formatter，禁止浮点运算决定最终金额。
 - 所有 market-sensitive 查询使用同一 market context。
+- Product/Cart 同时映射 `availableForSale`、`quantityAvailable`、
+  `currentlyNotInStock` 和 contextual `quantityRule`。只对不允许继续销售且精确
+  数量已知的 Variant 在客户端收紧数量上限；Cart warning/error 仍是最终校验。
 
 ### Cart
 
@@ -166,16 +152,15 @@ tests/
 - Checkout 点击时重新获取最新 `checkoutUrl`，避免使用过期 URL。
 - Shopify Checkout 是最终价格、折扣、库存、税费和配送裁决者。
 
-### Webhooks 与缓存失效
+### Webhooks 与缓存失效（发布前待实现）
 
-- Product、Collection 和相关内容更新通过已验证 Shopify webhook 触发
-  tag/path revalidation。
+- 实现后，Product、Collection 和相关内容更新应通过已验证 Shopify webhook
+  触发 tag/path revalidation。
 - Webhook 必须使用原始请求体按 Shopify 当前要求验证 HMAC，并在解析为业务
   对象或执行任何副作用前拒绝无效请求。
-- Handler 设计为幂等，重复事件不产生副作用。
-- 记录事件类型、资源 ID、结果和时间；不记录 secret 或完整客户数据。
-- Webhook 之外保留合理的时间兜底 revalidation，避免事件丢失导致永久陈旧。
-- 失败告警先使用 Vercel 能力；只有实际需要时增加第三方平台。
+- Handler 应幂等；只记录事件类型、资源 ID、结果和时间，不记录 secret 或
+  完整客户数据。
+- Webhook 之外保留合理的时间兜底 revalidation；失败告警先使用 Vercel 能力。
 
 ## 7. 规范化实体
 
@@ -200,18 +185,17 @@ type MarketContext = {
 决定内容版本，region 参与 Market 解析，Currency 只参与价格展示和交易上下文。
 未来多币种选择不得生成新的 SEO URL。
 
-实体至少包括：
+当前已实现的薄实体包括：
 
-- `NormalizedProduct`
-- `NormalizedVariant`
-- `NormalizedProductCategory`
-- `NormalizedCollection`
-- `NormalizedCrystal`
-- `NormalizedArticle`
-- `NormalizedContentPage`
-- `AboutNavigation`（固定 root + 有序 direct-child 引用）
-- `NormalizedOrganization`
-- `NormalizedPolicy`
+- `Product` / `ProductVariant` / `ProductCategory` / `Collection`
+- 不含 Cart ID 和常驻 Checkout URL 的公开 Cart view model
+- `StorefrontPolicy`
+- `StorefrontContentPage`
+- `StorefrontAboutTree`（固定 root + 有序 direct-child 引用）
+- `StorefrontEditorialIndex` / `StorefrontEditorialArticle`
+
+Organization/Site Settings 规范化实体尚未实现；不得为了 Schema 用占位法律实体、
+Logo、域名或 social profile 补齐。
 
 Mapper 只统一字段和语义，不建立通用实体平台。字段契约见 Commerce 和
 Content/SEO 规格。
@@ -220,13 +204,15 @@ Content/SEO 规格。
 
 | 页面/数据 | 默认策略 | 原因 |
 |---|---|---|
-| Home / About subtree / Policy | Static/ISR；当前 Shopify 内容页使用 5 分钟 revalidate | 品牌内容变化低；About metadata、正文与 tabs 使用同一 root tree |
-| Crystal Guide / Article | Static/ISR | 内容型、需完整 HTML |
-| Shop / Category / Collection | 当前 Dynamic / no-store；后续 ISR + cache tag | 尚未批准陈旧窗口，也未完成 webhook |
-| Product | 当前 Dynamic / no-store；后续 ISR + cache tag + webhook | 先保证价格与可售性实时一致 |
-| Cart | Dynamic / no-store | 会话和库存相关 |
+| Home | Dynamic；Catalog `no-store`，Blog fetch 5 分钟 | 首页同时包含实时商品与低频编辑内容 |
+| About / Policy / Accessibility | Dynamic route + Shopify fetch 5 分钟 | 低频内容；About 共用 tree，Policy/Accessibility entity 控制正文与索引资格 |
+| Crystal Guide / Article | Dynamic route + Shopify fetch 5 分钟 | 低频内容、需完整 HTML |
+| Shop / Category / Collection | Dynamic / `no-store`；Header Catalog fetch 独立缓存 5 分钟 | 页面商业数据无批准陈旧窗口；Header 只消费导航字段 |
+| Product | Dynamic / `no-store` | 价格、可售性和库存数量优先实时一致 |
+| Cart | 静态 `noindex` client shell；挂载后通过 Server Action `no-store` 读取 | Cart cookie、会话和库存相关，不把私有 Cart 烘焙进 HTML |
 | Account（未来） | Dynamic / no-store | 私有客户数据 |
-| Search | Dynamic 或短缓存 | Query-specific，noindex |
+| Search | Dynamic / `no-store` | 当前只检索 Shopify Product，query-specific，noindex |
+| Sitemap | Dynamic；Catalog `no-store`，内容 fetch 5 分钟 | 只在 index gate 开启后聚合已发布路径 |
 | Preview/draft | Dynamic + noindex | 不可缓存为生产公开内容 |
 
 规则：
@@ -234,13 +220,18 @@ Content/SEO 规格。
 - Metadata、JSON-LD 与可见 UI 应使用同一次数据读取或同一规范化实体。
 - 缓存键包含真实启用的 market 和 language。
 - 价格/库存允许的陈旧窗口在实现前由 Commerce owner 批准。
-- 2026-08-25 临时实现：在陈旧窗口、cache tags 和 Shopify webhook 获批并验收前，
+- 当前 Header cache 仍先读取并缓存完整 normalized Product/Collection（其中含价格、
+  可售性和数量），Locale shell 实际只消费 Category/Collection 的 handle/title。不得
+  把这份 5 分钟缓存复用于 PDP、商品卡或 Cart；生产 hardening 应收窄为 navigation-
+  specific query/projection，避免缓存无关商业字段。
+- 当前实现：在陈旧窗口、cache tags 和 Shopify webhook 获批并验收前，
   Product、Collection 及包含实时商品的 Home 使用 request-time Server Rendering
   与 `no-store`。这仍在初始响应输出完整 HTML，也避免把瞬时 Shopify 请求变成
   production build 的发布依赖；sitemap 同样在请求时从 Catalog 生成。完成缓存失效
-  链路后再切回表中规划的 ISR。
+  链路后再评估 ISR 或更广的 tag cache，不预先承诺切换。
 - 数据不可确认时展示可恢复错误，不显示缓存外的猜测值。
-- 不因“所有页面 SSR”把静态品牌和内容页强制改成每请求动态。
+- About、Policy、Accessibility、Blog/Article 当前也是 dynamic route + 5 分钟 cached
+  fetch；这是现状而非永久要求，完成 webhook/陈旧窗口验收后再评估 ISR。
 
 ## 9. 路由与国际化
 
@@ -267,6 +258,13 @@ Content/SEO 规格。
   未引用、错误类型、不完整或未知 handle 返回 404，不按所有 Metaobject 自动建路由。
 - About root 与子页在服务端输出同一有序页内导航；语言 fallback 保持 noindex 且不进入
   sitemap/hreflang。
+- 当前 root layout 的 document-level `<html lang>` 固定为 `en-US`；es-US 仅在
+  locale shell 容器上标记 `lang="es-US"`。这能限定主要内容语言，但不等于
+  文档级语言已验收；公开索引前必须调整路由/layout 边界，让 `<html lang>`
+  与当前 locale 一致并完成辅助技术检查。
+- Product/Collection 目前无法从 Storefront response 自动识别 Spanish 是真实翻译
+  还是 English fallback。全站 index gate 开启前必须补 Commerce translation readiness
+  验证，否则 metadata alternate 与 sitemap 会把 fallback URL 当成西语页面。
 - Currency 不进入 URL；若未来一个 Market 支持多个 Currency，选择保存在
   会话/Shopify buyer context 中。
 
@@ -285,17 +283,20 @@ Content/SEO 规格。
 
 ## 10. 环境与配置
 
-应用初始化后提交 `.env.example`，只包含变量名和说明。预期变量类别：
+当前 `.env.example` 只包含变量名和说明，分为：
 
-- Canonical site URL
-- 开启 index gate 时，Canonical site URL 必须是非本地 HTTPS origin；配置缺失或
+- `NEXT_PUBLIC_SITE_URL` 与 `NEXT_PUBLIC_SITE_INDEXABLE`；开启 index gate 时
+  canonical URL 必须是非本地 HTTPS origin，配置缺失或
   仍指向 localhost 时构建 fail closed，避免发布错误 canonical 与 sitemap。
-- Shopify store domain
-- Storefront API version
-- Storefront private/public token（按实际实现最小化）
-- Shopify webhook secret
-- Analytics/consent public configuration
-- Preview/monitoring configuration
+- `SHOPIFY_STORE_DOMAIN`、`SHOPIFY_STOREFRONT_ACCESS_TOKEN` 与
+  `SHOPIFY_STOREFRONT_API_VERSION`；当前 token 仅在服务端使用。
+- `SHOPIFY_CHECKOUT_ENABLED` 与可选 `SHOPIFY_CHECKOUT_DOMAIN`。
+- `CONTACT_FORM_ENABLED` 与 server-only `RESEND_API_KEY`。
+- `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`；`NEXT_PUBLIC_GA4_ID` 只是预留配置，
+  当前没有 GA4 运行时集成。
+
+Shopify webhook secret、consent 和监控变量只在对应功能实现并批准后加入，
+不提前伪造已存在的配置。
 
 要求：
 
@@ -304,9 +305,16 @@ Content/SEO 规格。
 - 任何日志、错误消息或测试 snapshot 不得泄露 secret。
 - 不在文档、issue、query string 或客户端 bundle 中保存凭证。
 
+当前尚无集中 startup env schema：index gate 打开时会在 metadata/site config 路径
+验证 canonical origin；Shopify domain/token/version 则在首次 `shopifyFetch` 时惰性
+验证，因此 dynamic production build 可在无 Shopify credential 时通过。Production
+部署前必须增加或执行独立 preflight，不能把 build 成功当成凭证已验证。
+
 ## 11. Security 与 Privacy
 
-- CSP、HSTS、Referrer-Policy、Permissions-Policy 等响应头在 Beta 前配置。
+- 当前已设置 `X-Content-Type-Options`、`Referrer-Policy`、`X-Frame-Options`
+  和限制型 `Permissions-Policy`；CSP 与 HSTS 在确定 Production/Checkout/第三方域后
+  于 Beta 前配置并验收。
 - 富文本使用受控组件渲染；不直接注入未消毒 HTML。
 - JSON-LD 使用安全序列化，防止 `</script>` 等注入。
 - Server Action/Route Handler 验证输入、Origin、方法和权限；对可滥用端点限流。
@@ -315,6 +323,9 @@ Content/SEO 规格。
 - 不在日志记录 Email、地址、完整订单、token、Cart ID 或支付信息。
 - 第三方脚本经过隐私、性能、数据接收方和 consent 审查。
 - 仅申请 Shopify 所需 scopes，并建立 token rotation 流程。
+
+上述 webhook、限流与 token rotation 是发布安全要求，不是当前已完成能力；Contact
+已有输入/Origin/honeypot 边界，但生产 rate limit/WAF 仍在开放清单中。
 - 生产错误对用户使用安全消息，详细堆栈仅进入受限服务端日志。
 
 法律文本和 consent 适用范围需要合格专业人士确认；工程实现不得假设某个州
@@ -324,11 +335,12 @@ Content/SEO 规格。
 
 ### 每次变更
 
-- Format
-- Lint
-- TypeScript typecheck
-- 相关 unit/integration tests
-- Production build（影响 build/runtime 时）
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`（或至少相关 Vitest）
+- `pnpm build`（影响 build/runtime 时）
+
+当前无独立 format 脚本、coverage threshold 或 CI gate；在建立前不得声称已通过。
 
 ### Integration tests
 
@@ -336,12 +348,12 @@ Content/SEO 规格。
 - Money、variant、availability 与 market context
 - GraphQL errors、timeout 和 unavailable 状态
 - Metadata、canonical、robots 和 JSON-LD mapper
-- Webhook HMAC、幂等和 cache tag
+- Webhook HMAC、幂等和 cache tag（实现 webhook 时新增）
 
-### E2E
+### E2E（待建立）
 
 - 浏览 Collection/PDP。
-- 选择 Variant 并 Add to cart。
+- 选择 Variant 并 Add to bag。
 - 更新数量、移除、恢复 Cart。
 - Guest flow 跳转 Shopify Checkout。
 - 售罄、价格变化、API 失败。
@@ -350,7 +362,7 @@ Content/SEO 规格。
 支付完成的端到端自动化应使用 Shopify 支持的测试方式，不绕过或模拟真实支付
 安全机制。
 
-### Accessibility
+### Accessibility（发布前待自动化与人工验收）
 
 - 自动 axe 检查。
 - 键盘、焦点顺序、skip link、dialog/menu focus trap。
@@ -367,6 +379,9 @@ Content/SEO 规格。
 - Bundle 与第三方脚本预算；新增脚本需解释。
 
 ## 13. CI/CD 与发布
+
+当前仓库没有 CI workflow，也没有已验收的 Vercel Preview/Production 配置。
+下列是建立后的发布目标，不是当前完成状态：
 
 - Git 主分支发布 Production；PR 生成 Vercel Preview。
 - Preview 使用隔离配置并全站 `noindex`，避免真实客户数据。

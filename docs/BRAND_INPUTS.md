@@ -2,7 +2,7 @@
 
 Status: Active input record  
 Owner: Project owner  
-Last updated: 2026-08-14
+Last updated: 2026-08-31
 Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-03）
 
 本文件把业务方回复分为 `Confirmed`、`Working` 和 `Pending`：
@@ -127,10 +127,23 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 
 ## Accounts, analytics and services
 
-### Confirmed
+### Current project state
 
-- Shopify、测试商品、域名、Vercel、设计资产、Email、GA4、GSC、Merchant
-  Center、CRM、Reviews、Consent 均尚未准备或选型。
+下列是截至 2026-08-31 的实施/账号事实，不会把测试店配置自动升级为生产批准：
+
+- Shopify store、Headless channel、服务端 private Storefront token 与至少一件
+  Headless-visible 测试商品已可用。运行时已是 Shopify-only，不再使用
+  本地商品/正文 fallback。
+- Shopify Policies、`content_page` Metaobject 与原生 Blog/Article 读取路径已
+  实现，但后台正式内容、西语翻译和业务/法律批准仍不完整。
+- 公开联系地址已决定为 `info@joyamana.com`；Contact 表单投递代码已存在但
+  仓库示例值及未配置时的代码默认值为关闭；邮箱 inbox、域验证、数据处理批准和
+  滥用控制尚待完成，各部署环境仍须单独核验。
+- 最终域名/DNS、Vercel Preview/Production、设计资产、GA4、GSC、Merchant
+  Center、CRM/Email、Reviews 和 Consent 仍未完成生产准备或选型。
+
+### Confirmed boundaries
+
 - 无真实评论时不展示 Reviews。
 - 最小分析栈：Shopify + GA4 + GSC。
 - 先定义 consent 和事件，再选择 Email/CRM。
@@ -146,11 +159,14 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 - 尽快建立能运行的美国单市场测试网站。
 - 为同一 US Market 和 Catalog 创建英文根路径与 `/es-us/` 西语路径。
 - 使用集中、可替换的工作品牌配置。
-- 使用明确标注的开发样本内容，不把样本升级为品牌或商品事实。
+- 在自动化测试或明确标注的 fixture 中使用开发样本，不把样本升级为
+  品牌或商品事实。D-042 后 storefront 运行时禁止使用本地样本作为
+  Shopify 缺失时的 fallback。
 - 建立兼容标准商品与天然独件的数据模型。
 - 实施 Shopify-first 内容架构和基础 Search/Collection/navigation。
 - 预留未确认政策入口，但保持不可索引且不发布承诺。
 - 对待确认字段使用明确的开发占位或 TODO。
 
-测试站默认 `noindex`；只有真实域名、商品、政策、Shopify 和发布验收全部完成后
-才能启用索引和 Product/Policy Schema。
+仓库示例值及未配置时的代码默认值保持 `noindex`；只有真实域名、商品、政策、
+Shopify 和发布验收全部完成后才能启用索引。合格 Product 的 JSON-LD 已实现但受
+全站索引门禁抑制；Policy Schema 尚未实现，不能因开启索引门禁而视为自动具备。

@@ -2,7 +2,7 @@
 
 Status: Active implementation guide
 Owner: Commerce / Content operations
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
 
 本文件说明 D-036 所需的 Shopify Admin 配置。它不包含 credential，也不授权代码或
@@ -21,9 +21,11 @@ Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
 | Apparel & Accessories > Jewelry > Earrings | `/category/earrings` |
 | Arts & Entertainment > Hobbies & Creative Arts > Collectibles > Rocks & Fossils > Gemstones | `/category/gemstones` |
 
-当前 Aquamarine bracelet 应由业务方在 Admin 核对并设置为 Bracelets；Palm Stone、
-Sphere、Guardian Figure 等当前商品使用 Gemstones。Product Type 不是公开 Category 的
-事实来源；标准 Category 已能准确表达时，不再机械重复类别。
+Aquamarine bracelet 在 2026-08-30 Storefront 抽查时可通过 Bracelets Category
+发现，但生产发布前仍应在 Admin 复核。若未来上架 Palm Stone、Sphere、
+Guardian Figure 等实物，仅在 Shopify 准确 taxonomy 确认后才使用 Gemstones；
+这些名称不表示当前 Headless Catalog 已有对应商品。Product Type 不是公开
+Category 的事实来源。
 
 Category route 只在当前 Headless channel 至少有一个商品使用对应 taxonomy ID 时出现。
 代码不按标题、Tag 或 Product Type 推断归属。
@@ -91,6 +93,9 @@ Storefront access: enabled
 
 当前 storefront 已读取 `custom.collection_kind` 并 fail closed：缺失、拼写不同或不是
 `design_series` 的 Collection 不会出现在 `/collections`，详情路由也返回 404。
+当前前端尚未读取 Collection/Product 上的 `custom.design_series` reference，也未
+渲染 Metaobject 中的 story/lookbook 字段。按 D-036 发布完整设计系列前，还需实现并
+验证该读取链路；不能只创建 Metaobject 就声称系列故事已接入。
 
 ## 5. 建立系列 Collection
 
@@ -114,6 +119,8 @@ Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端
 
 - Product 已发布到 Headless channel，Category 准确，价格/库存来自当前 US Catalog。
 - Design Series Metaobject 与必要字段有已审核 EN/ES 内容。
+- Storefront 已实现并验证 `custom.design_series` reference 与必需故事/媒体字段读取；
+  在此前只能验证 Collection 类型门禁和商品网格。
 - Series Collection 非空、handle 稳定、`collection_kind=design_series`，并发布到
   Headless channel。
 - `/shop` 显示商品；对应 `/category/*` 显示相同商品；系列页只显示系列成员。

@@ -1,8 +1,8 @@
 # Customer Lifecycle
 
-Status: Draft — MVP 边界已确定，供应商待选  
+Status: Working — MVP 边界和 Contact 技术路径已确定，生产供应商/流程待批准
 Owner: Customer experience / Marketing  
-Last updated: 2026-08-02  
+Last updated: 2026-08-31
 Supersedes: `docs/archive/crystal-customer-system-design.md` 的阶段命名
 
 ## 1. 原则
@@ -20,7 +20,7 @@ Supersedes: `docs/archive/crystal-customer-system-design.md` 的阶段命名
 ```text
 Discover
   → Browse / Learn
-  → Add to cart
+  → Add to bag
   → Guest Shopify Checkout
   → Transactional confirmation
   → Shopify Order Status / support
@@ -34,7 +34,7 @@ Landing page 必须与来源承诺一致，不用强制弹窗截断。
 
 ### Consider
 
-通过 Product、Collection、Guide、Article、Shipping、Returns 和真实信任信息
+通过 Product、Shop/Category/Design Collection、Guide、Article、Shipping、Returns 和真实信任信息
 完成判断。Email opt-in 是可选增强，不是查看价格或库存的条件。
 
 ### Purchase
@@ -81,6 +81,11 @@ MVP 自助与人工服务：
 Analytics。表单供应商未批准或不可用时，页面回退为直接 Email。
 
 上线前必须确定服务时段、响应承诺、责任人和升级路径。
+
+当前 storefront 页面只展示 Email 入口，并已有 Contact 表单校验、Server Action
+和可关闭的 Resend 薄适配；仓库示例值及未配置时 `CONTACT_FORM_ENABLED` 默认为
+关闭。Email inbox、负责人/备援与服务流程仍未验收，不能仅因页面显示地址就视为
+可运营客服渠道。
 
 ## 5. Customer Account（Post-MVP）
 

@@ -1,13 +1,17 @@
 # MVP Product Requirements
 
-Status: Draft — 依赖 Phase 0 决策  
+Status: Working — 核心技术切片已实现，完整 MVP 与发布验收未完成
 Owner: Product owner  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
+
+当前实现已覆盖 Shopify Catalog/Cart、主要路由和部分内容/SEO adapter，但正式
+Product knowledge、商品模型披露、内容到商品关系、Home Email opt-in、完整 Schema、
+西语 document-level language、Analytics/consent、webhook 与浏览器/支付 E2E 仍是缺口。
 
 ## 1. 产品目标
 
-在一个可信、快速、移动端友好的美国英文品牌站中，让访客能够：
+在一个可信、快速、移动端友好的美国 en-US + es-US 品牌站中，让访客能够：
 
 1. 理解品牌和商品是否适合自己。
 2. 按商品类型或晶体类型发现商品。
@@ -19,16 +23,16 @@ Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
 
 ### J1：直接购物
 
-Landing/Home → Shop/Category/Design Collection → Product → Add to cart → Cart → Shopify Checkout
+Landing/Home → Shop/Category/Design Collection → Product → Add to bag → Bag → Shopify Checkout
 
 ### J2：内容辅助购买
 
 Search/AI citation → Crystal Guide/Article → Related Product/Category/Collection →
-Product → Cart → Shopify Checkout
+Product → Bag → Shopify Checkout
 
 ### J3：礼赠
 
-Home/Category/Collection → Product → 查看包装、配送与退换政策 → Cart → Checkout
+Home/Category/Collection → Product → 查看包装、配送与退换政策 → Bag → Checkout
 
 ### J4：订单后服务
 
@@ -38,7 +42,7 @@ MVP 不在购买前插入登录、注册、问卷或营销弹窗强制步骤。
 
 ## 3. 信息架构
 
-URL 名称在品牌命名确认前使用功能性路径：
+URL 名称遵循已确认的 Joya Mana 信息架构与 D-007/D-036：
 
 | Route | 目的 | Index |
 |---|---|---|
@@ -99,6 +103,9 @@ URL 名称在品牌命名确认前使用功能性路径：
 - 启用时必须同时检索商品和内容，提供空状态，结果页 `noindex`。
 - 不因未来搜索需求先引入独立搜索服务。
 
+当前实现只检索 Shopify Product，且结果页永久 `noindex`。在发布为完整站内
+Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证意图、空状态与性能。
+
 ### FR-004 状态与错误
 
 - 为 loading、empty、unavailable、API error、404 和 500 提供可恢复体验。
@@ -158,9 +165,13 @@ URL 名称在品牌命名确认前使用功能性路径：
 - Variant 选择项显示本地化款式名与当前 Market 价格；切换后主价格、结构化数据
   和加入 Cart 的 merchandise 必须一致。
 - Buy now 使用独立单商品 Cart 进入 Shopify hosted checkout，不改变已有 Bag；
-  Shopify 未连接时必须禁用并解释原因。
-- 售罄、不可售和低库存信息来自 Shopify。
-- UI、metadata 与 JSON-LD 的价格、币种、库存一致。
+  当 `SHOPIFY_CHECKOUT_ENABLED=false` 或运营/政策验收未完成时必须禁用并
+  解释原因。
+- 售罄、不可售和可履约数量信息来自 Shopify。已知且不允许继续销售的
+  `quantityAvailable` 与 contextual `quantityRule`/安全上限一起约束 PDP 数量；
+  `currentlyNotInStock` 或数量为 `null` 时不猜测为 0，不用具体数量制造紧迫感。
+- UI、metadata 与 JSON-LD 的价格、币种、库存一致。当前 Product Offer availability
+  尚未纳入 UI 使用的最小可履约数量边界，因此该验收项仍未通过。
 - 图片有尺寸、响应式资源和有意义的替代文本。
 
 ### P-004 Cart
@@ -248,8 +259,8 @@ URL 名称在品牌命名确认前使用功能性路径：
 
 ## 8. 发布验收
 
-- 所有 P0 页面使用真实品牌、商品、图片和政策内容。
-- Home → PDP → Cart → Shopify Checkout 的游客路径在移动端和桌面通过。
+- 所有首发 scope 页面使用真实品牌、商品、图片和政策内容。
+- Home → PDP → Bag → Shopify Checkout 的游客路径在移动端和桌面通过。
 - 0 个关键内部 404；所有预期 sitemap URL 返回 200、canonical、indexable。
 - 0 个 Schema 与 UI 价格/库存不一致；eligible PDP 无 critical structured data error。
 - Preview、Cart、Search、Account 和参数页不会被索引。

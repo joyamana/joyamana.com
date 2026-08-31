@@ -1,8 +1,8 @@
 # Project Specification
 
-Status: Draft — 工作品牌已提供，生产输入仍待确认  
+Status: Working — 核心技术切片已实现，生产输入与发布验收未完成
 Owner: Business owner  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Supersedes: 2026-08-02 之前的简版 `PROJECT_SPEC.md`
 
 ## 1. 项目定义
@@ -18,8 +18,29 @@ Supersedes: 2026-08-02 之前的简版 `PROJECT_SPEC.md`
 - 用低摩擦流程完成浏览、加购与 Shopify Checkout。
 - 累积可持续的自然搜索、AI Search 与 Email 客户关系资产。
 
-品牌名称已确认为 `Joya Mana`，测试站继续使用经授权的工作定位；域名、商标、
-价格带、首发商品与运营政策仍未确认。完整输入见 `docs/BRAND_INPUTS.md`。
+品牌名称已确认为 `Joya Mana`，测试站继续使用经授权的工作定位；域名/商标核验、
+价格带、正式首发 assortment、品牌资产与运营政策仍未确认。完整输入见
+`docs/BRAND_INPUTS.md`。
+
+### 当前实施快照
+
+- Next.js 16 / React 19 / TypeScript storefront 已运行，en-US 根路径和
+  `/es-us/` 使用同一 US Catalog/USD context；Canada 规划路径返回 404。
+- Runtime Commerce 与 Shopify-backed 业务正文已是 Shopify-only：Catalog、Policy、
+  About/Accessibility、Blog/Guide 通过服务端查询读取，Bag/Buy now 通过 Shopify Cart
+  mutations 创建和更新 Cart；这些路径均无本地业务数据 fallback。Home、Contact、
+  导航和 Category 的界面/结构文案仍由 Next.js 代码配置维护。
+- Product、Shop/Category/Collection、About 和 Article 的 metadata/部分适用 Schema
+  与 sitemap 门禁已实现；Home Organization/WebSite/WebPage、ContactPage、Policy
+  Schema、内容搜索、Analytics/consent、webhook、CI/Playwright 与支付 E2E 仍未完成。
+- Product knowledge metafields、商品模型/图片代表性披露、内容到商品的关系、Home
+  Email opt-in 尚未接入；Product Offer availability 与 UI 的最小可履约数量边界也仍需
+  统一验收。
+- root `<html lang>` 目前固定为 `en-US`，es-US 只在内层内容容器标记语言；商品与
+  Collection 的 Spanish Storefront fallback 也尚无可重复检测，因此不能开放索引。
+- `NEXT_PUBLIC_SITE_INDEXABLE`、`SHOPIFY_CHECKOUT_ENABLED` 和
+  `CONTACT_FORM_ENABLED` 是三个独立发布门禁；仓库示例值及未配置时的代码默认值
+  均为关闭，各 Preview/Production 部署必须分别核验实际环境值。
 
 ## 2. 目标优先级
 
@@ -108,7 +129,7 @@ certified 等词。
 - About、Contact、Shipping、Returns、Privacy、Terms、Accessibility。
 - Crystal Guide 知识枢纽和可持续的晶体实体页模型。
 - `/blog` 内容模型；首发目标 5–10 篇经人工审核的 Guide/Article。
-- 基础站内 Search、Collection 与导航。
+- 基础站内 Search、Catalog/Category/Design Collection 与导航。
 - 商品、内容、品牌和政策的统一数据映射。
 - Metadata、canonical、必要 Schema、sitemap、robots、Open Graph。
 - 基础 Analytics、Search Console、错误监控、性能和无障碍验证。
@@ -169,16 +190,18 @@ certified 等词。
 
 ### 业务依赖
 
-- 最终品牌名称、域名、法律实体和联系方式。
+- 域名/商标核验、法律实体、邮箱实际开通和政策审批责任人。
 - 价格带和最终视觉资产。
 - 首发商品、SKU、图片、材料、尺寸、来源与处理信息。
 - 发货地、覆盖地区、配送、退换货、税费和客服政策。
 - 真实内容、作者背景与引用。
-- Shopify 店铺、Headless channel、Checkout 和 Vercel 账户。
+- Shopify Checkout/Payment/Market 运营验收和 Vercel 账户；store 与
+  Headless channel 已具备测试读取能力。
 
 ### 技术依赖
 
-- Shopify 测试商品与 Storefront API 权限。
+- Shopify 生产 Catalog/内容/翻译完整度与最小 Storefront API 权限；测试
+  Product/Cart 读写和库存数量 scope 已验证。
 - 可用的开发、Preview 与 Production 环境。
 - 最小 Analytics 与 consent 方案。
 - 域名、DNS、交易 Email 和支持邮箱配置。
@@ -187,7 +210,7 @@ certified 等词。
 
 | 风险 | 影响 | 缓解 |
 |---|---|---|
-| 工作品牌被误当最终事实 | 域名、文案、商标返工 | 集中 brand config + prototype 标识 |
+| 已确认品牌名被误解为域名/商标/定位均已批准 | 域名、文案、资产返工 | 集中 brand config + 发布门禁 |
 | Hydrogen 与 Next.js 旧指令并存 | 架构分叉 | 旧文档归档；`D-003` 固化 |
 | 独件与标准 SKU 模型不清 | PDP、库存、Schema 错误 | 先确认 Catalog worksheet |
 | 水晶功效被写成医疗事实 | 信任与合规风险 | Claims policy、引用和发布审核 |
@@ -196,11 +219,14 @@ certified 等词。
 | 第三方脚本累积 | 性能、隐私、CRO 受损 | Vendor gate 与脚本预算 |
 | Checkout 追踪不完整 | 漏斗误判 | Shopify 与 analytics 对账 |
 
-## 11. Phase 0 完成条件
+## 11. Phase 0 业务退出条件
+
+工程边界、测试店与样例数据流已足够支持后续实施，但 Phase 0 仍未达成下列
+业务退出条件，不得因代码进展把它们标记为已批准：
 
 - 工作品牌、Catalog 类型、内容和测试站边界已确认。
 - 生产阻塞问题集中记录在 `docs/OPEN_QUESTIONS.md`。
-- MVP 商品和内容样本足以验证数据模型。
+- 正式首发商品和内容足以验证生产数据与发布流程。
 - 真实 Shipping、Returns、Privacy 等政策有负责人。
 - Shopify、Vercel、域名和内容维护责任明确。
 - MVP PRD 与技术规格不再包含阻塞性占位信息。

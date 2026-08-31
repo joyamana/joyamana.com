@@ -1,12 +1,13 @@
 # Open Questions
 
-Status: Active — 不阻塞测试站工程骨架  
+Status: Active — 各项按 Blocks 阻塞对应能力；不要把条件项一律当成全站 blocker
 Owner: Project owner  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Resolved input: `docs/BRAND_INPUTS.md`
 
-业务方已授权先建立可运行测试站。下列问题仍会阻塞真实商品接入、政策发布或
-生产上线；Codex 不得以开发样本代替答案。
+业务方已授权先建立可运行测试站。下列问题分别会阻塞真实商品接入、政策发布或
+生产上线；以表格 `Blocks` 和发布清单的适用范围判断，不设置一个笼统 P0 标签。
+Codex 不得以开发样本代替答案。
 
 ## Brand and commercial
 
@@ -14,8 +15,9 @@ Resolved input: `docs/BRAND_INPUTS.md`
 |---|---|---|
 | Q-001A | Joya Mana 的 `.com`、美国商标与社交账号核验 | Production identity/domain |
 | Q-001B | 价格带、AOV 和 margin context | Real prices、free shipping |
-| Q-002A | 七脉轮普通款完整 11 选项、SKU、正式材料与定价 | Shopify catalog |
+| Q-002A | 七脉轮普通款完整 11 选项、SKU、正式材料与定价 | Seven Chakra 生产 Catalog |
 | Q-002B | 礼盒、包装成本、礼品留言 | Gift experience |
+| Q-002C | 正式首发 assortment；Aquamarine 是否仅测试商品 | Public Catalog、index、Checkout |
 
 ## Fulfillment and policy
 
@@ -28,17 +30,22 @@ Resolved input: `docs/BRAND_INPUTS.md`
 | Q-003E | 销售税、关税、进口费用责任 | Checkout/policy |
 | Q-003F | 法律实体、地址、政策审批人 | Privacy/Terms/Organization |
 
-未解决前，测试站 Policy 页面必须显示为内部开发占位、全站保持 `noindex`，
-不得输出 Shipping/Return policy Schema。
+未解决前，缺失的 Shopify Policy 必须 fail closed 或明确显示暂不可用，全站保持
+`noindex`，不得输出 Shipping/Return policy Schema；不得用本地开发正文伪装政策。
 
 ## Assets and accounts
 
 - [x] Shopify store / development store
 - [x] Headless channel 与 private Storefront API access（2026-08-15 只读验证通过）
 - [x] 历史代表性 mock Product/Collection 已完成迁移并从运行时代码删除
-- [x] Shopify Headless channel 中发布真实 Product/Variant（2026-08-25 可见 1 件）
-- [ ] Shopify Headless channel 中创建、填充并发布真实 Collection
-- [ ] 为商品设置准确 Shopify Standard Product Category（首件应核对 Bracelets）
+- [x] Shopify Headless channel 中发布测试 Product/Variant（2026-08-25 可见 1 件）
+- [ ] Shopify Headless channel 中创建、填充并发布非空 Design Collection
+- [ ] 上线前复核所有 Shopify Standard Product Category；2026-08-30 Storefront
+  抽查时 Aquamarine 可通过 Bracelets Category 发现
+- [ ] 定义、填充并映射正式 Product knowledge metafields：materials、dimensions/
+  fit、care、origin/treatment disclosure、package contents 与 related content，并完成 EN/ES 审核
+- [ ] 定义并映射 repeatable/natural-variation/one-of-a-kind 商品模型，以及
+  exact item/representative image disclosure；当前 mapper/UI 尚未实现这组语义
 - [ ] 创建 Design Series Metaobject、Product `custom.design_series` reference、
   Collection `custom.collection_kind`，并将真实系列 Collection 标记为 `design_series`
 - [ ] 在现有 `content_page` definition 增加可选 `navigation_title`（single line）、
@@ -50,16 +57,23 @@ Resolved input: `docs/BRAND_INPUTS.md`
 - [ ] Vercel account/team
 - [ ] Logo、字体授权、颜色
 - [ ] 真实商品摄影/视频
+- [ ] 替换或移除 Home 测试期 `bling-omen-editorial-hero.png`，确认获批 production
+  hero/editorial 资产并清理旧品牌文件名；该图不得被解释为商品实拍
 - [x] 公开客服/隐私邮箱确定为 `info@joyamana.com`
 - [ ] `info@joyamana.com` inbox、负责人/备援和交易发件域名认证
+- [ ] 决定是否批准 Resend 作为 Contact 数据处理方，并确认成本、保留期、
+  删除/导出、发件域验证和退出路径
+- [ ] 在启用 `CONTACT_FORM_ENABLED` 前配置生产滥用限制/WAF 并验收投递、
+  回复、失败和 Email-only 降级流程
 - [ ] GA4 / GSC / Merchant Center
 - [ ] Email/CRM 与 Consent 方案
 
 不要在本文件粘贴 credential。
 
-## Shopify storefront audit — 2026-08-16
+## Shopify storefront audit — 2026-08-16（历史快照）
 
-Storefront API 已只读确认：
+本节只保留当日证据；后续 follow-up 与当前 Shopify response 优先。Storefront API
+当日只读确认：
 
 - Store name 为 Joya Mana；主域名仍是 `gee0hu-1n.myshopify.com`，商店描述为空。
 - 仅 US / USD / English 可用，`shipsToCountries` 仅 US；Canada 未开放。
@@ -81,7 +95,7 @@ Storefront token 无法验证、仍需 Shopify Admin 人工确认：
 - Notification sender、发件域名认证、订单邮件、support/privacy 邮箱。
 - 正式域名、DNS、Checkout domain、像素/Analytics 和生产 Secret 分离。
 
-## Shopify storefront follow-up — 2026-08-25
+## Shopify storefront follow-up — 2026-08-25（历史快照）
 
 Storefront API 与安全的 Cart smoke 已确认：
 
@@ -93,10 +107,8 @@ Storefront API 与安全的 Cart smoke 已确认：
   只能展示 Shopify 全商品目录，具体 Collection URL 不得引用本地 mock。
 - US Spanish `@inContext(language: ES)` 当前回退为 English，说明西语翻译尚未在
   Shopify 发布；`/es-us/` 继续 noindex，不能把 fallback 视为已审核翻译。
-- Headless private Storefront token 已启用
-  `unauthenticated_read_product_inventory`；商品页与 Bag 使用
-  `quantityAvailable` 限制可选数量，并保留 Shopify Cart 库存 warning 作为并发
-  购买时的最终校验。
+- 当日 token 尚不能读取具体库存数量，页面只使用 `availableForSale` 与
+  Shopify Cart warning/user error 做可售校验。该状态已被 2026-08-31 follow-up 取代。
 - Cart create/update/remove 与 HTTPS `checkoutUrl` 合约可用；smoke 未创建订单，
   测试商品行已移除。Buy now 与 Bag Checkout 的代码仍受
   `SHOPIFY_CHECKOUT_ENABLED=false` 门禁保护。
@@ -130,11 +142,38 @@ Storefront API 与安全的 Cart smoke 已确认：
 - 当前全站 noindex 门禁不变。正式开放索引前还需完成 Article 内容审核、claim/source
   检查、独立 SEO、图片 alt、翻译与相关商品关系。
 
-## Before public launch
+## Shopify runtime follow-up — 2026-08-31
+
+- Headless private Storefront token 现可读 `quantityAvailable` 与
+  `currentlyNotInStock`。Product/Cart mapper、PDP 与 Bag 已与 contextual
+  `quantityRule` 一起使用这些字段约束可选数量；并发变化仍以 Cart warning/
+  user error 和 Checkout 为准，页面不显示“仅剩 X 件”类紧迫文案。
+- `COMMERCE_PROVIDER`、本地 mock Catalog、本地 Trust/Policy/About/Editorial 正文
+  fallback 已删除。Storefront 现为 Shopify-only；缺失/无效/异常时 fail closed。
+- 当前 Search 仅检索 Shopify Product；CI、Playwright/E2E、webhook/cache invalidation、
+  Analytics/consent 和 Customer Privacy API 仍未实现。
+- en-US/es-US Search route 的 metadata 文案仍声称可检索 editorial content，与当前
+  Product-only 结果不一致；公开发布前必须修正文案或实现内容检索。
+- 参数请求当前只输出 clean canonical，未根据 `searchParams` 设置 `noindex`；开启总
+  index gate 后会继承基页 indexable metadata。发布前必须实现参数级 robots 门禁并测试。
+- Policy/Accessibility 的 fallback 页自身会 noindex 并退出 sitemap/Schema，但英文页
+  当前仍可能输出指向未就绪 es-US fallback 的 hreflang；发布前补 readiness alternate
+  过滤。About/Article 已有对应过滤。
+- Product/Collection 尚无法自动识别 Spanish 真实翻译与 English fallback；在增加
+  Commerce translation readiness 验证前不得开启全站 index gate。
+- root `<html lang>` 当前固定 `en-US`，es-US 主内容只在内层 shell 标记语言；
+  需在索引/无障碍发布验收前改为 document-level locale。
+- Header 目录是所有 US 页面 layout 的 Shopify 依赖；5 分钟缓存未命中且上游失败时
+  会进入全页 error boundary。公开上线前需完成故障恢复/监控验收，不恢复本地 Catalog。
+- Header cache 当前从完整 Product/Collection response 生成导航，虽然 UI 只消费
+  handle/title，但缓存实体仍含价格/可售性/数量。生产 hardening 需收窄为导航专用
+  query/projection，并禁止其他 UI 复用其中的商业字段。
+
+## Deferred / conditional decisions
 
 | ID | Decision | Current handling |
 |---|---|---|
-| Q-101 | Training crawler policy | Pending；Search/User 与 Training 分开 |
+| Q-101 | Training crawler policy（对应 D-016） | Pending；Search/User 与 Training 分开 |
 | Q-103 | Reviews provider | 无真实评论时不渲染模块 |
 | Q-104 | Email/CRM | 先定义 consent/events |
 | Q-105 | Error monitoring | Vercel baseline；Beta 前复核 |

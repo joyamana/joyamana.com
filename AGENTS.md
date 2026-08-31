@@ -135,9 +135,18 @@
 
 ## 当前仓库状态
 
-截至 2026-08-30，仓库包含 Next.js 16 App Router 测试站、pnpm 配置、Shopify-only
-Storefront API catalog 与 Cart、en-US 根路径和 `/es-us/`；Canada 只保留未启用的规划
-配置。默认全站 noindex，Shopify Checkout 仍受独立发布门禁保护。
+截至 2026-08-31，仓库包含 Next.js 16 App Router 测试站、pnpm 配置以及
+Shopify-only Storefront API 适配层。US en-US 根路径与 `/es-us/` 已共享同一
+Catalog/Cart；商品、Variant、Category、Design Collection、实时价格/可售性/可用数量、
+Bag 和独立 Buy now Cart 已接入。Policy、About subtree、Accessibility、Blog/
+Crystal Guide 也由 Shopify 驱动；Contact 表单仅在受控配置后才投递。本地 mock
+Catalog 和业务正文 fallback 已删除，上游缺失时 fail closed。
+
+Canada 只保留未启用的 typed 规划配置。仓库示例值及未配置时的代码默认值为全站
+noindex，并关闭 Shopify Checkout 和 Contact 投递；各部署环境必须单独核验。当前没有
+CI、Playwright/E2E、format check 或
+Shopify webhook 失效链路；西语人工审核、完整政策、Analytics/consent、真实支付与
+Production/Preview 验收仍未完成。
 
 常用命令：`pnpm dev`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、
 `pnpm build`。不得在实际运行前声称检查已通过。

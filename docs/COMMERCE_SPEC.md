@@ -1,8 +1,8 @@
 # Commerce Specification
 
-Status: Draft — Catalog 与运营政策待确认  
+Status: Working — Catalog/Cart 核心切片已实现，生产 Catalog 与 hardening 待完成
 Owner: Commerce / Operations  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Related: `MVP_PRD.md`, `TECH_SPEC.md`, `CUSTOMER_LIFECYCLE.md`
 
 Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
@@ -15,9 +15,14 @@ Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
 - 天然水晶的个体差异必须诚实表达，图片代表性与实际交付物不能含糊。
 - 商品信息完整度优先于 SKU 数量。
 
-## 2. Catalog 待决模型
+## 2. Catalog 模型与当前状态
 
-首发 Catalog 必须先归类：
+D-020 已接受同时支持 repeatable、natural-variation 和 one-of-a-kind 这组业务边界。
+当前代码只有 `standard | one-of-one` 的可选类型预留，Shopify mapper 与消费者 UI
+尚未实现正式 model metafield、natural-variation 语义或 exact/representative image
+披露。正式首发 assortment、七脉轮资料和每个 SKU 的准确商品事实仍分别受
+Q-002C/Q-002A 阻塞；Q-002B 另行决定包装与礼赠体验。当前 Headless 测试店可见的
+Aquamarine 商品只用于验证数据流，不等于已获批的生产首发清单。
 
 ### Repeatable product
 
@@ -34,7 +39,8 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 标准设计下使用天然独件。需要明确买家收到的是“图片中的具体实物”还是
 “同规格相似实物”；该决定影响图片、Product/Variant、库存和退换政策。
 
-在 Q-002 回答前，不锁定 Product/Variant 层级。
+每个正式商品在发布前按其实际交付物选择 Product/Variant 层级；不为了复用模板
+把应当独立的天然独件强行并成 Variant。
 
 ## 3. Product 数据契约
 
@@ -47,7 +53,8 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - options、variants
 - SKU
 - price、compare-at price、currency
-- availability、inventory policy
+- availability、`quantityAvailable`、`currentlyNotInStock`、contextual
+  quantity rule、inventory policy
 - selling plan（MVP 不使用，除非另行批准）
 - SEO title/description（如采用）
 
@@ -66,6 +73,16 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - care 与使用安全
 - shipping/returns policy reference
 - related Guide/Article
+
+当前 Shopify mapper 已覆盖 Product/Variant、SEO、媒体、Category、价格、可售性、
+库存数量和 quantity rule，但尚未读取 product model、exact/representative image、
+materials、dimensions、care、origin/treatment、package contents 或 related content
+等 Product knowledge metafields。这些字段的 definition、填充、翻译和映射是正式
+商品发布阻塞，不能用本地文案补齐。
+
+当前 normalized entity 也尚未保留 vendor、product type/tags、Variant SKU 或
+inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，必须先明确用途并
+从 Shopify 映射，不能从 handle/title 推断。
 
 ### 标识符
 
@@ -120,6 +137,14 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - 永久下架只有存在真正等价替代时才 301。
 - 不把所有失效商品跳转首页。
 - Cart 更新时重新处理库存和价格警告。
+- PDP 与 Bag 的可选数量以 Shopify contextual `quantityRule`、storefront 安全
+  上限 99 和可用的实际库存上限取交集。只有 `currentlyNotInStock=false`
+  且 `quantityAvailable` 为已知非负整数时，才把它用作硬上限。
+- `currentlyNotInStock=true` 表示 Shopify 可能允许继续销售；
+  `quantityAvailable=null` 表示没有可供前端确定的精确上限。两者都不得被误判为
+  库存 0，Cart warning/user error 和 Checkout 是并发变化的最终裁决。
+- 具体库存数只用于防止无法履约的数量选择，不输出“仅剩 X 件”等紧迫性
+  营销。
 - PDP Variant 选择器显示 Shopify 返回的 contextual variant price；内部供应商
   名称、素材名和文件名不得作为消费者文案或客户端商品字段。
 
@@ -133,6 +158,11 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - 显示 Shopify warnings/user errors。
 - 恢复已有 Cart；无效/过期 Cart 安全重建。
 - Checkout 前请求最新 `checkoutUrl`。
+
+当前代码已实现上述 Bag Cart 生命周期、HttpOnly cookie、过期 Cart 的 add
+recovery、独立 Buy now Cart 和服务端 Checkout URL 校验。它们已通过 mapper/
+Server Action 测试与历史 live contract smoke，但尚未有 Playwright 跨页/跨设备/
+支付完成 E2E。
 
 ### 错误处理
 
@@ -149,7 +179,9 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - Checkout 使用 Shopify hosted checkout。
 - PDP Buy now 使用独立单商品 Cart，带当前 Variant、数量与 Market buyer
   identity，并请求最新 `checkoutUrl`；不得复用、清空或改写用户已有 Bag。
-- Shopify、真实价格、库存和获批政策未连接时，Buy now 保持不可用，不模拟订单。
+- 当真实价格、库存、获批政策或 Shopify Checkout 运营配置任一未通过验收时，
+  未获批公开部署保持 `SHOPIFY_CHECKOUT_ENABLED=false`。受保护 local/Preview 可为
+  受控 E2E 临时启用，但不构成 production approval；门禁关闭时 Buy now 不模拟订单。
 - 支付方式、地址验证、税、配送、折扣和订单创建由 Shopify 管理。
 - Next.js 不收集、代理或存储支付卡数据。
 - Checkout 域名、品牌样式、政策链接和交易 Email 在 Shopify 中配置并验收。
@@ -158,7 +190,7 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 
 ## 10. Shipping、Returns 与 Taxes
 
-下列内容全部是 P0 业务输入，当前不得假设：
+下列内容全部是公开销售与 Checkout 的必需业务输入，当前不得假设：
 
 - fulfillment origin 与 handling time
 - service levels、cost、free-shipping threshold
@@ -206,9 +238,14 @@ Personalization 全套工具。
 
 ## 14. MVP 验收
 
+以下仍是发布退出条件，不因 Commerce adapter 的代码完成自动标记为已通过。
+
 - 代表性 repeatable/one-of-a-kind 商品模型已通过业务审核。
 - 每个首发 Product/Variant 具备必需字段和真实媒体。
 - Price、currency、availability、SKU 在 Shopify/UI/Cart/Schema 一致。
+- 当前 Product Offer availability 只使用 Product/Variant 的 `availableForSale`，而 UI
+  还会验证 `quantityAvailable >= quantityRule.minimum`；这个边界统一前不得把上一项
+  标记为通过。
 - Guest Cart → Shopify Checkout 完成跨设备核心测试。
 - Shipping/Returns/Taxes 文案与 Checkout 配置一致。
 - 售罄、下架、价格变化、API 错误均有明确行为。

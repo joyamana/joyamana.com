@@ -1,8 +1,8 @@
 # Content, SEO and GEO Specification
 
-Status: Draft — 内容运营与 crawler policy 待确认  
+Status: Working — Shopify 内容/SEO 技术边界已实现，正式内容与 crawler policy 待批准
 Owner: Content / SEO  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Supersedes: `docs/archive/` 中两份 SEO/GEO 架构总结的实施结论
 
 ## 1. 核心原则
@@ -67,29 +67,43 @@ Blog 是唯一栏目名称与路径。不得创建 `/journal`、Journal UI 别�
 
 ## 4. 内容事实来源
 
-`D-009` 的已接受边界：
+`D-009`、`D-041` 和 `D-042` 的已接受边界：
 
 - Shopify Product Category：商品形态及 `/category/*` 归属。
 - Shopify Product/Collection + Metafields：商品、设计系列商品归集、分类扩展内容，
   以及商品专属 Product Care 事实。只有
   `custom.collection_kind=design_series` 的 Collection 进入公开系列 URL。
 - Shopify Policies：Shipping、Returns/Refund、Privacy、Terms 的完整事实。
-- Shopify Pages：Contact 与其他获批的普通品牌页。
+- Next.js code-owned UI copy + 集中 `brand.supportEmail`：当前 Contact 介面、Email 入口和
+  表单指引；投递边界按 D-038。不在本地复制响应时间、退货或配送承诺。
+- Shopify Pages：保留给未来获批的普通品牌页；当前没有公开路由从 Shopify Page 读取正文。
 - Shopify `content_page` Metaobjects：About hub、由 root 直接引用的 About 子页、
   Accessibility，以及需要由 Headless storefront 读取的结构化品牌内容。
-
-Next.js 使用稳定的品牌化 URL 呈现这些内容，不暴露 `/pages/*` 或 Shopify 默认
-Policy/Metaobject URL。当前不设 FAQ、Disclaimer 或独立 Product Care URL；若未来恢复，必须先
-确认独立页面价值、内容来源和索引条件。
 - Shopify Blog/Article：`blog` 承载 Blog，`crystals` 承载 Crystal Guide；Article
   保存正文、发布状态、作者、日期、SEO，并按需使用 Metafields 保存结构化扩展。
 - Shopify merchant-owned Metaobjects：Design Series、Author、Source、
   可复用 FAQ、Site Settings 等结构化实体。Design Series 保存系列故事与视觉；
   对应 Shopify Collection 保存公开 URL、SEO 和商品归集，职责不得双写。
 
+Next.js 使用稳定的品牌化 URL 呈现这些内容，不暴露 `/pages/*` 或 Shopify 默认
+Policy/Metaobject URL。当前不设 FAQ、Disclaimer 或独立 Product Care URL；若未来恢复，必须先
+确认独立页面价值、内容来源和索引条件。
+
 只有满足 D-009 的升级触发条件才增加 Sanity 或其他 CMS。若升级，Commerce
 字段仍不复制到 CMS；内容 ID、预览、webhook、translation 和 migration 必须
 有 ADR。
+
+当前运行时无本地业务正文 fallback。条目缺失或必需字段不完整时，受门禁的
+Article/About child 等详情页返回 404；上游请求异常时，Article/About child 进入
+安全 error/500，Policy、Accessibility 和 hub 则显示可理解的空或暂不可用状态。
+所有分支都不得回退本地业务正文。
+Policy、About、Accessibility 和 Article 的西语请求命中 Shopify 默认英语时可提供
+阅读后备；fallback 页自身 `noindex`、不输出 Schema 且不进入 sitemap。About/Article
+的 alternate 会按 readiness 过滤，但 Policy/Accessibility 的英文页当前仍可能通过
+默认 enabled locales 输出指向 fallback 西语页的 hreflang；发布前必须补跨语言过滤。
+当前 Commerce Product/Collection response 也没有等价的“是否回退默认语言”标记；
+全站 gate 只能在所有西语商品/系列已审核时开启，且发布前仍需增加可持续验证的
+Commerce translation readiness 门禁或同等运营检查。
 
 ## 5. 内容模型
 
@@ -140,6 +154,10 @@ Commerce 核心字段见 `COMMERCE_SPEC.md`。内容扩展包括：
 - related Crystal/Article
 - source/reference（只有客观声明需要且可验证时）
 
+上述 Product knowledge metafields 尚未进入当前 Shopify mapper。在 definition、真实值、
+翻译与可见 PDP 同时完成前，不得从商品标题/描述猜测这些字段，也不得
+输出对应 Schema 扩展。
+
 ### Design Series
 
 - canonical name 与内部稳定 handle
@@ -152,6 +170,10 @@ Commerce 核心字段见 `COMMERCE_SPEC.md`。内容扩展包括：
 
 Design Series Metaobject 不另行生成第二个可索引页面；公开 canonical 保持对应
 `/collections/{handle}`。SEO title/description 和商品成员归集由 Collection 维护。
+
+当前 storefront 只读 Collection 的 `custom.collection_kind`、title、description、image、
+SEO 与 products；Design Series Metaobject reference 与 story/lookbook 模块尚未接入。
+因此“Metaobject 承载系列故事”仍是 Admin/后续实施要求，不得写成当前已完成功能。
 
 ### Crystal Guide Article
 
@@ -323,6 +345,8 @@ Category   Design Collection
 - filter、sort、tracking 和非独立 Variant 参数页
 - 任何未上线 market/locale
 - 缺字段、未被 root 引用或使用默认语言 fallback 的 About 子页
+- 使用默认语言 fallback 的 Policy、Accessibility、Blog/Crystal Guide 或其他
+  localized content page
 
 需要 crawler 读取 `noindex` 的页面不应同时在 robots.txt 中阻止抓取。
 
@@ -353,6 +377,16 @@ Category   Design Collection
 - 当前不输出 `x-default`，因为 `/` 是明确的 en-US 页面而非 Global 入口。
 - 未来若按 D-027 增加 `/choose-region`，再评估将其作为 `x-default`。
 
+当前 `buildMetadata` 可为 Commerce 页生成 EN/ES alternate，动态 sitemap 也会在
+index gate 开启时聚合两种语言的 Product/Collection。由于 Commerce adapter 尚不能
+自动识别默认语言 fallback，在完成上述 translation readiness 检查前不得开启
+`NEXT_PUBLIC_SITE_INDEXABLE`。
+
+Policy/Accessibility 的 fallback 页自身与 sitemap 已按 readiness 保护，但英文
+counterpart 的 hreflang 尚未过滤未就绪的 es-US alternate；About/Article 已有该过滤。
+此外，当前参数请求只 canonical 到 clean URL，没有按 `searchParams` 单独设置
+`noindex`。这两项均是开启总 index gate 前的实现与回归测试 blocker。
+
 ## 12. Structured data
 
 所有 JSON-LD 使用稳定 `@id` 和规范化实体，只输出页面可见、真实的数据。
@@ -368,7 +402,7 @@ Category   Design Collection
 | About hub | `AboutPage` + `BreadcrumbList` |
 | About child | `WebPage` + `BreadcrumbList` |
 | Contact | `ContactPage` |
-| FAQ | `FAQPage`，仅当完整问答在 UI 可见且适用 |
+| FAQ | `FAQPage`，仅适用于未来获批且完整问答在 UI 可见的场景；当前无 FAQ 路由 |
 
 规则：
 
@@ -380,6 +414,11 @@ Category   Design Collection
   Offer。
 - 不把 Schema eligibility 或 rich result 展示当作保证。
 - 用自动测试验证 JSON-LD 可解析、关键字段与 UI 一致。
+
+当前 Product、Shop/Category/Design Collection、About 和 Article 详情已有受
+index gate 保护的 mapper。Home 的 `Organization`/`WebSite`/`WebPage` 与 Contact 的
+`ContactPage` 尚未实现，并且法律实体、Logo、canonical domain 等 Organization
+字段未确认；它们是发布前缺口，不可以用占位值补齐。
 
 ## 13. robots 与 AI crawler
 

@@ -3,10 +3,14 @@
 面向美国市场的水晶 DTC 品牌独立站。项目采用 `Brand + Content + Commerce`
 模式：以品牌体验和可信内容建立认知，以 Shopify 完成交易。
 
-当前状态：**Phase 1 — 可运行测试站初始化**。业务方已确认品牌名称
-`Joya Mana`，并授权使用明确标注的开发样本；全站默认不可索引，未确认商品、政策和
-健康功效不得伪装为生产事实。输入见
-[`docs/BRAND_INPUTS.md`](docs/BRAND_INPUTS.md)。
+当前状态（截至 2026-08-31）：**Phase 3 实施中；Phase 2 的 Catalog/Cart 核心纵切面
+已完成，Commerce hardening 与生产数据仍未完成**。
+商品/Cart 事实及已接入的 Policy、About/Accessibility、Blog/Guide 正文来自
+Shopify，不再使用本地样本商品或正文 fallback。Home、Contact、导航等界面文案仍由
+代码配置维护。全站索引、Shopify Checkout 和 Contact 表单投递分别受独立门禁
+保护；生产商品内容、政策、西语翻译、外部账号和发布验收尚未完成。当前输入与
+阻塞项分别见 [`docs/BRAND_INPUTS.md`](docs/BRAND_INPUTS.md) 和
+[`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)。
 
 ## 已确定方向
 
@@ -49,7 +53,7 @@
 需要 Node.js 24 LTS 与 pnpm：
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 pnpm dev
 pnpm lint
 pnpm typecheck
@@ -57,12 +61,23 @@ pnpm test
 pnpm build
 ```
 
-测试站运行时只使用 Shopify Storefront API，并由
-`NEXT_PUBLIC_SITE_INDEXABLE=false` 保持全站不可索引。不存在本地 Commerce
-provider 或样本 Catalog fallback；Shopify 缺失、数据无效或请求失败时页面必须
-fail closed。Canada 的 Cart、Catalog 和 Currency context 只保留未来隔离模型，
-不生成公开 URL。正式内容、本地化内容与已批准政策准备好之前，不得开启索引或
-Checkout。
+当前尚未建立 CI、format check 或 Playwright/E2E；不得把本地 Vitest 结果写成已通过浏览器、
+Preview 或支付端到端验收。
+
+Commerce 与 Shopify-backed 正文的数据路径只使用 Shopify Storefront API；Contact
+投递是受独立门禁保护的可选 Resend adapter。仓库示例值及未配置时的代码默认值以
+`NEXT_PUBLIC_SITE_INDEXABLE=false` 保持全站不可索引；各部署环境必须单独核验。
+不存在本地 Commerce provider 或样本 Catalog fallback；Shopify 缺失、数据无效或
+请求失败时页面必须 fail closed。Canada 的 Cart、Catalog 和 Currency context 只保留
+未来隔离模型，不生成公开 URL。正式内容、本地化与 SEO 验收完成前不得开启索引；
+真实商品/库存、政策和 Shopify 支付/配送/税务验收完成前不得在公开部署开启 Checkout。
+
+已实现的内容路径包括 Shopify Policies、`content_page` 驱动的 About/
+Accessibility，以及 Shopify Blog `blog` / `crystals` 驱动的 Blog 和 Crystal
+Guide。Contact 表单具备服务端校验和可关闭的 Resend 薄适配层；页面当前展示
+Email 入口，但 inbox、负责人/备援和服务流程仍须在公开上线前验收。当前站内 Search
+只检索 Shopify 商品，内容检索、Analytics/consent、webhook 缓存失效和真实浏览器
+E2E 仍是待办。
 
 ## 文档语言
 

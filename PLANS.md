@@ -85,11 +85,12 @@
 
 ---
 
-# Trust、Policy 与 Product Care 本地页面骨架
+# Trust、Policy 与 Product Care 本地页面骨架（历史）
 
-状态：Complete  
+状态：Complete
+当前适用性：Historical — 后续实现已被 D-035、D-039 与 D-042 取代
 负责人：Codex  
-最后更新：2026-08-14  
+最后更新：2026-08-31
 关联：D-009、D-021、D-023、D-024；Q-003A–Q-003F；`MVP_PRD.md` P-003/P-007
 
 ## Objective
@@ -164,15 +165,22 @@ store、Headless channel、真实政策、客服渠道和商品护理事实尚�
 Shopify Policies/Pages/Product metafields，并在 Q-003A–Q-003F 与商品护理事实
 获批后补正式内容、页面级 metadata、发布状态和 sitemap。
 
+Post-completion note（2026-08-31）：上述 Outcome 保留为 2026-08-14 的实施证据，
+不再表示当前运行时。D-035 后 Canada 路由不生成并返回 404；D-039 已删除
+FAQ、Disclaimer 和独立 Product Care 页面；D-042 已删除本地 Trust/
+Policy 正文和 fallback。当前 Shipping/Returns/Privacy/Terms 只读 Shopify
+Policies，About/Accessibility 只读 `content_page` Metaobject；缺失或异常时 fail
+closed。
+
 ---
 
 # Shopify Commerce vertical slice
 
 状态：Complete
 负责人：Codex
-最后更新：2026-08-25
+最后更新：2026-08-31
 关联：D-002、D-005、D-006、D-008、D-020、D-021、D-023、D-024、D-030、
-D-031；Q-002A、Q-003A–Q-003F；`MVP_PRD.md` P-002/P-003/P-004
+D-031；Q-002A、Q-002C、Q-003A–Q-003F；`MVP_PRD.md` P-002/P-003/P-004
 
 ## Objective
 
@@ -195,7 +203,7 @@ channel 已有 1 个可售商品 `aquamarine-bracelet-9-mm`，但只有空的默
   facade；当前 US market/language context；HttpOnly Cart cookie；Cart create/read/
   add/update/remove/recovery；独立 Buy-now Cart；最新 Checkout URL；真实 Cart UI、
   error/loading/empty 状态；metadata/sitemap 数据源迁移；测试和文档。
-- 不包含：Admin API 写入、创建或发布 Shopify Collection、具体库存数量展示、
+- 不包含：Admin API 写入、创建或发布 Shopify Collection、使用库存数量制造稀缺文案、
   Shopify webhook/cache invalidation、支付完成自动化、正式政策发布、启用索引、
   Canada Commerce、Customer Account 或自定义 Checkout。
 
@@ -205,12 +213,16 @@ channel 已有 1 个可售商品 `aquamarine-bracelet-9-mm`，但只有空的默
   Order 的唯一事实来源；US English/Spanish 共享同一 US Catalog 与 USD 交易上下文。
 - Accepted：Bag Cart ID 仅保存在 `HttpOnly + SameSite=Lax` cookie 中；Buy now
   必须创建独立单商品 Cart，不读取、清空或改写 Bag。
-- Temporary：缺少 `quantityAvailable` scope 时只使用 Shopify
-  `availableForSale`，不显示“仅剩 X 件”或猜测库存。
+- Resolved：2026-08-31 已可读 `quantityAvailable` 与 `currentlyNotInStock`。PDP/
+  Bag 用它们和 contextual `quantityRule` 限制可选数量，但不显示“仅剩 X 件”。
+  当 `currentlyNotInStock=true` 或 Shopify 不返回精确数量时，不把 `null`
+  误判为 0；Cart warning/user error 和 Checkout 仍是并发变化的最终裁决。
 - Temporary：`SHOPIFY_CHECKOUT_ENABLED` 是独立发布门禁。代码和合约可完成，
-  但在 Q-003A–Q-003F 及 Shopify Checkout 运营验收前保持 `false`。
-- Blocking：业务方需在 Shopify 创建、填充并发布至少一个真实 Collection；否则
-  Collection adapter 和空状态可验收，但没有可展示的真实策展集合页。
+  但在 Q-003A–Q-003F 及 Shopify Checkout 运营验收前，未获批公开部署保持
+  `false`；受保护 local/Preview 可按 Runbook 临时启用完成 E2E。
+- Blocking：若首发包含设计系列，业务方需创建、填充并发布至少一个非空
+  `collection_kind=design_series` Collection，并完成 `custom.design_series` reference/
+  story 链路；否则 Collection adapter 和空状态可验收，但不能发布设计系列页。
 
 ## Milestones
 
@@ -227,7 +239,8 @@ Catalog query 使用 `@inContext(country: US, language: ...)` 请求页面所需
 Shopify 失败时展示错误而不静默回退到本地样本。
 Catalog、Collection 与 Search 使用完整 cursor pagination；PDP 继续取回全部 Variant，且
 PDP/Cart 的数量控件遵循 Shopify contextual `quantityRule`，并与已约定的 storefront
-安全上限 99 取交集。
+安全上限 99 取交集；对不允许继续销售且数量已知的 Variant，还与
+`quantityAvailable` 取交集。
 
 Cart mutation 全部 `no-store`。Server Action 读取并写入服务端 cookie，只把去除
 Cart ID 和 Checkout URL 的安全 Cart view model 返回客户端；用户明确开始 Checkout
@@ -252,7 +265,7 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
 ## Progress log
 
 - 2026-08-25：对齐上次会话状态；完成规范、代码、测试与实时 Storefront 只读审计。
-  确认真实 Product 已发布、Collection 仍为空、inventory quantity scope 不可用，
+  确认 Headless-visible 测试 Product 已发布、Collection 仍为空、inventory quantity scope 不可用，
   建立本执行计划并开始实施。
 - 2026-08-25：完成 Shopify Product/Variant/Money/Image/SEO、非空 Collection 与
   Search mapper；`COMMERCE_PROVIDER=shopify` 成为项目默认，Shopify 失败不回退 mock。
@@ -276,12 +289,18 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
   production build 通过；live Storefront/Cart smoke 通过。库存冲突 smoke 返回
   `MERCHANDISE_NOT_ENOUGH_STOCK` 并保持可履约数量，随后测试 Cart 已清空；客户端
   bundle 与 build 输出未发现 private token。
+- 2026-08-31：Storefront scope 已返回 `quantityAvailable` 与
+  `currentlyNotInStock`；normalized Product/Cart line、PDP、Bag 和数量工具统一使用
+  Shopify 库存上限，并保留 continue-selling/null 语义。本轮文档同步前，
+  lint、typecheck 与 147 项 Vitest 在 Node 26.7.0 上通过；因超出项目固定的
+  Node 24 范围，仍需在 Node 24/CI 重验。
 
 ## Risks
 
-- Risk：空 Shopify Collection 使既有 Seven Chakras 导航失效。
-  - Mitigation：运行时不引用 mock Collection；提供真实 Catalog/Collection 空状态，
-    并把 Admin 发布 Collection 作为明确业务待办。
+- Risk：没有合格 `design_series` 时系列入口会隐藏且 Collections 显示空状态；若
+  首发 scope 承诺设计系列，这会阻塞发布。
+  - Mitigation：运行时不引用 mock Collection；只有业务方创建非空 Design Collection
+    并完成 kind/reference/story 链路后才公开系列入口。
 - Risk：Cart secret 泄露到 React state、日志或浏览器存储。
   - Mitigation：完整 Cart ID 只存在 HttpOnly cookie 和 server-only adapter，测试
     public Cart view model 不包含 `id` 或 `checkoutUrl`。
@@ -293,7 +312,7 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
 - Risk：Shopify 商品正文可独立于代码更新，未经复核的外部内容可能与价格或披露
   事实冲突。
   - Mitigation：最终实时复核确认早期 `$14` description 冲突已由 Shopify 更新解决；
-    gate 仍保持关闭，业务方须审核当前正文与西语翻译后再发布。
+    公开 index gate 必须保持关闭，业务方须审核当前正文与西语翻译后再发布。
 - Risk：两个浏览器标签页在没有 Cart cookie 时同时首次 Add，仍可能各自 cartCreate，
   后完成的响应会成为当前 Bag。
   - Mitigation：同标签页请求已串行并防 stale response；跨标签并发需在 Playwright
@@ -308,17 +327,21 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
 
 ## Outcome
 
-US storefront 已切换为 Shopify Catalog 和 Cart 数据。当前可见的 Aquamarine 商品、
-USD 35 contextual price、真实媒体和 availability 已进入 Home、Catalog、PDP、Search
+US storefront 已切换为 Shopify Catalog 和 Cart 数据。2026-08-25 验证时可见的
+Aquamarine 测试商品、当时的 Shopify contextual price、媒体和 availability 已进入 Home、Catalog、PDP、Search
 与 Bag；旧七脉轮 mock 商品和 `$68` 不再作为 Shopify 运行时回退。Cart secret 仅在
 HttpOnly cookie/server adapter，公开 Cart view model 不含 Cart ID 或常驻
 `checkoutUrl`。Buy now 始终建立独立单商品 Cart，Bag Checkout 始终重取最新 URL。
 PDP/Collection schema 受 index gate 保护，Cart/Search 无论发布开关如何都保持 noindex。
 
-实现已完成但发布仍受业务门禁保护：Shopify 需创建并发布至少一个非空 Collection；
+实现已完成但发布仍受业务门禁保护：若首发包含设计系列，Shopify 需创建并发布非空、
+标记为 `design_series` 且完成 reference/story 链路的 Collection；
 Q-003A–Q-003F、payment/guest checkout/branding/notification 等 Admin 验收完成后，
-才可将 `SHOPIFY_CHECKOUT_ENABLED` 设为 `true`。当前全站继续 `noindex`，Spanish 商品
-内容因 Shopify 未发布翻译而回退 English，Canada 继续 404。
+才可在公开部署将 `SHOPIFY_CHECKOUT_ENABLED` 设为 `true`。仓库默认继续全站
+`noindex`，Spanish 商品内容因 Shopify 未发布翻译而回退 English，Canada 继续 404；
+各 local/Preview/Production 环境值仍须分别验收。
+已知且不允许继续销售的库存数量现在会约束 PDP 与 Bag 数量；页面不用该数据生成
+紧迫性文案。
 
 ---
 
@@ -326,7 +349,7 @@ Q-003A–Q-003F、payment/guest checkout/branding/notification 等 Admin 验收�
 
 状态：Complete
 负责人：Codex
-最后更新：2026-08-30
+最后更新：2026-08-31
 关联：D-002、D-007、D-009、D-013、D-023、D-024、D-036；
 `COMMERCE_SPEC.md`、`CONTENT_SEO_GEO_SPEC.md`
 
@@ -338,10 +361,10 @@ Product/Variant、价格和库存，同时保持唯一 canonical、清晰导航�
 
 ## Context
 
-当前 storefront 只有 `/collections` 与 `/collections/{handle}`，Collections hub 同时
+本任务开始时 storefront 只有 `/collections` 与 `/collections/{handle}`，Collections hub 同时
 承担全部商品、后台 Collection 筛选和系列入口。Shopify Product mapper 尚未读取标准
 Category，Collection mapper 也未读取 `custom.collection_kind`。2026-08-25 实时审计
-显示 Headless channel 有一个商品但没有非空真实 Collection；全站仍由 noindex gate
+显示 Headless channel 有一个测试商品但没有非空 Collection；全站仍由 noindex gate
 保护。
 
 ## Scope
@@ -359,7 +382,8 @@ Category，Collection mapper 也未读取 `custom.collection_kind`。2026-08-25 
 - Accepted：只有 `custom.collection_kind=design_series` 的非空 Shopify Collection
   可出现在 `/collections` 和 `/collections/{handle}`。
 - Temporary：首批可导航商品类别使用 Shopify 稳定 taxonomy ID 映射 Bracelets、
-  Rings、Necklaces、Earrings；只显示至少有一个 Storefront-visible Product 的类别。
+  Rings、Necklaces、Earrings、Gemstones；只显示至少有一个 Storefront-visible Product
+  的类别。
 - Blocking：业务方仍需在 Shopify 给商品设置 Product Category，并创建 Design Series
   Metaobject、引用字段、Collection kind 与非空 automated Collection，真实系列页才会
   出现。
@@ -427,6 +451,10 @@ Shop hub 展示全部商品和真实非空类别；Collections hub 只列 Design
   Category 在同一横向信息组平铺；恢复离开顶级入口和面板整体区域后的自动收起，并用
   120ms 缓冲避免穿越边界闪烁。Chrome 鼠标轨迹验收确认 hover 展开、进入面板保持、
   离开区域后关闭均符合预期。
+- 2026-08-31：Category allowlist 增加 Shopify Gemstones taxonomy；本地 mock
+  Catalog 移除后，所有 Category/Collection 验证继续以 Shopify response 或测试中的
+  mock fetch 为输入。现有旧类别重定向覆盖 Bracelets、Rings、Necklaces 和
+  Earrings；Gemstones 尚无已发布的旧 Collection URL 迁移记录。
 
 ## Risks
 
@@ -453,3 +481,205 @@ Header 的 Shop 固定提供 Shop All 与非空 Category；Design Collection 按
 `docs/SHOPIFY_CATALOG_SETUP.md` 创建 Metaobject/reference、设置 collection kind、填充
 商品并发布到 Headless channel；完成前 Collections hub 正确显示空状态。全站 index
 gate 与 Checkout gate 均未改变。
+
+---
+
+# Shopify 内容接入与运行时单一事实来源
+
+状态：Complete
+负责人：Codex
+最后更新：2026-08-31
+关联：D-009、D-021、D-022、D-023、D-037–D-042；Q-003A–Q-003F；
+`MVP_PRD.md` P-005/P-006/P-007
+
+## Objective
+
+让品牌、编辑和 Policy 页面从 Shopify 的唯一内容事实来源生成初始 HTML、
+metadata、可适用 Schema 与 sitemap 候选路径，并删除会在上游缺失时伪装成
+正式内容的本地正文 fallback。
+
+## Context
+
+2026-08-30 前，Policy、About、Accessibility、Blog 与 Crystal Guide 仍混有本地
+prototype 正文或样本 entity。Shopify 已提供 Policies、`content_page`
+Metaobject 与两个原生 Blog，但正式内容、西语翻译和政策批准尚不完整。
+仓库示例值及未配置时的代码默认值继续关闭全站 index 与 Checkout gate；各部署
+环境仍需单独核验。
+
+## Scope
+
+- 包含：Shopify Policy mapper 与 HTML allowlist；About root/direct-child tree；
+  Accessibility `content_page`；Blog/Crystal Guide Article；内容 metadata、Schema、
+  sitemap 和翻译 fallback 门禁；Contact Server Action/Resend 可关闭薄适配；
+  删除运行时 mock Catalog 与本地业务正文。
+- 不包含：代替业务方在 Shopify Admin 发布内容或翻译、政策/
+  claims 批准、Resend 生产开通、Customer Privacy API、Analytics/consent、
+  webhook、开放索引或 Checkout。
+
+## Decisions and assumptions
+
+- Accepted：Shopify 是商品与 MVP 业务内容的唯一运行时事实来源；缺失或
+  异常时 fail closed（D-009、D-041、D-042）。
+- Accepted：FAQ、Disclaimer 和独立 Product Care 页面当前不存在（D-039）。
+- Working：Contact 可以在供应商、隐私、发件域与滥用控制全部验收后启用
+  Resend；仓库默认关闭表单并仅展示 Email 地址，inbox/服务流程仍待验收（D-038）。
+- Blocking：Shopify 当前内容只是部分可用，且不等于业务、翻译或法律批准。
+
+## Milestones
+
+1. [x] Refund/Privacy/Shipping/Terms 从 Shopify Policies 安全读取。
+2. [x] About hub 与 direct-child 页面及 Accessibility 改用 `content_page`。
+3. [x] `/blog` 与 `/crystals` 改用 Shopify Blog/Article。
+4. [x] Contact 投递边界、Email-only 降级与 PII 校验完成。
+5. [x] 本地 mock provider/业务正文 fallback 删除，失败状态收紧。
+6. [x] 文档、测试与发布门禁同步。
+
+## Detailed approach
+
+内容 adapter 在服务端向 Shopify 发起带 US language context 的查询，把原始响应
+映射为薄的 typed entity。Rich text/Policy HTML 经 allowlist 清理后才渲染。西语
+请求如命中 Shopify 默认英语 fallback，页面仍可阅读，但不输出可索引
+metadata/Schema，也不进入该 locale 的 sitemap/hreflang。不完整或未被 root
+引用的 About child 返回 404。
+
+Contact Server Action 只接收回复当次请求所需字段，不创建 Customer、订单或
+营销订阅，不记录正文/PII。`CONTACT_FORM_ENABLED=false` 或缺少密钥时只展示
+`info@joyamana.com`。
+
+## Validation
+
+- Command：`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`。
+- Contract：Vitest 已覆盖 Policy/About/Content Page/Editorial 的 GraphQL 映射、HTML
+  清理、adapter 缺失/无效、西语 fallback、published paths、About render、通用 SEO/
+  structured-data builder 与 Contact 投递；通用 Shopify client tests 另覆盖 GraphQL/
+  protocol error，不等于每个内容 adapter 的 network/timeout 分支都有直接测试。
+- Remaining test gaps：`about-metadata.ts`、`editorial-metadata.ts`、各 Policy/
+  Accessibility `generateMetadata` 与 Editorial detail fallback Schema gate 尚无直接
+  测试；不能把通用 helper 覆盖写成所有 route metadata/Schema 已验收。
+- SEO/Data：全站 noindex 时 sitemap 为空且不输出 JSON-LD；正文和索引资格来自同一
+  Shopify entity。Policy 的本地化 metadata copy 是代码常量，只用 entity 状态控制
+  index eligibility；默认语言 fallback 不进入 published paths。
+- Current evidence：2026-08-31 在 Node 26.7.0 上 lint、typecheck、21 files / 147 项
+  Vitest 与 production build 通过；本机超出项目固定的 Node 24 范围，仍需在
+  Node 24/CI 重验。首次受限网络 build 因 Google Fonts 无法下载而失败，允许网络后
+  同一 build 通过。
+
+## Progress log
+
+- 2026-08-30：Refund 与 Privacy 读取、清理、翻译识别和索引门禁完成；
+  Shipping/Terms 在上游缺失时显示暂不可用。
+- 2026-08-30：公开邮箱统一为 `info@joyamana.com`；Contact Server Action、可关闭
+  Resend adapter、表单校验和 Email-only 降级完成。
+- 2026-08-30：About root/child tree、共享页内导航、独立 metadata/Schema 和
+  Accessibility 读取完成。
+- 2026-08-30：Blog/Crystal Guide 与首页推荐改读 Shopify Article，本地
+  prototype entries 删除。
+- 2026-08-31：删除最后的 mock Catalog、Trust Page 和正文 fallback；运行时
+  统一 Shopify-only，商品缺图只显示中性不可用状态。
+
+## Risks
+
+- Risk：已发布测试文章或政策正文被误当成已审批生产内容。
+  - Mitigation：仓库默认关闭 index gate；各部署环境核验，内容与 Policy 仍需
+    业务/claims/法律验收。
+- Risk：5 分钟内容/导航缓存在没有 webhook 时延迟发布或下线。
+  - Mitigation：公开发布前完成 HMAC webhook/cache invalidation，或书面接受明确的
+    陈旧窗口，并在保持 noindex 的受控环境验收。
+- Risk：Contact 会将客户 PII 交给未审批供应商。
+  - Mitigation：默认关闭；生产启用前完成数据边界、保留期、域验证与滥用防护。
+
+## Outcome
+
+当前 storefront 已无本地业务数据后备路径。Shopify 可用时输出规范化内容；
+缺失或异常时返回 404、空状态或暂不可用，不显示旧工作文案。这个计划的
+代码边界已完成，但内容审核、翻译、Policy、Contact 供应商、隐私选择入口、
+webhook 和发布门禁仍是生产上线工作，不由 `Complete` 状态自动批准。
+
+---
+
+# 2026-08-31 文档与实施状态同步
+
+状态：Complete
+负责人：Codex
+最后更新：2026-08-31
+关联：D-035–D-042；`ROADMAP.md` Phase 1–4；`OPEN_QUESTIONS.md`
+
+## Objective
+
+让所有现行项目文档以 2026-08-31 的仓库实现为共同基线，明确区分已实现技术切片、
+历史证据、deployment-specific 配置、未批准业务输入和发布 blocker，使后续会话不再
+依据 Phase 1、本地 mock、四 locale 或已完成全部 Commerce 等过期陈述工作。
+
+## Context
+
+代码已从早期本地原型演进为 Shopify-only Commerce 与 Shopify-backed 内容 adapter，
+但文档仍分散保留旧商品、旧路由、旧测试数和拟议工具链。索引、Checkout 与 Contact
+是独立发布门禁；仓库默认值不能代表任一 local/Preview/Production 的实际环境值。
+
+## Scope
+
+- 包含：`README.md`、`AGENTS.md`、全部现行项目规格/输入/决策/Runbook、既有
+  Execution Plans、`.env.example` 注释，以及它们之间的状态、引用和术语一致性。
+- 不包含：修改 runtime 代码、替业务方批准商品/政策/品牌资产、改变 Accepted 架构、
+  启用任何发布门禁或写入 Shopify/Vercel。
+- 历史保留：`docs/archive/` 不作为当前事实来源，不改写；`docs/REFERENCES.md` 已检查
+  其用途说明，但没有重新联网核验官方资料，因此不伪造新的 `Last verified` 日期。
+
+## Decisions and assumptions
+
+- 当前事实以代码、tracked 配置、测试输出和有日期的 Shopify 审计为证据。
+- 个人/部署环境值不写入文档；只记录仓库示例与未配置时的默认行为，并要求逐环境验收。
+- Accepted 决策保留历史原文；后续决定通过 amended/superseded/maintenance note 收口。
+- 测试店商品与内容只证明数据链路，不自动成为获批 production assortment 或正文。
+
+## Milestones
+
+1. [x] 盘点当前路由、Shopify adapter、缓存、Schema、门禁、工具链和验证能力。
+2. [x] 更新全部需要变化的现行 Markdown，并同步 `AGENTS.md`、`PLANS.md` 与环境说明。
+3. [x] 交叉审校 Commerce、Content/SEO、国际化、发布顺序和历史计划边界。
+4. [x] 验证 Markdown、lint、typecheck、Vitest 与 production build。
+
+## Detailed approach
+
+现行文档统一采用“核心技术切片完成、生产退出条件未完成”的阶段口径；动态价格、
+库存、政策和测试商品不复制为长期批准事实。实现缺口集中回写 Roadmap、Open Questions
+和 Launch Runbook，包括 Product knowledge/model、Search metadata、参数级 noindex、
+Policy/Accessibility hreflang、document-level Spanish lang、Schema、Header cache、
+Analytics/consent、webhook、CI/Playwright 和受控 Checkout/Contact 验收。
+
+## Validation
+
+- `git diff --check`：通过。
+- 19 份现行 Markdown 的显式相对链接检查：全部解析到存在文件。
+- `pnpm lint`：通过。
+- `pnpm typecheck`：通过。
+- `pnpm test`：21 files / 147 tests 通过。
+- `pnpm build`：通过。首次受限网络执行只因 Google Fonts 无法下载而失败；允许网络后
+  同一 production build 成功。
+- 环境边界：上述 pnpm 命令运行于 Node 26.7.0，触发项目要求 `>=24 <25` 的 engine
+  warning；仍需在 Node 24 与未来 CI 重验，不能写成 CI/Preview/browser/payment E2E。
+
+## Progress log
+
+- 2026-08-31：完成实现/文档/Git/验证证据盘点并建立跨领域同步清单。
+- 2026-08-31：更新 18 份现行 Markdown 与 `.env.example`；保留 References 的旧核验
+  日期和 archive 历史原文。
+- 2026-08-31：三轮实现对照和交叉审校后，修正门禁时态、Product model、内容错误行为、
+  缓存边界、发布顺序、参数索引与跨语言 hreflang 等过度声明。
+- 2026-08-31：完成链接、diff、lint、typecheck、147 项 Vitest 和 production build 验证。
+
+## Risks
+
+- Risk：文档状态被误读为 production ready。
+  - Mitigation：所有状态页同时列明业务审批、翻译、外部账号、E2E 和发布门禁缺口。
+- Risk：历史计划的“Complete”被误作当前架构。
+  - Mitigation：保留历史 Outcome 作为日期化证据，并增加 superseded/post-completion note。
+- Risk：动态 Shopify 或 deployment 配置在文档提交后变化。
+  - Mitigation：不复制 secret/环境值；发布前按 Runbook 重新审计 Shopify 与每个 deployment。
+
+## Outcome
+
+当前项目文档已与 2026-08-31 仓库进展对齐：Shopify-only 数据边界、US EN/ES 与
+planned CA、Catalog/Cart 核心切片、Shopify 内容接入、独立门禁和生产 blocker 使用
+一致口径。未改 runtime 代码、外部系统或发布状态；下一阶段可直接从 Roadmap 与
+Open Questions 中的真实缺口继续，而无需依赖旧 Phase 1 或 mock 假设。

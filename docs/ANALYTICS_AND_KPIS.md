@@ -1,8 +1,8 @@
 # Analytics and KPIs
 
-Status: Draft — 工具与 consent 方案待确认  
+Status: Draft — 事件模型已定义，运行时 Analytics/consent 尚未实现
 Owner: Growth / Analytics  
-Last updated: 2026-08-02
+Last updated: 2026-08-31
 
 ## 1. 原则
 
@@ -12,6 +12,16 @@ Last updated: 2026-08-02
 - 不发送 PII、Cart ID、access token、完整地址或支付信息。
 - 对 consent、retention、data sharing 和删除有明确策略。
 - SEO/GEO 指标必须与页面质量或商业结果关联。
+
+当前实施状态：仓库没有 GA4、Shopify Customer Events、consent UI 或自定义事件
+运行时；`NEXT_PUBLIC_GA4_ID` 只是未使用的预留环境变量。Google site
+verification metadata 已支持可选配置，但不等于 GSC 账户已验证。本文件下列
+事件、KPI 和验收项目均是 Phase 4 发布前要求。
+
+当前唯一必要 cookie 是 `joya-mana-shopify-cart-us`：只保存 Shopify Cart ID，
+`HttpOnly`、`SameSite=Lax`、`Path=/`、最长 10 天，Production 使用 `Secure`。它用于
+恢复 Bag，不是 Analytics/marketing consent；仍须进入发布前 Cookie/SDK 清单和
+Privacy 审核。
 
 ## 2. 拟议最小工具集
 
@@ -58,7 +68,8 @@ Last updated: 2026-08-02
 
 ### Content
 
-- `page_view` 按 page type 区分 Product/Collection/Crystal/Article/Policy。
+- `page_view` 按 page type 区分 Product、Shop、Category、Design Collection、
+  Crystal Guide、Article、About/Contact 与 Policy。
 - 内容到商品点击记录 source entity 与 destination product。
 - 外部 source click 只记录匿名目标域/类型，避免泄露用户数据。
 - 阅读深度等微事件只有用于明确决策时才采集。
@@ -76,7 +87,8 @@ Last updated: 2026-08-02
 - `item_id` 使用稳定、非 PII 的 Shopify Variant/Product identifier 或 SKU，
   全站保持一致。
 - `item_name`、brand、category、variant 与当前 Shopify 数据一致。
-- Currency 由 Market 决定（US=USD，CA=CAD）；value 使用事件发生时该 Market
+- Currency 由 Market 决定（当前只有 US=USD；CA=CAD 仅为未启用规划，不发送生产
+  事件）；value 使用事件发生时该 Market
   的真实金额，事件同时携带 market、locale 与 currency。
 - 不在 analytics 中重建折扣、税或最终订单逻辑。
 - Product 和 content page type 使用集中枚举。
