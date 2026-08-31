@@ -1,5 +1,9 @@
 import type { MetadataRoute } from "next";
-import { siteConfig } from "@/config/site";
+import {
+  isIndexGroupEnabled,
+  isIndexingEnabledFor,
+  siteConfig,
+} from "@/config/site";
 import {
   getDesignCollections,
   getProducts,
@@ -16,12 +20,12 @@ export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!siteConfig.indexable) return [];
 
-  const contentPaths = [
-    "/",
-    "/contact",
-  ];
   const localizedCatalogs = await Promise.all(
     enabledLocales.map(async (locale) => {
+      const coreEnabled = isIndexGroupEnabled(locale, "core");
+      const commerceEnabled = isIndexGroupEnabled(locale, "commerce");
+      const policiesEnabled = isIndexGroupEnabled(locale, "policies");
+      const editorialEnabled = isIndexGroupEnabled(locale, "editorial");
       const [
         collections,
         products,
@@ -31,15 +35,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         blogPaths,
         crystalPaths,
       ] = await Promise.all([
-        getDesignCollections("us", locale),
-        getProducts("us", locale),
-        getPublishedShopifyPolicyPaths(locale),
-        getPublishedShopifyContentPagePaths(locale),
-        getPublishedShopifyAboutPaths(locale),
-        getPublishedShopifyEditorialPaths("blog", locale),
-        getPublishedShopifyEditorialPaths("crystals", locale),
+        commerceEnabled
+          ? getDesignCollections("us", locale)
+          : Promise.resolve([]),
+        commerceEnabled ? getProducts("us", locale) : Promise.resolve([]),
+        policiesEnabled
+          ? getPublishedShopifyPolicyPaths(locale)
+          : Promise.resolve([]),
+        coreEnabled
+          ? getPublishedShopifyContentPagePaths(locale)
+          : Promise.resolve([]),
+        coreEnabled ? getPublishedShopifyAboutPaths(locale) : Promise.resolve([]),
+        editorialEnabled
+          ? getPublishedShopifyEditorialPaths("blog", locale)
+          : Promise.resolve([]),
+        editorialEnabled
+          ? getPublishedShopifyEditorialPaths("crystals", locale)
+          : Promise.resolve([]),
       ]);
-      const categories = productCategoriesForProducts(products, locale);
+      const categories = commerceEnabled
+        ? productCategoriesForProducts(products, locale)
+        : [];
       return {
         aboutPaths,
         blogPaths,
@@ -67,7 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       products,
     }) => {
       const paths = [
-        ...contentPaths,
+        ...(isIndexGroupEnabled(locale, "core") ? ["/", "/contact"] : []),
         ...aboutPaths,
         ...blogPaths,
         ...crystalPaths,
@@ -80,10 +96,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...contentPagePaths,
       ];
 
-      return [...new Set(paths)].map((path) => ({
-        url: new URL(localePath(locale, path), siteConfig.url).toString(),
-        changeFrequency: "weekly" as const,
-      }));
+      return [...new Set(paths)]
+        .filter((path) => isIndexingEnabledFor(locale, path))
+        .map((path) => ({
+          url: new URL(localePath(locale, path), siteConfig.url).toString(),
+          changeFrequency: "weekly" as const,
+        }));
     },
   );
 }

@@ -83,18 +83,20 @@ Guide。`Patron Saint` 是当前非空、Headless 可见且标记为 `design_ser
 description/SEO 与完整 story/lookbook 仍待补齐。Contact 当前正式采用 Email-only，
 `info@joyamana.com` 已确认可收信；表单/Resend 后置，负责人/备援和外发流程仍须验收。
 当前站内 Search
-只检索 Shopify 商品，内容检索、Analytics/consent、webhook 缓存失效和真实浏览器
+只检索 Shopify 商品，内容检索、Analytics/consent 和真实浏览器
 与支付验收仍是待办；Playwright 按 D-043 暂缓，当前采用有记录的人工 smoke。
+Webhook 缓存失效按 D-046 后置，低频内容与导航接受并记录 5 分钟窗口。
 
 2026-08-31 外部检查确认 apex 308 至 `https://www.joyamana.com`、`www` 返回 Vercel
 HTTP 200、`checkout` 返回 Shopify HTTP 200。D-044 确认 `www` 是唯一 canonical
 origin；Vercel Production 环境值已由业务方配置，当前公开 deployment 的
 canonical/OG 已复核为 `https://www.joyamana.com`。Production 仍
-`noindex` 且 sitemap 为空；其他内容、政策和 SEO blocker 完成前不要开启 index gate。
+`noindex` 且 sitemap 为空。D-045 已将索引控制拆为部署级总开关，以及
+`src/config/indexing.ts` 中版本控制的语言和页面组子门禁；只为已完成验收的范围开放。
 
 当前代码已实现参数页 noindex、en-US/es-US document-level `<html lang>`、按真实
 翻译 readiness 过滤的 Policy/Accessibility hreflang、Product-only Search metadata、
-Header 专用轻量 Shopify query 与上游失败降级，以及 `pnpm preflight`。Vercel build
+Header 专用轻量 Shopify query 与上游失败降级、细分索引门禁，以及 `pnpm preflight`。Vercel build
 会在 `prebuild` 阶段运行 preflight，并对 Production canonical、Preview noindex、
 Shopify credential 和启用功能所需 secret fail closed。
 

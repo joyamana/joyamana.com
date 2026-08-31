@@ -65,4 +65,15 @@ describe("environment preflight", () => {
 
     expect(errors.join(" ")).not.toContain(secret);
   });
+
+  it("leaves granular indexing scope to the version-controlled policy", () => {
+    const errors = validateEnvironment({
+      NEXT_PUBLIC_SITE_INDEXABLE: "true",
+      NEXT_PUBLIC_SITE_URL: "https://www.joyamana.com",
+      SHOPIFY_CHECKOUT_ENABLED: "false",
+      CONTACT_FORM_ENABLED: "false",
+    });
+
+    expect(errors).toEqual([]);
+  });
 });

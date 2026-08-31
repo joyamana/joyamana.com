@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { resolveSiteUrl } from "./site";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { indexGroupForPath, resolveSiteUrl } from "./site";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.resetModules();
+});
 
 describe("canonical site URL configuration", () => {
   it("allows a local HTTP origin while the storefront is noindex", () => {
@@ -35,5 +40,31 @@ describe("canonical site URL configuration", () => {
     expect(() => resolveSiteUrl(value, false)).toThrow(
       "NEXT_PUBLIC_SITE_URL must be an absolute HTTP(S) origin.",
     );
+  });
+
+  it.each([
+    ["/", "core"],
+    ["/about/our-approach", "core"],
+    ["/products/aquamarine", "commerce"],
+    ["/privacy", "policies"],
+    ["/blog/story", "editorial"],
+    ["/future-page", null],
+  ])("classifies %s into the fail-closed index group %s", (path, group) => {
+    expect(indexGroupForPath(path)).toBe(group);
+  });
+
+  it("applies the approved locale and page-group release matrix", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
+    vi.resetModules();
+    const { isIndexingEnabledFor } = await import("./site");
+
+    expect(isIndexingEnabledFor("en-US", "/about")).toBe(true);
+    expect(isIndexingEnabledFor("en-US", "/shop")).toBe(false);
+    expect(isIndexingEnabledFor("es-US", "/about")).toBe(true);
+    expect(isIndexingEnabledFor("en-US", "/privacy")).toBe(true);
+    expect(isIndexingEnabledFor("es-US", "/terms")).toBe(true);
+    expect(isIndexingEnabledFor("en-US", "/blog/story")).toBe(false);
+    expect(isIndexingEnabledFor("en-US", "/future-page")).toBe(false);
   });
 });

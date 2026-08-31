@@ -45,6 +45,7 @@ export async function ShopPage({ locale }: { locale: Locale }) {
       locale,
       breadcrumbs,
     }),
+    { locale, path: "/shop" },
   );
 
   return (

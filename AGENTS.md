@@ -153,8 +153,10 @@ Contact 表单/Resend 后置。Blog/Crystal Guide 的两篇测试 Article 因暂
 不得把它们视为正式内容或开放索引。
 
 Canada 只保留未启用的 typed 规划配置。仓库示例值及未配置时的代码默认值为全站
-noindex，并关闭 Shopify Checkout 和 Contact 投递；各部署环境必须单独核验。当前没有
-CI、format check 或 Shopify webhook 失效链路。Playwright 按 D-043 暂时封存，只有
+noindex；索引采用部署级总开关 + `src/config/indexing.ts` 中版本控制的语言/页面组
+fail-closed 三层门禁，并关闭 Shopify Checkout 和 Contact 投递；各部署环境必须单独
+核验总开关。当前没有 CI 或 format check；
+Shopify webhook 失效链路按 D-046 后置，接受内容/导航 5 分钟窗口。Playwright 按 D-043 暂时封存，只有
 复杂度触发后才重新评估；当前必须记录人工浏览器/Checkout smoke 的范围和结果。
 
 Production storefront 已通过 Vercel 在 `https://www.joyamana.com` 公开响应，
@@ -164,7 +166,7 @@ noindex；D-044 已确认 `https://www.joyamana.com` 为 canonical origin，apex
 `www`，当前公开 canonical/OG 已复核为 `www`。参数页 noindex、
 document-level locale、Policy/Accessibility hreflang、Search metadata、Header
 专用 query/故障降级和环境 preflight 已实现；完整政策、Commerce 西语 readiness、
-Analytics/consent、Commerce 西语 readiness、真实支付与发布验收尚未完成。
+Analytics/consent、真实支付与发布验收尚未完成。
 
 常用命令：`pnpm dev`、`pnpm preflight`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、
 `pnpm build`。不得在实际运行前声称检查已通过。

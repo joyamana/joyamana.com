@@ -2,23 +2,23 @@
 
 Status: Active — Production 已公开，交易、内容、索引与运营退出条件未完成
 Owner: Engineering / Operations  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 本 Runbook 只描述可重复的发布控制。`https://www.joyamana.com` 已由 Vercel 公开
 提供 storefront，`https://checkout.joyamana.com` 已指向 Shopify Online Store；
 联系人、Shopify Admin 支付配置、dashboard 和完整发布验收仍是待填项。
-全站 index、Shopify Checkout 和 Contact 表单投递是三个独立门禁；仓库示例值及
-未配置时的代码默认值均为关闭，各 Preview/Production deployment 必须分别核验。
-仓库尚无 CI、自动化浏览器/支付 E2E、webhook/cache invalidation 或
+索引、Shopify Checkout 和 Contact 表单投递是三个独立门禁族；索引进一步采用部署级
+总开关，以及 `src/config/indexing.ts` 中版本控制的语言和页面组子门禁。总开关示例值
+和仓库细分策略均默认关闭，各 Preview/Production deployment 必须分别核验总开关。
+仓库尚无 CI、自动化浏览器/支付 E2E 或
 Analytics/consent 运行时。Playwright 按 D-043 暂缓；当前发布使用有记录的人工
 浏览器/Checkout smoke，不能声称自动化 E2E 已通过。
+Webhook/cache invalidation 按 D-046 后置，发布流程接受并记录 5 分钟内容/导航窗口。
 
 2026-08-31 外部基线：`www` 与 `checkout` 均返回 HTTP 200，apex 返回 308 至 `www`；
-Production storefront 仍输出
-`noindex, nofollow, noarchive`，sitemap 为空，当前 deployment 首页 `og:url` 仍指向
-`https://joyamana.vercel.app`。D-044 已确认 `www` canonical 与 apex 308，Vercel
-环境值已设置；当前代码 redeploy 后必须复核 canonical/OG。其他 SEO blocker 完成前
-继续保持 index gate 关闭。
+Production storefront 仍输出 `noindex, nofollow, noarchive`，sitemap 为空。
+D-044 的 `www` canonical、apex 308 和公开 `og:url` 已复核。其他 SEO blocker 完成前
+保持索引总门禁关闭；后续只打开 D-045 中通过验收的语言和页面组。
 
 ## 1. 发布角色
 
@@ -43,7 +43,7 @@ Production storefront 仍输出
 - Production Shopify Catalog、Markets、payment、shipping、tax 配置获批。
 - 域名、SSL、Checkout domain、Email sender 和 support inbox 可用。
 - Production secrets 与 Preview/local 分离。
-- `SHOPIFY_CHECKOUT_ENABLED`、`NEXT_PUBLIC_SITE_INDEXABLE` 与
+- `SHOPIFY_CHECKOUT_ENABLED`、`NEXT_PUBLIC_SITE_INDEXABLE`、仓库内语言/页面组策略，与
   `CONTACT_FORM_ENABLED` 分别有明确 owner、验收记录和回退方式，不用一个
   总开关同时放开。
 - 数据备份/导出责任与 Vercel rollback 方式明确。
@@ -109,9 +109,9 @@ build: pnpm build
 - Product/Collection 的 Spanish 翻译已通过可重复的 Commerce translation readiness
   检查，不依赖人眼猜测 Storefront fallback；`<html lang>` 在 en-US/es-US 页面均
   与 document locale 一致。后半项已实现，前半项仍是索引 blocker。
-- 全站 index gate 只在所有拟发布内容和西语页面一次性验收通过后开启；当前 sitemap
-  会在总门禁打开后加入 `/`、`/contact`，且 Product/Collection 没有逐页 fallback
-  检测，不能把总门禁误当成逐页翻译保护。
+- D-045 的索引总开关与仓库内语言/页面组门禁只为已验收范围开启。Product/Collection
+  尚无逐页 Spanish fallback 检测，因此在完成可重复验证前保持 es-US 或 Commerce
+  子门禁关闭；未知路径默认 noindex。
 
 ## 6. Accessibility 与 Performance
 
@@ -136,6 +136,36 @@ build: pnpm build
 
 当前上述 Analytics/consent 与 Customer Privacy API 项均未完成，不得在发布记录中
 预先勾选。
+
+未来获批实施 Headless Customer Privacy 时，代码范围为：
+
+- 建立独立的浏览器可用 Storefront public token 配置；不得复用或暴露当前 server-only
+  private token。
+- 在 client-only privacy provider 中加载 Shopify Customer Privacy / bundled banner
+  asset，以 `storefrontRootDomain=joyamana.com`、
+  `checkoutRootDomain=checkout.joyamana.com`、当前 US locale/country 初始化。
+- Footer 提供可重复打开偏好设置的入口；另提供清楚的 `Your Privacy Choices` opt-out
+  flow，只在用户明确操作后调用 `setTrackingConsent({ sale_of_data: false, ...headless })`，
+  显示成功/失败状态。不得自行读写 Shopify consent cookie。
+- Analytics/marketing/preferences 脚本分别调用对应 `*ProcessingAllowed()` 判断，并监听
+  `visitorConsentCollected`；API 未就绪或判断失败时，本项目自己的非必要脚本 fail closed。
+- CSP 允许 Shopify privacy asset，并允许浏览器向 Checkout domain 的 Storefront API
+  发起所需 POST；不扩大到任意第三方域名。
+- 覆盖首次访问、接受、拒绝、修改偏好、适用州 data-sale opt-out、GPC、EN/ES、跨
+  `www` → `checkout` 及无障碍键盘流程。
+
+对应 Shopify Admin 配置范围为：
+
+- `Settings > Customer privacy` 复核并发布 Privacy policy；确认 Shopify Network
+  Intelligence 与实际使用功能一致。
+- 配置 Cookie banner 的地区与 EN/ES 文案；是否在 US 全域展示由 Legal/Privacy 决定，
+  不由代码猜测。
+- 启用并复核 Data sharing opt-out page 的适用州、内容与 GPC 行为；Online Store 自动
+  菜单入口不会自动出现在 Headless Footer，因此仍需上述前端入口。
+- 在 `Settings > Domains` 复核 storefront/checkout 同属 `joyamana.com` 根域，并建立
+  独立 public Storefront token；记录 token rotation、owner 和撤销方式。
+- 列出 GA4、广告像素、Shopify pixels 及其他第三方接收方，确保后台地区配置、Privacy
+  正文和代码中的 consent 分类一致，再批准启用任何 analytics/marketing runtime。
 
 ## 8. 发布步骤
 
@@ -164,9 +194,11 @@ build: pnpm build
 10. 退出 Shopify Payment test mode，复核 live provider、payout、Checkout、shipping、
     tax 与 notification 配置。若业务/支付规则允许，完成获批的低额真实订单、退款与
     对账；否则记录可接受的替代验收证据。测试模式未退出时不得 go-live。
-11. 完成所有内容/翻译/SEO/privacy 检查并确认 Production 非本地 HTTPS canonical 后，
-    在 Production 最后设置 `NEXT_PUBLIC_SITE_INDEXABLE` 并创建新 deployment/redeploy；
-    此时保留临时访问保护，先做内部响应检查。
+11. 完成拟开放范围的内容/翻译/SEO/privacy 检查并确认 Production 非本地 HTTPS
+    canonical 后，先 review、提交并部署 `src/config/indexing.ts` 中对应的语言和页面组
+    策略，同时保持 `NEXT_PUBLIC_SITE_INDEXABLE=false`；随后打开总开关并 redeploy。
+    此时保留临时访问保护，逐组检查 metadata、sitemap、hreflang 和 Schema；细分回退
+    通过恢复仓库策略并部署完成，紧急全站回退则关闭总开关并 redeploy。
 12. Launch lead go/no-go 后解除 Production 临时访问保护，立即从外部网络验证首页、
     Checkout、Contact、robots、sitemap、Schema、hreflang 和永久 noindex 页面，再提交
     Search Console 与 Merchant Center。若外部 smoke 失败，恢复保护/门禁并 redeploy。

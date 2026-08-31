@@ -87,11 +87,11 @@ Production 当前仍 noindex、sitemap 为空。D-044 已确认 `www` canonical 
 - Storefront Cart 创建、恢复、更新、删除和错误状态。
 - 获取最新 checkout URL 并跳转 Shopify hosted checkout。
 - 处理售罄、价格变化、库存冲突与 API 失败。
-- Webhook HMAC 验证与 Product/Collection cache invalidation。
+- 低频内容与导航按 D-046 接受并记录 5 分钟缓存窗口；Webhook 仅在触发条件出现后重评。
 - Commerce integration 与 E2E 测试。
 
 2026-09-01 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 已完成；仓库共有
-170 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
+181 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
 真实 Cart 合约 smoke 已覆盖 create、库存冲突 warning、update/remove 与 HTTPS
 Checkout URL。Storefront 现会读取 `quantityAvailable` 与 `currentlyNotInStock`，
 并把它们与 contextual quantity rule 用于 PDP/Bag 数量上限；PDP 仅对明确商品模型且
@@ -100,7 +100,7 @@ Checkout URL。Storefront 现会读取 `quantityAvailable` 与 `currentlyNotInSt
 为正式商品填充 `custom.product_model`，并定义 exact/representative image disclosure、
 补全 `Patron Saint` 的 description/SEO、Design Series Metaobject/reference 与 story/lookbook，
 审核当前商品正文、发布人工审核的
-西语翻译、完成政策和 Checkout 运营验收，并补 webhook 与有记录的浏览器/支付验证；
+西语翻译、完成政策和 Checkout 运营验收，并补有记录的浏览器/支付验证；
 Playwright 按 D-043 暂缓。
 Header 导航已使用专用轻量 query/projection，并在 Shopify 导航上游失败时保留基础
 导航和页面主体，不缓存或复用价格、可售性与库存字段。
@@ -110,8 +110,8 @@ Header 导航已使用专用轻量 query/projection，并在 Shopify 导航上�
 2026-08-31 Policy follow-up：Shipping、Returns、Privacy 与 Terms 已由 Shopify Policy
 服务端驱动，包含默认语言回退识别、安全 HTML 输出和按真实翻译状态控制索引；
 Shipping/Returns 的已公开运营承诺已确认，Terms 占位符已在 Shopify 修复并经直接
-Storefront API 验证。Headless `Your Privacy Choices`、Customer Privacy API 同步、
-税务/法律发布复核与更及时的缓存失效仍是公开索引/交易前待办。
+Storefront API 验证。Headless `Your Privacy Choices`、Customer Privacy API 同步及
+税务/法律发布复核仍是公开索引/交易前待办；更及时的缓存失效按 D-046 后置。
 
 ### 退出条件
 
@@ -144,7 +144,7 @@ Storefront API 验证。Headless `Your Privacy Choices`、Customer Privacy API �
   Blog 和 Crystal Guide 已使用 Shopify Blog/Article。不完整、未引用或未翻译内容
   fail closed/noindex，本地正文 fallback 已删除。
 - Product、Shop/Category/Design Collection、About 与 Article 的 metadata/
-  适用 Schema/sitemap 映射已完成并受全站 index gate 保护。
+  适用 Schema/sitemap 映射已完成并受总开关、语言和页面组索引门禁保护。
 - `info@joyamana.com` 已确认可以收信，当前正式支持方式为 Email-only；Contact 表单、
   Resend 与滥用防护延后，负责人/备援、出站投递与服务流程仍待验收。
 - 当前 Search 仅检索 Product；Home Organization/WebSite、ContactPage Schema、

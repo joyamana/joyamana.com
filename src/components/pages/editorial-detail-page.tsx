@@ -59,6 +59,7 @@ export async function EditorialDetailPage({
           publishedAt: entry.publishedAt,
           image: entry.image?.url,
         }),
+        { locale, path },
       );
 
   return (

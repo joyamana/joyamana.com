@@ -164,16 +164,19 @@ Storefront API 与安全的 Cart smoke 已确认：
   Variant 显示 `Only X left`；`one_of_one`、未知模型和不可靠库存全部排除，商品卡不显示。
 - `COMMERCE_PROVIDER`、本地 mock Catalog、本地 Trust/Policy/About/Editorial 正文
   fallback 已删除。Storefront 现为 Shopify-only；缺失/无效/异常时 fail closed。
-- 当前 Search 仅检索 Shopify Product；CI、自动化浏览器/支付 E2E、webhook/cache
-  invalidation、Analytics/consent 和 Customer Privacy API 仍未实现。Playwright 按
-  D-043 暂缓，当前使用有记录的人工浏览器/Checkout smoke。
+- 当前 Search 仅检索 Shopify Product；CI、自动化浏览器/支付 E2E、Analytics/consent
+  和 Customer Privacy API 仍未实现。Webhook/cache invalidation 按 D-046 后置，当前
+  接受并记录低频内容与导航的 5 分钟缓存窗口。Playwright 按 D-043 暂缓，当前使用
+  有记录的人工浏览器/Checkout smoke。
 - Search metadata 已与 Product-only 运行时一致，不再声称检索 editorial content。
 - 参数请求已输出 `noindex, nofollow, noarchive`，保留 clean canonical 并移除 hreflang；
-  clean URL 在 index gate 开启时维持正常 index/follow。
+  clean URL 由 D-045 的部署级总开关与 `src/config/indexing.ts` 中的语言/页面组子门禁
+  共同控制。
 - Policy/Accessibility 的双向 hreflang 已按各语言真实 readiness 过滤；fallback 页继续
   noindex，并退出 sitemap/Schema。
 - Product/Collection 尚无法自动识别 Spanish 真实翻译与 English fallback；在增加
-  Commerce translation readiness 验证前不得开启全站 index gate。
+  Commerce translation readiness 验证前保持 es-US 或 Commerce 索引子门禁关闭，不再
+  阻塞已审核的 en-US Core/Policies 页面组。
 - en-US/es-US 已在初始 HTML 输出正确的 document-level `<html lang>`。
 - Header 目录已使用不含价格/库存/正文的导航专用 query/projection；上游失败时降级为
   基础导航并保留页面主体，不恢复本地 Catalog。监控/告警仍属于 Q-105。

@@ -62,6 +62,7 @@ export async function ProductPage({
   ];
   const structuredData = serializeIndexableStructuredData(
     buildProductStructuredData({ product, locale, breadcrumbs }),
+    { locale, path: `/products/${product.handle}` },
   );
 
   return (

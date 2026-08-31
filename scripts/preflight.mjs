@@ -104,7 +104,6 @@ export function validateEnvironment(env = process.env) {
   if (isPreview && indexable) {
     errors.push("Vercel Preview deployments must remain noindex.");
   }
-
   const storeDomain = env.SHOPIFY_STORE_DOMAIN?.trim().toLowerCase();
   const storefrontToken = env.SHOPIFY_STOREFRONT_ACCESS_TOKEN?.trim();
   if (isVercel && (!storeDomain || !storefrontToken)) {

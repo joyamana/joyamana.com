@@ -44,7 +44,8 @@ Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyam
   Guide 的测试 Article 因暂无正式内容暂不处理并继续排除索引。
 - Product、Shop/Category/Collection、About 和 Article 的 metadata/部分适用 Schema
   与 sitemap 门禁已实现；Home Organization/WebSite/WebPage、ContactPage、Policy
-  Schema、内容搜索、Analytics/consent、webhook、CI 与支付 E2E 仍未完成；Playwright
+  Schema、内容搜索、Analytics/consent、CI 与支付 E2E 仍未完成；webhook 按 D-046
+  后置并接受 5 分钟内容/导航缓存窗口。Playwright
   按 D-043 暂时封存，浏览器/支付验收当前采用有记录的人工 smoke。
 - Product `custom.product_model` 已映射，并只在明确 repeatable 模型和可靠的 1–3 件
   库存条件下用于 PDP 准确低库存披露；正式商品仍需在 Shopify 填充该字段。
@@ -54,8 +55,10 @@ Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyam
 - en-US 与 es-US 已各自输出正确的 document-level `<html lang>`；参数请求会 noindex
   并 canonical 回干净路径，Policy/Accessibility hreflang 也按真实翻译 readiness
   过滤。商品与 Collection 的 Spanish Storefront fallback 尚无可重复检测，因此仍
-  不能开放索引。
-- `NEXT_PUBLIC_SITE_INDEXABLE`、`SHOPIFY_CHECKOUT_ENABLED` 和
+  不能开放 es-US Commerce 索引范围。
+- `NEXT_PUBLIC_SITE_INDEXABLE` 保留为部署级索引总开关，并按 D-045 叠加版本控制的
+  `src/config/indexing.ts` 中 en-US/es-US 与 Core/Commerce/Policies/Editorial 子门禁；
+  `SHOPIFY_CHECKOUT_ENABLED` 和
   `CONTACT_FORM_ENABLED` 是三个独立发布门禁；仓库示例值及未配置时的代码默认值
   均为关闭，各 Preview/Production 部署必须分别核验实际环境值。
 

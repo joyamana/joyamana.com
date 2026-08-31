@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { brand } from "@/config/brand";
-import { siteConfig } from "@/config/site";
+import { isIndexingEnabledFor, siteConfig } from "@/config/site";
 import { enabledLocales, localePath, type Locale } from "@/lib/i18n/locales";
 
 export type PageSearchParams = Record<
@@ -61,19 +61,23 @@ export function buildMetadata({
   const canonical = new URL(localizedPath, siteConfig.url).toString();
   const normalizedTitle = withoutTrailingBrand(title);
   const parameterized = Boolean(searchParams && Object.keys(searchParams).length);
-  const indexable = siteConfig.indexable && !parameterized;
+  const cleanPageIndexable = isIndexingEnabledFor(locale, path);
+  const indexable = cleanPageIndexable && !parameterized;
+  const indexableAlternateLocales = alternateLocales.filter(
+    (alternateLocale) => isIndexingEnabledFor(alternateLocale, path),
+  );
 
   return {
     title: normalizedTitle,
     description,
     metadataBase: new URL(siteConfig.url),
-    alternates: siteConfig.indexable
+    alternates: cleanPageIndexable
       ? {
           canonical,
           languages: parameterized
             ? undefined
             : Object.fromEntries(
-                alternateLocales.map((enabledLocale) => [
+                indexableAlternateLocales.map((enabledLocale) => [
                   enabledLocale,
                   new URL(
                     localePath(enabledLocale, path),

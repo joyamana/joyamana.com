@@ -1,7 +1,18 @@
 import { markets } from "./markets";
+import { indexingPolicy, type IndexGroup } from "./indexing";
 
 const defaultUrl = "http://localhost:3000";
-const indexable = process.env.NEXT_PUBLIC_SITE_INDEXABLE === "true";
+const indexingMasterEnabled =
+  process.env.NEXT_PUBLIC_SITE_INDEXABLE === "true";
+
+const indexGroupEnabled = indexingPolicy.groups;
+const indexLocaleEnabled: Readonly<Record<string, boolean>> =
+  indexingPolicy.locales;
+
+const anyIndexingEnabled =
+  indexingMasterEnabled &&
+  Object.values(indexGroupEnabled).some(Boolean) &&
+  Object.values(indexLocaleEnabled).some(Boolean);
 
 function isLocalHostname(hostname: string) {
   return (
@@ -44,9 +55,65 @@ export function resolveSiteUrl(value: string | undefined, allowIndexing: boolean
   return url.origin;
 }
 
+export function indexGroupForPath(path: string): IndexGroup | null {
+  if (
+    path === "/shop" ||
+    path === "/collections" ||
+    path.startsWith("/category/") ||
+    path.startsWith("/collections/") ||
+    path.startsWith("/products/")
+  ) {
+    return "commerce";
+  }
+  if (
+    path === "/shipping" ||
+    path === "/returns" ||
+    path === "/privacy" ||
+    path === "/terms"
+  ) {
+    return "policies";
+  }
+  if (
+    path === "/blog" ||
+    path.startsWith("/blog/") ||
+    path === "/crystals" ||
+    path.startsWith("/crystals/")
+  ) {
+    return "editorial";
+  }
+  if (
+    path === "/" ||
+    path === "/contact" ||
+    path === "/about" ||
+    path.startsWith("/about/") ||
+    path === "/accessibility"
+  ) {
+    return "core";
+  }
+  return null;
+}
+
+export function isIndexGroupEnabled(locale: string, group: IndexGroup) {
+  return Boolean(
+    indexingMasterEnabled &&
+      indexLocaleEnabled[locale] &&
+      indexGroupEnabled[group],
+  );
+}
+
+export function isIndexingEnabledFor(locale: string, path: string) {
+  const group = indexGroupForPath(path);
+  return group ? isIndexGroupEnabled(locale, group) : false;
+}
+
 export const siteConfig = {
-  url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL, indexable),
-  indexable,
+  url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL, indexingMasterEnabled),
+  indexable: anyIndexingEnabled,
+  indexing: {
+    masterEnabled: indexingMasterEnabled,
+    groups: indexGroupEnabled,
+    locales: indexLocaleEnabled,
+  },
   defaultMarket: markets.us,
   markets,
 } as const;

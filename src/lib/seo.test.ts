@@ -5,6 +5,18 @@ import {
   withoutTrailingBrand,
 } from "./seo";
 
+vi.mock("@/config/indexing", () => ({
+  indexingPolicy: {
+    locales: { "en-US": true, "es-US": true },
+    groups: {
+      core: true,
+      commerce: true,
+      policies: true,
+      editorial: true,
+    },
+  },
+}));
+
 describe("metadata titles", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -92,5 +104,26 @@ describe("metadata titles", () => {
     expect(metadata.openGraph).toMatchObject({
       url: "https://joyamana.com/shop",
     });
+  });
+
+  it("keeps an unclassified page noindex even while approved gates are open", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://joyamana.com");
+    vi.resetModules();
+    const { buildMetadata: buildGranularMetadata } = await import("./seo");
+
+    const metadata = buildGranularMetadata({
+      title: "Future page",
+      description: "Not yet classified.",
+      locale: "en-US",
+      path: "/future-page",
+    });
+
+    expect(metadata.robots).toEqual({
+      index: false,
+      follow: false,
+      noarchive: true,
+    });
+    expect(metadata.alternates).toBeUndefined();
   });
 });
