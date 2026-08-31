@@ -135,10 +135,13 @@
 
 ## 当前仓库状态
 
-截至 2026-08-31，仓库包含 Next.js 16 App Router 测试站、pnpm 配置以及
+截至 2026-09-01，仓库包含 Next.js 16 App Router 测试站、pnpm 配置以及
 Shopify-only Storefront API 适配层。US en-US 根路径与 `/es-us/` 已共享同一
 Catalog/Cart；商品、Variant、Category、Design Collection、实时价格/可售性/可用数量、
-Bag 和独立 Buy now Cart 已接入。Policy、About subtree、Accessibility、Blog/
+Bag 和独立 Buy now Cart 已接入。Product `custom.product_model` 已映射；PDP 仅对明确
+`standard` / `natural_variation` 且符合严格库存条件的 1–3 件显示准确低库存，
+`one_of_one`、未知模型和 oversell 排除。PDP 商品描述读取经过 allowlist 清理的 Shopify
+`descriptionHtml`，纯文本字段继续用于 metadata/Schema 和后备。Policy、About subtree、Accessibility、Blog/
 Crystal Guide 也由 Shopify 驱动；Contact 表单仅在受控配置后才投递。本地 mock
 Catalog 和业务正文 fallback 已删除，上游缺失时 fail closed。
 

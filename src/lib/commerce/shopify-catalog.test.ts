@@ -41,7 +41,10 @@ function productFixture(): ShopifyProductNode {
     handle: "seven-chakra-bracelet",
     title: "Seven-Chakra Bracelet",
     description: "A translated storefront description.",
+    descriptionHtml:
+      '<h2 onclick="bad()">Details</h2><p>A <strong>translated</strong> description.</p><ul><li>Natural stone</li></ul><script>alert(1)</script>',
     availableForSale: true,
+    productModel: { value: "standard" },
     category: {
       id: "gid://shopify/TaxonomyCategory/aa-6-3",
       name: "Bracelets",
@@ -124,11 +127,14 @@ describe("Shopify catalog mapper and queries", () => {
 
     expect(product).toMatchObject({
       title: "Seven-Chakra Bracelet",
+      descriptionHtml:
+        "<h2>Details</h2><p>A <strong>translated</strong> description.</p><ul><li>Natural stone</li></ul>",
       priceRange: {
         minVariantPrice: { amount: "68.50", currencyCode: "USD" },
         maxVariantPrice: { amount: "72.00", currencyCode: "USD" },
       },
       compareAtPrice: { amount: "75.00", currencyCode: "USD" },
+      model: "standard",
       category: {
         id: "gid://shopify/TaxonomyCategory/aa-6-3",
         name: "Bracelets",
@@ -139,6 +145,8 @@ describe("Shopify catalog mapper and queries", () => {
         height: 1200,
       },
     });
+    expect(product.descriptionHtml).not.toContain("onclick");
+    expect(product.descriptionHtml).not.toContain("<script");
     expect(product.images).toHaveLength(2);
     expect(product.images[1]?.altText).toBe("Seven-Chakra Bracelet");
     expect(product.variants[0]).toMatchObject({
@@ -151,6 +159,26 @@ describe("Shopify catalog mapper and queries", () => {
       quantityRule: { minimum: 1, maximum: null, increment: 1 },
     });
     expect(product).not.toHaveProperty("facts");
+  });
+
+  it.each([
+    ["standard", "standard"],
+    ["natural_variation", "natural-variation"],
+    ["one_of_one", "one-of-one"],
+  ] as const)("maps product model %s to %s", (value, expected) => {
+    const fixture = productFixture();
+    fixture.productModel = { value };
+
+    expect(mapShopifyProduct(fixture).model).toBe(expected);
+  });
+
+  it("fails closed when the product model is missing or unsupported", () => {
+    const fixture = productFixture();
+    fixture.productModel = { value: "limited" };
+    expect(mapShopifyProduct(fixture).model).toBeUndefined();
+
+    fixture.productModel = null;
+    expect(mapShopifyProduct(fixture).model).toBeUndefined();
   });
 
   it.each([
@@ -187,6 +215,10 @@ describe("Shopify catalog mapper and queries", () => {
     expect(SHOPIFY_PRODUCTS_QUERY).toContain("pageInfo");
     expect(SHOPIFY_PRODUCTS_QUERY).toContain("quantityRule");
     expect(SHOPIFY_PRODUCTS_QUERY).toContain("quantityAvailable");
+    expect(SHOPIFY_PRODUCTS_QUERY).toContain("descriptionHtml");
+    expect(SHOPIFY_PRODUCTS_QUERY).toContain(
+      'productModel: metafield(namespace: "custom", key: "product_model")',
+    );
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       1,
       SHOPIFY_PRODUCTS_QUERY,

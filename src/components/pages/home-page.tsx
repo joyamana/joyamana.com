@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getProducts } from "@/lib/commerce/catalog";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
@@ -14,6 +15,14 @@ export async function HomePage({ locale }: { locale: Locale }) {
   return (
     <>
       <section className="hero">
+        <Image
+          className="hero__image"
+          src="/images/joya-mana-home-hero.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+        />
         <div className="hero__content">
           <p className="eyebrow">{copy.home.eyebrow}</p>
           <h1>{copy.home.title}</h1>
@@ -33,9 +42,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
               )}
             >
               {uiText(locale, {
-                en: "View the featured piece",
-                es: "Ver la pieza destacada",
-                fr: "Voir la pièce vedette",
+                en: "Discover a featured piece",
+                es: "Descubrir una pieza destacada",
+                fr: "Découvrir une pièce vedette",
               })}
             </Link>
           </div>

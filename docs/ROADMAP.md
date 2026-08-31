@@ -2,7 +2,7 @@
 
 Status: Active planning  
 Owner: Project owner  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 Roadmap 按依赖和可验证结果排序，不承诺未经资源评估的日历日期。详细功能以
 MVP PRD 和领域规格为准。
@@ -90,13 +90,14 @@ Production 当前仍 noindex、sitemap 为空。D-044 已确认 `www` canonical 
 - Webhook HMAC 验证与 Product/Collection cache invalidation。
 - Commerce integration 与 E2E 测试。
 
-2026-08-31 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 已完成；仓库共有
-157 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
+2026-09-01 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 已完成；仓库共有
+170 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
 真实 Cart 合约 smoke 已覆盖 create、库存冲突 warning、update/remove 与 HTTPS
 Checkout URL。Storefront 现会读取 `quantityAvailable` 与 `currentlyNotInStock`，
-并把它们与 contextual quantity rule 用于 PDP/Bag 数量上限；不产生稀缺营销。
+并把它们与 contextual quantity rule 用于 PDP/Bag 数量上限；PDP 仅对明确商品模型且
+符合严格可靠性条件的 1–3 件库存作准确披露，不在商品卡制造广泛稀缺提示。
 仍需定义/映射 Product knowledge metafields（材料、尺寸/护理、来源/处理、包装与关联内容）、
-商品模型与 exact/representative image disclosure、
+为正式商品填充 `custom.product_model`，并定义 exact/representative image disclosure、
 补全 `Patron Saint` 的 description/SEO、Design Series Metaobject/reference 与 story/lookbook，
 审核当前商品正文、发布人工审核的
 西语翻译、完成政策和 Checkout 运营验收，并补 webhook 与有记录的浏览器/支付验证；

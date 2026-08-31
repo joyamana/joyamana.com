@@ -45,25 +45,25 @@ export function ProductCard({
         )}
       </Link>
       <div className="product-card__body">
-        <div>
+        <div className="product-card__meta">
           <p className="microcopy">
             {product.availableForSale
               ? uiText(locale, {
-                  en: "Available from Shopify",
-                  es: "Disponible en Shopify",
-                  fr: "Disponible sur Shopify",
+                  en: "Available",
+                  es: "Disponible",
+                  fr: "Disponible",
                 })
               : copy.labels.soldOut}
           </p>
-          <h3>
-            <Link href={localePath(locale, `/products/${product.handle}`)}>
-              {product.title}
-            </Link>
-          </h3>
+          <p className="product-card__price">
+            {formatPriceRange(product.priceRange, locale)}
+          </p>
         </div>
-        <p className="product-card__price">
-          {formatPriceRange(product.priceRange, locale)}
-        </p>
+        <h3>
+          <Link href={localePath(locale, `/products/${product.handle}`)}>
+            {product.title}
+          </Link>
+        </h3>
       </div>
     </article>
   );

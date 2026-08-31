@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n/locales";
+import { sanitizeShopifyHtml } from "@/lib/content/shopify-html";
 import { shopifyFetch, type ShopifyFetchOptions } from "./shopify";
 import {
   isValidQuantityRule,
@@ -80,7 +81,9 @@ export interface ShopifyProductNode {
   handle: string;
   title: string;
   description: string;
+  descriptionHtml: string;
   availableForSale: boolean;
+  productModel: ShopifyMetafield | null;
   category: ShopifyTaxonomyCategory | null;
   seo: ShopifySeo;
   featuredImage: ShopifyImage | null;
@@ -234,7 +237,11 @@ const productFields = `#graphql
     handle
     title
     description
+    descriptionHtml
     availableForSale
+    productModel: metafield(namespace: "custom", key: "product_model") {
+      value
+    }
     category {
       id
       name
@@ -718,6 +725,7 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
     handle: node.handle,
     title: node.title,
     description: node.description,
+    descriptionHtml: sanitizeShopifyHtml(node.descriptionHtml),
     seoTitle: optionalText(node.seo.title),
     seoDescription: optionalText(node.seo.description),
     availableForSale: node.availableForSale,
@@ -735,10 +743,21 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
     featuredImage,
     images,
     variants,
+    model: mapProductModel(node.productModel),
     category: node.category
       ? { id: node.category.id, name: node.category.name }
       : null,
   };
+}
+
+function mapProductModel(
+  metafield: ShopifyMetafield | null | undefined,
+): Product["model"] {
+  const value = optionalText(metafield?.value);
+  if (value === "standard") return "standard";
+  if (value === "natural_variation") return "natural-variation";
+  if (value === "one_of_one") return "one-of-one";
+  return undefined;
 }
 
 function mapCollectionKind(

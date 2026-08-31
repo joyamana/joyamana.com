@@ -2,7 +2,7 @@
 
 Status: Working — 核心技术切片已实现，生产输入与发布验收未完成
 Owner: Business owner  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Supersedes: 2026-08-02 之前的简版 `PROJECT_SPEC.md`
 
 ## 1. 项目定义
@@ -46,9 +46,11 @@ Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyam
   与 sitemap 门禁已实现；Home Organization/WebSite/WebPage、ContactPage、Policy
   Schema、内容搜索、Analytics/consent、webhook、CI 与支付 E2E 仍未完成；Playwright
   按 D-043 暂时封存，浏览器/支付验收当前采用有记录的人工 smoke。
-- Product knowledge metafields（除已确认 guidebook 事实外）、商品模型/图片代表性披露、内容到商品的关系、Home
-  Email opt-in 尚未接入；Product Offer availability 与 UI 的最小可履约数量边界也仍需
-  统一验收。
+- Product `custom.product_model` 已映射，并只在明确 repeatable 模型和可靠的 1–3 件
+  库存条件下用于 PDP 准确低库存披露；正式商品仍需在 Shopify 填充该字段。
+  其他 Product knowledge metafields（除已确认 guidebook 事实外）、exact/representative
+  image 披露、内容到商品的关系和 Home Email opt-in 尚未接入；Product Offer
+  availability 与 UI 的最小可履约数量边界也仍需统一验收。
 - en-US 与 es-US 已各自输出正确的 document-level `<html lang>`；参数请求会 noindex
   并 canonical 回干净路径，Policy/Accessibility hreflang 也按真实翻译 readiness
   过滤。商品与 Collection 的 Spanish Storefront fallback 尚无可重复检测，因此仍

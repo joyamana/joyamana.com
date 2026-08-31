@@ -20,6 +20,7 @@ const product: Product = {
   handle: "aquamarine-bracelet",
   title: "Aquamarine bracelet",
   description: "A pale-blue bracelet.",
+  descriptionHtml: "<p>A pale-blue bracelet.</p>",
   availableForSale: true,
   priceRange: {
     minVariantPrice: { amount: "35.00", currencyCode: "USD" },

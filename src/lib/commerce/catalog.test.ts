@@ -30,6 +30,7 @@ const product: Product = {
   handle: "crystal-bracelet",
   title: "Crystal Bracelet",
   description: "A bracelet.",
+  descriptionHtml: "<p>A bracelet.</p>",
   availableForSale: true,
   priceRange: {
     minVariantPrice: { amount: "68.00", currencyCode: "USD" },

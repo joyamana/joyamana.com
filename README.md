@@ -3,7 +3,7 @@
 面向美国市场的水晶 DTC 品牌独立站。项目采用 `Brand + Content + Commerce`
 模式：以品牌体验和可信内容建立认知，以 Shopify 完成交易。
 
-当前状态（截至 2026-08-31）：**Production storefront 已在
+当前状态（截至 2026-09-01）：**Production storefront 已在
 `https://www.joyamana.com` 公开运行；Phase 3 与 Commerce hardening 仍在继续**。
 `https://checkout.joyamana.com` 已指向 Shopify Online Store，但下单支付、税务/法律、
 商品西语本地化和发布验收尚未完成，不能把“域名可访问”解释为完整交易上线。

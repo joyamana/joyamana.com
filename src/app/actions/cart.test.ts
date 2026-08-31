@@ -283,7 +283,7 @@ describe("Checkout server actions", () => {
       ok: false,
       error: {
         code: "CHECKOUT_URL_INVALID",
-        message: "Shopify returned an invalid checkout destination.",
+        message: "Checkout is temporarily unavailable. Please try again.",
       },
     });
     expect(JSON.stringify(result)).not.toContain("evil.example");

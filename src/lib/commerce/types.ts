@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n/locales";
 
 export type CurrencyCode = "USD" | "CAD";
-export type ProductModel = "standard" | "one-of-one";
+export type ProductModel = "standard" | "natural-variation" | "one-of-one";
 export type CollectionKind =
   | "category"
   | "design_series"
@@ -43,6 +43,7 @@ export const DEFAULT_PRODUCT_QUANTITY_RULE: ProductQuantityRule = {
 
 export const SHOPIFY_MAX_QUANTITY = 2_147_483_647;
 export const STOREFRONT_MAX_QUANTITY = 99;
+export const LOW_STOCK_THRESHOLD = 3;
 
 export function isValidQuantityRule(rule: ProductQuantityRule) {
   return (
@@ -132,6 +133,32 @@ export interface ProductVariant {
   quantityRule: ProductQuantityRule;
 }
 
+export function getLowStockCount(
+  model: ProductModel | undefined,
+  variant: ProductVariant,
+) {
+  if (model !== "standard" && model !== "natural-variation") return null;
+  if (
+    !variant.availableForSale ||
+    variant.currentlyNotInStock ||
+    variant.quantityAvailable === null ||
+    variant.quantityRule.increment !== 1 ||
+    !isValidAvailableProductQuantity(
+      variant.quantityRule.minimum,
+      variant.quantityRule,
+      variant.quantityAvailable,
+      variant.currentlyNotInStock,
+    )
+  ) {
+    return null;
+  }
+
+  return variant.quantityAvailable >= 1 &&
+    variant.quantityAvailable <= LOW_STOCK_THRESHOLD
+    ? variant.quantityAvailable
+    : null;
+}
+
 export interface ProductFacts {
   material?: string;
   dimensions?: string;
@@ -158,6 +185,7 @@ export interface Product {
   handle: string;
   title: string;
   description: string;
+  descriptionHtml: string;
   seoTitle?: string;
   seoDescription?: string;
   availableForSale: boolean;

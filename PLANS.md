@@ -90,7 +90,7 @@
 状态：Complete
 当前适用性：Historical — 后续实现已被 D-035、D-039 与 D-042 取代
 负责人：Codex  
-最后更新：2026-08-31
+最后更新：2026-09-01
 关联：D-009、D-021、D-023、D-024；Q-003A–Q-003F；`MVP_PRD.md` P-003/P-007
 
 ## Objective
@@ -214,7 +214,9 @@ channel 已有 1 个可售商品 `aquamarine-bracelet-9-mm`，但只有空的默
 - Accepted：Bag Cart ID 仅保存在 `HttpOnly + SameSite=Lax` cookie 中；Buy now
   必须创建独立单商品 Cart，不读取、清空或改写 Bag。
 - Resolved：2026-08-31 已可读 `quantityAvailable` 与 `currentlyNotInStock`。PDP/
-  Bag 用它们和 contextual `quantityRule` 限制可选数量，但不显示“仅剩 X 件”。
+  Bag 用它们和 contextual `quantityRule` 限制可选数量。2026-09-01 业务方进一步批准
+  PDP 的准确低库存披露：只对明确 `standard` / `natural_variation` 模型、非 oversell、
+  步进为 1 且准确数量为 1–3 的所选 Variant 显示；One-Of-A-Kind 和未知模型排除。
   当 `currentlyNotInStock=true` 或 Shopify 不返回精确数量时，不把 `null`
   误判为 0；Cart warning/user error 和 Checkout 仍是并发变化的最终裁决。
 - Temporary：`SHOPIFY_CHECKOUT_ENABLED` 是独立发布门禁。代码和合约可完成，
@@ -294,6 +296,11 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
   Shopify 库存上限，并保留 continue-selling/null 语义。本轮文档同步前，
   lint、typecheck 与 147 项 Vitest 在 Node 26.7.0 上通过；因超出项目固定的
   Node 24 范围，仍需在 Node 24/CI 重验。
+- 2026-09-01：映射 Product `custom.product_model`，增加严格 fail-closed 的 PDP
+  `Only X left`（阈值 3），并以 170 项 Vitest、lint、typecheck 和 production build
+  完成验证。正式商品仍需由运营在 Shopify 填充模型字段。
+- 2026-09-01：PDP 改读并安全渲染 Shopify `descriptionHtml`，保留标题、段落、列表、
+  链接、强调和表格等语义格式；纯文本 `description` 继续服务 metadata/Schema 和后备。
 
 ## Risks
 
@@ -342,8 +349,9 @@ Q-003A–Q-003F、payment/guest checkout/branding/notification 等 Admin 验收�
 才可在公开部署将 `SHOPIFY_CHECKOUT_ENABLED` 设为 `true`。仓库默认继续全站
 `noindex`，Spanish 商品内容因 Shopify 未发布翻译而回退 English，Canada 继续 404；
 各 local/Preview/Production 环境值仍须分别验收。
-已知且不允许继续销售的库存数量现在会约束 PDP 与 Bag 数量；页面不用该数据生成
-紧迫性文案。
+已知且不允许继续销售的库存数量会约束 PDP 与 Bag 数量。后续于 2026-09-01 获批的
+准确低库存披露只在 PDP、明确 repeatable 模型和严格可靠性条件下显示 1–3 件；商品卡、
+One-Of-A-Kind、未知模型及 continue-selling Variant 均不显示。
 
 ---
 

@@ -2,7 +2,7 @@
 
 Status: Active — 各项按 Blocks 阻塞对应能力；不要把条件项一律当成全站 blocker
 Owner: Project owner  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Resolved input: `docs/BRAND_INPUTS.md`
 
 业务方已授权先建立可运行测试站。下列问题分别会阻塞真实商品接入、政策发布或
@@ -48,8 +48,10 @@ Codex 不得以开发样本代替答案。
   抽查时 Aquamarine 可通过 Bracelets Category 发现
 - [ ] 定义、填充并映射正式 Product knowledge metafields：materials、dimensions/
   fit、care、origin/treatment disclosure、package contents 与 related content，并完成 EN/ES 审核
-- [ ] 定义并映射 repeatable/natural-variation/one-of-a-kind 商品模型，以及
-  exact item/representative image disclosure；当前 mapper/UI 尚未实现这组语义
+- [ ] 在 Shopify 建立并为所有正式商品填充 `custom.product_model`；代码已映射
+  `standard`、`natural_variation` 与 `one_of_one`，缺失或未知值会 fail closed
+- [ ] 定义并映射 exact item/representative image disclosure；商品模型与低库存披露
+  已实现，但图片所展示的是确切单件还是代表性样品仍未形成正式语义
 - [ ] 创建并接入 Design Series Metaobject、Product/Collection
   `custom.design_series` reference 与 story/lookbook；`Patron Saint` 的 Collection kind
   基础门禁已完成，但 description/SEO 仍为空
@@ -67,8 +69,9 @@ Codex 不得以开发样本代替答案。
 - [x] 当前公开 deployment 已复核 canonical/OG 使用 `https://www.joyamana.com`
 - [ ] Logo、字体授权、颜色
 - [ ] 真实商品摄影/视频
-- [x] Home 已移除并删除测试期 `bling-omen-editorial-hero.png`，首屏改用纯色背景与
-  排版；未来新增 production hero/editorial 资产仍须先获批
+- [x] Home 已移除并删除测试期 `bling-omen-editorial-hero.png`；2026-09-01 业务方重新
+  要求使用图片，现采用获批的抽象矿物编辑图 `joya-mana-home-hero.webp`。该图不对应
+  具体在售商品，不能替代真实商品摄影
 - [x] 公开客服/隐私邮箱确定为 `info@joyamana.com`
 - [x] `info@joyamana.com` inbox 已确认可以收信
 - [ ] 确认 `info@joyamana.com` 负责人/备援、外发认证与回复/垃圾箱表现
@@ -156,7 +159,9 @@ Storefront API 与安全的 Cart smoke 已确认：
 - Headless private Storefront token 现可读 `quantityAvailable` 与
   `currentlyNotInStock`。Product/Cart mapper、PDP 与 Bag 已与 contextual
   `quantityRule` 一起使用这些字段约束可选数量；并发变化仍以 Cart warning/
-  user error 和 Checkout 为准，页面不显示“仅剩 X 件”类紧迫文案。
+  user error 和 Checkout 为准。PDP 仅对明确标记为 `standard` 或
+  `natural_variation`、可售、非 oversell、购买增量为 1 且准确库存为 1–3 的所选
+  Variant 显示 `Only X left`；`one_of_one`、未知模型和不可靠库存全部排除，商品卡不显示。
 - `COMMERCE_PROVIDER`、本地 mock Catalog、本地 Trust/Policy/About/Editorial 正文
   fallback 已删除。Storefront 现为 Shopify-only；缺失/无效/异常时 fail closed。
 - 当前 Search 仅检索 Shopify Product；CI、自动化浏览器/支付 E2E、webhook/cache

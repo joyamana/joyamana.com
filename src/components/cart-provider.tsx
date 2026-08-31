@@ -67,8 +67,8 @@ function connectionFailureForLanguage(
       code: "SHOPIFY_ERROR",
       message:
         language === "ES"
-          ? "La bolsa no pudo conectarse con Shopify. Inténtalo de nuevo."
-          : "The bag could not reach Shopify. Please try again.",
+          ? "No se pudo actualizar la bolsa. Inténtalo de nuevo."
+          : "The bag could not be updated. Please try again.",
     },
   };
 }

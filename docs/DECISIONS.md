@@ -224,6 +224,10 @@ Variant 混淆不同设计。
 这是实际 package contents/履约承诺，不再作为待定包装假设。礼盒、包装成本和礼品留言
 仍属 Q-002B，不因 guidebook 获批而自动确认。
 
+2026-09-01 inventory note: 业务方批准 PDP 显示准确的 `Only X left`，阈值为 3。
+只有结构化模型明确为 standard/natural-variation，且当前 Variant 可售、库存已知、
+不允许超卖、步进为 1 时显示；one-of-a-kind 和未知模型必须排除，商品卡不显示。
+
 ### D-021 — 政策发布门禁
 
 Decision: Shipping、Returns、Duties、Taxes、Warranty、Privacy/Terms 中依赖

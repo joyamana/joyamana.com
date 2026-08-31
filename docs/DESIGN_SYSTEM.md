@@ -2,7 +2,7 @@
 
 Status: Working — 测试站视觉方向已获批，生产资产待确认  
 Owner: Brand / Design  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 本文件定义体验和实现边界。测试站可使用下列可替换视觉方向；Logo、商品摄影和
 生产色值仍需按 `OPEN_QUESTIONS.md` 的 Assets and accounts 清单定稿。
@@ -182,6 +182,11 @@ focus 6.92:1。Accent 4.09:1 与 metal accent 3.04:1 不用于普通尺寸正文
 - Availability
 - PolicySummary
 
+顾客可见的品牌界面使用 Joya Mana 自有语言，例如 Product、Collection、Bag 和
+Checkout；不显示 Shopify、Headless、`design_series`、integration 或 release gate 等
+实现细节。Privacy/Terms 可在准确披露数据处理方、支付服务商和卖方责任时保留必要的
+第三方名称；内部 API 标识、环境变量和 CDN URL 不受此文案规则影响。
+
 ### Content
 
 - RichText
@@ -196,7 +201,9 @@ focus 6.92:1。Accent 4.09:1 与 metal accent 3.04:1 不用于普通尺寸正文
 
 - Crystal Guide：居中标题和定位说明，下方为极简资料目录、细分隔线和清晰入口。
 - Blog：居中标题和定位说明，下方为一个 Featured article 与其余编辑列表。
-- Home 首屏使用纯色背景和排版层级，不展示测试期或未获批的 Hero 图片。首页不展示
+- Home 首屏使用 2026-09-01 重新批准的抽象矿物编辑图
+  `public/images/joya-mana-home-hero.webp`：左侧保留深色文字空间，右侧为不对应具体
+  在售商品的矿物光影。它是品牌编辑背景，不得用作商品事实或真实商品摄影。首页不展示
   Blog 推荐或 Design Collection 条带；这些内容保留在各自导航与独立页面中。
 - 没有获批编辑摄影时优先使用排版层级，不制造占位图片；获得真实资产后 Blog
   可升级为图片主导的 Featured story。

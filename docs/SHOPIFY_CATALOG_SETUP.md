@@ -2,7 +2,7 @@
 
 Status: Active implementation guide
 Owner: Commerce / Content operations
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
 
 本文件说明 D-036 所需的 Shopify Admin 配置。它不包含 credential，也不授权代码或
@@ -51,9 +51,30 @@ Category route 只在当前 Headless channel 至少有一个商品使用对应 t
 审核翻译。不要为同一 Metaobject 再开放第二个可索引 web page；公开系列 URL 保持
 `/collections/{handle}`。
 
-## 3. Product metafield
+## 3. Product metafields
 
 在 `Settings > Custom data > Products` 建立：
+
+### 3.1 Product model
+
+```text
+Name: Product model
+Namespace and key: custom.product_model
+Type: Single line text
+Preset choices:
+  standard
+  natural_variation
+  one_of_one
+Storefront access: enabled
+```
+
+每件正式商品必须明确选择一个值。不要根据标题、Tag、库存数量或图片推断商品模型。
+Storefront 对缺失和未知值 fail closed：不会显示低库存文案。PDP 仅对
+`standard` / `natural_variation` 中可售、非 oversell、购买增量为 1 且准确可用数量为
+1–3 的所选 Variant 显示 `Only X left`；`one_of_one` 永远排除。该字段目前只用于
+可信的库存披露，不替代后续仍需定义的 exact item / representative image disclosure。
+
+### 3.2 Design series
 
 ```text
 Name: Design series
@@ -123,6 +144,8 @@ Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端
 ## 6. 发布验收
 
 - Product 已发布到 Headless channel，Category 准确，价格/库存来自当前 US Catalog。
+- 每件正式 Product 已填充 `custom.product_model`；分别验证 `standard`、
+  `natural_variation`、`one_of_one`、缺失值和 oversell Variant 的 PDP 行为。
 - Design Series Metaobject 与必要字段有已审核 EN/ES 内容。
 - Storefront 已实现并验证 `custom.design_series` reference 与必需故事/媒体字段读取；
   在此前只能验证 Collection 类型门禁和商品网格。
