@@ -204,7 +204,7 @@ Content/SEO 规格。
 
 | 页面/数据 | 默认策略 | 原因 |
 |---|---|---|
-| Home | Dynamic；Catalog `no-store`，Blog fetch 5 分钟 | 首页同时包含实时商品与低频编辑内容 |
+| Home | Dynamic；Catalog `no-store` | 首页包含实时商品，首屏与品牌立场文案由代码集中维护 |
 | About / Policy / Accessibility | Dynamic route + Shopify fetch 5 分钟 | 低频内容；About 共用 tree，Policy/Accessibility entity 控制正文与索引资格 |
 | Crystal Guide / Article | Dynamic route + Shopify fetch 5 分钟 | 低频内容、需完整 HTML |
 | Shop / Category / Collection | Dynamic / `no-store`；Header Catalog fetch 独立缓存 5 分钟 | 页面商业数据无批准陈旧窗口；Header 只消费导航字段 |

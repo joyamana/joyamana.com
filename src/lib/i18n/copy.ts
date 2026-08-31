@@ -21,10 +21,6 @@ const copy = {
       featured: "Selected forms",
       featuredIntro:
         "Products, current prices, and availability come directly from the Joya Mana Shopify catalog.",
-      principles: "Designed for clarity",
-      principlesIntro:
-        "Beautiful objects need clear facts. We distinguish exact pieces, natural variation, materials, dimensions, care, and fulfillment.",
-      blog: "From the blog",
     },
     labels: {
       exactPiece: "Exact piece shown",
@@ -61,10 +57,6 @@ const copy = {
       featured: "Formas seleccionadas",
       featuredIntro:
         "Los productos, precios actuales y disponibilidad provienen directamente del catálogo de Shopify de Joya Mana.",
-      principles: "Diseñado con claridad",
-      principlesIntro:
-        "Los objetos bellos también necesitan datos claros. Distinguimos piezas exactas, variación natural, materiales, medidas, cuidado y entrega.",
-      blog: "Del blog",
     },
     labels: {
       exactPiece: "Pieza exacta en la foto",
@@ -101,10 +93,6 @@ const copy = {
       featured: "Formes sélectionnées",
       featuredIntro:
         "Les produits, prix actuels et disponibilités proviennent directement du catalogue Shopify de Joya Mana.",
-      principles: "Conçu avec clarté",
-      principlesIntro:
-        "Les beaux objets ont aussi besoin de faits clairs. Nous distinguons les pièces exactes, les variations naturelles, les matériaux, les dimensions, l’entretien et la livraison.",
-      blog: "Du blog",
     },
     labels: {
       exactPiece: "Pièce exacte présentée",

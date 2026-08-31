@@ -63,8 +63,8 @@ Codex 不得以开发样本代替答案。
   `og:url` 仍指向 `https://joyamana.vercel.app`
 - [ ] Logo、字体授权、颜色
 - [ ] 真实商品摄影/视频
-- [ ] 替换或移除 Home 测试期 `bling-omen-editorial-hero.png`，确认获批 production
-  hero/editorial 资产并清理旧品牌文件名；该图不得被解释为商品实拍
+- [x] Home 已移除并删除测试期 `bling-omen-editorial-hero.png`，首屏改用纯色背景与
+  排版；未来新增 production hero/editorial 资产仍须先获批
 - [x] 公开客服/隐私邮箱确定为 `info@joyamana.com`
 - [ ] `info@joyamana.com` inbox、负责人/备援和交易发件域名认证
 - [ ] 决定是否批准 Resend 作为 Contact 数据处理方，并确认成本、保留期、
@@ -139,8 +139,8 @@ Storefront API 与安全的 Cart smoke 已确认：
 
 - Storefront API 当前可读取原生 Blog `blog` 与 `crystals`；两者各有 1 篇已发布测试
   Article，分别为 `hello-world` 与 `hello-for-crystal-guide`。
-- `/blog`、`/crystals`、各详情页和首页 Blog 推荐已切换为 Shopify Article，不再读取
-  本地 prototype entries；品牌 URL 不暴露 Shopify `/blogs/*`。
+- `/blog`、`/crystals` 与各详情页已切换为 Shopify Article，不再读取本地 prototype
+  entries；品牌 URL 不暴露 Shopify `/blogs/*`。首页已按后续业务决定移除 Blog 推荐。
 - 两篇测试 Article 当前均无 excerpt、SEO、featured image 或 tags，正文只有一行测试
   文字。前端会从正文生成安全摘要，但这些内容仍须替换为原创、审核完成的正式内容。
 - `@inContext(language: ES)` 当前对两个 Blog 均回退 English；西语页面提供阅读后备并

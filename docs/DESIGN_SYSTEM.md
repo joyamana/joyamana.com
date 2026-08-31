@@ -196,9 +196,8 @@ focus 6.92:1。Accent 4.09:1 与 metal accent 3.04:1 不用于普通尺寸正文
 
 - Crystal Guide：居中标题和定位说明，下方为极简资料目录、细分隔线和清晰入口。
 - Blog：居中标题和定位说明，下方为一个 Featured article 与其余编辑列表。
-- Home 当前使用本地 `bling-omen-editorial-hero.png` 作为测试期装饰性 editorial
-  placeholder（空 alt），不是商品实拍或获批生产品牌资产；公开上线前替换或移除，
-  并清理旧品牌文件名。
+- Home 首屏使用纯色背景和排版层级，不展示测试期或未获批的 Hero 图片。首页不展示
+  Blog 推荐或 Design Collection 条带；这些内容保留在各自导航与独立页面中。
 - 没有获批编辑摄影时优先使用排版层级，不制造占位图片；获得真实资产后 Blog
   可升级为图片主导的 Featured story。
 - 极简不等于空页；索引链接、摘要和分类必须输出在服务端 HTML。

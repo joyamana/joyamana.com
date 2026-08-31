@@ -575,19 +575,6 @@ h3 {
   background: #160e16;
 }
 
-.hero__image {
-  object-fit: cover;
-  object-position: center;
-}
-
-.hero__veil {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(17, 9, 16, 0.82), rgba(17, 9, 16, 0.18) 62%),
-    linear-gradient(0deg, rgba(17, 9, 16, 0.35), transparent 50%);
-}
-
 .hero__content {
   position: relative;
   z-index: 2;
@@ -2189,14 +2176,6 @@ textarea {
     padding-bottom: 5rem;
   }
 
-  .hero__image {
-    object-position: 62% center;
-  }
-
-  .hero__veil {
-    background: linear-gradient(0deg, rgba(17, 9, 16, 0.9), rgba(17, 9, 16, 0.05));
-  }
-
   .hero__content {
     width: auto;
     margin: 0 var(--page);
@@ -2236,7 +2215,6 @@ textarea {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
-
 
   .crystal-directory__item,
   .blog-index__item {
