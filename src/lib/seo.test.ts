@@ -65,4 +65,32 @@ describe("metadata titles", () => {
       },
     });
   });
+
+  it("keeps parameterized variants out of the index and points to the clean canonical", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://joyamana.com");
+    vi.resetModules();
+    const { buildMetadata: buildIndexableMetadata } = await import("./seo");
+
+    const metadata = buildIndexableMetadata({
+      title: "Shop",
+      description: "Browse products.",
+      locale: "en-US",
+      path: "/shop",
+      searchParams: { sort: "price", utm_source: "newsletter" },
+    });
+
+    expect(metadata.robots).toEqual({
+      index: false,
+      follow: false,
+      noarchive: true,
+    });
+    expect(metadata.alternates).toEqual({
+      canonical: "https://joyamana.com/shop",
+      languages: undefined,
+    });
+    expect(metadata.openGraph).toMatchObject({
+      url: "https://joyamana.com/shop",
+    });
+  });
 });

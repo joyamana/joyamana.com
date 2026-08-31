@@ -43,7 +43,7 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 
 ### Pending
 
-- `.com` 域名、美国商标与社交账号可用性。
+- 美国商标与社交账号可用性；`.com` 域名和 DNS 已完成。
 - 目标价格带和 AOV。
 - Logo、字体授权、最终颜色与商品摄影。
 
@@ -139,8 +139,12 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 - 公开联系地址已决定为 `info@joyamana.com`；Contact 表单投递代码已存在但
   仓库示例值及未配置时的代码默认值为关闭；邮箱 inbox、域验证、数据处理批准和
   滥用控制尚待完成，各部署环境仍须单独核验。
-- 最终域名/DNS、Vercel Preview/Production、设计资产、GA4、GSC、Merchant
-  Center、CRM/Email、Reviews 和 Consent 仍未完成生产准备或选型。
+- `www.joyamana.com` 已由 Vercel Production 公开响应，`checkout.joyamana.com`
+  已由 Shopify Online Store 公开响应；Preview branch/deployment、设计资产、GA4、
+  GSC、Merchant Center、CRM/Email、Reviews 和 Consent 仍未完成生产准备或选型。
+- D-044 已确认 `https://www.joyamana.com` 为唯一 Production canonical origin，
+  `https://joyamana.com` 308 至 `www`。Vercel 环境值已配置；当前公开 deployment 的
+  `og:url` 仍为 `https://joyamana.vercel.app`，需在新 deployment 后复核。
 
 ### Confirmed boundaries
 

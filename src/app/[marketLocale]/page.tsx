@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { HomePage } from "@/components/pages/home-page";
 import { canadaLocaleFromSegment } from "@/lib/i18n/locales";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, type PageSearchParams } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ marketLocale: string }>;
+  searchParams: Promise<PageSearchParams>;
 }): Promise<Metadata> {
   const locale = canadaLocaleFromSegment((await params).marketLocale);
   if (!locale) notFound();
@@ -20,6 +22,7 @@ export async function generateMetadata({
       ? "Un prototype canadien pour des bijoux modernes en cristal et des objets singuliers."
       : "A Canadian prototype for modern crystal jewelry and singular objects.",
     locale,
+    searchParams: await searchParams,
   });
 }
 

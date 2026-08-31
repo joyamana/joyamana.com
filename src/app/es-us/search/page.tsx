@@ -3,7 +3,7 @@ import { buildNoIndexMetadata } from "@/lib/seo";
 
 export const metadata = buildNoIndexMetadata({
   title: "Buscar",
-  description: "Busca en el catálogo y el contenido editorial de Joya Mana.",
+  description: "Busca productos en el catálogo de Joya Mana.",
 });
 
 export default async function Page({

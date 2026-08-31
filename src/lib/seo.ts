@@ -3,6 +3,11 @@ import { brand } from "@/config/brand";
 import { siteConfig } from "@/config/site";
 import { enabledLocales, localePath, type Locale } from "@/lib/i18n/locales";
 
+export type PageSearchParams = Record<
+  string,
+  string | string[] | undefined
+>;
+
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -43,16 +48,20 @@ export function buildMetadata({
   locale,
   path = "/",
   alternateLocales = enabledLocales,
+  searchParams,
 }: {
   title: string;
   description: string;
   locale: Locale;
   path?: string;
   alternateLocales?: readonly Locale[];
+  searchParams?: PageSearchParams;
 }): Metadata {
   const localizedPath = localePath(locale, path);
   const canonical = new URL(localizedPath, siteConfig.url).toString();
   const normalizedTitle = withoutTrailingBrand(title);
+  const parameterized = Boolean(searchParams && Object.keys(searchParams).length);
+  const indexable = siteConfig.indexable && !parameterized;
 
   return {
     title: normalizedTitle,
@@ -61,15 +70,20 @@ export function buildMetadata({
     alternates: siteConfig.indexable
       ? {
           canonical,
-          languages: Object.fromEntries(
-            alternateLocales.map((enabledLocale) => [
-              enabledLocale,
-              new URL(localePath(enabledLocale, path), siteConfig.url).toString(),
-            ]),
-          ),
+          languages: parameterized
+            ? undefined
+            : Object.fromEntries(
+                alternateLocales.map((enabledLocale) => [
+                  enabledLocale,
+                  new URL(
+                    localePath(enabledLocale, path),
+                    siteConfig.url,
+                  ).toString(),
+                ]),
+              ),
         }
       : undefined,
-    robots: siteConfig.indexable
+    robots: indexable
       ? { index: true, follow: true }
       : { index: false, follow: false, noarchive: true },
     openGraph: {

@@ -3,7 +3,7 @@ import { buildNoIndexMetadata } from "@/lib/seo";
 
 export const metadata = buildNoIndexMetadata({
   title: "Search",
-  description: "Search the Joya Mana catalog and editorial content.",
+  description: "Search products in the Joya Mana catalog.",
 });
 
 export default async function Page({

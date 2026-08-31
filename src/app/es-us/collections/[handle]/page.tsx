@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
 import { CollectionPage } from "@/components/pages/collection-page";
 import { getDesignCollection } from "@/lib/commerce/catalog";
-import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
+import {
+  buildMetadata,
+  buildNoIndexMetadata,
+  type PageSearchParams,
+} from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<PageSearchParams>;
 }): Promise<Metadata> {
   const { handle } = await params;
   const collection = await getDesignCollection(handle, "us", "es-US");
@@ -24,6 +30,7 @@ export async function generateMetadata({
     description,
     locale: "es-US",
     path: `/collections/${handle}`,
+    searchParams: await searchParams,
   });
 }
 

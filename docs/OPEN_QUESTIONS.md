@@ -13,7 +13,7 @@ Codex 不得以开发样本代替答案。
 
 | ID | Pending decision | Blocks |
 |---|---|---|
-| Q-001A | Joya Mana 的 `.com`、美国商标与社交账号核验 | Production identity/domain |
+| Q-001A | Joya Mana 的美国商标与社交账号核验；`.com` 与 DNS 已完成 | Production identity |
 | Q-001B | 价格带、AOV 和 margin context | Real prices、free shipping |
 | Q-002A | 七脉轮普通款完整 11 选项、SKU、正式材料与定价 | Seven Chakra 生产 Catalog |
 | Q-002B | 礼盒、包装成本、礼品留言 | Gift experience |
@@ -53,8 +53,14 @@ Codex 不得以开发样本代替答案。
   确认 Storefront access
 - [ ] 创建、审核并发布 root `about`；如需子页，将完整 child 加入
   `about.child_pages`，按期望 tabs 顺序排列，并完成 en-US / es-US 正文与 SEO 审核
-- [ ] 最终域名和 DNS
-- [ ] Vercel account/team
+- [x] 最终域名和 DNS：`www.joyamana.com` 指向 Vercel，
+  `checkout.joyamana.com` 指向 Shopify Online Store
+- [x] Vercel account/team 与 Production deployment；`www` 已公开响应
+- [ ] 将本地 `dev` 分支推送并由 Vercel 成功构建为 Preview；推送前不视为 Preview 已建立
+- [x] D-044 确认 `https://www.joyamana.com` 为 canonical origin，apex 308 至 `www`；
+  Vercel Production 环境值已设置
+- [ ] 部署当前代码后复核公开 canonical/OG；2026-08-31 当前 deployment 的
+  `og:url` 仍指向 `https://joyamana.vercel.app`
 - [ ] Logo、字体授权、颜色
 - [ ] 真实商品摄影/视频
 - [ ] 替换或移除 Home 测试期 `bling-omen-editorial-hero.png`，确认获批 production
@@ -150,24 +156,19 @@ Storefront API 与安全的 Cart smoke 已确认：
   user error 和 Checkout 为准，页面不显示“仅剩 X 件”类紧迫文案。
 - `COMMERCE_PROVIDER`、本地 mock Catalog、本地 Trust/Policy/About/Editorial 正文
   fallback 已删除。Storefront 现为 Shopify-only；缺失/无效/异常时 fail closed。
-- 当前 Search 仅检索 Shopify Product；CI、Playwright/E2E、webhook/cache invalidation、
-  Analytics/consent 和 Customer Privacy API 仍未实现。
-- en-US/es-US Search route 的 metadata 文案仍声称可检索 editorial content，与当前
-  Product-only 结果不一致；公开发布前必须修正文案或实现内容检索。
-- 参数请求当前只输出 clean canonical，未根据 `searchParams` 设置 `noindex`；开启总
-  index gate 后会继承基页 indexable metadata。发布前必须实现参数级 robots 门禁并测试。
-- Policy/Accessibility 的 fallback 页自身会 noindex 并退出 sitemap/Schema，但英文页
-  当前仍可能输出指向未就绪 es-US fallback 的 hreflang；发布前补 readiness alternate
-  过滤。About/Article 已有对应过滤。
+- 当前 Search 仅检索 Shopify Product；CI、自动化浏览器/支付 E2E、webhook/cache
+  invalidation、Analytics/consent 和 Customer Privacy API 仍未实现。Playwright 按
+  D-043 暂缓，当前使用有记录的人工浏览器/Checkout smoke。
+- Search metadata 已与 Product-only 运行时一致，不再声称检索 editorial content。
+- 参数请求已输出 `noindex, nofollow, noarchive`，保留 clean canonical 并移除 hreflang；
+  clean URL 在 index gate 开启时维持正常 index/follow。
+- Policy/Accessibility 的双向 hreflang 已按各语言真实 readiness 过滤；fallback 页继续
+  noindex，并退出 sitemap/Schema。
 - Product/Collection 尚无法自动识别 Spanish 真实翻译与 English fallback；在增加
   Commerce translation readiness 验证前不得开启全站 index gate。
-- root `<html lang>` 当前固定 `en-US`，es-US 主内容只在内层 shell 标记语言；
-  需在索引/无障碍发布验收前改为 document-level locale。
-- Header 目录是所有 US 页面 layout 的 Shopify 依赖；5 分钟缓存未命中且上游失败时
-  会进入全页 error boundary。公开上线前需完成故障恢复/监控验收，不恢复本地 Catalog。
-- Header cache 当前从完整 Product/Collection response 生成导航，虽然 UI 只消费
-  handle/title，但缓存实体仍含价格/可售性/数量。生产 hardening 需收窄为导航专用
-  query/projection，并禁止其他 UI 复用其中的商业字段。
+- en-US/es-US 已在初始 HTML 输出正确的 document-level `<html lang>`。
+- Header 目录已使用不含价格/库存/正文的导航专用 query/projection；上游失败时降级为
+  基础导航并保留页面主体，不恢复本地 Catalog。监控/告警仍属于 Q-105。
 
 ## Deferred / conditional decisions
 
@@ -176,7 +177,7 @@ Storefront API 与安全的 Cart smoke 已确认：
 | Q-101 | Training crawler policy（对应 D-016） | Pending；Search/User 与 Training 分开 |
 | Q-103 | Reviews provider | 无真实评论时不渲染模块 |
 | Q-104 | Email/CRM | 先定义 consent/events |
-| Q-105 | Error monitoring | Vercel baseline；Beta 前复核 |
+| Q-105 | Error monitoring | Vercel Production baseline 已有；告警、owner 与保留策略待复核 |
 | Q-106 | Customer Account | Post-launch |
 | Q-107 | Future markets | 第一阶段仅 US；CA 保留 planned 配置且不创建公开 URL |
 | Q-108 | Gift Card/Wishlist/Loyalty | 依据购买和复购数据 |
@@ -200,4 +201,17 @@ Storefront API 与安全的 Cart smoke 已确认：
 
 ## Resolved on 2026-08-14
 
-- 品牌名称确认为 `Joya Mana`；域名、美国商标和社交账号可用性仍在 Q-001A。
+- 品牌名称确认为 `Joya Mana`；美国商标和社交账号可用性仍在 Q-001A。
+
+## Production deployment follow-up — 2026-08-31
+
+- `https://www.joyamana.com` 外部返回 HTTP 200，并由 Vercel 提供服务。
+- `https://checkout.joyamana.com` 外部返回 HTTP 200，并由 Shopify 提供服务。
+- Production 首页仍输出 `noindex, nofollow, noarchive`；`robots.txt` 允许抓取，
+  但 `sitemap.xml` 是空 `urlset`。这是公开可访问但尚未开放搜索索引的状态。
+- D-044 已确认 `www` canonical，外部检查确认 apex 308 至 `www`。Vercel Production
+  环境值已设置，但当前 deployment 的 `og:url` 仍为 `https://joyamana.vercel.app`；
+  当前代码 redeploy 后必须复核。origin 修正不代表可以同时打开 index gate。
+- 业务方确认网站已正式公开，但下单支付等能力尚未完整支持。因此域名与部署问题已
+  解决，Checkout/payment、政策、翻译、Analytics/consent 与发布验收仍按各自 Blocks
+  保持开放。

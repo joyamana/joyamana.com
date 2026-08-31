@@ -315,15 +315,17 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
     公开 index gate 必须保持关闭，业务方须审核当前正文与西语翻译后再发布。
 - Risk：两个浏览器标签页在没有 Cart cookie 时同时首次 Add，仍可能各自 cartCreate，
   后完成的响应会成为当前 Bag。
-  - Mitigation：同标签页请求已串行并防 stale response；跨标签并发需在 Playwright
-    覆盖并决定是否接受，或在未来引入不扩大 PII 的协调机制。
+  - Mitigation：同标签页请求已串行并防 stale response；当前用人工双标签复现并记录
+    是否接受。若此路径频繁回归或客户端状态复杂度增加，按 D-043 重新评估 Playwright，
+    或在未来引入不扩大 PII 的协调机制。
 - Risk：当前机器使用 Node 26.7.0，超出仓库固定的 Node 24 范围。
   - Mitigation：所有检查虽通过但持续显示 engine warning；CI/Vercel 必须按
     `.nvmrc` / `package.json#engines` 使用 Node 24 重新验收。
-- Risk：Playwright/CI 尚未建立，无法在本次自动化真实浏览器的移动端和跨页 cookie
-  交互。
+- Risk：Playwright 按 D-043 暂缓且 CI 尚未建立，无法自动化验证真实浏览器的移动端、
+  跨页 cookie 和支付交互。
   - Mitigation：完成 production 初始 HTML、真实 Storefront/Cart contract、服务端
-    Action 与 mapper 测试；在打开 Checkout gate 前补核心 E2E。
+    Action 与 mapper 测试；在打开 Checkout gate 前执行并记录人工浏览器/Checkout
+    smoke，不把该证据写成自动化 E2E。
 
 ## Outcome
 
@@ -645,7 +647,8 @@ webhook 和发布门禁仍是生产上线工作，不由 `Complete` 状态自动
 库存、政策和测试商品不复制为长期批准事实。实现缺口集中回写 Roadmap、Open Questions
 和 Launch Runbook，包括 Product knowledge/model、Search metadata、参数级 noindex、
 Policy/Accessibility hreflang、document-level Spanish lang、Schema、Header cache、
-Analytics/consent、webhook、CI/Playwright 和受控 Checkout/Contact 验收。
+Analytics/consent、webhook、CI、按 D-043 暂缓的 Playwright，以及受控
+Checkout/Contact 验收。
 
 ## Validation
 
@@ -667,6 +670,12 @@ Analytics/consent、webhook、CI/Playwright 和受控 Checkout/Contact 验收。
 - 2026-08-31：三轮实现对照和交叉审校后，修正门禁时态、Product model、内容错误行为、
   缓存边界、发布顺序、参数索引与跨语言 hreflang 等过度声明。
 - 2026-08-31：完成链接、diff、lint、typecheck、147 项 Vitest 和 production build 验证。
+- 2026-08-31：业务方确认品牌为 Joya Mana，`www.joyamana.com` 已指向 Vercel、
+  `checkout.joyamana.com` 已指向 Shopify Online Store，Production 已公开但下单支付等
+  功能未完整支持；建立并切换本地 `dev` 分支用于后续 Vercel Preview。
+- 2026-08-31：外部检查确认两个域名均返回 HTTP 200；Production 仍 noindex、sitemap
+  为空且首页 `og:url` 仍为 Vercel 默认域名。按 D-043 封存 Playwright，当前使用有记录
+  的人工浏览器/Checkout smoke，复杂度触发后再评估。
 
 ## Risks
 
@@ -683,3 +692,79 @@ Analytics/consent、webhook、CI/Playwright 和受控 Checkout/Contact 验收。
 planned CA、Catalog/Cart 核心切片、Shopify 内容接入、独立门禁和生产 blocker 使用
 一致口径。未改 runtime 代码、外部系统或发布状态；下一阶段可直接从 Roadmap 与
 Open Questions 中的真实缺口继续，而无需依赖旧 Phase 1 或 mock 假设。
+
+Post-completion note（2026-08-31）：随后 Production 与正式域名已由业务方配置并公开，
+因此本计划原 Outcome 中“未改外部系统或发布状态”只描述该轮文档同步当时的范围，
+不再代表当前部署状态。D-044 随后确认 `www` canonical 与 apex 308；索引、
+Checkout/payment、政策、翻译、Analytics/consent 和发布验收仍待完成。
+
+---
+
+# Execution Plan — SEO/i18n、Header resilience 与 env preflight（2026-08-31）
+
+Status: Complete
+Owner: Engineering
+
+## Goal
+
+在不启用索引、Checkout、Contact 或 Playwright 的前提下，修复参数页索引保护、
+document-level locale、Policy/Accessibility hreflang、Search metadata、Header
+上游故障/缓存字段和部署环境 preflight，并使文档与运行时证据同步。
+
+## Scope
+
+- 包含：当前 en-US/es-US 可索引路由 metadata、root document layout、服务页
+  translation readiness、Header navigation Shopify query/projection、Locale shell
+  降级、构建前环境校验、测试和现行文档。
+- 不包含：Commerce Product/Collection Spanish fallback 检测、开启 index gate、
+  Shopify payment/政策配置、Vercel deploy/push、Analytics/consent 或 Playwright。
+
+## Decisions and assumptions
+
+- D-044：Production canonical origin 为 `https://www.joyamana.com`；apex 308 至 `www`。
+- 参数 URL 保留 clean canonical，但强制 noindex/noarchive 并移除 hreflang。
+- Policy/Accessibility 只有真实本地化正文才参与该语言的 alternate。
+- Header 故障只降级动态 taxonomy/series 链接，不恢复本地 Catalog。
+- Vercel Production/Preview 在 build 前 fail closed；错误只包含变量名，不输出 secret。
+
+## Milestones
+
+1. [x] 修复参数 metadata、en-US/es-US root document lang、服务页 hreflang 和 Search 文案。
+2. [x] 建立 Header 专用最小 Shopify queries，并在上游失败时保留基础导航和页面主体。
+3. [x] 新增 `pnpm preflight` 并接入 `prebuild`，校验 canonical、Preview、Shopify 与门禁 secret。
+4. [x] 增加 metadata、Header projection/failure 和 preflight tests。
+5. [x] 完成默认 noindex build、diff/文档一致性与最终工作树核对。
+
+## Validation
+
+- `pnpm typecheck`：通过。
+- `pnpm lint`：通过。
+- `pnpm test`：24 files / 157 tests 通过。
+- `pnpm build`：默认 noindex build 通过；首次受限网络执行只因现有 Google Fonts 下载
+  失败，允许网络后通过。
+- 临时 indexable production build：通过；初始 HTML 验证 clean `/shop` 为 index/follow、
+  `?sort=price&utm_source=test` 为 noindex/noarchive、canonical 均为 `www` clean URL且参数页
+  无 hreflang；`/es-us` 输出 `<html lang="es-US">`。
+- 外部域名：apex 返回 308 至 `https://www.joyamana.com/`，`www` 返回 Vercel 200；当前
+  已部署版本仍显示旧 Vercel OG origin，需在本次代码 deploy 后复核。
+- 环境边界：验证运行于 Node 26.7.0，仍有项目要求 Node 24 的 engine warning；不能写成
+  CI、Preview、Production redeploy 或支付 E2E 已通过。
+
+## Risks
+
+- Risk：多 root layout 使跨语言导航执行完整文档加载。
+  - Mitigation：语言切换频率低，换取初始 HTML document locale 正确；build 和本地
+    production HTML 已验证。
+- Risk：Header 降级会暂时隐藏动态类别/系列。
+  - Mitigation：保留 Shop all/Search/Bag/语言入口和页面主体；不以陈旧商业数据兜底。
+- Risk：Vercel 已修改环境值但未 redeploy，公开 HTML 继续保留旧 OG origin。
+  - Mitigation：preflight 对未来 Production build 强制 `www`，deploy 后按 Runbook
+    外部复核 canonical/OG。
+
+## Outcome
+
+7 项指定问题均已完成：可索引 clean URL 与参数 noindex 分离，en-US/es-US 输出正确
+document lang，Policy/Accessibility hreflang 按真实翻译过滤，Search metadata 与
+Product-only 运行时一致，Header 使用最小字段并可安全降级，Vercel build 前执行
+不泄露 secret 的环境 preflight。默认生成物已恢复为 noindex；没有启用任何发布门禁、
+修改 Shopify 数据、推送 `dev` 或部署 Vercel。

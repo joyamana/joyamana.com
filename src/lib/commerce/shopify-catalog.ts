@@ -17,6 +17,8 @@ const COLLECTION_PAGE_SIZE = 100;
 const SUMMARY_VARIANT_PAGE_SIZE = 1;
 const VARIANT_PAGE_SIZE = 100;
 const SEARCH_PAGE_SIZE = 24;
+const NAVIGATION_PRODUCT_PAGE_SIZE = 250;
+const NAVIGATION_COLLECTION_PAGE_SIZE = 100;
 
 interface ShopifyMoneyV2 {
   amount: string;
@@ -136,6 +138,36 @@ interface ShopifySearchData {
     | ({ __typename: "Product" } & ShopifyProductNode)
     | { __typename: string; id: string }
   >;
+}
+
+interface ShopifyNavigationProductNode {
+  id: string;
+  category: { id: string } | null;
+}
+
+interface ShopifyNavigationCollectionNode {
+  id: string;
+  handle: string;
+  title: string;
+  collectionKind: ShopifyMetafield | null;
+  products: { nodes: Array<{ id: string }> };
+}
+
+interface ShopifyNavigationProductsData {
+  products: ShopifyConnection<ShopifyNavigationProductNode>;
+}
+
+interface ShopifyNavigationCollectionsData {
+  collections: ShopifyConnection<ShopifyNavigationCollectionNode>;
+}
+
+export interface ShopifyCatalogNavigationSnapshot {
+  productCategoryIds: string[];
+  collections: Array<{
+    handle: string;
+    title: string;
+    kind: CollectionKind | undefined;
+  }>;
 }
 
 export type ShopifyCatalogErrorKind = "unsupported-locale" | "invalid-data";
@@ -394,6 +426,51 @@ export const SHOPIFY_SEARCH_QUERY = `#graphql
     }
   }
   ${productFields}
+`;
+
+export const SHOPIFY_NAVIGATION_PRODUCTS_QUERY = `#graphql
+  query CatalogNavigationProducts(
+    $country: CountryCode!
+    $language: LanguageCode!
+    $first: Int!
+    $after: String
+  ) @inContext(country: $country, language: $language) {
+    products(first: $first, after: $after) {
+      nodes {
+        id
+        category { id }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const SHOPIFY_NAVIGATION_COLLECTIONS_QUERY = `#graphql
+  query CatalogNavigationCollections(
+    $country: CountryCode!
+    $language: LanguageCode!
+    $first: Int!
+    $after: String
+  ) @inContext(country: $country, language: $language) {
+    collections(first: $first, after: $after) {
+      nodes {
+        id
+        handle
+        title
+        collectionKind: metafield(namespace: "custom", key: "collection_kind") {
+          value
+        }
+        products(first: 1) { nodes { id } }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
 `;
 
 function shopifyContext(locale: Locale) {
@@ -858,4 +935,61 @@ export async function searchShopifyProducts(
         ]
       : [],
   );
+}
+
+export async function getShopifyCatalogNavigation(
+  locale: Locale,
+  fetchOptions: ShopifyFetchOptions,
+): Promise<ShopifyCatalogNavigationSnapshot> {
+  const context = shopifyContext(locale);
+  const loadProductsPage = (after: string | null) =>
+    shopifyFetch<ShopifyNavigationProductsData>(
+      SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
+      { ...context, first: NAVIGATION_PRODUCT_PAGE_SIZE, after },
+      fetchOptions,
+    );
+  const loadCollectionsPage = (after: string | null) =>
+    shopifyFetch<ShopifyNavigationCollectionsData>(
+      SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
+      { ...context, first: NAVIGATION_COLLECTION_PAGE_SIZE, after },
+      fetchOptions,
+    );
+  const [firstProductsPage, firstCollectionsPage] = await Promise.all([
+    loadProductsPage(null),
+    loadCollectionsPage(null),
+  ]);
+  const [products, collections] = await Promise.all([
+    collectConnectionNodes(
+      firstProductsPage.products,
+      async (after) => (await loadProductsPage(after)).products,
+      "navigation products",
+    ),
+    collectConnectionNodes(
+      firstCollectionsPage.collections,
+      async (after) => (await loadCollectionsPage(after)).collections,
+      "navigation collections",
+    ),
+  ]);
+
+  return {
+    productCategoryIds: [
+      ...new Set(
+        products.flatMap((product) =>
+          product.category?.id ? [product.category.id] : [],
+        ),
+      ),
+    ],
+    collections: collections.flatMap((collection) => {
+      const handle = optionalText(collection.handle);
+      const title = optionalText(collection.title);
+      if (!handle || !title || collection.products.nodes.length === 0) return [];
+      return [
+        {
+          handle,
+          title,
+          kind: mapCollectionKind(collection.collectionKind),
+        },
+      ];
+    }),
+  };
 }

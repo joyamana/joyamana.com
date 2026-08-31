@@ -18,26 +18,35 @@ Supersedes: 2026-08-02 之前的简版 `PROJECT_SPEC.md`
 - 用低摩擦流程完成浏览、加购与 Shopify Checkout。
 - 累积可持续的自然搜索、AI Search 与 Email 客户关系资产。
 
-品牌名称已确认为 `Joya Mana`，测试站继续使用经授权的工作定位；域名/商标核验、
-价格带、正式首发 assortment、品牌资产与运营政策仍未确认。完整输入见
+品牌名称已确认为 `Joya Mana`，`www.joyamana.com` 与 `checkout.joyamana.com` 已完成
+Production DNS/平台指向；美国商标/社交账号、价格带、正式首发 assortment、品牌资产
+与运营政策仍未确认。完整输入见
 `docs/BRAND_INPUTS.md`。
 
 ### 当前实施快照
 
 - Next.js 16 / React 19 / TypeScript storefront 已运行，en-US 根路径和
   `/es-us/` 使用同一 US Catalog/USD context；Canada 规划路径返回 404。
+- Vercel Production 已在 `https://www.joyamana.com` 返回 200；Shopify Online Store
+  已在 `https://checkout.joyamana.com` 返回 200。Production 仍 noindex、sitemap
+  为空；D-044 已确认 `www` 为唯一 canonical origin，apex 308 至 `www`。Vercel
+  环境值已配置，当前公开 deployment 仍显示旧 Vercel OG origin，待新部署复核；
+  下单支付等能力尚未完整验收。
 - Runtime Commerce 与 Shopify-backed 业务正文已是 Shopify-only：Catalog、Policy、
   About/Accessibility、Blog/Guide 通过服务端查询读取，Bag/Buy now 通过 Shopify Cart
   mutations 创建和更新 Cart；这些路径均无本地业务数据 fallback。Home、Contact、
   导航和 Category 的界面/结构文案仍由 Next.js 代码配置维护。
 - Product、Shop/Category/Collection、About 和 Article 的 metadata/部分适用 Schema
   与 sitemap 门禁已实现；Home Organization/WebSite/WebPage、ContactPage、Policy
-  Schema、内容搜索、Analytics/consent、webhook、CI/Playwright 与支付 E2E 仍未完成。
+  Schema、内容搜索、Analytics/consent、webhook、CI 与支付 E2E 仍未完成；Playwright
+  按 D-043 暂时封存，浏览器/支付验收当前采用有记录的人工 smoke。
 - Product knowledge metafields、商品模型/图片代表性披露、内容到商品的关系、Home
   Email opt-in 尚未接入；Product Offer availability 与 UI 的最小可履约数量边界也仍需
   统一验收。
-- root `<html lang>` 目前固定为 `en-US`，es-US 只在内层内容容器标记语言；商品与
-  Collection 的 Spanish Storefront fallback 也尚无可重复检测，因此不能开放索引。
+- en-US 与 es-US 已各自输出正确的 document-level `<html lang>`；参数请求会 noindex
+  并 canonical 回干净路径，Policy/Accessibility hreflang 也按真实翻译 readiness
+  过滤。商品与 Collection 的 Spanish Storefront fallback 尚无可重复检测，因此仍
+  不能开放索引。
 - `NEXT_PUBLIC_SITE_INDEXABLE`、`SHOPIFY_CHECKOUT_ENABLED` 和
   `CONTACT_FORM_ENABLED` 是三个独立发布门禁；仓库示例值及未配置时的代码默认值
   均为关闭，各 Preview/Production 部署必须分别核验实际环境值。
@@ -190,21 +199,22 @@ certified 等词。
 
 ### 业务依赖
 
-- 域名/商标核验、法律实体、邮箱实际开通和政策审批责任人。
+- 美国商标/社交账号核验、法律实体、邮箱实际开通和政策审批责任人。
 - 价格带和最终视觉资产。
 - 首发商品、SKU、图片、材料、尺寸、来源与处理信息。
 - 发货地、覆盖地区、配送、退换货、税费和客服政策。
 - 真实内容、作者背景与引用。
-- Shopify Checkout/Payment/Market 运营验收和 Vercel 账户；store 与
+- Shopify Checkout/Payment/Market 运营验收；Vercel Production 与 store/
   Headless channel 已具备测试读取能力。
 
 ### 技术依赖
 
 - Shopify 生产 Catalog/内容/翻译完整度与最小 Storefront API 权限；测试
   Product/Cart 读写和库存数量 scope 已验证。
-- 可用的开发、Preview 与 Production 环境。
+- 可用的开发与 Preview 环境；Production 与 canonical 环境值已建立，仍需新 deployment
+  的公开 HTML 和 release gate 复核。
 - 最小 Analytics 与 consent 方案。
-- 域名、DNS、交易 Email 和支持邮箱配置。
+- 交易 Email 和支持邮箱配置；Production canonical origin 与域名/DNS 已建立。
 
 ## 10. 主要风险
 

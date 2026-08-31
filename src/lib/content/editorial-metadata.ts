@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { enabledLocales, type Locale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
-import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
+import {
+  buildMetadata,
+  buildNoIndexMetadata,
+  type PageSearchParams,
+} from "@/lib/seo";
 import {
   getShopifyEditorialArticle,
   getShopifyEditorialIndex,
@@ -70,9 +74,11 @@ async function publishedArticleLocales(kind: EditorialKind, handle: string) {
 export async function buildEditorialIndexMetadata({
   kind,
   locale,
+  searchParams,
 }: {
   kind: EditorialKind;
   locale: Locale;
+  searchParams?: PageSearchParams;
 }): Promise<Metadata> {
   const title = fallbackTitle(kind, locale);
   const description = fallbackDescription(kind, locale);
@@ -88,6 +94,7 @@ export async function buildEditorialIndexMetadata({
         locale,
         path: basePath(kind),
         alternateLocales: await publishedIndexLocales(kind),
+        searchParams,
       });
     }
   } catch {
@@ -100,10 +107,12 @@ export async function buildEditorialArticleMetadata({
   handle,
   kind,
   locale,
+  searchParams,
 }: {
   handle: string;
   kind: EditorialKind;
   locale: Locale;
+  searchParams?: PageSearchParams;
 }): Promise<Metadata> {
   const title = fallbackTitle(kind, locale);
   const description = fallbackDescription(kind, locale);
@@ -116,6 +125,7 @@ export async function buildEditorialArticleMetadata({
         locale,
         path: `${basePath(kind)}/${article.handle}`,
         alternateLocales: await publishedArticleLocales(kind, handle),
+        searchParams,
       });
     }
   } catch {

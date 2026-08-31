@@ -1,6 +1,6 @@
 # Technical Specification
 
-Status: Working — 当前工程基线已实现，发布基础设施与 E2E 待完成
+Status: Working — Production 已公开部署，工程 hardening 与发布验收待完成
 Owner: Engineering  
 Last updated: 2026-08-31
 Supersedes: 旧版 `TECH_SPEC.md` 与归档文档中的 Hydrogen/Oxygen 方案
@@ -20,7 +20,7 @@ Supersedes: 旧版 `TECH_SPEC.md` 与归档文档中的 Hydrogen/Oxygen 方案
 Browser / Search crawler / AI Search crawler
                     |
                     v
-          Next.js App Router (Vercel target; current local validation)
+          Next.js App Router (Vercel Production + local/dev workflow)
           ├─ Server Components / dynamic rendering
           ├─ Client Components for interaction
           ├─ Server Actions / thin Route Handlers
@@ -80,8 +80,8 @@ Shopify webhook/cache invalidation 是发布前规划能力，尚未实现，不
 
 ### Deferred quality/infrastructure
 
-- Playwright/browser E2E
-- CI 与 Vercel Preview/Production pipeline
+- Playwright/browser automation（D-043：当前阶段封存；复杂度触发后再评估）
+- CI、Vercel Preview 与自动化 promotion pipeline；Production 已公开部署
 - format check/coverage gate
 - Shopify webhook HMAC + cache invalidation
 
@@ -220,10 +220,12 @@ Content/SEO 规格。
 - Metadata、JSON-LD 与可见 UI 应使用同一次数据读取或同一规范化实体。
 - 缓存键包含真实启用的 market 和 language。
 - 价格/库存允许的陈旧窗口在实现前由 Commerce owner 批准。
-- 当前 Header cache 仍先读取并缓存完整 normalized Product/Collection（其中含价格、
-  可售性和数量），Locale shell 实际只消费 Category/Collection 的 handle/title。不得
-  把这份 5 分钟缓存复用于 PDP、商品卡或 Cart；生产 hardening 应收窄为 navigation-
-  specific query/projection，避免缓存无关商业字段。
+- Header 使用独立的 navigation-specific Product Category/Collection GraphQL query，
+  只映射 taxonomy ID、handle、title、collection kind 和非空判断，不读取或缓存价格、
+  可售性、库存数量、图片或正文。5 分钟 Header cache 不得复用于 PDP、商品卡或 Cart。
+- Header navigation 上游失败时 Locale shell 降级为空的动态目录链接，保留 Shop all、
+  Search、Bag、语言切换和页面主体；不恢复本地 Catalog，也不让 Header 数据故障触发
+  全页 error boundary。
 - 当前实现：在陈旧窗口、cache tags 和 Shopify webhook 获批并验收前，
   Product、Collection 及包含实时商品的 Home 使用 request-time Server Rendering
   与 `no-store`。这仍在初始响应输出完整 HTML，也避免把瞬时 Shopify 请求变成
@@ -258,10 +260,9 @@ Content/SEO 规格。
   未引用、错误类型、不完整或未知 handle 返回 404，不按所有 Metaobject 自动建路由。
 - About root 与子页在服务端输出同一有序页内导航；语言 fallback 保持 noindex 且不进入
   sitemap/hreflang。
-- 当前 root layout 的 document-level `<html lang>` 固定为 `en-US`；es-US 仅在
-  locale shell 容器上标记 `lang="es-US"`。这能限定主要内容语言，但不等于
-  文档级语言已验收；公开索引前必须调整路由/layout 边界，让 `<html lang>`
-  与当前 locale 一致并完成辅助技术检查。
+- en-US、es-US 和未来 Market route boundary 各自拥有 root document layout；初始
+  HTML 的 `<html lang>` 与当前 locale 一致。语言切换跨 root layout 会发生完整文档
+  navigation，这是换取正确 document metadata 的明确边界。
 - Product/Collection 目前无法从 Storefront response 自动识别 Spanish 是真实翻译
   还是 English fallback。全站 index gate 开启前必须补 Commerce translation readiness
   验证，否则 metadata alternate 与 sitemap 会把 fallback URL 当成西语页面。
@@ -305,10 +306,18 @@ Shopify webhook secret、consent 和监控变量只在对应功能实现并批�
 - 任何日志、错误消息或测试 snapshot 不得泄露 secret。
 - 不在文档、issue、query string 或客户端 bundle 中保存凭证。
 
-当前尚无集中 startup env schema：index gate 打开时会在 metadata/site config 路径
-验证 canonical origin；Shopify domain/token/version 则在首次 `shopifyFetch` 时惰性
-验证，因此 dynamic production build 可在无 Shopify credential 时通过。Production
-部署前必须增加或执行独立 preflight，不能把 build 成功当成凭证已验证。
+`pnpm preflight` 已提供不输出 secret 的集中部署检查，并由 `prebuild` 自动运行：
+Vercel 部署必须提供 canonical origin 与 Shopify credential；Production origin 必须
+精确为 `https://www.joyamana.com`；Preview 必须 noindex；Checkout/Contact 门禁开启
+时必须具备对应 credential。运行时 adapter 仍保留自身校验，不能只依赖 build。
+
+2026-08-31 外部响应检查确认 `https://www.joyamana.com` 由 Vercel 提供服务，
+`https://checkout.joyamana.com` 由 Shopify 提供服务。Production 首页仍输出
+`noindex, nofollow, noarchive`，sitemap 为空。D-044 已确认
+`https://www.joyamana.com` 是唯一 canonical origin，apex 308 至 `www`；Vercel 环境值
+已设置，但当前公开 deployment 的 `og:url` 仍为 `https://joyamana.vercel.app`，需在
+新 deployment 后复核。其他索引 blocker 完成前继续保持
+`NEXT_PUBLIC_SITE_INDEXABLE=false`。
 
 ## 11. Security 与 Privacy
 
@@ -350,17 +359,18 @@ Shopify webhook secret、consent 和监控变量只在对应功能实现并批�
 - Metadata、canonical、robots 和 JSON-LD mapper
 - Webhook HMAC、幂等和 cache tag（实现 webhook 时新增）
 
-### E2E（待建立）
+### Browser/Checkout validation（Playwright 暂缓）
 
-- 浏览 Collection/PDP。
-- 选择 Variant 并 Add to bag。
-- 更新数量、移除、恢复 Cart。
-- Guest flow 跳转 Shopify Checkout。
-- 售罄、价格变化、API 失败。
-- 关键内容、404、政策和移动导航。
+- 当前按 D-043 不安装、不编写或维护 Playwright suite。
+- 每次受影响发布必须记录人工浏览 Collection/PDP、选择 Variant、Add to bag、
+  更新数量、移除、恢复 Cart 和 Guest Checkout 跳转的结果。
+- 人工 smoke 还需覆盖售罄、价格变化、API 失败、关键内容、404、政策和移动导航。
+- Vitest、build 和 Storefront contract smoke 不得表述为浏览器或支付 E2E。
+- 当客户端状态、关键路径、回归频率、团队协作或设备矩阵明显增加时，重新评估
+  Playwright，并在启用前更新 D-043、Roadmap 和 Runbook。
 
-支付完成的端到端自动化应使用 Shopify 支持的测试方式，不绕过或模拟真实支付
-安全机制。
+无论是否自动化，支付完成验证都应使用 Shopify 支持的测试方式，不绕过或模拟真实
+支付安全机制。
 
 ### Accessibility（发布前待自动化与人工验收）
 
@@ -380,13 +390,15 @@ Shopify webhook secret、consent 和监控变量只在对应功能实现并批�
 
 ## 13. CI/CD 与发布
 
-当前仓库没有 CI workflow，也没有已验收的 Vercel Preview/Production 配置。
-下列是建立后的发布目标，不是当前完成状态：
+当前仓库没有 CI workflow。Vercel Production 已在 `https://www.joyamana.com` 公开
+响应；本地 `dev` 分支已建立用于后续 Preview，但只有推送到远端并由 Vercel 成功构建
+后才算 Preview 已建立。下列仍是待完成的发布目标：
 
 - Git 主分支发布 Production；PR 生成 Vercel Preview。
 - Preview 使用隔离配置并全站 `noindex`，避免真实客户数据。
 - 合并前运行 lint、typecheck、tests 和 build。
-- 发布前执行 Shopify API 合约 smoke test 与关键 E2E。
+- 发布前执行 Shopify API 合约 smoke test 与有记录的人工浏览器/Checkout smoke；
+  D-043 仍有效时不得把它写成自动化 E2E。
 - Production 回滚使用上一个已验证 Vercel deployment；不对 Shopify 业务数据
   做自动回滚。
 - 发布步骤、监控和回滚见 `LAUNCH_RUNBOOK.md`。

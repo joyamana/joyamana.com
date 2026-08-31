@@ -161,8 +161,9 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
 
 当前代码已实现上述 Bag Cart 生命周期、HttpOnly cookie、过期 Cart 的 add
 recovery、独立 Buy now Cart 和服务端 Checkout URL 校验。它们已通过 mapper/
-Server Action 测试与历史 live contract smoke，但尚未有 Playwright 跨页/跨设备/
-支付完成 E2E。
+Server Action 测试与历史 live contract smoke，但尚未完成自动化跨页/跨设备/支付
+E2E。Playwright 按 D-043 暂缓；在重新批准前以有记录的人工浏览器/Checkout smoke
+验收关键流程，且不得将其表述为自动化 E2E。
 
 ### 错误处理
 

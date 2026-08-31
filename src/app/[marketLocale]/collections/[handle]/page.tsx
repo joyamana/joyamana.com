@@ -6,7 +6,11 @@ import {
   canadaLocaleFromSegment,
   enabledCanadaLocaleSegments,
 } from "@/lib/i18n/locales";
-import { buildMetadata, buildNoIndexMetadata } from "@/lib/seo";
+import {
+  buildMetadata,
+  buildNoIndexMetadata,
+  type PageSearchParams,
+} from "@/lib/seo";
 
 export async function generateStaticParams() {
   if (enabledCanadaLocaleSegments.length === 0) return [];
@@ -19,8 +23,10 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ marketLocale: string; handle: string }>;
+  searchParams: Promise<PageSearchParams>;
 }): Promise<Metadata> {
   const { marketLocale, handle } = await params;
   const locale = canadaLocaleFromSegment(marketLocale);
@@ -38,6 +44,7 @@ export async function generateMetadata({
     description,
     locale,
     path: `/collections/${handle}`,
+    searchParams: await searchParams,
   });
 }
 

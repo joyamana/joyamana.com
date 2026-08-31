@@ -99,8 +99,8 @@ Article/About child 等详情页返回 404；上游请求异常时，Article/Abo
 所有分支都不得回退本地业务正文。
 Policy、About、Accessibility 和 Article 的西语请求命中 Shopify 默认英语时可提供
 阅读后备；fallback 页自身 `noindex`、不输出 Schema 且不进入 sitemap。About/Article
-的 alternate 会按 readiness 过滤，但 Policy/Accessibility 的英文页当前仍可能通过
-默认 enabled locales 输出指向 fallback 西语页的 hreflang；发布前必须补跨语言过滤。
+及 Policy/Accessibility 的 alternate 均按每种语言的真实 readiness 过滤，不输出指向
+fallback 西语页的 hreflang。
 当前 Commerce Product/Collection response 也没有等价的“是否回退默认语言”标记；
 全站 gate 只能在所有西语商品/系列已审核时开启，且发布前仍需增加可持续验证的
 Commerce translation readiness 门禁或同等运营检查。
@@ -366,8 +366,8 @@ Category   Design Collection
 
 ## 11. hreflang 与多市场
 
-测试站全站 noindex，不输出生产 hreflang。各 Market 的内容、商品与运营条件
-完成审核并正式启用索引后：
+当前公开 Production storefront 仍全站 noindex，不输出生产 hreflang。各 Market 的
+内容、商品与运营条件完成审核并正式启用索引后：
 
 - 每个等价页面双向输出 self 和 alternate。
 - 只列 200、indexable、内容等价、当前运营的版本。
@@ -382,10 +382,16 @@ index gate 开启时聚合两种语言的 Product/Collection。由于 Commerce a
 自动识别默认语言 fallback，在完成上述 translation readiness 检查前不得开启
 `NEXT_PUBLIC_SITE_INDEXABLE`。
 
-Policy/Accessibility 的 fallback 页自身与 sitemap 已按 readiness 保护，但英文
-counterpart 的 hreflang 尚未过滤未就绪的 es-US alternate；About/Article 已有该过滤。
-此外，当前参数请求只 canonical 到 clean URL，没有按 `searchParams` 单独设置
-`noindex`。这两项均是开启总 index gate 前的实现与回归测试 blocker。
+Policy/Accessibility 的 fallback 页自身与 sitemap 已按 readiness 保护，英文
+counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参数请求会 canonical
+到 clean URL，同时输出 `noindex, nofollow, noarchive` 并移除 hreflang；clean URL
+保持自身正常索引规则。
+
+2026-08-31 外部检查确认 Production sitemap 为空，当前 deployment 首页 `og:url` 仍为
+`https://joyamana.vercel.app`。D-044 已确认 `https://www.joyamana.com` 为唯一
+canonical origin、apex 308 至 `www`，Vercel 环境值也已设置；当前代码部署后须验证
+canonical/OG。域名对齐后仍须等待 Commerce translation readiness、Schema 和内容退出
+条件完成，不能顺手开启全站索引。
 
 ## 12. Structured data
 

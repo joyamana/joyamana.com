@@ -1,14 +1,24 @@
 # Launch Runbook
 
-Status: Draft — Shopify-only 应用已建立，负责人、内容和生产外部配置待完成
+Status: Active — Production 已公开，交易、内容、索引与运营退出条件未完成
 Owner: Engineering / Operations  
 Last updated: 2026-08-31
 
-本 Runbook 只描述可重复的发布控制。当前已有本地应用代码和检查命令；生产
-URL、联系人、Shopify Admin 配置和 dashboard 仍是待填项，不能声称已验证。
+本 Runbook 只描述可重复的发布控制。`https://www.joyamana.com` 已由 Vercel 公开
+提供 storefront，`https://checkout.joyamana.com` 已指向 Shopify Online Store；
+联系人、Shopify Admin 支付配置、dashboard 和完整发布验收仍是待填项。
 全站 index、Shopify Checkout 和 Contact 表单投递是三个独立门禁；仓库示例值及
 未配置时的代码默认值均为关闭，各 Preview/Production deployment 必须分别核验。
-仓库尚无 CI、Playwright/E2E、webhook/cache invalidation 或 Analytics/consent 运行时。
+仓库尚无 CI、自动化浏览器/支付 E2E、webhook/cache invalidation 或
+Analytics/consent 运行时。Playwright 按 D-043 暂缓；当前发布使用有记录的人工
+浏览器/Checkout smoke，不能声称自动化 E2E 已通过。
+
+2026-08-31 外部基线：`www` 与 `checkout` 均返回 HTTP 200，apex 返回 308 至 `www`；
+Production storefront 仍输出
+`noindex, nofollow, noarchive`，sitemap 为空，当前 deployment 首页 `og:url` 仍指向
+`https://joyamana.vercel.app`。D-044 已确认 `www` canonical 与 apex 308，Vercel
+环境值已设置；当前代码 redeploy 后必须复核 canonical/OG。其他 SEO blocker 完成前
+继续保持 index gate 关闭。
 
 ## 1. 发布角色
 
@@ -45,11 +55,12 @@ URL、联系人、Shopify Admin 配置和 dashboard 仍是待填项，不能声�
 
 ```text
 install: pnpm install --frozen-lockfile
+environment: pnpm preflight
 format/check: 待建立
 lint: pnpm lint
 typecheck: pnpm typecheck
 unit/integration: pnpm test
-e2e: 待建立
+browser/checkout: 有记录的人工 smoke（D-043；Playwright 暂缓）
 build: pnpm build
 ```
 
@@ -72,15 +83,15 @@ build: pnpm build
 
 ## 5. SEO/GEO 检查
 
-- Canonical production domain，无 Preview/staging URL。
+- Canonical production origin 固定为 `https://www.joyamana.com`；apex 对应 URL 308
+  至 `www`，canonical/hreflang/sitemap 不使用 apex、Preview 或 staging origin。
 - Preview 和内部页面 `noindex`。
 - 按上线前批准的 D-016 crawler policy 验证 `robots.txt`，不误封静态资源和获准
   crawler；当前 D-016 仍是 Pending，不得把代码默认当成业务批准。
 - Sitemap 只包含 200、canonical、indexable、published URL。
 - Cart、Search、参数页和内部状态页永久 `noindex` 且不进入 sitemap；参数不得制造
-  canonical/indexable 变体。当前参数请求只 canonical 回 clean path，并未根据
-  `searchParams` 覆盖 robots；总 index gate 打开时会继承基页 indexable metadata，
-  必须在发布前实现并测试参数级 `noindex`。
+  canonical/indexable 变体。参数请求已 canonical 回 clean path，并独立输出 noindex、
+  移除 hreflang；临时 indexable production build 已验证 clean/parameter 两种响应。
 - `NEXT_PUBLIC_SITE_URL` 必须是获批的非本地 HTTPS origin；缺失或不安全时索引
   fail closed，不输出 Preview/staging canonical。
 - Title、description、OG image、H1、breadcrumbs；当前缺少 OG image，发布前补齐。
@@ -92,11 +103,11 @@ build: pnpm build
 - 关键页面在禁用 JavaScript时仍有主要内容和链接。
 - 默认语言 fallback 的 Policy、About、Accessibility 和 Article 不进入对应 locale
   的 sitemap/Schema，并且不被其他语言页面的 hreflang 引用。当前 fallback 页自身
-  noindex/sitemap/Schema 门禁与 About/Article alternate 过滤已实现；Policy/
-  Accessibility 的英文页仍可能输出未就绪 es-US alternate，必须在发布前修复并回归。
+  noindex/sitemap/Schema 门禁以及 About/Article/Policy/Accessibility alternate
+  readiness 过滤均已实现。
 - Product/Collection 的 Spanish 翻译已通过可重复的 Commerce translation readiness
   检查，不依赖人眼猜测 Storefront fallback；`<html lang>` 在 en-US/es-US 页面均
-  与 document locale 一致。
+  与 document locale 一致。后半项已实现，前半项仍是索引 blocker。
 - 全站 index gate 只在所有拟发布内容和西语页面一次性验收通过后开启；当前 sitemap
   会在总门禁打开后加入 `/`、`/contact`，且 Product/Collection 没有逐页 fallback
   检测，不能把总门禁误当成逐页翻译保护。
@@ -129,7 +140,8 @@ build: pnpm build
 
 1. 冻结非必要内容和配置变更。
 2. 记录当前 Production deployment 和 Shopify 配置快照/导出方式。
-3. 运行全部自动检查和 production smoke test。
+3. 运行全部自动检查和有记录的人工 production 浏览器/Checkout smoke；D-043 有效时
+   不等待 Playwright，也不把人工结果写成自动化 E2E。
 4. 在三个发布门禁均关闭的状态下，将已批准 commit 部署到受保护 Preview；如必须
    使用 Production，先建立受控发布窗口并确认访问、支付和回退范围。
 5. 验证域名、SSL、首页、PDP、Bag、Policy、Contact Email 入口和全站 noindex。

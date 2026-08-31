@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "next dev",
+    "preflight": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/preflight.mjs",
+    "prebuild": "pnpm preflight",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

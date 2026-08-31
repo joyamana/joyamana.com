@@ -9,7 +9,8 @@ MVP PRD 和领域规格为准。
 
 当前阶段判断：Phase 2 的 Catalog/Cart 核心纵切面已完成，但 Commerce hardening、
 生产数据与退出条件未完成；Phase 3 的 Shopify 内容、路由与 SEO 技术基础正在进行。
-Phase 4 尚未开始。
+Phase 4 已有 Vercel Production 与正式域名这一部署基础，但 measurement、hardening、
+真实支付和完整发布验收尚未完成。
 
 ## Phase 0 — 决策与资料准备（测试站所需部分完成）
 
@@ -43,8 +44,8 @@ Phase 4 尚未开始。
 
 - 初始化 Git、Next.js App Router、TypeScript、pnpm 与 Node 版本。
 - 建立 lint、typecheck、unit test 与 production build。
-- 建立 Playwright、CI 和 format check（待办）。
-- 建立环境变量验证、`.env.example` 和 secret 边界。
+- 建立 CI 和 format check（待办）；Playwright 按 D-043 暂缓，复杂度触发后再评估。
+- 建立环境变量验证、`.env.example` 和 secret 边界；`pnpm preflight` 已接入 prebuild。
 - 配置 Vercel Preview/Production，Preview 全站 `noindex`。
 - 建立 Shopify Storefront API client、GraphQL types 与错误处理。
 - 建立 typed US market context、统一 path helper 和 money formatter。
@@ -59,7 +60,11 @@ Money、Availability、Search 和非空 Collection 均通过 Shopify-only adapte
 Cart 的创建、恢复、增改删、HttpOnly cookie、独立 Buy now Cart 与最新 Checkout URL
 代码已完成；因 Q-003A–Q-003F 和 Checkout 运营配置未批准，仓库示例值、未配置时
 默认值和任何未获批公开部署都必须保持跳转门禁关闭；各环境值单独验收。
-Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
+Vercel Production 已在 `https://www.joyamana.com` 公开响应，
+`https://checkout.joyamana.com` 已指向 Shopify Online Store；本地 `dev` 分支已建立，
+但尚未推送/构建为 Vercel Preview。CI 仍待建立，Playwright 按 D-043 暂缓。
+Production 当前仍 noindex、sitemap 为空。D-044 已确认 `www` canonical 与 apex 308；
+Vercel 环境值已设置，当前公开 deployment 的旧 OG origin 待新部署复核。
 
 ### 退出条件
 
@@ -85,16 +90,17 @@ Vercel Preview、Playwright 与 CI 仍待外部账号或后续工程阶段。
 - Commerce integration 与 E2E 测试。
 
 2026-08-31 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 已完成；仓库共有
-147 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
+157 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
 真实 Cart 合约 smoke 已覆盖 create、库存冲突 warning、update/remove 与 HTTPS
 Checkout URL。Storefront 现会读取 `quantityAvailable` 与 `currentlyNotInStock`，
 并把它们与 contextual quantity rule 用于 PDP/Bag 数量上限；不产生稀缺营销。
 仍需定义/映射 Product knowledge metafields（材料、尺寸/护理、来源/处理、包装与关联内容）、
 商品模型与 exact/representative image disclosure、
 Shopify 发布真实 Design Collection、审核当前商品正文、发布人工审核的
-西语翻译、完成政策和 Checkout 运营验收，并补 webhook、Playwright 和支付测试。
-Header 导航还需从当前缓存完整 Product/Collection response 收窄为导航专用 query/
-projection，避免缓存或误用无关商业字段。
+西语翻译、完成政策和 Checkout 运营验收，并补 webhook 与有记录的浏览器/支付验证；
+Playwright 按 D-043 暂缓。
+Header 导航已使用专用轻量 query/projection，并在 Shopify 导航上游失败时保留基础
+导航和页面主体，不缓存或复用价格、可售性与库存字段。
 2026-08-30 已批准 D-036：商品类别迁至 `/category/*`，原创设计系列保留
 `/collections/*`；实现与 Shopify Admin 结构化字段配置进入当前工作流。
 
@@ -141,10 +147,9 @@ Privacy API 同步仍是公开上线前待办。
 - 当前 Search 仅检索 Product；Home Organization/WebSite、ContactPage Schema、
   完整 Design Series Metaobject 故事模块、正式内容/西语审核、GSC/Merchant Center
   与 crawler policy 仍待完成。
-- Commerce Product/Collection 的 Spanish fallback 无自动识别，且 root `<html lang>`
-  仍固定 `en-US`；Policy/Accessibility 英文页的 hreflang 也尚未过滤未就绪 es-US
-  fallback，参数请求尚无独立 `noindex`。这些 translation/metadata/document-level
-  locale 缺口必须在开放索引前解决。
+- Commerce Product/Collection 的 Spanish fallback 仍无自动识别；这是当前剩余的
+  translation/index blocker。document-level `<html lang>`、Policy/Accessibility
+  readiness hreflang、Product-only Search metadata 和参数页 noindex 已完成并有测试。
 
 ### 退出条件
 

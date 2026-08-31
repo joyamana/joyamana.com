@@ -144,9 +144,17 @@ Catalog 和业务正文 fallback 已删除，上游缺失时 fail closed。
 
 Canada 只保留未启用的 typed 规划配置。仓库示例值及未配置时的代码默认值为全站
 noindex，并关闭 Shopify Checkout 和 Contact 投递；各部署环境必须单独核验。当前没有
-CI、Playwright/E2E、format check 或
-Shopify webhook 失效链路；西语人工审核、完整政策、Analytics/consent、真实支付与
-Production/Preview 验收仍未完成。
+CI、format check 或 Shopify webhook 失效链路。Playwright 按 D-043 暂时封存，只有
+复杂度触发后才重新评估；当前必须记录人工浏览器/Checkout smoke 的范围和结果。
 
-常用命令：`pnpm dev`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、
+Production storefront 已通过 Vercel 在 `https://www.joyamana.com` 公开响应，
+`https://checkout.joyamana.com` 已指向 Shopify Online Store；本地 `dev` 分支用于后续
+Vercel Preview，但在推送并由 Vercel 构建前不代表 Preview 已建立。Production 当前仍
+noindex；D-044 已确认 `https://www.joyamana.com` 为 canonical origin，apex 308 至
+`www`，Vercel 环境值已设置但须在新 deployment 复核公开 HTML。参数页 noindex、
+document-level locale、Policy/Accessibility hreflang、Search metadata、Header
+专用 query/故障降级和环境 preflight 已实现；完整政策、Commerce 西语 readiness、
+Analytics/consent、真实支付与发布验收尚未完成。
+
+常用命令：`pnpm dev`、`pnpm preflight`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、
 `pnpm build`。不得在实际运行前声称检查已通过。

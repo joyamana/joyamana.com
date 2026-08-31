@@ -62,6 +62,8 @@ Last updated: 2026-08-31
 | D-040 | About subtree | Accepted | Content Page Metaobject 驱动独立 URL 与页内文字 tabs |
 | D-041 | Editorial source model | Accepted | `/blog` 与 `/crystals` 分别读取 Shopify 原生 `blog`、`crystals` Blog |
 | D-042 | Shopify-only runtime | Accepted | 删除 mock provider 与本地正文 fallback；上游异常 fail closed |
+| D-043 | Browser E2E tooling | Accepted | 当前阶段封存 Playwright；复杂度触发后再启用 |
+| D-044 | Production canonical origin | Accepted | `https://www.joyamana.com`；apex 308 至 `www` |
 
 ## Accepted decisions
 
@@ -206,6 +208,10 @@ Consequence: 所有面向用户的品牌名称、metadata 和 wordmark 使用 Jo
 2026-08-31 maintenance note: 当前 US UI 没有可见的 prototype badge；测试状态由
 `noindex`、Checkout/Contact release gates 和受控环境表达。若 D-019 的“明确”意指
 客户可见标签，该项尚未实现，需先确认不会与品牌测试或可用性目标冲突。
+
+2026-08-31 deployment note: `www.joyamana.com` 已指向 Vercel Production，
+`checkout.joyamana.com` 已指向 Shopify Online Store。域名配置完成不代表美国商标、
+社交账号、支付、政策、索引或完整发布验收已完成。
 
 ### D-020 — 标准商品与天然独件并存
 
@@ -634,6 +640,34 @@ Migration / rollback: 回滚 Shopify adapter 通过代码版本完成，不恢�
 切换或本地业务数据副本。
 Supersedes: D-025 的本地七脉轮运行时样本、D-040 的临时 About 正文后备、
 D-023 中 mock Checkout 条件，以及旧执行计划中的 `COMMERCE_PROVIDER` rollback。
+
+### D-043 — 当前阶段封存 Playwright
+
+Date: 2026-08-31
+Status: Accepted
+Owner: Project owner
+Decision: 当前阶段不安装、不编写也不维护 Playwright。继续使用 Vitest、production
+build、Shopify contract smoke、Vercel deployment smoke 和有记录的人工浏览器/
+Checkout 验收；不得因此声称浏览器或支付 E2E 已自动化通过。
+Revisit triggers: 路由/客户端状态显著增加、跨页 Cart/consent 回归频繁、多人并行开发、
+设备矩阵扩大，或人工回归成本已可测量地影响发布可靠性。
+Reason: 当前项目复杂度不足以抵消浏览器依赖、运行时间和维护成本；先把商品、政策、
+本地化、支付与索引边界完成。
+Consequences: Roadmap、Runbook 和完成说明使用“人工 browser/Checkout smoke”，不再把
+Playwright 作为当前待办。达到触发条件时可重新批准 Playwright，不需要改变 Commerce
+或公开 URL 架构。
+
+### D-044 — Production canonical origin
+
+Date: 2026-08-31
+Status: Accepted
+Owner: Project owner
+Decision: Production 的唯一 canonical origin 是 `https://www.joyamana.com`；
+`https://joyamana.com` 永久 308 重定向至对应的 `www` URL。canonical、Open Graph、
+hreflang、sitemap 和绝对内部实体 URL 不使用 apex 或 `*.vercel.app` origin。
+Consequence: Vercel Production 必须设置
+`NEXT_PUBLIC_SITE_URL=https://www.joyamana.com`，build preflight 对 Production 强制
+校验该值；Preview 保持 noindex。修改环境值后必须 redeploy 并从公开 HTML 复核。
 
 ## Pending decision
 
