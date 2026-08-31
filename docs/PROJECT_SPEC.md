@@ -19,8 +19,9 @@ Supersedes: 2026-08-02 之前的简版 `PROJECT_SPEC.md`
 - 累积可持续的自然搜索、AI Search 与 Email 客户关系资产。
 
 品牌名称已确认为 `Joya Mana`，`www.joyamana.com` 与 `checkout.joyamana.com` 已完成
-Production DNS/平台指向；美国商标/社交账号、价格带、正式首发 assortment、品牌资产
-与运营政策仍未确认。完整输入见
+Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyamana.com` 可收信。
+美国商标/社交账号、价格带、正式首发 assortment、品牌资产及剩余税务/法律/隐私事项
+仍未确认。完整输入见
 `docs/BRAND_INPUTS.md`。
 
 ### 当前实施快照
@@ -30,17 +31,22 @@ Production DNS/平台指向；美国商标/社交账号、价格带、正式首�
 - Vercel Production 已在 `https://www.joyamana.com` 返回 200；Shopify Online Store
   已在 `https://checkout.joyamana.com` 返回 200。Production 仍 noindex、sitemap
   为空；D-044 已确认 `www` 为唯一 canonical origin，apex 308 至 `www`。Vercel
-  环境值已配置，当前公开 deployment 仍显示旧 Vercel OG origin，待新部署复核；
+  环境值已配置，当前公开 canonical/OG 已复核为 `www`；
   下单支付等能力尚未完整验收。
 - Runtime Commerce 与 Shopify-backed 业务正文已是 Shopify-only：Catalog、Policy、
   About/Accessibility、Blog/Guide 通过服务端查询读取，Bag/Buy now 通过 Shopify Cart
   mutations 创建和更新 Cart；这些路径均无本地业务数据 fallback。Home、Contact、
   导航和 Category 的界面/结构文案仍由 Next.js 代码配置维护。
+- `Patron Saint` 已是非空且标记为 `design_series` 的 Headless Collection；基础系列页
+  可用，但 description/SEO 和 Design Series Metaobject story/lookbook 尚未完成。
+- Shipping/Returns 与 About EN/ES 正文已获业务方确认，商品专属 guidebook 是已确认
+  package contents。Contact 当前正式采用 Email-only，表单/Resend 后置；Blog/Crystal
+  Guide 的测试 Article 因暂无正式内容暂不处理并继续排除索引。
 - Product、Shop/Category/Collection、About 和 Article 的 metadata/部分适用 Schema
   与 sitemap 门禁已实现；Home Organization/WebSite/WebPage、ContactPage、Policy
   Schema、内容搜索、Analytics/consent、webhook、CI 与支付 E2E 仍未完成；Playwright
   按 D-043 暂时封存，浏览器/支付验收当前采用有记录的人工 smoke。
-- Product knowledge metafields、商品模型/图片代表性披露、内容到商品的关系、Home
+- Product knowledge metafields（除已确认 guidebook 事实外）、商品模型/图片代表性披露、内容到商品的关系、Home
   Email opt-in 尚未接入；Product Offer availability 与 UI 的最小可履约数量边界也仍需
   统一验收。
 - en-US 与 es-US 已各自输出正确的 document-level `<html lang>`；参数请求会 noindex
@@ -199,10 +205,11 @@ certified 等词。
 
 ### 业务依赖
 
-- 美国商标/社交账号核验、法律实体、邮箱实际开通和政策审批责任人。
+- 美国商标/社交账号核验、法律实体、支持邮箱负责人/备援和剩余政策审批责任人。
 - 价格带和最终视觉资产。
 - 首发商品、SKU、图片、材料、尺寸、来源与处理信息。
-- 发货地、覆盖地区、配送、退换货、税费和客服政策。
+- 发货地、特殊覆盖地区、Checkout 运费、税费和客服操作流程；Shipping/Returns 正文
+  已确认。
 - 真实内容、作者背景与引用。
 - Shopify Checkout/Payment/Market 运营验收；Vercel Production 与 store/
   Headless channel 已具备测试读取能力。

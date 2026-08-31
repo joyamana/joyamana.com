@@ -25,13 +25,16 @@ Codex 不得以开发样本代替答案。
 |---|---|---|
 | Q-003A | 中国直发、美国本地、3PL 或混合履约 | Shipping promise |
 | Q-003B | Alaska/Hawaii/Puerto Rico/PO Box/APO/FPO 范围 | Delivery coverage |
-| Q-003C | handling、carrier、运费、免邮门槛 | Checkout/shipping page |
-| Q-003D | 退换窗口、例外、运费、restocking、损坏/丢件 | Returns page |
+| Q-003C | carrier、实际 Checkout 运费、免邮门槛；handling 已确认为通常 1–3 个工作日 | Checkout/shipping settings |
 | Q-003E | 销售税、关税、进口费用责任 | Checkout/policy |
 | Q-003F | 法律实体、地址、政策审批人 | Privacy/Terms/Organization |
 
 未解决前，缺失的 Shopify Policy 必须 fail closed 或明确显示暂不可用，全站保持
 `noindex`，不得输出 Shipping/Return policy Schema；不得用本地开发正文伪装政策。
+
+已解决：Q-003D。业务方确认当前公开 Returns 正文，包括收货后 15 天申请窗口、
+例外、适用退货运费责任、原始运费和退款处理时限；Shipping 正文中的通常 1–3 个
+工作日处理承诺也已确认。
 
 ## Assets and accounts
 
@@ -39,38 +42,38 @@ Codex 不得以开发样本代替答案。
 - [x] Headless channel 与 private Storefront API access（2026-08-15 只读验证通过）
 - [x] 历史代表性 mock Product/Collection 已完成迁移并从运行时代码删除
 - [x] Shopify Headless channel 中发布测试 Product/Variant（2026-08-25 可见 1 件）
-- [ ] Shopify Headless channel 中创建、填充并发布非空 Design Collection
+- [x] Shopify Headless channel 已发布非空 `Patron Saint` Design Collection，且
+  `custom.collection_kind=design_series`；已进入 Header、hub 和详情页
 - [ ] 上线前复核所有 Shopify Standard Product Category；2026-08-30 Storefront
   抽查时 Aquamarine 可通过 Bracelets Category 发现
 - [ ] 定义、填充并映射正式 Product knowledge metafields：materials、dimensions/
   fit、care、origin/treatment disclosure、package contents 与 related content，并完成 EN/ES 审核
 - [ ] 定义并映射 repeatable/natural-variation/one-of-a-kind 商品模型，以及
   exact item/representative image disclosure；当前 mapper/UI 尚未实现这组语义
-- [ ] 创建 Design Series Metaobject、Product `custom.design_series` reference、
-  Collection `custom.collection_kind`，并将真实系列 Collection 标记为 `design_series`
-- [ ] 在现有 `content_page` definition 增加可选 `navigation_title`（single line）、
+- [ ] 创建并接入 Design Series Metaobject、Product/Collection
+  `custom.design_series` reference 与 story/lookbook；`Patron Saint` 的 Collection kind
+  基础门禁已完成，但 description/SEO 仍为空
+- [x] 在现有 `content_page` definition 增加可选 `navigation_title`（single line）、
   `summary`（multi-line）和 `child_pages`（Content Page Metaobject reference list），并
   确认 Storefront access
-- [ ] 创建、审核并发布 root `about`；如需子页，将完整 child 加入
+- [x] 创建、审核并发布 root `about`；Philosophy、Approach、Founder 已加入
   `about.child_pages`，按期望 tabs 顺序排列，并完成 en-US / es-US 正文与 SEO 审核
 - [x] 最终域名和 DNS：`www.joyamana.com` 指向 Vercel，
   `checkout.joyamana.com` 指向 Shopify Online Store
 - [x] Vercel account/team 与 Production deployment；`www` 已公开响应
-- [ ] 将本地 `dev` 分支推送并由 Vercel 成功构建为 Preview；推送前不视为 Preview 已建立
+- [x] `dev` 分支已推送并由 Vercel 构建为受保护 Preview
 - [x] D-044 确认 `https://www.joyamana.com` 为 canonical origin，apex 308 至 `www`；
   Vercel Production 环境值已设置
-- [ ] 部署当前代码后复核公开 canonical/OG；2026-08-31 当前 deployment 的
-  `og:url` 仍指向 `https://joyamana.vercel.app`
+- [x] 当前公开 deployment 已复核 canonical/OG 使用 `https://www.joyamana.com`
 - [ ] Logo、字体授权、颜色
 - [ ] 真实商品摄影/视频
 - [x] Home 已移除并删除测试期 `bling-omen-editorial-hero.png`，首屏改用纯色背景与
   排版；未来新增 production hero/editorial 资产仍须先获批
 - [x] 公开客服/隐私邮箱确定为 `info@joyamana.com`
-- [ ] `info@joyamana.com` inbox、负责人/备援和交易发件域名认证
-- [ ] 决定是否批准 Resend 作为 Contact 数据处理方，并确认成本、保留期、
-  删除/导出、发件域验证和退出路径
-- [ ] 在启用 `CONTACT_FORM_ENABLED` 前配置生产滥用限制/WAF 并验收投递、
-  回复、失败和 Email-only 降级流程
+- [x] `info@joyamana.com` inbox 已确认可以收信
+- [ ] 确认 `info@joyamana.com` 负责人/备援、外发认证与回复/垃圾箱表现
+- [x] Contact 当前采用 Email-only，表单明确后置并保持
+  `CONTACT_FORM_ENABLED=false`；Resend、表单数据处理与 WAF 只在未来重新批准表单时评估
 - [ ] GA4 / GSC / Merchant Center
 - [ ] Email/CRM 与 Consent 方案
 
@@ -170,6 +173,24 @@ Storefront API 与安全的 Cart smoke 已确认：
 - Header 目录已使用不含价格/库存/正文的导航专用 query/projection；上游失败时降级为
   基础导航并保留页面主体，不恢复本地 Catalog。监控/告警仍属于 Q-105。
 
+## Shopify content and operations follow-up — 2026-08-31
+
+- 非空 `Patron Saint` Collection 已发布到 Headless，并因
+  `custom.collection_kind=design_series` 进入公开系列路由；旧“只有空 frontpage”只保留
+  为 2026-08-25 历史证据。当前 Collection description/SEO 为空，Design Series
+  Metaobject/reference 与 story/lookbook 尚未接入。
+- Shipping、Returns、Privacy、Terms 与 Accessibility 均可由 Storefront API 读取 EN/ES
+  正文。业务方确认当前 Shipping/Returns 运营承诺；PDP 已改为显示 1–3 个工作日处理、
+  15 天退货申请窗口和 Checkout 运费/预计日期摘要。
+- 业务方确认 Terms 后台已移除公开地址/电话占位符；Storefront API 直接请求复核为 0 个
+  占位符；2026-09-01 公开 Production HTML 复核也已不含占位符。
+- About root、Philosophy、Approach、Founder 的 EN/ES 正文及 Founder 个人事实已获业务方
+  确认；每件商品附带专属 guidebook 也已确认为实际履约承诺。
+- `info@joyamana.com` 已确认可收信。当前正式客服范围为 Email-only，Contact 表单、
+  Resend 和表单滥用控制后置，不阻塞当前范围。
+- Blog/Crystal Guide 仍各有一篇测试 Article，且西语回退 English；由于暂无正式内容，
+  业务方决定本阶段暂不处理。它们继续不得进入可索引 sitemap 或被标记为正式内容。
+
 ## Deferred / conditional decisions
 
 | ID | Decision | Current handling |
@@ -209,9 +230,9 @@ Storefront API 与安全的 Cart smoke 已确认：
 - `https://checkout.joyamana.com` 外部返回 HTTP 200，并由 Shopify 提供服务。
 - Production 首页仍输出 `noindex, nofollow, noarchive`；`robots.txt` 允许抓取，
   但 `sitemap.xml` 是空 `urlset`。这是公开可访问但尚未开放搜索索引的状态。
-- D-044 已确认 `www` canonical，外部检查确认 apex 308 至 `www`。Vercel Production
-  环境值已设置，但当前 deployment 的 `og:url` 仍为 `https://joyamana.vercel.app`；
-  当前代码 redeploy 后必须复核。origin 修正不代表可以同时打开 index gate。
+- D-044 已确认 `www` canonical，外部检查确认 apex 308 至 `www`；当前 deployment 的
+  canonical/OG 已复核为 `https://www.joyamana.com`。origin 正确不代表可以同时打开
+  index gate。
 - 业务方确认网站已正式公开，但下单支付等能力尚未完整支持。因此域名与部署问题已
   解决，Checkout/payment、政策、翻译、Analytics/consent 与发布验收仍按各自 Blocks
   保持开放。

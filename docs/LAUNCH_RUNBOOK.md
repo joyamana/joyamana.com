@@ -71,14 +71,15 @@ build: pnpm build
 - 品牌名称、法律实体、联系方式、Logo、social links。
 - Product/Variant/SKU、价格、库存、媒体、材料、尺寸、处理/来源披露。
 - Shopify Standard Product Category 与 `/category/*` 归属。
-- Design Series Metaobject/reference、`collection_kind=design_series`、Collection
-  membership、非空状态和排序。
+- `Patron Saint` 已确认 `collection_kind=design_series`、Headless 可见且非空；发布前补全
+  description/SEO，并按需要建立 Design Series Metaobject/reference、story/lookbook 和排序。
 - Shipping、Returns、Privacy、Terms、Accessibility 内容。
 - Shopify Checkout 品牌、policy links、payment、shipping、tax。
 - 测试 Guest Cart → Checkout → test order → confirmation → Order Status。
 - 售罄、超库存、折扣、损坏 Cart 和 API 失败。
 - Transaction Email 与 support reply。
-- `info@joyamana.com` inbox、负责人/备援和回复流程。若启用 Contact 表单，
+- `info@joyamana.com` inbox 已确认可收信；仍需确认负责人/备援、回复流程和出站投递。
+  若未来启用 Contact 表单，
   另行批准 Resend 的数据边界/保留期/成本/退出路径，验证发件域与生产滥用控制。
 
 ## 5. SEO/GEO 检查
@@ -151,9 +152,9 @@ build: pnpm build
    branding、policy link 和 notification 配置验收；随后在受保护目标环境单独设置
    `SHOPIFY_CHECKOUT_ENABLED`，创建新 deployment/redeploy，再运行测试订单并验证
    payment、confirmation、Order Status 与 notification。失败时恢复门禁并再次部署。
-7. 若 Resend 已通过数据与滥用验收，在目标环境单独设置
-   `CONTACT_FORM_ENABLED`，创建新 deployment/redeploy 并验证投递/降级；否则保持
-   表单关闭，只展示已经 go/no-go 验收可收信的 Email 渠道。
+7. 当前保持 `CONTACT_FORM_ENABLED=false`，以已确认可收信的 Email-only 渠道提供支持，
+   不等待 Resend 或表单上线。未来若另行批准表单，再完成数据、发件域和滥用验收，
+   在目标环境单独启用并创建新 deployment/redeploy 验证投递与降级。
 8. 清理测试 Product/Article/订单标记和其他会被索引的测试数据，等待或清除已约定的
    5 分钟缓存窗口，再重验 Catalog、内容、Policy、Search 和内部链接。
 9. 将同一已验收 commit promote/deploy 到受控 Production，先保持三个门禁关闭；

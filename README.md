@@ -5,12 +5,13 @@
 
 当前状态（截至 2026-08-31）：**Production storefront 已在
 `https://www.joyamana.com` 公开运行；Phase 3 与 Commerce hardening 仍在继续**。
-`https://checkout.joyamana.com` 已指向 Shopify Online Store，但下单支付、政策、
-本地化和发布验收尚未完成，不能把“域名可访问”解释为完整交易上线。
+`https://checkout.joyamana.com` 已指向 Shopify Online Store，但下单支付、税务/法律、
+商品西语本地化和发布验收尚未完成，不能把“域名可访问”解释为完整交易上线。
 商品/Cart 事实及已接入的 Policy、About/Accessibility、Blog/Guide 正文来自
 Shopify，不再使用本地样本商品或正文 fallback。Home、Contact、导航等界面文案仍由
 代码配置维护。全站索引、Shopify Checkout 和 Contact 表单投递分别受独立门禁
-保护；生产商品内容、政策、西语翻译、外部账号和发布验收尚未完成。当前输入与
+保护；当前 Shipping/Returns 和 About 内容已确认，其他法律/隐私、商品西语翻译、
+外部账号和发布验收仍未完成。当前输入与
 阻塞项分别见 [`docs/BRAND_INPUTS.md`](docs/BRAND_INPUTS.md) 和
 [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)。
 
@@ -78,15 +79,17 @@ Commerce 与 Shopify-backed 正文的数据路径只使用 Shopify Storefront AP
 
 已实现的内容路径包括 Shopify Policies、`content_page` 驱动的 About/
 Accessibility，以及 Shopify Blog `blog` / `crystals` 驱动的 Blog 和 Crystal
-Guide。Contact 表单具备服务端校验和可关闭的 Resend 薄适配层；页面当前展示
-Email 入口，但 inbox、负责人/备援和服务流程仍须在公开上线前验收。当前站内 Search
+Guide。`Patron Saint` 是当前非空、Headless 可见且标记为 `design_series` 的系列；
+description/SEO 与完整 story/lookbook 仍待补齐。Contact 当前正式采用 Email-only，
+`info@joyamana.com` 已确认可收信；表单/Resend 后置，负责人/备援和外发流程仍须验收。
+当前站内 Search
 只检索 Shopify 商品，内容检索、Analytics/consent、webhook 缓存失效和真实浏览器
 与支付验收仍是待办；Playwright 按 D-043 暂缓，当前采用有记录的人工 smoke。
 
 2026-08-31 外部检查确认 apex 308 至 `https://www.joyamana.com`、`www` 返回 Vercel
 HTTP 200、`checkout` 返回 Shopify HTTP 200。D-044 确认 `www` 是唯一 canonical
-origin；Vercel Production 环境值已由业务方配置，当前公开 deployment 仍输出旧
-`og:url=https://joyamana.vercel.app`，须随本次代码重新部署后复核。Production 仍
+origin；Vercel Production 环境值已由业务方配置，当前公开 deployment 的
+canonical/OG 已复核为 `https://www.joyamana.com`。Production 仍
 `noindex` 且 sitemap 为空；其他内容、政策和 SEO blocker 完成前不要开启 index gate。
 
 当前代码已实现参数页 noindex、en-US/es-US document-level `<html lang>`、按真实

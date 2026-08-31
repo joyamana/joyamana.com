@@ -27,6 +27,14 @@ function uniqueImages(images: Array<ProductImage | null | undefined>) {
   });
 }
 
+export function productShippingReturnsSummary(locale: Locale) {
+  return uiText(locale, {
+    en: "Orders are typically prepared within 1–3 business days. Eligible returns may be requested within 15 days of delivery. Rates and delivery estimates are shown at checkout.",
+    es: "Los pedidos suelen prepararse en un plazo de 1 a 3 días hábiles. Las devoluciones elegibles pueden solicitarse dentro de los 15 días posteriores a la entrega. Las tarifas y las fechas estimadas de entrega se muestran al pagar.",
+    fr: "Les modalités d’expédition et de retour seront confirmées avant l’ouverture du marché canadien.",
+  });
+}
+
 export function ProductPurchase({
   product,
   locale,
@@ -396,11 +404,7 @@ export function ProductPurchase({
             </dt>
             <dd>
               <p>
-                {uiText(locale, {
-                  en: "Rates, timing, fulfillment origin, and return terms are pending approval and will be confirmed in Shopify Checkout.",
-                  es: "Las tarifas, los plazos, el origen del envío y las condiciones de devolución están pendientes de aprobación y se confirmarán en el pago de Shopify.",
-                  fr: "Les tarifs, délais, l’origine d’expédition et les conditions de retour sont en attente d’approbation et seront confirmés dans Shopify Checkout.",
-                })}
+                {productShippingReturnsSummary(locale)}
               </p>
               <span className="fact-list__links">
                 <Link

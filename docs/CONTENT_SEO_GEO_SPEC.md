@@ -174,6 +174,9 @@ Design Series Metaobject 不另行生成第二个可索引页面；公开 canoni
 当前 storefront 只读 Collection 的 `custom.collection_kind`、title、description、image、
 SEO 与 products；Design Series Metaobject reference 与 story/lookbook 模块尚未接入。
 因此“Metaobject 承载系列故事”仍是 Admin/后续实施要求，不得写成当前已完成功能。
+`Patron Saint` 已通过非空、Headless 与 `design_series` 基础门禁，但 description/SEO
+为空；当前 metadata 会把“缺少描述”误判为 Collection unavailable，需修正 fallback，
+在此之前该系列页不具备索引资格。
 
 ### Crystal Guide Article
 

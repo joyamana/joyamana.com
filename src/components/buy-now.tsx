@@ -5,6 +5,14 @@ import type { Locale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 
+export function checkoutDisabledNote(locale: Locale) {
+  return uiText(locale, {
+    en: "Checkout code is connected, but remains disabled until the remaining tax, legal, payment, and hosted-checkout settings are approved.",
+    es: "El código de pago está conectado, pero permanece desactivado hasta aprobar los ajustes pendientes de impuestos, aspectos legales, pagos y checkout alojado.",
+    fr: "Le paiement est connecté, mais reste désactivé jusqu’à l’approbation des paramètres fiscaux, juridiques, de paiement et de checkout hébergé encore en attente.",
+  });
+}
+
 export function BuyNow({
   variantId,
   quantity,
@@ -54,11 +62,7 @@ export function BuyNow({
               es: "Crea un carrito de Shopify independiente con este artículo y no cambia tu bolsa.",
               fr: "Crée un panier Shopify distinct pour cet article sans modifier votre panier.",
             })
-          : uiText(locale, {
-              en: "Checkout code is connected, but remains disabled until shipping, returns, tax, legal, and hosted-checkout settings are approved.",
-              es: "El código de pago está conectado, pero permanece desactivado hasta aprobar los ajustes de envío, devoluciones, impuestos, aspectos legales y pago alojado.",
-              fr: "Le paiement est connecté, mais reste désactivé jusqu’à l’approbation de l’expédition, des retours, des taxes, des paramètres juridiques et du paiement hébergé.",
-            })}
+          : checkoutDisabledNote(locale)}
       </p>
       {failed && error ? (
         <p className="action-error" id={errorId} role="alert">

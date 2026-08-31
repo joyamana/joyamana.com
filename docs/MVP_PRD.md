@@ -159,6 +159,10 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 - 相关 Crystal Guide、文章或商品，只有真实关联才展示。
 - 准确 Product/Offer 结构化数据。
 
+当前 US PDP 使用已确认的政策摘要：订单通常在 1–3 个工作日内处理，符合条件的
+退货可在收货后 15 天内申请，实际运费与预计送达日期在 Shopify Checkout 显示。
+税务、法律、支付和 hosted Checkout 仍由独立发布门禁控制。
+
 验收：
 
 - 不选择有效变体时不能误加购。

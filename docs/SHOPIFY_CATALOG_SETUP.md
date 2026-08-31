@@ -97,6 +97,11 @@ Storefront access: enabled
 渲染 Metaobject 中的 story/lookbook 字段。按 D-036 发布完整设计系列前，还需实现并
 验证该读取链路；不能只创建 Metaobject 就声称系列故事已接入。
 
+2026-08-31 current state: `Patron Saint` 已是非空、Headless 可见且
+`custom.collection_kind=design_series` 的 Collection，基础路由和商品成员显示正常。
+其 description/SEO 仍为空；是否已建 Design Series Metaobject/reference 无法由当前
+Storefront query 验证，且即使已建，前端也尚未读取 story/lookbook。
+
 ## 5. 建立系列 Collection
 
 每个设计系列建立一个非空 Shopify automated Collection：

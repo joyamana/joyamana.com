@@ -479,10 +479,11 @@ EN/ES 导航、PDP breadcrumb、metadata、Schema、sitemap 和类别旧地址�
 Header 的 Shop 固定提供 Shop All 与非空 Category；Design Collection 按 0 个隐藏、
 1–2 个直接展示、3 个及以上合并下拉的规则自适应。
 
-代码不会代替业务方写入 Shopify。真实 Design Collection 仍需按
-`docs/SHOPIFY_CATALOG_SETUP.md` 创建 Metaobject/reference、设置 collection kind、填充
-商品并发布到 Headless channel；完成前 Collections hub 正确显示空状态。全站 index
-gate 与 Checkout gate 均未改变。
+代码不会代替业务方写入 Shopify。Post-completion update（2026-08-31）：业务方已在
+Shopify 发布非空 `Patron Saint` Collection，并设置
+`custom.collection_kind=design_series`；它已进入 Header、Collections hub 和详情页。
+仍需按 `docs/SHOPIFY_CATALOG_SETUP.md` 补全 description/SEO、Design Series
+Metaobject/reference 与 story/lookbook。全站 index gate 与 Checkout gate 均未改变。
 
 ---
 
@@ -523,8 +524,8 @@ Metaobject 与两个原生 Blog，但正式内容、西语翻译和政策批准�
 - Accepted：Shopify 是商品与 MVP 业务内容的唯一运行时事实来源；缺失或
   异常时 fail closed（D-009、D-041、D-042）。
 - Accepted：FAQ、Disclaimer 和独立 Product Care 页面当前不存在（D-039）。
-- Working：Contact 可以在供应商、隐私、发件域与滥用控制全部验收后启用
-  Resend；仓库默认关闭表单并仅展示 Email 地址，inbox/服务流程仍待验收（D-038）。
+- Current：`info@joyamana.com` 已确认可以收信，当前正式范围为 Email-only；表单、
+  Resend 与滥用防护后置并保持关闭。负责人/备援、外发认证和服务流程仍待验收（D-038）。
 - Blocking：Shopify 当前内容只是部分可用，且不等于业务、翻译或法律批准。
 
 ## Milestones
@@ -587,15 +588,18 @@ Contact Server Action 只接收回复当次请求所需字段，不创建 Custom
 - Risk：5 分钟内容/导航缓存在没有 webhook 时延迟发布或下线。
   - Mitigation：公开发布前完成 HMAC webhook/cache invalidation，或书面接受明确的
     陈旧窗口，并在保持 noindex 的受控环境验收。
-- Risk：Contact 会将客户 PII 交给未审批供应商。
-  - Mitigation：默认关闭；生产启用前完成数据边界、保留期、域验证与滥用防护。
+- Risk：未来启用 Contact 表单会将客户 PII 交给外部供应商。
+  - Mitigation：当前 Email-only 且默认关闭表单；未来重新批准后才完成数据边界、
+    保留期、域验证与滥用防护。
 
 ## Outcome
 
 当前 storefront 已无本地业务数据后备路径。Shopify 可用时输出规范化内容；
 缺失或异常时返回 404、空状态或暂不可用，不显示旧工作文案。这个计划的
-代码边界已完成，但内容审核、翻译、Policy、Contact 供应商、隐私选择入口、
-webhook 和发布门禁仍是生产上线工作，不由 `Complete` 状态自动批准。
+代码边界已完成。Post-completion update（2026-08-31）：Shipping/Returns、About EN/ES、
+Terms 占位符、guidebook 与 Contact inbox 已获业务确认；Contact 表单明确后置。正式
+Article/Crystal Guide 内容、Commerce 西语翻译、剩余法律/税务复核、隐私选择入口、
+webhook 和发布门禁仍是上线工作，不由 `Complete` 状态自动批准。
 
 ---
 
@@ -745,8 +749,8 @@ document-level locale、Policy/Accessibility hreflang、Search metadata、Header
 - 临时 indexable production build：通过；初始 HTML 验证 clean `/shop` 为 index/follow、
   `?sort=price&utm_source=test` 为 noindex/noarchive、canonical 均为 `www` clean URL且参数页
   无 hreflang；`/es-us` 输出 `<html lang="es-US">`。
-- 外部域名：apex 返回 308 至 `https://www.joyamana.com/`，`www` 返回 Vercel 200；当前
-  已部署版本仍显示旧 Vercel OG origin，需在本次代码 deploy 后复核。
+- 外部域名：apex 返回 308 至 `https://www.joyamana.com/`，`www` 返回 Vercel 200；
+  post-completion 复核已确认部署版本的 canonical 与 OG 使用 `www` origin。
 - 环境边界：验证运行于 Node 26.7.0，仍有项目要求 Node 24 的 engine warning；不能写成
   CI、Preview、Production redeploy 或支付 E2E 已通过。
 
@@ -757,9 +761,9 @@ document-level locale、Policy/Accessibility hreflang、Search metadata、Header
     production HTML 已验证。
 - Risk：Header 降级会暂时隐藏动态类别/系列。
   - Mitigation：保留 Shop all/Search/Bag/语言入口和页面主体；不以陈旧商业数据兜底。
-- Risk：Vercel 已修改环境值但未 redeploy，公开 HTML 继续保留旧 OG origin。
-  - Mitigation：preflight 对未来 Production build 强制 `www`，deploy 后按 Runbook
-    外部复核 canonical/OG。
+- Risk：未来 deployment 的环境值漂移会再次输出错误 origin。
+  - Mitigation：preflight 对 Production build 强制 `www`，每次 deploy 后按 Runbook
+    外部复核 canonical/OG；当前 deployment 已复核正确。
 
 ## Outcome
 
@@ -768,3 +772,62 @@ document lang，Policy/Accessibility hreflang 按真实翻译过滤，Search met
 Product-only 运行时一致，Header 使用最小字段并可安全降级，Vercel build 前执行
 不泄露 secret 的环境 preflight。默认生成物已恢复为 noindex；没有启用任何发布门禁、
 修改 Shopify 数据、推送 `dev` 或部署 Vercel。
+
+---
+
+# Execution Plan — 业务确认同步与 PDP Policy 文案（2026-09-01）
+
+Status: Complete
+Owner: Engineering
+
+## Goal
+
+把 Design Collection、Policy/About、客服邮箱、guidebook 与测试文章的最新业务确认
+同步到现行文档，并移除 PDP 仍把已确认 Shipping/Returns 写成 pending 的旧文案。
+
+## Scope
+
+- 包含：`AGENTS.md`、根级说明、现行 `docs/`、本计划、环境变量注释、PDP 与禁用
+  Checkout 提示、对应 unit tests。
+- 不包含：修改 Shopify/Vercel 配置、处理暂缓的 Blog/Crystal Guide 测试内容、实现
+  Policy Schema、Customer Privacy consent、Collection metadata fallback、细粒度 index
+  gate 或 webhook/cache invalidation。
+
+## Decisions and assumptions
+
+- `Patron Saint` 已非空、Headless 可见并设置 `collection_kind=design_series`；系列
+  description/SEO、Metaobject/reference 与 story/lookbook 仍未完成。
+- Shipping/Returns 运营承诺、About EN/ES、Founder 事实、每件商品随附 guidebook 已确认。
+- Terms 后台占位符已修复；直接 Storefront API 与 2026-09-01 公开 Production HTML
+  均已复核不再返回占位符。
+- `info@joyamana.com` 可以收信；当前正式客服范围为 Email-only，表单后置。
+- 两篇测试 Article 因没有正式替代内容而暂缓，不得在开启索引时进入 sitemap。
+
+## Milestones
+
+1. [x] 核对 Shopify/Production 当前状态和代码行为。
+2. [x] 更新 PDP Shipping/Returns 摘要与 Checkout disabled 提示，增加 EN/ES 测试。
+3. [x] 同步现行决策、输入、规格、Roadmap、Runbook、Open Questions 与仓库指令。
+4. [x] 完成 lint、typecheck、unit tests、production build 与 diff 一致性检查。
+
+## Validation
+
+- `git diff --check`：通过。
+- `pnpm lint`：通过。
+- `pnpm typecheck`：通过。
+- `pnpm test`：26 files / 161 tests 通过，其中新增 PDP Policy copy tests 2 项。
+- `pnpm build`：preflight 与 production build 通过；首次受限网络执行仅因现有 Google
+  Fonts 下载失败，允许网络后通过。
+- Production Terms：2026-09-01 公开 HTML 不含地址/电话占位符，`og:url` 使用
+  `https://www.joyamana.com/terms`。
+- 环境说明：检查运行于 Node 26.7.0，pnpm 持续提示项目要求 Node `>=24 <25`；仍需
+  在 CI/Node 24 环境重验，且本轮没有修改 Shopify/Vercel、启用索引/Checkout 或部署。
+
+## Risks
+
+- Risk：Shopify 内容缓存使已修复 Terms 在公开页面短时显示旧版本。
+  - Mitigation：直接 Storefront API 已验证；公开验收等待 5 分钟窗口或实现失效端点。
+- Risk：把测试 Article 的“暂缓”误写成可以被索引。
+  - Mitigation：全站 gate 保持关闭；未来细粒度 gate 必须持续排除未正式发布内容。
+- Risk：把 Collection 基础门禁完成误写成完整系列体验完成。
+  - Mitigation：文档分别列明 description/SEO、Metaobject/reference 和 story/lookbook 缺口。

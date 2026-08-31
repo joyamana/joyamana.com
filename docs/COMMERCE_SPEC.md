@@ -21,8 +21,9 @@ D-020 已接受同时支持 repeatable、natural-variation 和 one-of-a-kind 这
 当前代码只有 `standard | one-of-one` 的可选类型预留，Shopify mapper 与消费者 UI
 尚未实现正式 model metafield、natural-variation 语义或 exact/representative image
 披露。正式首发 assortment、七脉轮资料和每个 SKU 的准确商品事实仍分别受
-Q-002C/Q-002A 阻塞；Q-002B 另行决定包装与礼赠体验。当前 Headless 测试店可见的
-Aquamarine 商品只用于验证数据流，不等于已获批的生产首发清单。
+Q-002C/Q-002A 阻塞；Q-002B 仍决定礼盒、包装成本与礼品留言，但每件商品附带专属
+guidebook 已获业务方确认。当前 Headless Catalog 的商品用于运行数据流，不因已发布
+自动成为获批的生产首发清单。
 
 ### Repeatable product
 
@@ -96,6 +97,9 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
   `/category/{handle}`，只为至少有一个当前 US Catalog 可见商品的受支持类别开放。
 - `/collections/{handle}` 只表达具备独立名称、故事和视觉语言的原创设计系列；
   Shopify Collection 必须有 `custom.collection_kind=design_series` 才能进入该路由。
+- 当前 `Patron Saint` 已满足非空、Headless 可见和 `design_series` 类型门禁；其
+  description/SEO 为空，Metaobject reference 与 story/lookbook 尚未接入，因此只完成
+  基础商品系列页，不代表完整系列叙事验收。
 - 商品类别可以在 Shopify 以 automated Collection 辅助后台归集，但不得同时以
   `/collections/bracelets` 和 `/category/bracelets` 暴露两个公开列表 URL。
 - 设计系列成员由 Product 的结构化 `custom.design_series` Metaobject reference

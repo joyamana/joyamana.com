@@ -220,10 +220,21 @@ Decision: 数据模型同时支持 repeatable、natural-variation 和 one-of-a-k
 Consequence: Shopify mapper 必须保留 `kind`、exact-image 和库存语义，不能用复杂
 Variant 混淆不同设计。
 
+2026-08-31 content note: 业务方确认当前每件商品均随附一份 Joya Mana 专属 guidebook；
+这是实际 package contents/履约承诺，不再作为待定包装假设。礼盒、包装成本和礼品留言
+仍属 Q-002B，不因 guidebook 获批而自动确认。
+
 ### D-021 — 政策发布门禁
 
 Decision: Shipping、Returns、Duties、Taxes、Warranty、Privacy/Terms 中依赖
 业务事实的内容，在负责人确认前只保留开发入口，不发布承诺，不输出政策 Schema。
+
+2026-08-31 approval note: 业务方确认当前 Shopify Shipping/Returns 正文中的运营承诺，
+包括通常 1–3 个工作日处理、收货后 15 天退货申请窗口、适用退货运费责任、原始运费
+和退款处理时限。该确认解除 Q-003D，并使 PDP 可以显示相同摘要；税务、法律主体、
+支付和 Checkout 配置仍按各自门禁处理。Terms 后台占位地址/电话已由业务方修正，
+Storefront API 直接复核不再返回占位符；2026-09-01 公开 Production HTML 复核也已
+不含占位符。后续 Shopify 内容修改仍受当前 5 分钟缓存窗口影响。
 
 ### D-022 — 内容治理
 
@@ -501,6 +512,12 @@ Supersedes: D-029 和 D-033 中 Header 固定直达 Seven Chakras 的部分、D-
 统一暴露为 `/collections/{handle}` 的部分；D-033 的内容枢纽、New Arrivals 门禁和
 其他 UI 决策继续有效。
 
+2026-08-31 runtime note: Shopify 已有非空、Headless 可见且
+`custom.collection_kind=design_series` 的 `Patron Saint` Collection，并已进入 Header、
+Collections hub 和详情页。当前 Collection description/SEO 仍为空，Design Series
+Metaobject/reference 与 story/lookbook 前端读取链路仍未实现；旧“无非空 Design
+Collection / 未设置 collection_kind”状态已失效。
+
 ### D-037 — 公开联系邮箱
 
 Date: 2026-08-30
@@ -508,6 +525,9 @@ Decision: 客服、隐私请求和当前公开联系入口统一使用 `info@joy
 客服沟通与营销同意继续分离；收到 Contact 请求不得自动加入营销列表。
 Consequence: 页面、配置和后续政策使用同一地址。生产开放前仍须完成真实邮箱开通、
 负责人/备援、域名认证和回复流程验收。
+
+2026-08-31 operations note: 业务方确认 `info@joyamana.com` inbox 可以正常收信。
+负责人/备援和外发认证/垃圾箱表现仍需按实际客服流程验收。
 
 ### D-038 — Contact 表单投递边界
 
@@ -523,6 +543,10 @@ Data boundary: Resend 会接收顾客姓名、邮箱、主题、可选订单号�
 验证发送域，并在边缘/WAF 配置滥用限制。
 Migration / rollback: `CONTACT_FORM_ENABLED=false` 立即回退为 Email-only；更换供应商
 只替换投递适配层和 Secret，不改变表单、URL 或客户数据模型。
+
+2026-08-31 scope amendment: 当前正式客服模式为 Email-only，Contact 表单明确后置；
+保持 `CONTACT_FORM_ENABLED=false`，Resend、表单滥用控制和表单投递验收不再阻塞当前
+发布范围。未来重新批准表单时再恢复上述供应商和数据处理门禁。
 
 ### D-039 — 当前阶段精简服务页面
 
@@ -576,6 +600,10 @@ Migration / rollback: 删除 child 引用即可从 tabs 与 sitemap 下线；如
 Supersedes: D-034 中 About 固定页面布局与硬编码工作文案作为长期实现的部分；D-034
 关于未获批品牌事实和 claims 的限制继续有效。
 
+2026-08-31 content approval note: 业务方确认当前 About root、Philosophy、Approach、
+Founder 的 EN/ES 正文，以及 Founder 页中的个人经历、抑郁诊断、学习/实践背景、
+社区/慈善工作和帮助数百人的事实陈述。上述内容不再是开放审核项。
+
 ### D-041 — Blog 与 Crystal Guide 使用 Shopify 原生 Blog
 
 Date: 2026-08-30
@@ -604,6 +632,10 @@ Article Metafields 足以承载 MVP 的结构化扩展，而双写 Article 和 M
 Consequences: Next.js 的 Blog、Crystal Guide、首页推荐、metadata 与 sitemap 统一从
 Shopify Article 派生。修改 Blog handle 或已发布 Article handle 前必须安排明确的 URL
 迁移和 301。
+
+2026-08-31 scope note: 当前 `hello-world` 与 `hello-for-crystal-guide` 仍是测试文章，
+且无正式内容可替换；业务方决定本阶段暂不处理。它们不得被误记为正式内容或随索引
+门禁进入 sitemap，未来准备正式内容时再替换/下线并完成 EN/ES 审核。
 Migration / rollback: 本地 prototype entries 已移除。若未来升级为 Crystal
 Metaobject，应先定义字段、Article 到实体的迁移和旧 URL 保留方案，再切换唯一事实来源。
 Supersedes: D-009 与 `CONTENT_SEO_GEO_SPEC.md` 中“Crystal 必须由 merchant-owned

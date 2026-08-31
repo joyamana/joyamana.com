@@ -56,15 +56,16 @@ typed 配置、noindex/robots/sitemap、lint、typecheck、unit tests 和 produc
 已建立。Shopify Headless private token 与 Storefront API 已连接；Product、Variant、
 Money、Availability、Search 和非空 Collection 均通过 Shopify-only adapter 读取，
 本地 provider/fallback 已删除。
-2026-08-25 Storefront 可见 1 个 Headless 测试商品，但尚无包含商品的 Collection。Shopify
+2026-08-31 Storefront 已可见多个 Headless 商品；`Patron Saint` Collection 已非空、
+已加入 Headless channel，并确认 `custom.collection_kind=design_series`。Shopify
 Cart 的创建、恢复、增改删、HttpOnly cookie、独立 Buy now Cart 与最新 Checkout URL
-代码已完成；因 Q-003A–Q-003F 和 Checkout 运营配置未批准，仓库示例值、未配置时
+代码已完成；因剩余履约费率、税务、法律、支付和 Checkout 运营配置未完成，仓库示例值、未配置时
 默认值和任何未获批公开部署都必须保持跳转门禁关闭；各环境值单独验收。
 Vercel Production 已在 `https://www.joyamana.com` 公开响应，
 `https://checkout.joyamana.com` 已指向 Shopify Online Store；本地 `dev` 分支已建立，
-但尚未推送/构建为 Vercel Preview。CI 仍待建立，Playwright 按 D-043 暂缓。
+并已构建 Vercel Preview。CI 仍待建立，Playwright 按 D-043 暂缓。
 Production 当前仍 noindex、sitemap 为空。D-044 已确认 `www` canonical 与 apex 308；
-Vercel 环境值已设置，当前公开 deployment 的旧 OG origin 待新部署复核。
+当前 Production 的 canonical 与 `og:url` 已输出 `www` origin。
 
 ### 退出条件
 
@@ -96,7 +97,8 @@ Checkout URL。Storefront 现会读取 `quantityAvailable` 与 `currentlyNotInSt
 并把它们与 contextual quantity rule 用于 PDP/Bag 数量上限；不产生稀缺营销。
 仍需定义/映射 Product knowledge metafields（材料、尺寸/护理、来源/处理、包装与关联内容）、
 商品模型与 exact/representative image disclosure、
-Shopify 发布真实 Design Collection、审核当前商品正文、发布人工审核的
+补全 `Patron Saint` 的 description/SEO、Design Series Metaobject/reference 与 story/lookbook，
+审核当前商品正文、发布人工审核的
 西语翻译、完成政策和 Checkout 运营验收，并补 webhook 与有记录的浏览器/支付验证；
 Playwright 按 D-043 暂缓。
 Header 导航已使用专用轻量 query/projection，并在 Shopify 导航上游失败时保留基础
@@ -104,10 +106,11 @@ Header 导航已使用专用轻量 query/projection，并在 Shopify 导航上�
 2026-08-30 已批准 D-036：商品类别迁至 `/category/*`，原创设计系列保留
 `/collections/*`；实现与 Shopify Admin 结构化字段配置进入当前工作流。
 
-2026-08-30 Policy follow-up：Refund 与 Privacy 已由 Shopify Policy 服务端驱动，
-包含默认语言回退识别、安全 HTML 输出和按真实翻译状态控制索引；当前 Returns
-已有西语正文，Privacy 仍回退英文。Headless `Your Privacy Choices` 与 Customer
-Privacy API 同步仍是公开上线前待办。
+2026-08-31 Policy follow-up：Shipping、Returns、Privacy 与 Terms 已由 Shopify Policy
+服务端驱动，包含默认语言回退识别、安全 HTML 输出和按真实翻译状态控制索引；
+Shipping/Returns 的已公开运营承诺已确认，Terms 占位符已在 Shopify 修复并经直接
+Storefront API 验证。Headless `Your Privacy Choices`、Customer Privacy API 同步、
+税务/法律发布复核与更及时的缓存失效仍是公开索引/交易前待办。
 
 ### 退出条件
 
@@ -134,18 +137,17 @@ Privacy API 同步仍是公开上线前待办。
 
 2026-08-31 实施结果：
 
-- Shipping/Returns/Privacy/Terms 已从 Shopify Policies 服务端读取；当前
-  Refund/Privacy 有上游正文，Shipping/Terms 缺失时显示暂不可用。这些正文仍
-  未通过业务/法律发布批准。
+- Shipping/Returns/Privacy/Terms 已从 Shopify Policies 服务端读取；Shipping/Returns
+  的运营承诺已确认，Terms 占位符已修复。剩余税务/法律发布复核独立跟踪。
 - About hub/direct children 与 Accessibility 已使用 Shopify `content_page`；
   Blog 和 Crystal Guide 已使用 Shopify Blog/Article。不完整、未引用或未翻译内容
   fail closed/noindex，本地正文 fallback 已删除。
 - Product、Shop/Category/Design Collection、About 与 Article 的 metadata/
   适用 Schema/sitemap 映射已完成并受全站 index gate 保护。
-- Contact 已有公开 Email 地址入口和可关闭的 Resend Server Action，但 inbox/服务流程
-  与生产投递尚未验收；仓库示例值及未配置时表单门禁默认关闭。
+- `info@joyamana.com` 已确认可以收信，当前正式支持方式为 Email-only；Contact 表单、
+  Resend 与滥用防护延后，负责人/备援、出站投递与服务流程仍待验收。
 - 当前 Search 仅检索 Product；Home Organization/WebSite、ContactPage Schema、
-  完整 Design Series Metaobject 故事模块、正式内容/西语审核、GSC/Merchant Center
+  完整 Design Series Metaobject 故事模块、正式 Article/Crystal Guide 内容与西语审核、GSC/Merchant Center
   与 crawler policy 仍待完成。
 - Commerce Product/Collection 的 Spanish fallback 仍无自动识别；这是当前剩余的
   translation/index blocker。document-level `<html lang>`、Policy/Accessibility
