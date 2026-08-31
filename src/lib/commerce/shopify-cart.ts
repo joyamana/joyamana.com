@@ -33,6 +33,8 @@ interface ShopifyProductVariant {
   id: string;
   title: string;
   availableForSale: boolean;
+  currentlyNotInStock: boolean;
+  quantityAvailable: number | null;
   image: ShopifyImage | null;
   price: ShopifyMoney;
   quantityRule: ProductQuantityRule;
@@ -129,6 +131,8 @@ const cartFields = `#graphql
             id
             title
             availableForSale
+            currentlyNotInStock
+            quantityAvailable
             price { amount currencyCode }
             quantityRule { minimum maximum increment }
             image { url altText width height }
@@ -290,6 +294,22 @@ function normalizeQuantityRule(rule: ProductQuantityRule) {
   return { ...rule };
 }
 
+function normalizeInventory(variant: ShopifyProductVariant) {
+  if (
+    typeof variant.currentlyNotInStock !== "boolean" ||
+    (variant.quantityAvailable !== null &&
+      (!Number.isInteger(variant.quantityAvailable) ||
+        variant.quantityAvailable < 0))
+  ) {
+    throw new ShopifyCartError("SHOPIFY_ERROR");
+  }
+
+  return {
+    currentlyNotInStock: variant.currentlyNotInStock,
+    quantityAvailable: variant.quantityAvailable,
+  };
+}
+
 function safeWarningMessage(message: string) {
   if (
     /gid:\/\/shopify\/Cart\//i.test(message) ||
@@ -329,6 +349,7 @@ function mapCartLine(line: ShopifyCartLine) {
         }
       : null,
     availableForSale: line.merchandise.availableForSale,
+    ...normalizeInventory(line.merchandise),
     quantity: line.quantity,
     quantityRule,
     unitPrice: normalizeMoney(line.merchandise.price),

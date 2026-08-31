@@ -93,9 +93,10 @@ Storefront API 与安全的 Cart smoke 已确认：
   只能展示 Shopify 全商品目录，具体 Collection URL 不得引用本地 mock。
 - US Spanish `@inContext(language: ES)` 当前回退为 English，说明西语翻译尚未在
   Shopify 发布；`/es-us/` 继续 noindex，不能把 fallback 视为已审核翻译。
-- token 未获得 `quantityAvailable` scope；前端只使用 `availableForSale`，不展示或
-  猜测具体库存数。真实 Cart 请求增加数量时，Shopify 能返回库存不足 warning 并
-  保持可履约数量。
+- Headless private Storefront token 已启用
+  `unauthenticated_read_product_inventory`；商品页与 Bag 使用
+  `quantityAvailable` 限制可选数量，并保留 Shopify Cart 库存 warning 作为并发
+  购买时的最终校验。
 - Cart create/update/remove 与 HTTPS `checkoutUrl` 合约可用；smoke 未创建订单，
   测试商品行已移除。Buy now 与 Bag Checkout 的代码仍受
   `SHOPIFY_CHECKOUT_ENABLED=false` 门禁保护。

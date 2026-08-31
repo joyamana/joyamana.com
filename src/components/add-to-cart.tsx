@@ -7,22 +7,31 @@ export function AddToCart({
   variantId,
   quantity,
   available,
+  maximumQuantity,
   label,
   unavailableLabel,
+  limitReachedLabel,
   addedLabel = "Added",
 }: {
   variantId: string;
   quantity: number;
   available: boolean;
+  maximumQuantity: number;
   label: string;
   unavailableLabel: string;
+  limitReachedLabel: string;
   addedLabel?: string;
 }) {
-  const { addItem, clearError, error, status } = useCart();
+  const { addItem, cart, clearError, error, status } = useCart();
   const [added, setAdded] = useState(false);
   const [failed, setFailed] = useState(false);
   const errorId = useId();
   const busy = status !== "ready";
+  const quantityInBag = cart.lines
+    .filter((line) => line.merchandiseId === variantId)
+    .reduce((total, line) => total + line.quantity, 0);
+  const canAdd =
+    available && quantityInBag + quantity <= maximumQuantity;
 
   return (
     <div className="purchase-action">
@@ -31,7 +40,7 @@ export function AddToCart({
         aria-describedby={failed ? errorId : undefined}
         className="button button--primary button--wide"
         type="button"
-        disabled={!available || busy}
+        disabled={!canAdd || busy}
         onClick={async () => {
           clearError();
           setFailed(false);
@@ -49,7 +58,9 @@ export function AddToCart({
           ? unavailableLabel
           : added
             ? `✓ ${addedLabel}`
-            : label}
+            : canAdd
+              ? label
+              : limitReachedLabel}
       </button>
       {failed && error ? (
         <p className="action-error" id={errorId} role="alert">

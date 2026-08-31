@@ -47,6 +47,8 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
             id: merchandiseId,
             title: "Aquamarine",
             availableForSale: true,
+            currentlyNotInStock: false,
+            quantityAvailable: 2,
             image: {
               url: "https://cdn.shopify.com/product.png",
               altText: "Aquamarine bracelet",
@@ -94,6 +96,8 @@ describe("Shopify Cart mapper and validation", () => {
           merchandiseId,
           productHandle: "aquamarine-bracelet-9-mm",
           quantity: 2,
+          currentlyNotInStock: false,
+          quantityAvailable: 2,
           quantityRule: { minimum: 1, maximum: null, increment: 1 },
           unitPrice: { amount: "68.00", currencyCode: "USD" },
         },
@@ -190,6 +194,7 @@ describe("Shopify Cart Storefront operations", () => {
     const [query, variables, options] = mocks.shopifyFetch.mock.calls[0];
     expect(query).toContain("query JoyaManaCart");
     expect(query).toContain("language: $language");
+    expect(query).toContain("quantityAvailable");
     expect(variables).toEqual({ id: cartId, language: "ES" });
     expect(options).toEqual({ cache: "no-store" });
   });

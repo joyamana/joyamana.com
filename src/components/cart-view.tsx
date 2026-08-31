@@ -8,7 +8,7 @@ import {
   cartErrorMessage,
   isBlockingInventoryWarning,
 } from "@/lib/commerce/cart-types";
-import { isValidProductQuantity } from "@/lib/commerce/types";
+import { isValidAvailableProductQuantity } from "@/lib/commerce/types";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
@@ -202,9 +202,11 @@ export function CartView({ locale }: { locale: Locale }) {
                     type="button"
                     disabled={
                       busy ||
-                      !isValidProductQuantity(
+                      !isValidAvailableProductQuantity(
                         decreaseQuantity,
                         line.quantityRule,
+                        line.quantityAvailable,
+                        line.currentlyNotInStock,
                       )
                     }
                     aria-label={uiText(locale, { en: "Decrease quantity", es: "Disminuir cantidad", fr: "Diminuer la quantité" })}
@@ -217,9 +219,11 @@ export function CartView({ locale }: { locale: Locale }) {
                     type="button"
                     disabled={
                       busy ||
-                      !isValidProductQuantity(
+                      !isValidAvailableProductQuantity(
                         increaseQuantity,
                         line.quantityRule,
+                        line.quantityAvailable,
+                        line.currentlyNotInStock,
                       )
                     }
                     aria-label={uiText(locale, { en: "Increase quantity", es: "Aumentar cantidad", fr: "Augmenter la quantité" })}

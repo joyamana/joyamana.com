@@ -76,10 +76,55 @@ export function isValidProductQuantity(
   );
 }
 
+/**
+ * Returns the largest quantity the storefront should offer right now.
+ * Shopify Cart remains authoritative because inventory can change after the
+ * catalog response is rendered.
+ */
+export function getProductQuantityMaximum(
+  rule: ProductQuantityRule,
+  quantityAvailable: number | null,
+  currentlyNotInStock: boolean,
+) {
+  const ruleMaximum = Math.min(
+    rule.maximum ?? STOREFRONT_MAX_QUANTITY,
+    STOREFRONT_MAX_QUANTITY,
+  );
+
+  // Shopify uses this flag for backorders. A null inventory quantity also
+  // represents inventory for which an exact storefront cap is unavailable.
+  if (currentlyNotInStock || quantityAvailable === null) return ruleMaximum;
+
+  if (!Number.isInteger(quantityAvailable) || quantityAvailable < 0) return 0;
+
+  const inventoryMaximum =
+    Math.floor(quantityAvailable / rule.increment) * rule.increment;
+  return Math.min(ruleMaximum, inventoryMaximum);
+}
+
+export function isValidAvailableProductQuantity(
+  quantity: number,
+  rule: ProductQuantityRule,
+  quantityAvailable: number | null,
+  currentlyNotInStock: boolean,
+) {
+  return (
+    isValidProductQuantity(quantity, rule) &&
+    quantity <=
+      getProductQuantityMaximum(
+        rule,
+        quantityAvailable,
+        currentlyNotInStock,
+      )
+  );
+}
+
 export interface ProductVariant {
   id: string;
   title: string;
   availableForSale: boolean;
+  currentlyNotInStock: boolean;
+  quantityAvailable: number | null;
   price: Money;
   compareAtPrice: Money | null;
   image: ProductImage | null;

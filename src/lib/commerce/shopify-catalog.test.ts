@@ -79,6 +79,8 @@ function productFixture(): ShopifyProductNode {
           id: "gid://shopify/ProductVariant/11",
           title: "Obsidian",
           availableForSale: true,
+          currentlyNotInStock: false,
+          quantityAvailable: 1,
           price: { amount: "68.50", currencyCode: "USD" },
           compareAtPrice: { amount: "75.00", currencyCode: "USD" },
           image: null,
@@ -139,6 +141,8 @@ describe("Shopify catalog mapper and queries", () => {
     expect(product.variants[0]).toMatchObject({
       price: { amount: "68.50", currencyCode: "USD" },
       availableForSale: true,
+      currentlyNotInStock: false,
+      quantityAvailable: 1,
       selectedOptions: [{ name: "Main stone", value: "Obsidian" }],
       image: { url: "https://cdn.shopify.com/featured.jpg" },
       quantityRule: { minimum: 1, maximum: null, increment: 1 },
@@ -179,6 +183,7 @@ describe("Shopify catalog mapper and queries", () => {
     expect(SHOPIFY_PRODUCTS_QUERY).toContain("images(first: 10)");
     expect(SHOPIFY_PRODUCTS_QUERY).toContain("pageInfo");
     expect(SHOPIFY_PRODUCTS_QUERY).toContain("quantityRule");
+    expect(SHOPIFY_PRODUCTS_QUERY).toContain("quantityAvailable");
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       1,
       SHOPIFY_PRODUCTS_QUERY,

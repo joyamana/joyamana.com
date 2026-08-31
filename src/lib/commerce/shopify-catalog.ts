@@ -64,6 +64,8 @@ interface ShopifyVariantNode {
   id: string;
   title: string;
   availableForSale: boolean;
+  currentlyNotInStock: boolean;
+  quantityAvailable: number | null;
   price: ShopifyMoneyV2;
   compareAtPrice: ShopifyMoneyV2 | null;
   image: ShopifyImage | null;
@@ -169,6 +171,8 @@ const variantFields = `#graphql
     id
     title
     availableForSale
+    currentlyNotInStock
+    quantityAvailable
     price {
       ...CatalogMoneyFields
     }
@@ -556,6 +560,27 @@ function mapQuantityRule(
   };
 }
 
+function mapInventory(
+  variant: ShopifyVariantNode,
+): Pick<ProductVariant, "currentlyNotInStock" | "quantityAvailable"> {
+  if (
+    typeof variant.currentlyNotInStock !== "boolean" ||
+    (variant.quantityAvailable !== null &&
+      (!Number.isInteger(variant.quantityAvailable) ||
+        variant.quantityAvailable < 0))
+  ) {
+    throw new ShopifyCatalogError(
+      "invalid-data",
+      `Shopify returned invalid inventory for variant ${variant.id}.`,
+    );
+  }
+
+  return {
+    currentlyNotInStock: variant.currentlyNotInStock,
+    quantityAvailable: variant.quantityAvailable,
+  };
+}
+
 export function mapShopifyProduct(node: ShopifyProductNode): Product {
   const images = node.images.nodes.flatMap((image) => {
     const mapped = mapImage(image, node.title);
@@ -589,6 +614,7 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
       id: variant.id,
       title: variant.title,
       availableForSale: variant.availableForSale,
+      ...mapInventory(variant),
       price,
       compareAtPrice,
       image:

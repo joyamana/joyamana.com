@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PRODUCT_QUANTITY_RULE,
+  getProductQuantityMaximum,
+  isValidAvailableProductQuantity,
   isValidProductQuantity,
   isValidQuantityRule,
 } from "./types";
@@ -43,5 +45,20 @@ describe("Shopify quantity rules", () => {
 
     expect(isValidQuantityRule(highMinimumRule)).toBe(true);
     expect(isValidProductQuantity(100, highMinimumRule)).toBe(false);
+  });
+
+  it("caps selectable quantities at tracked Shopify inventory", () => {
+    const rule = { minimum: 1, maximum: null, increment: 1 };
+
+    expect(getProductQuantityMaximum(rule, 1, false)).toBe(1);
+    expect(isValidAvailableProductQuantity(1, rule, 1, false)).toBe(true);
+    expect(isValidAvailableProductQuantity(2, rule, 1, false)).toBe(false);
+  });
+
+  it("aligns inventory to increments and permits Shopify backorders", () => {
+    const rule = { minimum: 2, maximum: 10, increment: 2 };
+
+    expect(getProductQuantityMaximum(rule, 3, false)).toBe(2);
+    expect(getProductQuantityMaximum(rule, 0, true)).toBe(10);
   });
 });

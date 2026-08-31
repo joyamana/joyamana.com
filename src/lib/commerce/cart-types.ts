@@ -26,6 +26,8 @@ export interface CartLineView {
   variantTitle: string;
   image: CartImage | null;
   availableForSale: boolean;
+  currentlyNotInStock: boolean;
+  quantityAvailable: number | null;
   quantity: number;
   quantityRule: ProductQuantityRule;
   unitPrice: CartMoney;

@@ -63,6 +63,8 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
             id: merchandiseId,
             title: "Default Title",
             availableForSale: true,
+            currentlyNotInStock: false,
+            quantityAvailable: 1,
             image: null,
             quantityRule: { minimum: 1, maximum: null, increment: 1 },
             price: { amount: "68.00", currencyCode: "USD" },

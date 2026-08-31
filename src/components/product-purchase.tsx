@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  STOREFRONT_MAX_QUANTITY,
+  getProductQuantityMaximum,
+  isValidAvailableProductQuantity,
   isValidProductQuantity,
   type Product,
   type ProductImage,
@@ -86,14 +87,18 @@ export function ProductPurchase({
     quantityRule.minimum,
     quantityRule,
   );
+  const maximumQuantity = getProductQuantityMaximum(
+    quantityRule,
+    selected.quantityAvailable,
+    selected.currentlyNotInStock,
+  );
+  const inventorySupportsMinimum =
+    maximumQuantity >= quantityRule.minimum;
   const available =
     product.availableForSale &&
     selected.availableForSale &&
-    quantityRuleSupported;
-  const maximumQuantity = Math.min(
-    quantityRule.maximum ?? STOREFRONT_MAX_QUANTITY,
-    STOREFRONT_MAX_QUANTITY,
-  );
+    quantityRuleSupported &&
+    inventorySupportsMinimum;
   const unavailableLabel = quantityRuleSupported
     ? copy.labels.soldOut
     : uiText(locale, {
@@ -217,7 +222,7 @@ export function ProductPurchase({
           </fieldset>
         ) : null}
 
-        {quantityRuleSupported ? (
+        {quantityRuleSupported && inventorySupportsMinimum ? (
           <div className="quantity-picker">
             <span id="product-quantity-label">
               {uiText(locale, {
@@ -256,7 +261,14 @@ export function ProductPurchase({
                 step={quantityRule.increment}
                 onChange={(event) => {
                   const next = Number(event.target.value);
-                  if (isValidProductQuantity(next, quantityRule)) {
+                  if (
+                    isValidAvailableProductQuantity(
+                      next,
+                      quantityRule,
+                      selected.quantityAvailable,
+                      selected.currentlyNotInStock,
+                    )
+                  ) {
                     setQuantity(next);
                   }
                 }}
@@ -284,7 +296,7 @@ export function ProductPurchase({
               </button>
             </div>
           </div>
-        ) : (
+        ) : !quantityRuleSupported ? (
           <p className="action-error" role="status">
             {uiText(locale, {
               en: "This Shopify quantity rule cannot be fulfilled through the online storefront.",
@@ -292,15 +304,21 @@ export function ProductPurchase({
               fr: "Cette règle de quantité Shopify ne peut pas être appliquée sur la boutique en ligne.",
             })}
           </p>
-        )}
+        ) : null}
 
         <div className="purchase-actions">
           <AddToCart
             variantId={selected.id}
             quantity={quantity}
             available={available}
+            maximumQuantity={maximumQuantity}
             label={copy.labels.addToCart}
             unavailableLabel={unavailableLabel}
+            limitReachedLabel={uiText(locale, {
+              en: "Maximum quantity is already in your bag",
+              es: "La cantidad máxima ya está en tu bolsa",
+              fr: "La quantité maximale est déjà dans votre panier",
+            })}
             addedLabel={uiText(locale, {
               en: "Added",
               es: "Agregado",
