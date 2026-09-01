@@ -27,10 +27,27 @@ describe("Product card", () => {
       <ProductCard product={product} locale="en-US" />,
     );
 
+    expect(html).toContain("product-card--available");
     expect(html).toContain('class="product-card__meta"');
+    expect(html).toContain("product-card__availability--available");
+    expect(html).toContain("product-card__availability-dot");
     expect(html).toContain('class="product-card__price"');
     expect(html).toContain("Available");
     expect(html).toContain("Tiger&#x27;s Eye Bracelet, Multicolour — 14 mm");
     expect(html).not.toContain("Shopify");
+  });
+
+  it("gives unavailable products a distinct visible state", () => {
+    const html = renderToStaticMarkup(
+      <ProductCard
+        product={{ ...product, availableForSale: false }}
+        locale="en-US"
+      />,
+    );
+
+    expect(html).toContain("product-card--unavailable");
+    expect(html).toContain("product-card__availability--unavailable");
+    expect(html).toContain("product-card__availability-badge");
+    expect(html).toContain("Unavailable");
   });
 });

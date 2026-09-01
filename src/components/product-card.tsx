@@ -17,9 +17,20 @@ export function ProductCard({
   const copy = getCopy(locale);
   const image =
     product.featuredImage ?? product.images[0] ?? product.variants[0]?.image;
+  const availabilityLabel = product.availableForSale
+    ? uiText(locale, {
+        en: "Available",
+        es: "Disponible",
+        fr: "Disponible",
+      })
+    : copy.labels.soldOut;
 
   return (
-    <article className="product-card">
+    <article
+      className={`product-card product-card--${
+        product.availableForSale ? "available" : "unavailable"
+      }`}
+    >
       <Link
         className="product-card__visual"
         href={localePath(locale, `/products/${product.handle}`)}
@@ -43,17 +54,24 @@ export function ProductCard({
             })}
           </span>
         )}
+        {!product.availableForSale ? (
+          <span className="product-card__availability-badge" aria-hidden="true">
+            {availabilityLabel}
+          </span>
+        ) : null}
       </Link>
       <div className="product-card__body">
         <div className="product-card__meta">
-          <p className="microcopy">
-            {product.availableForSale
-              ? uiText(locale, {
-                  en: "Available",
-                  es: "Disponible",
-                  fr: "Disponible",
-                })
-              : copy.labels.soldOut}
+          <p
+            className={`product-card__availability product-card__availability--${
+              product.availableForSale ? "available" : "unavailable"
+            }`}
+          >
+            <span
+              className="product-card__availability-dot"
+              aria-hidden="true"
+            />
+            {availabilityLabel}
           </p>
           <p className="product-card__price">
             {formatPriceRange(product.priceRange, locale)}

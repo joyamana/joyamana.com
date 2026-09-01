@@ -5,14 +5,15 @@ const defaultUrl = "http://localhost:3000";
 const indexingMasterEnabled =
   process.env.NEXT_PUBLIC_SITE_INDEXABLE === "true";
 
-const indexGroupEnabled = indexingPolicy.groups;
-const indexLocaleEnabled: Readonly<Record<string, boolean>> =
-  indexingPolicy.locales;
+const indexScopeEnabled: Readonly<
+  Record<string, Readonly<Record<IndexGroup, boolean>>>
+> = indexingPolicy;
 
 const anyIndexingEnabled =
   indexingMasterEnabled &&
-  Object.values(indexGroupEnabled).some(Boolean) &&
-  Object.values(indexLocaleEnabled).some(Boolean);
+  Object.values(indexScopeEnabled).some((groups) =>
+    Object.values(groups).some(Boolean),
+  );
 
 function isLocalHostname(hostname: string) {
   return (
@@ -95,9 +96,7 @@ export function indexGroupForPath(path: string): IndexGroup | null {
 
 export function isIndexGroupEnabled(locale: string, group: IndexGroup) {
   return Boolean(
-    indexingMasterEnabled &&
-      indexLocaleEnabled[locale] &&
-      indexGroupEnabled[group],
+    indexingMasterEnabled && indexScopeEnabled[locale]?.[group],
   );
 }
 
@@ -111,8 +110,7 @@ export const siteConfig = {
   indexable: anyIndexingEnabled,
   indexing: {
     masterEnabled: indexingMasterEnabled,
-    groups: indexGroupEnabled,
-    locales: indexLocaleEnabled,
+    scopes: indexScopeEnabled,
   },
   defaultMarket: markets.us,
   markets,

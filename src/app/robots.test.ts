@@ -5,9 +5,14 @@ const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 vi.mock("@/config/indexing", () => ({
   indexingPolicy: {
-    locales: { "en-US": true, "es-US": false },
-    groups: {
+    "en-US": {
       core: true,
+      commerce: false,
+      policies: false,
+      editorial: false,
+    },
+    "es-US": {
+      core: false,
       commerce: false,
       policies: false,
       editorial: false,

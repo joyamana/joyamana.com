@@ -12,15 +12,21 @@ export type IndexLocale = "en-US" | "es-US";
  * Version-controlled indexing release policy.
  *
  * A page is indexable only when the deployment-wide master environment gate,
- * its locale flag, its page-group flag, and its content readiness checks all
- * pass. Keep unapproved scopes false; policy changes require review and deploy.
+ * its locale/page-group scope, and its content readiness checks all pass. Keep
+ * unapproved scopes false; policy changes require review and deploy.
  */
 export const indexingPolicy = {
-  locales: {
-    "en-US": true,
-    "es-US": true,
+  "en-US": {
+    // Home, Contact, About, Accessibility
+    core: true,
+    // Shop, Category, Collection, Product
+    commerce: true,
+    // Shipping, Returns, Privacy, Terms
+    policies: true,
+    // Blog, Crystal Guide
+    editorial: false,
   },
-  groups: {
+  "es-US": {
     // Home, Contact, About, Accessibility
     core: true,
     // Shop, Category, Collection, Product
@@ -30,7 +36,4 @@ export const indexingPolicy = {
     // Blog, Crystal Guide
     editorial: false,
   },
-} as const satisfies {
-  locales: Record<IndexLocale, boolean>;
-  groups: Record<IndexGroup, boolean>;
-};
+} as const satisfies Record<IndexLocale, Record<IndexGroup, boolean>>;

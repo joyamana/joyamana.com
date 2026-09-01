@@ -9,15 +9,19 @@ describe("version-controlled indexing policy", () => {
       "policies",
       "editorial",
     ]);
-    expect(indexingPolicy.locales).toEqual({
-      "en-US": true,
-      "es-US": true,
-    });
-    expect(indexingPolicy.groups).toEqual({
-      core: true,
-      commerce: false,
-      policies: true,
-      editorial: false,
+    expect(indexingPolicy).toEqual({
+      "en-US": {
+        core: true,
+        commerce: true,
+        policies: true,
+        editorial: false,
+      },
+      "es-US": {
+        core: true,
+        commerce: false,
+        policies: true,
+        editorial: false,
+      },
     });
   });
 });

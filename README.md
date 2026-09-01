@@ -92,7 +92,7 @@ HTTP 200、`checkout` 返回 Shopify HTTP 200。D-044 确认 `www` 是唯一 can
 origin；Vercel Production 环境值已由业务方配置，当前公开 deployment 的
 canonical/OG 已复核为 `https://www.joyamana.com`。Production 仍
 `noindex` 且 sitemap 为空。D-045 已将索引控制拆为部署级总开关，以及
-`src/config/indexing.ts` 中版本控制的语言和页面组子门禁；只为已完成验收的范围开放。
+`src/config/indexing.ts` 中版本控制的 locale/page-group 矩阵；只为已完成验收的范围开放。
 
 当前代码已实现参数页 noindex、en-US/es-US document-level `<html lang>`、按真实
 翻译 readiness 过滤的 Policy/Accessibility hreflang、Product-only Search metadata、

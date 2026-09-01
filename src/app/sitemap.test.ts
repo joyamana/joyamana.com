@@ -30,9 +30,14 @@ vi.mock("@/lib/content/shopify-content-pages", () => ({
 }));
 vi.mock("@/config/indexing", () => ({
   indexingPolicy: {
-    locales: { "en-US": true, "es-US": false },
-    groups: {
+    "en-US": {
       core: true,
+      commerce: false,
+      policies: false,
+      editorial: false,
+    },
+    "es-US": {
+      core: false,
       commerce: false,
       policies: false,
       editorial: false,
