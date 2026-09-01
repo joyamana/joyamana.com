@@ -2,7 +2,7 @@
 
 Status: Working — Production 已公开部署，工程 hardening 与发布验收待完成
 Owner: Engineering  
-Last updated: 2026-08-31
+Last updated: 2026-09-02
 Supersedes: 旧版 `TECH_SPEC.md` 与归档文档中的 Hydrogen/Oxygen 方案
 
 ## 1. 架构目标
@@ -197,8 +197,9 @@ type MarketContext = {
 - `StorefrontAboutTree`（固定 root + 有序 direct-child 引用）
 - `StorefrontEditorialIndex` / `StorefrontEditorialArticle`
 
-Organization/Site Settings 规范化实体尚未实现；不得为了 Schema 用占位法律实体、
-Logo、域名或 social profile 补齐。
+Organization/Site Settings 规范化实体尚未实现。相关业务输入已确认解决，但实现仍须
+从获批公开字段建立集中配置；不得为了 Schema 推断、复制非公开法律实体/地址或填写
+占位 Logo、域名和 social profile。
 
 Mapper 只统一字段和语义，不建立通用实体平台。字段契约见 Commerce 和
 Content/SEO 规格。
@@ -318,13 +319,12 @@ Vercel 部署必须提供 canonical origin 与 Shopify credential；Production o
 精确为 `https://www.joyamana.com`；Preview 必须 noindex；Checkout/Contact 门禁开启
 时必须具备对应 credential。运行时 adapter 仍保留自身校验，不能只依赖 build。
 
-2026-08-31 外部响应检查确认 `https://www.joyamana.com` 由 Vercel 提供服务，
-`https://checkout.joyamana.com` 由 Shopify 提供服务。Production 首页仍输出
-`noindex, nofollow, noarchive`，sitemap 为空。D-044 已确认
-`https://www.joyamana.com` 是唯一 canonical origin，apex 308 至 `www`；Vercel 环境值
-已设置，但当前公开 deployment 的 `og:url` 仍为 `https://joyamana.vercel.app`，需在
-新 deployment 后复核。其他索引 blocker 完成前继续保持
-`NEXT_PUBLIC_SITE_INDEXABLE=false`。
+2026-09-02 外部响应检查确认 `https://www.joyamana.com` 由 Vercel 提供服务，
+`https://checkout.joyamana.com` 由 Shopify 提供服务。Production 首页与 `/es-us` 当前
+输出 `index, follow`，sitemap 已包含双语言 Core、Commerce、Policies；Editorial、Cart、
+Search 和参数页继续 noindex。D-044 已确认 `https://www.joyamana.com` 是唯一 canonical
+origin，apex 308 至 `www`，公开 canonical/OG 已使用 `www`。D-048 记录 Checkout/payment
+已通过当前 test mode 运营验收；Preview 仍必须保持 `NEXT_PUBLIC_SITE_INDEXABLE=false`。
 
 ## 11. Security 与 Privacy
 

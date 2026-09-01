@@ -2,7 +2,7 @@
 
 Status: Active  
 Owner: Project owner  
-Last updated: 2026-08-31
+Last updated: 2026-09-02
 
 本文件是项目决策的唯一权威记录。`Accepted` 才是已批准约束；`Proposed` 是
 可撤销默认值；`Pending` 不得被实现为已确认事实。
@@ -42,9 +42,9 @@ Last updated: 2026-08-31
 | D-020 | Catalog model | Accepted | 标准商品 + 天然独件 |
 | D-021 | Policy gate | Accepted | 未确认政策不发布、不进 Schema |
 | D-022 | Content governance | Accepted | 人工审批、AI 非事实来源 |
-| D-023 | Prototype | Accepted | 可继续初始化全站 noindex 测试站 |
+| D-023 | Prototype | Superseded | 测试站阶段已结束；Production 范围由 D-044/045/048 控制 |
 | D-024 | Market model | Accepted | Market、Language、URL、Currency 分离 |
-| D-025 | Prototype product | Superseded | 仅本地运行时样本由 D-042 取代；正式 assortment 转 Q-002C |
+| D-025 | Prototype product | Superseded | 仅本地运行时样本由 D-042 取代；assortment 由 Shopify/业务运营管理 |
 | D-026 | Canada prototype | Superseded | 曾启用 CA 测试路由；由 D-035 取代 |
 | D-027 | Global selector | Accepted | 当前不建 Global Site，保留低成本选择页扩展 |
 | D-028 | Header navigation v1 | Superseded | 地区与语言合并入口 |
@@ -64,6 +64,14 @@ Last updated: 2026-08-31
 | D-042 | Shopify-only runtime | Accepted | 删除 mock provider 与本地正文 fallback；上游异常 fail closed |
 | D-043 | Browser E2E tooling | Accepted | 当前阶段封存 Playwright；复杂度触发后再启用 |
 | D-044 | Production canonical origin | Accepted | `https://www.joyamana.com`；apex 308 至 `www` |
+| D-045 | Index release matrix | Accepted | 部署总开关 + locale/page-group fail-closed 配置 |
+| D-046 | Content cache window | Accepted | 当前接受内容与导航最多 5 分钟缓存窗口 |
+| D-047 | Website blocker boundary | Accepted | Q-001A/B、Q-002A/B/C 移出网站范围；Q-003A/F 已解决 |
+| D-048 | Checkout/payment readiness | Accepted | 下单支付完整支持；Payment test mode 流程测试通过 |
+
+Superseded 决策正文移至
+[`archive/superseded-decisions-2026-08.md`](archive/superseded-decisions-2026-08.md)；
+索引保留 ID、状态和替代关系，归档正文不作为当前实现依据。
 
 ## Accepted decisions
 
@@ -213,6 +221,10 @@ Consequence: 所有面向用户的品牌名称、metadata 和 wordmark 使用 Jo
 `checkout.joyamana.com` 已指向 Shopify Online Store。域名配置完成不代表美国商标、
 社交账号、支付、政策、索引或完整发布验收已完成。
 
+2026-09-02 scope note: 美国商标/社交账号与价格带/margin 已由业务方从网站开放问题中
+关闭并在项目外管理，不再是代码、索引或 Checkout 门禁。Logo、字体授权、颜色与真实
+商品摄影/视频也已确认完成；仓库仍不得虚构或公开内部商业资料。
+
 ### D-020 — 标准商品与天然独件并存
 
 Decision: 数据模型同时支持 repeatable、natural-variation 和 one-of-a-kind。
@@ -222,7 +234,7 @@ Variant 混淆不同设计。
 
 2026-08-31 content note: 业务方确认当前每件商品均随附一份 Joya Mana 专属 guidebook；
 这是实际 package contents/履约承诺，不再作为待定包装假设。礼盒、包装成本和礼品留言
-仍属 Q-002B，不因 guidebook 获批而自动确认。
+已移出当前网站范围；未来若增加礼赠功能，作为新范围重新定义，不沿用旧 Q-002B 门禁。
 
 2026-09-01 inventory note: 业务方批准 PDP 显示准确的 `Only X left`，阈值为 3。
 只有结构化模型明确为 standard/natural-variation，且当前 Variant 可售、库存已知、
@@ -245,11 +257,6 @@ Storefront API 直接复核不再返回占位符；2026-09-01 公开 Production 
 Decision: 项目负责人最终审批；AI 可辅助草拟但不是作者或事实来源。矿物、
 历史、文化和科学内容人工核对，不虚构 expert/reviewer/source。
 
-### D-023 — 不可索引测试站
-
-Decision: 在 Shopify、域名、商品、政策均未准备时，可以建立可运行测试站。
-全站默认 `noindex`；只有完成生产门禁后才显式开启索引、Checkout 和适用 Schema。
-
 ### D-024 — Market、Language、URL、Currency 分离
 
 Decision:
@@ -269,36 +276,6 @@ Reason: 国家、语言、Market 和货币并非一一对应。将 Currency 编�
 Consequence: Market 配置使用 regions、locales、currencies、catalog 及各运营
 profile 的显式引用；currency selection 使用会话/Shopify context，不生成
 `/de-ch-eur/` 一类 URL。
-
-### D-025 — 测试站首件商品
-
-Status: Superseded（仅 runtime sample）；正式 assortment 未决（Q-002C）。
-
-Decision: 测试站暂时只上架「七脉轮普通款」，按标准商品建模。工作规格为
-8mm、22 颗，七彩石列表来自 `docs/PRODUCT_INPUTS.md`。业务方已提供的白纹石、
-黑曜石、蓝纹石、蜜蜡玉、粉晶 5 张概念图建模为同一 Product 下的 5 个主石
-选项；每款 15 颗主石 + 7 颗七彩石。  
-Consequence: 其他构思系列不进入 Catalog；“11”的含义、准确组合、价格、腕围、
-线材、供应链和质量信息未确认前不补充其他 Variant 或生产声明。
-
-Superseded note: 这些资料现只是历史概念输入和测试 fixture 来源，不再是
-storefront 运行时 Catalog。D-042 后可见商品完全由 Shopify Headless channel 的
-实际发布结果决定；当前 Aquamarine 商品是测试商店事实，不因此自动成为
-已批准的正式首发 assortment。
-
-### D-026 — 加拿大测试 Market（Superseded by D-035）
-
-Decision: 增加独立 Canada 测试 Market：
-
-- URL：`/en-ca/` 与 `/fr-ca/`。
-- Catalog：`ca`，与 `us` 分离。
-- Currency：CAD；当前 `$92 CAD` 仅为测试值。
-- English/French 共享 CA Catalog、商品发布范围、价格、库存和 CA 运营 profile。
-- 原型可使用与 US 相同的七脉轮商品 ID 和素材，但 US/CA price、availability
-  和 Cart context 必须按 Market 隔离。
-
-Consequence: Canada Shipping、Tax、Returns、Privacy、Legal 和正式法语内容
-未获批准前保持 noindex，Checkout 不可用。
 
 ### D-035 — 第一阶段隐藏 Canada Market
 
@@ -324,29 +301,6 @@ Future trigger: 至少 3–4 个真实运营 Market、错误 Market 访问显著
 Commerce 模型；页面默认 noindex，不按 IP 强制重定向。  
 Important: 若未来把 `/` 改成 Global 门户并将 US 移到 `/en-us/`，属于高影响
 SEO URL 迁移，必须另做 ADR、301、canonical 与 hreflang 迁移计划。
-
-### D-028 — Header 地区与语言入口及系列导航
-
-Status: Superseded by D-029.
-
-Decision:
-
-- Header 右侧使用“中性地球图标 + Market · Language”合并入口，例如
-  `US · EN`、`US · ES`、`CA · EN`、`CA · FR`。
-- 入口展开后同时选择国家/地区与语言；Footer 保留完整文字版地区/语言入口。
-- 不使用国旗作为语言图标，因为一种语言可能服务多个 Market，国旗也不能准确
-  表达语言。
-- 当前主导航直接展示 `Seven Chakras`，不增加只有一层内容的 `Collections`
-  抽象入口；Footer 继续保留 Collections 聚合页。
-- 当至少有 3 个具备独立叙事和商品规模的正式系列时，再将 Header 升级为
-  Collections 父级菜单。
-
-Reason: Market 会影响 Catalog、价格、库存、配送和政策，只展示语言会隐藏重要的
-商业上下文；当前只有一个主推系列，直达链接比通用分类多一层点击更清晰。
-
-Consequence: Header 选择 Market 时保留当前页面路径；若目标 Market 不发布该页面，
-未来 Shopify 接入后应落到目标 Market 的等价 Collection 或本地化 404，而不是
-偷偷回退到其他 Market。
 
 ### D-029 — Header 只展示当前 Market 的语言
 
@@ -530,8 +484,9 @@ Decision: 客服、隐私请求和当前公开联系入口统一使用 `info@joy
 Consequence: 页面、配置和后续政策使用同一地址。生产开放前仍须完成真实邮箱开通、
 负责人/备援、域名认证和回复流程验收。
 
-2026-08-31 operations note: 业务方确认 `info@joyamana.com` inbox 可以正常收信。
-负责人/备援和外发认证/垃圾箱表现仍需按实际客服流程验收。
+2026-09-02 operations note: 业务方确认 `info@joyamana.com` inbox、负责人/备援、
+外发认证以及回复/垃圾箱表现均已完成验收。未来新增公开服务时段或响应 SLA 时，仍须
+以实际客服能力单独批准。
 
 ### D-038 — Contact 表单投递边界
 
@@ -752,6 +707,48 @@ Consequences: 紧急 Policy/Article 下线最多可能短时显示旧内容。�
 需求或多人发布增加，再重新评估 webhook 或受保护的按 tag 手动失效。
 Migration / rollback: 无运行时代码迁移；继续使用当前 300 秒配置。未来实施失效链路时
 必须验证 HMAC/鉴权、幂等、最小 tag 范围和失败降级。
+
+### D-047 — 业务侧问题不再作为网站门禁
+
+Date: 2026-09-02
+Status: Accepted
+Owner: Project owner
+Context: Q-001A、Q-001B、Q-002A、Q-002B、Q-002C 曾把商标/账号、商业规划、
+七脉轮商品开发、礼赠运营和 assortment 作为网站发布 blocker；Q-003A、Q-003F 曾把
+履约模式与法律/审批输入保持为 Pending。业务方现确认前五项与网站无关并已处理，后两项
+也已解决。
+Decision:
+
+- Q-001A/B、Q-002A/B/C 从网站开放问题中关闭。仓库不保存商标/账号核验、margin、
+  内部商品审批或包装成本；网站只消费 Shopify Headless channel 中已发布的商品、价格、
+  库存和客户可见内容。
+- Q-003A/F 不再阻塞 Shipping、Privacy、Terms、Catalog、索引或 Checkout 的代码实施。
+  客户可见履约与法律事实继续以业务方批准并发布的 Shopify 配置/Policy 为来源，仓库不
+  推断或复制未公开的主体、地址与运营记录。
+- Q-003B/C/E 继续仅阻塞其对应的特殊地址覆盖、配送费率/免邮和税费/进口责任，不扩大为
+  全站 blocker。
+- Organization/Site Settings 与 Schema 仍需代码实现和公开字段映射；这是工程缺口，
+  不再被描述为等待 Q-003F 的业务决策。
+- `info@joyamana.com` 的负责人/备援、外发认证和回复/垃圾箱表现，以及 Logo、字体授权、
+  颜色和真实商品摄影/视频均已确认完成，不再是发布待办。
+
+Reason: 网站工程不应复制业务运营系统或用内部商业问题阻塞通用 Storefront；同时，移除
+问题编号不等于允许网站虚构价格、商品、履约、法律或政策事实。
+Consequences: 后续规格和计划不得再引用这些已关闭编号作为发布门禁。未来若新增礼赠、
+七脉轮商品或公开 social/Organization 字段，应以实际 Shopify 配置、经批准公开资料和
+新的范围/验收条件实施。
+
+### D-048 — Checkout 与支付已通过当前运营验收
+
+Date: 2026-09-02
+Status: Accepted
+Owner: Project owner
+Decision: 当前 US Shopify hosted Checkout、下单与支付能力已完整支持；业务方在
+Shopify Payment test mode 下完成流程测试，未发现问题。Checkout/payment 不再作为
+未实现能力或开放问题。
+Consequences: `SHOPIFY_CHECKOUT_ENABLED` 继续作为各 deployment 独立的安全门禁，仓库
+示例值和未配置默认值仍为关闭；已验收 Production 可保持启用。此次证据是 test mode
+流程验收，不得在没有单独记录时写成已完成 live charge、退款或 payout 对账。
 
 ## Pending decision
 

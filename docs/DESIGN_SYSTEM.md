@@ -1,13 +1,12 @@
 # Design System Direction
 
-Status: Working — 测试站视觉方向已获批，生产资产待确认  
+Status: Working — 生产品牌资产已确认，组件与扩展规范继续演进
 Owner: Brand / Design  
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
-本文件定义体验和实现边界。测试站可使用下列可替换视觉方向；Logo、商品摄影和
-生产色值仍需按 `OPEN_QUESTIONS.md` 的 Assets and accounts 清单定稿。
-测试站字体使用开放授权字体，正式
-品牌上线前仍需确认字体组合是否作为长期品牌资产。
+本文件定义体验和实现边界。业务方已确认 Logo、字体授权、颜色以及真实商品摄影/视频
+问题解决，不再作为生产资产 blocker。代码和 Shopify 媒体仍须只使用实际获批资产，
+不得从本文件推断未提供的具体文件、授权范围或商品事实。
 
 ## 1. 体验原则
 
@@ -37,18 +36,23 @@ Last updated: 2026-09-01
 
 这些参考是构图、信息层级与色温原则，不构成对第三方 trade dress 的复制。
 
-## 3. 待确认的品牌输入
+## 3. 品牌输入状态
+
+已确认完成：
 
 - Logo 与 wordmark 版本、最小尺寸和留白。
 - Primary/secondary/neutral/semantic colors。
 - 字体授权、fallback 和使用层级。
 - Photography：背景、光线、比例、佩戴/尺度、独件拍摄规则。
+
+以下属于未来扩展规范，不阻塞当前网站：
+
 - Illustration/icon 风格。
 - Brand voice、capitalization、button 和 error tone。
 - Packaging 与实体触点。
 - 禁用视觉元素和竞品相似风险。
 
-无输入前只建立语义 token，不在生产文案或视觉中固化占位品牌。
+实现只使用已交付且获批的具体资产；未来扩展项未定义时保持现有语义 token 和克制默认值。
 
 ## 4. Token 结构
 

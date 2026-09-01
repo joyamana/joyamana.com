@@ -2,7 +2,7 @@
 
 Status: Active input record  
 Owner: Project owner  
-Last updated: 2026-08-31
+Last updated: 2026-09-02
 Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-03）
 
 本文件把业务方回复分为 `Confirmed`、`Working` 和 `Pending`：
@@ -43,9 +43,8 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 
 ### Pending
 
-- 美国商标与社交账号可用性；`.com` 域名和 DNS 已完成。
-- 目标价格带和 AOV。
-- Logo、字体授权、最终颜色与商品摄影。
+- 无当前网站发布待定项。美国商标/社交账号与价格带/AOV 在业务侧管理，不在
+  网站仓库跟踪；Logo、字体授权、最终颜色和真实商品摄影/视频已确认完成。
 
 ## Catalog
 
@@ -69,8 +68,8 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 
 ### Pending
 
-- 首发产品清单、SKU 数、晶体类型和主 Collection。
-- 礼盒形式、包装成本与礼品留言流程。
+- 无当前网站架构待定项。具体商品、SKU、晶体和 assortment 由 Shopify/业务运营
+  管理；礼盒、包装成本和礼品留言已移出当前网站范围，未来若启用礼赠功能另立范围。
 
 ## Market and operations
 
@@ -89,6 +88,9 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 - 当前 Shopify Shipping/Returns 正文中的运营承诺已确认：订单通常在 1–3 个工作日内
   处理，合格退货可在收货后 15 天内申请，并按已发布正文执行退货运费、原始运费和
   退款处理规则。
+- 履约模式以及法律实体、合规地址和政策审批责任已由业务方确认解决；仓库不重复保存
+  非公开运营记录，客户可见事实以 Shopify 配置和已批准 Policy 为准。
+- `info@joyamana.com` 的负责人/备援、外发认证与回复/垃圾箱表现已确认。
 
 ### Working
 
@@ -98,11 +100,9 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 
 ### Pending
 
-- 中国直发、美国本地、3PL 或混合履约。
 - Alaska、Hawaii、Puerto Rico、PO Box、军事地址范围。
 - carrier、实际 Checkout 运费与免邮门槛；handling time 已确认为通常 1–3 个工作日。
 - 销售税、关税、进口费用责任。
-- 法律实体、合规地址和政策审批人。
 
 ## Content and claims
 
@@ -131,58 +131,9 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 - 优先主题：crystal care、materials/sizing、gift selection、natural
   variations、individual crystal guides、jewelry care、brand philosophy。
 
-## Accounts, analytics and services
+## Project status routing
 
-### Current project state
-
-下列是截至 2026-08-31 的实施/账号事实，不会把测试店配置自动升级为生产批准：
-
-- Shopify store、Headless channel、服务端 private Storefront token 与至少一件
-  Headless-visible 测试商品已可用。运行时已是 Shopify-only，不再使用
-  本地商品/正文 fallback。
-- Shopify Policies、`content_page` Metaobject 与原生 Blog/Article 读取路径已实现。
-  Shipping/Returns 与 About EN/ES 正文已由业务方确认；Privacy/Terms 的法律主体、
-  Headless privacy/consent 和最终法律验收仍按适用门禁处理。Terms 后台占位地址/电话
-  已修正并由 Storefront API 直接复核。
-- Shopify 已发布非空 `Patron Saint` Design Collection，且
-  `collection_kind=design_series`；系列 description/SEO 与 story/lookbook 数据链路仍待完成。
-- `blog` 与 `crystals` 当前仍各自只有测试 Article；因尚无正式内容，业务方决定暂不
-  处理，继续保持全站 noindex，不能把测试正文升级为已批准内容。
-- 公开联系地址已决定为 `info@joyamana.com` 且 inbox 可收信；Contact 表单投递代码
-  保留但当前明确后置，仓库示例值及未配置时默认关闭。Resend、表单数据处理和滥用
-  控制只有未来重新启用表单时才进入范围；负责人/备援与外发认证仍需运营验收。
-- `www.joyamana.com` 已由 Vercel Production 公开响应，`checkout.joyamana.com`
-  已由 Shopify Online Store 公开响应；Preview branch/deployment、设计资产、GA4、
-  GSC、Merchant Center、CRM/Email、Reviews 和 Consent 仍未完成生产准备或选型。
-- D-044 已确认 `https://www.joyamana.com` 为唯一 Production canonical origin，
-  `https://joyamana.com` 308 至 `www`。Vercel 环境值已配置；当前公开 deployment 的
-  `og:url` 仍为 `https://joyamana.vercel.app`，需在新 deployment 后复核。
-
-### Confirmed boundaries
-
-- 无真实评论时不展示 Reviews。
-- 最小分析栈：Shopify + GA4 + GSC。
-- 先定义 consent 和事件，再选择 Email/CRM。
-- 首发使用 Vercel 基础日志，Beta 前再评估 Sentry。
-- Customer Account、Gift Card、Wishlist、Loyalty 均后置。
-- Training crawler policy 上线前单独决定。
-- 任何 token、密码、API secret 或客户信息不得写入 Markdown 或提交仓库。
-
-## Prototype authorization
-
-业务方已授权 Codex：
-
-- 尽快建立能运行的美国单市场测试网站。
-- 为同一 US Market 和 Catalog 创建英文根路径与 `/es-us/` 西语路径。
-- 使用集中、可替换的工作品牌配置。
-- 在自动化测试或明确标注的 fixture 中使用开发样本，不把样本升级为
-  品牌或商品事实。D-042 后 storefront 运行时禁止使用本地样本作为
-  Shopify 缺失时的 fallback。
-- 建立兼容标准商品与天然独件的数据模型。
-- 实施 Shopify-first 内容架构和基础 Search/Collection/navigation。
-- 预留未确认政策入口，但保持不可索引且不发布承诺。
-- 对待确认字段使用明确的开发占位或 TODO。
-
-仓库示例值及未配置时的代码默认值保持 `noindex`；只有真实域名、商品、政策、
-Shopify 和发布验收全部完成后才能启用索引。合格 Product 的 JSON-LD 已实现但受
-全站索引门禁抑制；Policy Schema 尚未实现，不能因开启索引门禁而视为自动具备。
+本文件只维护品牌、Catalog、Market、运营和 claims 的业务输入，不再复制部署、账号和
+实施快照。当前项目状态见 `PROJECT_SPEC.md`，当前外部依赖见 `OPEN_QUESTIONS.md`，
+Analytics/Customer lifecycle 见对应领域规格。2026-08-31 的旧账号/原型记录已归档到
+[`archive/brand-project-state-2026-08.md`](archive/brand-project-state-2026-08.md)。

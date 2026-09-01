@@ -2,7 +2,7 @@
 
 Status: Working — MVP 边界和 Contact 技术路径已确定，生产供应商/流程待批准
 Owner: Customer experience / Marketing  
-Last updated: 2026-08-31
+Last updated: 2026-09-02
 Supersedes: `docs/archive/crystal-customer-system-design.md` 的阶段命名
 
 ## 1. 原则
@@ -84,7 +84,8 @@ MVP 自助与人工服务：
 
 当前 storefront 页面只展示 Email 入口；仓库示例值及未配置时
 `CONTACT_FORM_ENABLED` 默认为关闭。Contact 表单、Resend 与滥用防护已明确延后，
-不是当前上线条件。负责人/备援、出站投递与服务流程仍需补充验收。
+不是当前上线条件。负责人/备援、外发认证、回复和垃圾箱表现已确认；未来如公开服务
+时段或响应 SLA，仍须以实际客服能力单独批准。
 
 ## 5. Customer Account（Post-MVP）
 

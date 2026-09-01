@@ -1,203 +1,53 @@
 # Open Questions
 
-Status: Active — 各项按 Blocks 阻塞对应能力；不要把条件项一律当成全站 blocker
+Status: Active — 只记录当前未解决输入；按 `Blocks` 限定影响范围
 Owner: Project owner  
-Last updated: 2026-09-01
-Resolved input: `docs/BRAND_INPUTS.md`
+Last updated: 2026-09-02
+Resolved input: `BRAND_INPUTS.md`、D-047、D-048
 
-业务方已授权先建立可运行测试站。下列问题分别会阻塞真实商品接入、政策发布或
-生产上线；以表格 `Blocks` 和发布清单的适用范围判断，不设置一个笼统 P0 标签。
-Codex 不得以开发样本代替答案。
+本文件不保存已解决问题和历史审计快照。历史记录见
+[`archive/open-questions-history-2026-08-to-09.md`](archive/open-questions-history-2026-08-to-09.md)。
+任何问题都不得自动扩大成全站 blocker；只阻塞表格明确列出的能力。
 
-## Brand and commercial
-
-| ID | Pending decision | Blocks |
-|---|---|---|
-| Q-001A | Joya Mana 的美国商标与社交账号核验；`.com` 与 DNS 已完成 | Production identity |
-| Q-001B | 价格带、AOV 和 margin context | Real prices、free shipping |
-| Q-002A | 七脉轮普通款完整 11 选项、SKU、正式材料与定价 | Seven Chakra 生产 Catalog |
-| Q-002B | 礼盒、包装成本、礼品留言 | Gift experience |
-| Q-002C | 正式首发 assortment；Aquamarine 是否仅测试商品 | Public Catalog、index、Checkout |
-
-## Fulfillment and policy
+## Fulfillment, tax and policy
 
 | ID | Pending decision | Blocks |
 |---|---|---|
-| Q-003A | 中国直发、美国本地、3PL 或混合履约 | Shipping promise |
 | Q-003B | Alaska/Hawaii/Puerto Rico/PO Box/APO/FPO 范围 | Delivery coverage |
 | Q-003C | carrier、实际 Checkout 运费、免邮门槛；handling 已确认为通常 1–3 个工作日 | Checkout/shipping settings |
 | Q-003E | 销售税、关税、进口费用责任 | Checkout/policy |
-| Q-003F | 法律实体、地址、政策审批人 | Privacy/Terms/Organization |
 
-未解决前，缺失的 Shopify Policy 必须 fail closed 或明确显示暂不可用，全站保持
-`noindex`，不得输出 Shipping/Return policy Schema；不得用本地开发正文伪装政策。
+这些问题不阻塞已经发布的 Catalog、已审核页面或现有下单支付能力。网站不得自行补写
+特殊地区承诺、免邮、税费或进口责任；客户可见事实必须来自 Shopify 配置和已批准 Policy。
 
-已解决：Q-003D。业务方确认当前公开 Returns 正文，包括收货后 15 天申请窗口、
-例外、适用退货运费责任、原始运费和退款处理时限；Shipping 正文中的通常 1–3 个
-工作日处理承诺也已确认。
+## External setup and release dependencies
 
-## Assets and accounts
+- [ ] 上线/变更商品前复核 Shopify Standard Product Category。
+- [ ] 为正式商品完整填充并审核 Product knowledge metafields：materials、dimensions/
+  fit、care、origin/treatment disclosure、package contents 和 related content。
+- [ ] 为所有正式商品填充 `custom.product_model`；未知或无效值继续 fail closed。
+- [ ] 定义并映射 exact item / representative image disclosure。
+- [ ] 完成 Design Series Metaobject、`custom.design_series` reference、story/lookbook；
+  `Patron Saint` 的非空 Collection 与 `collection_kind=design_series` 基础门禁已完成。
+- [ ] 配置并验收 GA4、Google Search Console 和 Merchant Center。
+- [ ] 决定并实现 Analytics/marketing consent 与 Headless `Your Privacy Choices`；不得向
+  浏览器暴露 server-only Storefront token。
+- [ ] Email/CRM 供应商与 consent/event 方案；Contact 当前保持已确认的 Email-only。
 
-- [x] Shopify store / development store
-- [x] Headless channel 与 private Storefront API access（2026-08-15 只读验证通过）
-- [x] 历史代表性 mock Product/Collection 已完成迁移并从运行时代码删除
-- [x] Shopify Headless channel 中发布测试 Product/Variant（2026-08-25 可见 1 件）
-- [x] Shopify Headless channel 已发布非空 `Patron Saint` Design Collection，且
-  `custom.collection_kind=design_series`；已进入 Header、hub 和详情页
-- [ ] 上线前复核所有 Shopify Standard Product Category；2026-08-30 Storefront
-  抽查时 Aquamarine 可通过 Bracelets Category 发现
-- [ ] 定义、填充并映射正式 Product knowledge metafields：materials、dimensions/
-  fit、care、origin/treatment disclosure、package contents 与 related content，并完成 EN/ES 审核
-- [ ] 在 Shopify 建立并为所有正式商品填充 `custom.product_model`；代码已映射
-  `standard`、`natural_variation` 与 `one_of_one`，缺失或未知值会 fail closed
-- [ ] 定义并映射 exact item/representative image disclosure；商品模型与低库存披露
-  已实现，但图片所展示的是确切单件还是代表性样品仍未形成正式语义
-- [ ] 创建并接入 Design Series Metaobject、Product/Collection
-  `custom.design_series` reference 与 story/lookbook；`Patron Saint` 的 Collection kind
-  基础门禁已完成，但 description/SEO 仍为空
-- [x] 在现有 `content_page` definition 增加可选 `navigation_title`（single line）、
-  `summary`（multi-line）和 `child_pages`（Content Page Metaobject reference list），并
-  确认 Storefront access
-- [x] 创建、审核并发布 root `about`；Philosophy、Approach、Founder 已加入
-  `about.child_pages`，按期望 tabs 顺序排列，并完成 en-US / es-US 正文与 SEO 审核
-- [x] 最终域名和 DNS：`www.joyamana.com` 指向 Vercel，
-  `checkout.joyamana.com` 指向 Shopify Online Store
-- [x] Vercel account/team 与 Production deployment；`www` 已公开响应
-- [x] `dev` 分支已推送并由 Vercel 构建为受保护 Preview
-- [x] D-044 确认 `https://www.joyamana.com` 为 canonical origin，apex 308 至 `www`；
-  Vercel Production 环境值已设置
-- [x] 当前公开 deployment 已复核 canonical/OG 使用 `https://www.joyamana.com`
-- [ ] Logo、字体授权、颜色
-- [ ] 真实商品摄影/视频
-- [x] Home 已移除并删除测试期 `bling-omen-editorial-hero.png`；2026-09-01 业务方重新
-  要求使用图片，现采用获批的抽象矿物编辑图 `joya-mana-home-hero.webp`。该图不对应
-  具体在售商品，不能替代真实商品摄影
-- [x] 公开客服/隐私邮箱确定为 `info@joyamana.com`
-- [x] `info@joyamana.com` inbox 已确认可以收信
-- [ ] 确认 `info@joyamana.com` 负责人/备援、外发认证与回复/垃圾箱表现
-- [x] Contact 当前采用 Email-only，表单明确后置并保持
-  `CONTACT_FORM_ENABLED=false`；Resend、表单数据处理与 WAF 只在未来重新批准表单时评估
-- [ ] GA4 / GSC / Merchant Center
-- [ ] Email/CRM 与 Consent 方案
+以上清单中的代码工作在对应输入或外部配置准备后进入 Roadmap，不等于全部阻塞当前
+Production。价格、库存、Cart、Checkout 和已接入内容继续以 Shopify 为事实来源。
 
-不要在本文件粘贴 credential。
+## Current production release state
 
-## Shopify storefront audit — 2026-08-16（历史快照）
-
-本节只保留当日证据；后续 follow-up 与当前 Shopify response 优先。Storefront API
-当日只读确认：
-
-- Store name 为 Joya Mana；主域名仍是 `gee0hu-1n.myshopify.com`，商店描述为空。
-- 仅 US / USD / English 可用，`shipsToCountries` 仅 US；Canada 未开放。
-- 支付展示配置返回 USD 与常见卡组织，但这不证明 payment provider 已激活、
-  payout 已验证或测试模式配置正确。
-- Privacy Policy 有 Shopify 正文，但尚未完成业务/法律批准；Refund、Shipping、
-  Terms 均为空。
-- Headless 可见 Product 为 0；只有空的默认 `frontpage` Collection。
-- Headless 可见 Page 为 0；默认中文 Blog「新闻」无文章；`main-menu` 仍是中文
-  默认菜单。Next.js 不使用 Shopify theme menu，但这些默认内容应在上线前整理。
-
-Storefront token 无法验证、仍需 Shopify Admin 人工确认：
-
-- 法律主体、地址、账单套餐、Shopify Payments、银行与 payout 状态、测试模式。
-- Inventory location、fulfillment origin、package、shipping profile/zone/rate。
-- US sales-tax registration 与 Shopify Tax 设置；不得仅凭默认计算视为合规。
-- Guest checkout、Customer accounts、营销同意、订单处理和 Checkout branding。
-- Customer Privacy、cookie banner、data-sharing opt-out 与实际第三方脚本清单。
-- Notification sender、发件域名认证、订单邮件、support/privacy 邮箱。
-- 正式域名、DNS、Checkout domain、像素/Analytics 和生产 Secret 分离。
-
-## Shopify storefront follow-up — 2026-08-25（历史快照）
-
-Storefront API 与安全的 Cart smoke 已确认：
-
-- Headless 可见 `aquamarine-bracelet-9-mm` 及 1 个可售 Variant，contextual price
-  为 USD；页面不得再使用 `$68` mock 价格或七脉轮 mock 商品作为运行时回退。
-- 本轮早期该商品 Shopify description 只有 `$14`；最终实时复核时已替换为完整
-  商品正文，当前页面未再出现该价格冲突。正文仍须在公开发布前由业务方审核。
-- Collection 仍只有空的默认 `frontpage`；Storefront 在有真实非空 Collection 前
-  只能展示 Shopify 全商品目录，具体 Collection URL 不得引用本地 mock。
-- US Spanish `@inContext(language: ES)` 当前回退为 English，说明西语翻译尚未在
-  Shopify 发布；`/es-us/` 继续 noindex，不能把 fallback 视为已审核翻译。
-- 当日 token 尚不能读取具体库存数量，页面只使用 `availableForSale` 与
-  Shopify Cart warning/user error 做可售校验。该状态已被 2026-08-31 follow-up 取代。
-- Cart create/update/remove 与 HTTPS `checkoutUrl` 合约可用；smoke 未创建订单，
-  测试商品行已移除。Buy now 与 Bag Checkout 的代码仍受
-  `SHOPIFY_CHECKOUT_ENABLED=false` 门禁保护。
-
-## Shopify policy follow-up — 2026-08-30
-
-- Storefront API 当前可读取已发布的 Refund Policy 与 Privacy Policy；Shipping
-  Policy 和 Terms 仍未完成。
-- `/returns` 与 `/privacy` 已改为服务端读取 Shopify Policy，并对商家正文执行
-  HTML allowlist 清理；正文缺失或 API 不可用时不输出旧政策承诺，也不进入索引。
-- Shopify 当前返回真实西语 Refund Policy；Privacy Policy 的 `ES` context 仍回退
-  English。西语路由始终可访问，只有正文存在真实翻译时才允许进入 sitemap/index。
-- Shopify Customer privacy 当前显示：Cookie banner 使用 automated 判断且 US
-  销售地区不要求展示；Data sharing opt-out 已在 California、Colorado 等 15 个州
-  启用；Shopify Network Intelligence 为 Enabled。
-- Shopify Online Store 的 data-sharing opt-out 设置不会自动为 Next.js Headless
-  storefront 生成入口。正式公开前仍需使用独立 public Storefront token 接入
-  Customer Privacy API、提供 `Your Privacy Choices`，并核对同根 Checkout domain；
-  绝不能向浏览器暴露当前 server-only private token。
-
-## Shopify editorial follow-up — 2026-08-30
-
-- Storefront API 当前可读取原生 Blog `blog` 与 `crystals`；两者各有 1 篇已发布测试
-  Article，分别为 `hello-world` 与 `hello-for-crystal-guide`。
-- `/blog`、`/crystals` 与各详情页已切换为 Shopify Article，不再读取本地 prototype
-  entries；品牌 URL 不暴露 Shopify `/blogs/*`。首页已按后续业务决定移除 Blog 推荐。
-- 两篇测试 Article 当前均无 excerpt、SEO、featured image 或 tags，正文只有一行测试
-  文字。前端会从正文生成安全摘要，但这些内容仍须替换为原创、审核完成的正式内容。
-- `@inContext(language: ES)` 当前对两个 Blog 均回退 English；西语页面提供阅读后备并
-  保持 noindex，不进入西语 sitemap/hreflang。
-- 当前全站 noindex 门禁不变。正式开放索引前还需完成 Article 内容审核、claim/source
-  检查、独立 SEO、图片 alt、翻译与相关商品关系。
-
-## Shopify runtime follow-up — 2026-08-31
-
-- Headless private Storefront token 现可读 `quantityAvailable` 与
-  `currentlyNotInStock`。Product/Cart mapper、PDP 与 Bag 已与 contextual
-  `quantityRule` 一起使用这些字段约束可选数量；并发变化仍以 Cart warning/
-  user error 和 Checkout 为准。PDP 仅对明确标记为 `standard` 或
-  `natural_variation`、可售、非 oversell、购买增量为 1 且准确库存为 1–3 的所选
-  Variant 显示 `Only X left`；`one_of_one`、未知模型和不可靠库存全部排除，商品卡不显示。
-- `COMMERCE_PROVIDER`、本地 mock Catalog、本地 Trust/Policy/About/Editorial 正文
-  fallback 已删除。Storefront 现为 Shopify-only；缺失/无效/异常时 fail closed。
-- 当前 Search 仅检索 Shopify Product；CI、自动化浏览器/支付 E2E、Analytics/consent
-  和 Customer Privacy API 仍未实现。Webhook/cache invalidation 按 D-046 后置，当前
-  接受并记录低频内容与导航的 5 分钟缓存窗口。Playwright 按 D-043 暂缓，当前使用
-  有记录的人工浏览器/Checkout smoke。
-- Search metadata 已与 Product-only 运行时一致，不再声称检索 editorial content。
-- 参数请求已输出 `noindex, nofollow, noarchive`，保留 clean canonical 并移除 hreflang；
-  clean URL 由 D-045 的部署级总开关与 `src/config/indexing.ts` 中的 locale/page-group scope
-  共同控制。
-- Policy/Accessibility 的双向 hreflang 已按各语言真实 readiness 过滤；fallback 页继续
-  noindex，并退出 sitemap/Schema。
-- Product/Collection 尚无法自动识别 Spanish 真实翻译与 English fallback；在增加
-  Commerce translation readiness 验证前，已获业务方批准开放的 es-US Commerce 依赖
-  每次发布的人工逐页核对。这仍是自动化缺口和发布风险，不再作为 scope 配置阻塞项。
-- en-US/es-US 已在初始 HTML 输出正确的 document-level `<html lang>`。
-- Header 目录已使用不含价格/库存/正文的导航专用 query/projection；上游失败时降级为
-  基础导航并保留页面主体，不恢复本地 Catalog。监控/告警仍属于 Q-105。
-
-## Shopify content and operations follow-up — 2026-08-31
-
-- 非空 `Patron Saint` Collection 已发布到 Headless，并因
-  `custom.collection_kind=design_series` 进入公开系列路由；旧“只有空 frontpage”只保留
-  为 2026-08-25 历史证据。当前 Collection description/SEO 为空，Design Series
-  Metaobject/reference 与 story/lookbook 尚未接入。
-- Shipping、Returns、Privacy、Terms 与 Accessibility 均可由 Storefront API 读取 EN/ES
-  正文。业务方确认当前 Shipping/Returns 运营承诺；PDP 已改为显示 1–3 个工作日处理、
-  15 天退货申请窗口和 Checkout 运费/预计日期摘要。
-- 业务方确认 Terms 后台已移除公开地址/电话占位符；Storefront API 直接请求复核为 0 个
-  占位符；2026-09-01 公开 Production HTML 复核也已不含占位符。
-- About root、Philosophy、Approach、Founder 的 EN/ES 正文及 Founder 个人事实已获业务方
-  确认；每件商品附带专属 guidebook 也已确认为实际履约承诺。
-- `info@joyamana.com` 已确认可收信。当前正式客服范围为 Email-only，Contact 表单、
-  Resend 和表单滥用控制后置，不阻塞当前范围。
-- Blog/Crystal Guide 仍各有一篇测试 Article，且西语回退 English；由于暂无正式内容，
-  业务方决定本阶段暂不处理。它们继续不得进入可索引 sitemap 或被标记为正式内容。
+- `https://www.joyamana.com` 是唯一 canonical origin；apex 308 至 `www`。
+- Production 首页与 `/es-us` 已复核为 `index, follow`。en-US/es-US Core、Commerce、
+  Policies 已打开；Editorial 关闭，Cart、Search、Preview 和参数页继续 noindex。
+- `sitemap.xml` 已非空，只包含通过 scope 与页面 readiness 的 URL。
+- 下单支付已由业务方确认完整支持，Shopify Payment test mode 流程测试未发现问题。
+- Blog/Crystal Guide 测试 Article 暂不处理并保持 Editorial noindex。
+- `info@joyamana.com` 的 inbox、负责人/备援、外发认证和投递表现已确认；Contact 表单
+  继续后置。
+- Logo、字体授权、颜色和真实商品摄影/视频已确认完成。
 
 ## Deferred / conditional decisions
 
@@ -206,41 +56,15 @@ Storefront API 与安全的 Cart smoke 已确认：
 | Q-101 | Training crawler policy（对应 D-016） | Pending；Search/User 与 Training 分开 |
 | Q-103 | Reviews provider | 无真实评论时不渲染模块 |
 | Q-104 | Email/CRM | 先定义 consent/events |
-| Q-105 | Error monitoring | Vercel Production baseline 已有；告警、owner 与保留策略待复核 |
+| Q-105 | Error monitoring | Vercel baseline 已有；告警、owner 与保留策略待复核 |
 | Q-106 | Customer Account | Post-launch |
 | Q-107 | Future markets | 第一阶段仅 US；CA 保留 planned 配置且不创建公开 URL |
 | Q-108 | Gift Card/Wishlist/Loyalty | 依据购买和复购数据 |
 
-## Resolved on 2026-08-03
+## Closed scope reference
 
-- Working name/positioning/voice and prohibited brand claims。
-- Standard + natural one-of-a-kind catalog model。
-- One-of-a-kind quantity=1 and exact-image rule。
-- Custom Crystal、Subscription、Customer Account 后置。
-- Shopify Pages/Blog/Metaobjects，独立 CMS 后置。
-- `/blog` URL。
-- 同一 US Market/Catalog 支持 en-US 根路径与 `/es-us/`。
-- CA typed Market/Catalog 模型保留，但第一阶段不公开 `/en-ca/`、`/fr-ca/`，
-  不发布 CAD 价格或 Canada Checkout。
-- 当前不建 Global Site；未来可按触发条件增加 `/choose-region`。
-- Market、Language、URL、Currency 分离；Currency 不进入 URL。
-- Claims/editorial constraints。
-- Minimal analytics: Shopify + GA4 + GSC。
-- Codex 可继续初始化不可索引测试站。
-
-## Resolved on 2026-08-14
-
-- 品牌名称确认为 `Joya Mana`；美国商标和社交账号可用性仍在 Q-001A。
-
-## Production deployment follow-up — 2026-08-31
-
-- `https://www.joyamana.com` 外部返回 HTTP 200，并由 Vercel 提供服务。
-- `https://checkout.joyamana.com` 外部返回 HTTP 200，并由 Shopify 提供服务。
-- Production 首页仍输出 `noindex, nofollow, noarchive`；`robots.txt` 允许抓取，
-  但 `sitemap.xml` 是空 `urlset`。这是公开可访问但尚未开放搜索索引的状态。
-- D-044 已确认 `www` canonical，外部检查确认 apex 308 至 `www`；当前 deployment 的
-  canonical/OG 已复核为 `https://www.joyamana.com`。origin 正确不代表可以同时打开
-  index gate。
-- 业务方确认网站已正式公开，但下单支付等能力尚未完整支持。因此域名与部署问题已
-  解决，Checkout/payment、政策、翻译、Analytics/consent 与发布验收仍按各自 Blocks
-  保持开放。
+- Q-001A/B、Q-002A/B/C 已由 D-047 移出网站范围。
+- Q-003A/F 已解决；Organization/Site Settings 仍是公开字段映射的工程缺口，不是业务
+  决策缺口。
+- Q-003D、品牌资产、商品摄影和客服邮箱运营验收均已解决。
+- Checkout/payment 已由 D-048 接受，不再是开放问题。

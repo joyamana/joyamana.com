@@ -1,24 +1,26 @@
 # Launch Runbook
 
-Status: Active — Production 已公开，交易、内容、索引与运营退出条件未完成
+Status: Active — Production 已公开并开放已审核索引/交易范围；剩余内容与运营项继续验收
 Owner: Engineering / Operations  
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 本 Runbook 只描述可重复的发布控制。`https://www.joyamana.com` 已由 Vercel 公开
 提供 storefront，`https://checkout.joyamana.com` 已指向 Shopify Online Store；
-联系人、Shopify Admin 支付配置、dashboard 和完整发布验收仍是待填项。
+业务方已确认下单支付完整支持，Payment test mode 流程测试未发现问题；发布角色、
+dashboard、Analytics/consent 和剩余运营验收仍需持续维护。
 索引、Shopify Checkout 和 Contact 表单投递是三个独立门禁族；索引进一步采用部署级
 总开关，以及 `src/config/indexing.ts` 中版本控制的 locale/page-group 矩阵。总开关示例值
-和仓库细分策略均默认关闭，各 Preview/Production deployment 必须分别核验总开关。
+默认关闭；当前仓库矩阵已打开 en-US/es-US Core、Commerce、Policies，Editorial 关闭。
+各 Preview/Production deployment 必须分别核验总开关，Preview 始终 noindex。
 仓库尚无 CI、自动化浏览器/支付 E2E 或
 Analytics/consent 运行时。Playwright 按 D-043 暂缓；当前发布使用有记录的人工
 浏览器/Checkout smoke，不能声称自动化 E2E 已通过。
 Webhook/cache invalidation 按 D-046 后置，发布流程接受并记录 5 分钟内容/导航窗口。
 
-2026-08-31 外部基线：`www` 与 `checkout` 均返回 HTTP 200，apex 返回 308 至 `www`；
-Production storefront 仍输出 `noindex, nofollow, noarchive`，sitemap 为空。
-D-044 的 `www` canonical、apex 308 和公开 `og:url` 已复核。其他 SEO blocker 完成前
-保持索引总门禁关闭；后续只打开 D-045 中通过验收的 locale/page-group scope。
+2026-09-02 当前外部基线：Production 首页和 `/es-us` 均为 `index, follow`；sitemap
+包含双语言 Core、Commerce、Policies，Editorial 仍 noindex，Cart/Search/参数页继续
+永久 noindex。D-048 记录 Checkout/payment 已通过当前 test mode 运营验收。旧外部基线
+见 `archive/open-questions-history-2026-08-to-09.md`。
 
 ## 1. 发布角色
 
@@ -36,9 +38,9 @@ D-044 的 `www` canonical、apex 308 和公开 `og:url` 已复核。其他 SEO b
 
 ## 2. Go/no-go 前置条件
 
-- `OPEN_QUESTIONS.md` 中 `Blocks` 覆盖 Public Catalog、index、Checkout、Policy、
-  production identity/domain 或所选首发能力的项目已解决；条件/后置项按实际 scope
-  记录决定，不笼统要求全部关闭。
+- `OPEN_QUESTIONS.md` 中剩余问题按各自 `Blocks` 验收；Q-001A/B、Q-002A/B/C 已移出
+  网站范围，Q-003A/F 已解决，不再把它们恢复成 Public Catalog、index 或 Checkout 的
+  笼统 blocker。
 - MVP PRD 的发布验收没有未接受的 blocker。
 - Production Shopify Catalog、Markets、payment、shipping、tax 配置获批。
 - 域名、SSL、Checkout domain、Email sender 和 support inbox 可用。
@@ -78,7 +80,8 @@ build: pnpm build
 - 测试 Guest Cart → Checkout → test order → confirmation → Order Status。
 - 售罄、超库存、折扣、损坏 Cart 和 API 失败。
 - Transaction Email 与 support reply。
-- `info@joyamana.com` inbox 已确认可收信；仍需确认负责人/备援、回复流程和出站投递。
+- `info@joyamana.com` inbox、负责人/备援、回复流程、外发认证和垃圾箱表现已确认；发布
+  smoke 仍需验证当次环境与实际收发链路。
   若未来启用 Contact 表单，
   另行批准 Resend 的数据边界/保留期/成本/退出路径，验证发件域与生产滥用控制。
 

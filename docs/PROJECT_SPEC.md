@@ -2,7 +2,7 @@
 
 Status: Working — 核心技术切片已实现，生产输入与发布验收未完成
 Owner: Business owner  
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 Supersedes: 2026-08-02 之前的简版 `PROJECT_SPEC.md`
 
 ## 1. 项目定义
@@ -20,19 +20,21 @@ Supersedes: 2026-08-02 之前的简版 `PROJECT_SPEC.md`
 
 品牌名称已确认为 `Joya Mana`，`www.joyamana.com` 与 `checkout.joyamana.com` 已完成
 Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyamana.com` 可收信。
-美国商标/社交账号、价格带、正式首发 assortment、品牌资产及剩余税务/法律/隐私事项
-仍未确认。完整输入见
-`docs/BRAND_INPUTS.md`。
+商标/社交账号、价格带/margin、具体商品开发、礼赠运营和 assortment 已从网站范围移出；
+履约模式、法律实体/地址/政策审批责任，客服负责人/备援与外发投递，以及 Logo、字体
+授权、颜色和真实商品摄影/视频均已由业务方确认解决。剩余配送覆盖、费率、税费/进口
+责任、隐私/consent 和 Checkout 运营验收仍按各自范围处理。完整输入见
+`docs/BRAND_INPUTS.md` 和 `docs/OPEN_QUESTIONS.md`。
 
 ### 当前实施快照
 
 - Next.js 16 / React 19 / TypeScript storefront 已运行，en-US 根路径和
   `/es-us/` 使用同一 US Catalog/USD context；Canada 规划路径返回 404。
 - Vercel Production 已在 `https://www.joyamana.com` 返回 200；Shopify Online Store
-  已在 `https://checkout.joyamana.com` 返回 200。Production 仍 noindex、sitemap
-  为空；D-044 已确认 `www` 为唯一 canonical origin，apex 308 至 `www`。Vercel
-  环境值已配置，当前公开 canonical/OG 已复核为 `www`；
-  下单支付等能力尚未完整验收。
+  已在 `https://checkout.joyamana.com` 返回 200。Production 总索引门禁已打开；公开
+  首页和 `/es-us` 为 `index, follow`，sitemap 已包含双语言 Core、Commerce、Policies，
+  Editorial 继续关闭。D-044 已确认 `www` 为唯一 canonical origin，apex 308 至 `www`。
+  Vercel 环境值已配置，当前公开 canonical/OG 已复核为 `www`。
 - Runtime Commerce 与 Shopify-backed 业务正文已是 Shopify-only：Catalog、Policy、
   About/Accessibility、Blog/Guide 通过服务端查询读取，Bag/Buy now 通过 Shopify Cart
   mutations 创建和更新 Cart；这些路径均无本地业务数据 fallback。Home、Contact、
@@ -44,7 +46,9 @@ Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyam
   Guide 的测试 Article 因暂无正式内容暂不处理并继续排除索引。
 - Product、Shop/Category/Collection、About 和 Article 的 metadata/部分适用 Schema
   与 sitemap 门禁已实现；Home Organization/WebSite/WebPage、ContactPage、Policy
-  Schema、内容搜索、Analytics/consent、CI 与支付 E2E 仍未完成；webhook 按 D-046
+  Schema、内容搜索、Analytics/consent 与 CI 仍未完成；下单支付已由业务方确认完整
+  支持，Payment test mode 的人工端到端测试未发现问题，但按 D-043 没有自动化浏览器/
+  支付 E2E。webhook 按 D-046
   后置并接受 5 分钟内容/导航缓存窗口。Playwright
   按 D-043 暂时封存，浏览器/支付验收当前采用有记录的人工 smoke。
 - Product `custom.product_model` 已映射，并只在明确 repeatable 模型和可靠的 1–3 件
@@ -61,7 +65,8 @@ Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyam
   开放，双语言 Editorial 关闭；
   `SHOPIFY_CHECKOUT_ENABLED` 和
   `CONTACT_FORM_ENABLED` 是三个独立发布门禁；仓库示例值及未配置时的代码默认值
-  均为关闭，各 Preview/Production 部署必须分别核验实际环境值。
+  均为关闭，各 Preview/Production 部署必须分别核验实际环境值。当前 Production 索引
+  与 Checkout 已通过业务验收并启用，Contact 表单继续关闭。
 
 ## 2. 目标优先级
 
@@ -135,7 +140,8 @@ certified 等词。
 - 清楚区分材料事实、传统文化含义和个人实践。
 
 品牌语气：Modern、Mysterious、Refined、Warm、Trustworthy。视觉避免杂乱、
-强玄学、恐惧营销、假奢侈和过量装饰。价格带仍待确认。
+强玄学、恐惧营销、假奢侈和过量装饰。价格带与 margin 在业务侧管理；网站只显示
+Shopify 当前真实价格，不复制内部商业模型。
 
 ## 6. MVP 范围
 
@@ -211,14 +217,14 @@ certified 等词。
 
 ### 业务依赖
 
-- 美国商标/社交账号核验、法律实体、支持邮箱负责人/备援和剩余政策审批责任人。
-- 价格带和最终视觉资产。
-- 首发商品、SKU、图片、材料、尺寸、来源与处理信息。
-- 发货地、特殊覆盖地区、Checkout 运费、税费和客服操作流程；Shipping/Returns 正文
-  已确认。
+- Shopify 中公开商品的 SKU、图片、材料、尺寸、来源与处理信息必须真实完整；具体
+  assortment 和商品开发由业务运营管理，不在仓库维护第二份审批清单。
+- 特殊覆盖地区、Checkout 运费、税费和客服操作流程；履约模式及 Shipping/Returns
+  正文已确认。
 - 真实内容、作者背景与引用。
-- Shopify Checkout/Payment/Market 运营验收；Vercel Production 与 store/
-  Headless channel 已具备测试读取能力。
+- Shopify Checkout/Payment 已通过业务方验收，test mode 流程未发现问题；后续 live
+  provider/payout 对账属于运营记录，不把未执行证据写成已验证。Vercel Production 与
+  store/Headless channel 已具备运行能力。
 
 ### 技术依赖
 
@@ -233,7 +239,7 @@ certified 等词。
 
 | 风险 | 影响 | 缓解 |
 |---|---|---|
-| 已确认品牌名被误解为域名/商标/定位均已批准 | 域名、文案、资产返工 | 集中 brand config + 发布门禁 |
+| 业务侧品牌/商业记录被复制成网站事实 | 文案、合规与维护风险 | 仓库只保留获批公开字段；内部记录留在业务系统 |
 | Hydrogen 与 Next.js 旧指令并存 | 架构分叉 | 旧文档归档；`D-003` 固化 |
 | 独件与标准 SKU 模型不清 | PDP、库存、Schema 错误 | 先确认 Catalog worksheet |
 | 水晶功效被写成医疗事实 | 信任与合规风险 | Claims policy、引用和发布审核 |

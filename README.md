@@ -3,15 +3,17 @@
 面向美国市场的水晶 DTC 品牌独立站。项目采用 `Brand + Content + Commerce`
 模式：以品牌体验和可信内容建立认知，以 Shopify 完成交易。
 
-当前状态（截至 2026-09-01）：**Production storefront 已在
+当前状态（截至 2026-09-02）：**Production storefront 已在
 `https://www.joyamana.com` 公开运行；Phase 3 与 Commerce hardening 仍在继续**。
-`https://checkout.joyamana.com` 已指向 Shopify Online Store，但下单支付、税务/法律、
-商品西语本地化和发布验收尚未完成，不能把“域名可访问”解释为完整交易上线。
+`https://checkout.joyamana.com` 已指向 Shopify Online Store；业务方确认下单支付完整
+支持，Payment test mode 流程测试未发现问题。特殊配送覆盖、费率、税费/进口责任、
+商品西语本地化和剩余发布验收仍按各自范围继续。
 商品/Cart 事实及已接入的 Policy、About/Accessibility、Blog/Guide 正文来自
 Shopify，不再使用本地样本商品或正文 fallback。Home、Contact、导航等界面文案仍由
-代码配置维护。全站索引、Shopify Checkout 和 Contact 表单投递分别受独立门禁
-保护；当前 Shipping/Returns 和 About 内容已确认，其他法律/隐私、商品西语翻译、
-外部账号和发布验收仍未完成。当前输入与
+代码配置维护。索引、Shopify Checkout 和 Contact 表单投递分别受独立门禁保护；
+Production 当前已开放 en-US/es-US Core、Commerce、Policies 索引，Editorial 和永久
+noindex 页面继续关闭。Shipping/Returns、About、法律/审批输入、品牌资产与客服运营
+已确认，隐私/consent、商品西语自动验证和剩余发布验收仍未完成。当前输入与
 阻塞项分别见 [`docs/BRAND_INPUTS.md`](docs/BRAND_INPUTS.md) 和
 [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)。
 
@@ -32,23 +34,22 @@ Shopify，不再使用本地样本商品或正文 fallback。Home、Contact、�
 1. [`AGENTS.md`](AGENTS.md)：Codex 的仓库级工作约定。
 2. [`docs/DECISIONS.md`](docs/DECISIONS.md)：已接受、拟议与待定的决策。
 3. [`docs/BRAND_INPUTS.md`](docs/BRAND_INPUTS.md)：确认、工作假设与待定输入。
-4. [`docs/PRODUCT_INPUTS.md`](docs/PRODUCT_INPUTS.md)：系列构思与当前测试商品。
-5. [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)：项目目标、边界与风险。
-6. [`docs/MVP_PRD.md`](docs/MVP_PRD.md)：MVP 页面、流程和验收条件。
-7. 领域规格：
+4. [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)：项目目标、边界与风险。
+5. [`docs/MVP_PRD.md`](docs/MVP_PRD.md)：MVP 页面、流程和验收条件。
+6. 领域规格：
    - [`docs/TECH_SPEC.md`](docs/TECH_SPEC.md)
    - [`docs/COMMERCE_SPEC.md`](docs/COMMERCE_SPEC.md)
    - [`docs/CONTENT_SEO_GEO_SPEC.md`](docs/CONTENT_SEO_GEO_SPEC.md)
    - [`docs/CUSTOMER_LIFECYCLE.md`](docs/CUSTOMER_LIFECYCLE.md)
    - [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)
    - [`docs/ANALYTICS_AND_KPIS.md`](docs/ANALYTICS_AND_KPIS.md)
-8. [`docs/ROADMAP.md`](docs/ROADMAP.md)：阶段、依赖与退出条件。
-9. [`docs/LAUNCH_RUNBOOK.md`](docs/LAUNCH_RUNBOOK.md)：发布、监控与回滚。
-10. [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)：仍需确认的生产输入。
-11. [`docs/REFERENCES.md`](docs/REFERENCES.md)：时效性官方资料索引。
-12. [`PLANS.md`](PLANS.md)：复杂开发任务的执行计划模板。
+7. [`docs/ROADMAP.md`](docs/ROADMAP.md)：阶段、依赖与退出条件。
+8. [`docs/LAUNCH_RUNBOOK.md`](docs/LAUNCH_RUNBOOK.md)：发布、监控与回滚。
+9. [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)：仍需确认的生产输入。
+10. [`docs/REFERENCES.md`](docs/REFERENCES.md)：时效性官方资料索引。
+11. [`PLANS.md`](PLANS.md)：复杂开发任务的执行计划模板；已完成计划保存在 archive。
 
-`docs/archive/` 仅保存历史研究，不是当前事实来源。出现冲突时，按
+`docs/archive/` 仅保存历史研究、旧输入、审计快照和已完成计划，不是当前事实来源。出现冲突时，按
 `AGENTS.md` 中的文档优先级处理，并在同一变更中修正文档。
 
 ## 开发命令
@@ -81,18 +82,19 @@ Commerce 与 Shopify-backed 正文的数据路径只使用 Shopify Storefront AP
 Accessibility，以及 Shopify Blog `blog` / `crystals` 驱动的 Blog 和 Crystal
 Guide。`Patron Saint` 是当前非空、Headless 可见且标记为 `design_series` 的系列；
 description/SEO 与完整 story/lookbook 仍待补齐。Contact 当前正式采用 Email-only，
-`info@joyamana.com` 已确认可收信；表单/Resend 后置，负责人/备援和外发流程仍须验收。
+`info@joyamana.com` 已确认可收信，负责人/备援、外发认证和投递表现也已确认；
+表单/Resend 后置。
 当前站内 Search
-只检索 Shopify 商品，内容检索、Analytics/consent 和真实浏览器
-与支付验收仍是待办；Playwright 按 D-043 暂缓，当前采用有记录的人工 smoke。
+只检索 Shopify 商品，内容检索、Analytics/consent 和自动化浏览器/支付 E2E 仍是待办；
+人工 Payment test mode 验收已通过。Playwright 按 D-043 暂缓，当前采用有记录的人工 smoke。
 Webhook 缓存失效按 D-046 后置，低频内容与导航接受并记录 5 分钟窗口。
 
-2026-08-31 外部检查确认 apex 308 至 `https://www.joyamana.com`、`www` 返回 Vercel
+2026-09-02 外部检查确认 apex 308 至 `https://www.joyamana.com`、`www` 返回 Vercel
 HTTP 200、`checkout` 返回 Shopify HTTP 200。D-044 确认 `www` 是唯一 canonical
 origin；Vercel Production 环境值已由业务方配置，当前公开 deployment 的
-canonical/OG 已复核为 `https://www.joyamana.com`。Production 仍
-`noindex` 且 sitemap 为空。D-045 已将索引控制拆为部署级总开关，以及
-`src/config/indexing.ts` 中版本控制的 locale/page-group 矩阵；只为已完成验收的范围开放。
+canonical/OG 已复核为 `https://www.joyamana.com`。Production 首页和 `/es-us` 当前为
+`index, follow`，sitemap 已包含双语言 Core、Commerce、Policies；Editorial、Cart、
+Search 和参数页继续 noindex。D-045 使用部署总开关与仓库 locale/page-group 矩阵控制范围。
 
 当前代码已实现参数页 noindex、en-US/es-US document-level `<html lang>`、按真实
 翻译 readiness 过滤的 Policy/Accessibility hreflang、Product-only Search metadata、

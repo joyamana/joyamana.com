@@ -2,7 +2,7 @@
 
 Status: Working — Catalog/Cart 核心切片已实现，生产 Catalog 与 hardening 待完成
 Owner: Commerce / Operations  
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 Related: `MVP_PRD.md`, `TECH_SPEC.md`, `CUSTOMER_LIFECYCLE.md`
 
 Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
@@ -20,11 +20,11 @@ Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
 D-020 已接受同时支持 repeatable、natural-variation 和 one-of-a-kind 这组业务边界。
 当前代码读取 Product `custom.product_model`，并将 `standard`、`natural_variation`、
 `one_of_one` 映射为明确的消费者模型；字段缺失或值无效时 fail closed。正式商品仍需
-在 Shopify 逐件填充该字段。exact/representative image 披露尚未实现。正式首发
-assortment、七脉轮资料和每个 SKU 的准确商品事实仍分别受
-Q-002C/Q-002A 阻塞；Q-002B 仍决定礼盒、包装成本与礼品留言，但每件商品附带专属
-guidebook 已获业务方确认。当前 Headless Catalog 的商品用于运行数据流，不因已发布
-自动成为获批的生产首发清单。
+在 Shopify 逐件填充该字段。exact/representative image 披露尚未实现。具体 assortment、
+七脉轮资料、SKU 和礼赠运营已移出网站开放问题，由 Shopify/业务运营流程管理；网站不
+复制内部审批清单、margin 或包装成本。每件商品附带专属 guidebook 已获业务方确认。
+当前 Headless Catalog 是网站运行时商品事实来源，但每件公开商品仍必须满足字段完整度、
+真实披露、可售性和发布验收要求。
 
 ### Repeatable product
 
@@ -195,6 +195,11 @@ E2E。Playwright 按 D-043 暂缓；在重新批准前以有记录的人工浏�
 - Checkout 域名、品牌样式、政策链接和交易 Email 在 Shopify 中配置并验收。
 - 成功订单以 Shopify Order 为准；Analytics purchase 不能反向创建业务事实。
 - Order confirmation 与 Shopify Order Status 可被游客使用。
+
+2026-09-02 operations note: 业务方确认当前下单与支付已完整支持，Shopify Payment
+test mode 下的下单、支付、confirmation 与后续流程测试未发现问题；Checkout 不再是
+未实现功能或开放问题。`SHOPIFY_CHECKOUT_ENABLED` 仍保留为部署级安全门禁，仓库默认
+关闭，各环境单独验收。test mode 结果不替代未来需要的 live provider/payout 对账记录。
 
 ## 10. Shipping、Returns 与 Taxes
 

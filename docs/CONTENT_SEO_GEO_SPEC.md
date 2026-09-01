@@ -2,7 +2,7 @@
 
 Status: Working — Shopify 内容/SEO 技术边界已实现，正式内容与 crawler policy 待批准
 Owner: Content / SEO  
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 Supersedes: `docs/archive/` 中两份 SEO/GEO 架构总结的实施结论
 
 ## 1. 核心原则
@@ -377,8 +377,9 @@ noindex。metadata、hreflang、Schema 与 sitemap 共用同一页面组判断�
 
 ## 11. hreflang 与多市场
 
-当前公开 Production storefront 仍全站 noindex，不输出生产 hreflang。各 Market 的
-内容、商品与运营条件完成审核并正式启用索引后：
+当前公开 Production storefront 已为 en-US/es-US 的 Core、Commerce、Policies 打开
+索引，Editorial 继续关闭；永久 noindex 页面和未通过内容 readiness 的单页仍排除。
+已开放的等价页面遵循：
 
 - 每个等价页面双向输出 self 和 alternate。
 - 只列 200、indexable、内容等价、当前运营的版本。
@@ -398,9 +399,10 @@ counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参�
 到 clean URL，同时输出 `noindex, nofollow, noarchive` 并移除 hreflang；clean URL
 保持自身正常索引规则。
 
-2026-09-01 已复核 Production canonical 与 `og:url` 使用
-`https://www.joyamana.com`，apex 308 至 `www`。当前 Production 总门禁仍关闭；未来按
-D-045 只打开已完成验收的 locale/page-group scope，不把域名对齐误作内容索引批准。
+2026-09-02 已复核 Production canonical 与 `og:url` 使用
+`https://www.joyamana.com`，apex 308 至 `www`；首页与 `/es-us` 为 `index, follow`，
+sitemap 已非空。后续仍按 D-045 只打开完成验收的 locale/page-group scope，不把总门禁
+开启误作 Editorial、fallback 或永久 noindex 页面也已获批。
 
 ## 12. Structured data
 
@@ -432,8 +434,9 @@ D-045 只打开已完成验收的 locale/page-group scope，不把域名对齐�
 
 当前 Product、Shop/Category/Design Collection、About 和 Article 详情已有受
 index gate 保护的 mapper。Home 的 `Organization`/`WebSite`/`WebPage` 与 Contact 的
-`ContactPage` 尚未实现，并且法律实体、Logo、canonical domain 等 Organization
-字段未确认；它们是发布前缺口，不可以用占位值补齐。
+`ContactPage` 尚未实现。法律/审批输入和品牌资产已由业务方确认解决，但公开字段尚未
+映射为 Organization/Site Settings 规范化实体；这是实现与验收缺口，不可以用占位值、
+非公开记录或推断字段补齐。
 
 ## 13. robots 与 AI crawler
 

@@ -20,10 +20,10 @@
 先阅读与任务相关的规范。复杂任务的默认顺序是：
 
 1. `docs/DECISIONS.md`
-2. `docs/BRAND_INPUTS.md` / `docs/PRODUCT_INPUTS.md`
+2. `docs/BRAND_INPUTS.md`
 3. `docs/PROJECT_SPEC.md`
 4. `docs/MVP_PRD.md`
-5. 对应领域规格
+5. 对应领域规格（商品任务使用 `docs/COMMERCE_SPEC.md`）
 6. `docs/ROADMAP.md`
 7. `docs/OPEN_QUESTIONS.md`
 
@@ -135,7 +135,7 @@
 
 ## 当前仓库状态
 
-截至 2026-09-01，仓库包含 Next.js 16 App Router 测试站、pnpm 配置以及
+截至 2026-09-02，仓库包含 Next.js 16 App Router 测试站、pnpm 配置以及
 Shopify-only Storefront API 适配层。US en-US 根路径与 `/es-us/` 已共享同一
 Catalog/Cart；商品、Variant、Category、Design Collection、实时价格/可售性/可用数量、
 Bag 和独立 Buy now Cart 已接入。Product `custom.product_model` 已映射；PDP 仅对明确
@@ -149,7 +149,8 @@ Catalog 和业务正文 fallback 已删除，上游缺失时 fail closed。
 基础系列路由有效，但 description/SEO 与 Design Series story/lookbook 链路尚未完成。
 Shipping/Returns 与 About EN/ES 正文已获业务方确认，每件商品附带专属 guidebook；
 Terms 后台占位符已修正。`info@joyamana.com` 可收信，当前正式客服模式为 Email-only，
-Contact 表单/Resend 后置。Blog/Crystal Guide 的两篇测试 Article 因暂无正式内容暂不处理，
+负责人/备援、外发认证和回复投递表现已确认；Logo、字体授权、颜色及真实商品摄影/视频
+也已解决。Contact 表单/Resend 后置。Blog/Crystal Guide 的两篇测试 Article 因暂无正式内容暂不处理，
 不得把它们视为正式内容或开放索引。
 
 Canada 只保留未启用的 typed 规划配置。仓库示例值及未配置时的代码默认值为全站
@@ -161,12 +162,15 @@ Shopify webhook 失效链路按 D-046 后置，接受内容/导航 5 分钟窗�
 
 Production storefront 已通过 Vercel 在 `https://www.joyamana.com` 公开响应，
 `https://checkout.joyamana.com` 已指向 Shopify Online Store；本地 `dev` 分支用于后续
-开发并已由 Vercel 构建受保护 Preview。Production 当前仍
-noindex；D-044 已确认 `https://www.joyamana.com` 为 canonical origin，apex 308 至
+开发并已由 Vercel 构建受保护 Preview。Production 总索引门禁已打开：en-US/es-US 的
+Core、Commerce、Policies 当前可索引，Editorial 继续关闭；公开首页为 `index, follow`，
+sitemap 已非空。D-044 已确认 `https://www.joyamana.com` 为 canonical origin，apex 308 至
 `www`，当前公开 canonical/OG 已复核为 `www`。参数页 noindex、
 document-level locale、Policy/Accessibility hreflang、Search metadata、Header
-专用 query/故障降级和环境 preflight 已实现；完整政策、Commerce 西语 readiness、
-Analytics/consent、真实支付与发布验收尚未完成。
+专用 query/故障降级和环境 preflight 已实现。业务方已确认下单支付完整支持，Payment
+test mode 下的流程测试未发现问题；Commerce 西语 readiness 自动检测、
+Analytics/consent 和剩余发布运营验收尚未完成。Q-001A/B、Q-002A/B/C 已移出网站范围，
+Q-003A/F 已解决；Q-003B/C/E 只按各自配送/税费范围继续跟踪。
 
 常用命令：`pnpm dev`、`pnpm preflight`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、
 `pnpm build`。不得在实际运行前声称检查已通过。

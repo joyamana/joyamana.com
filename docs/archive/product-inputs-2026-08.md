@@ -1,15 +1,25 @@
-# Product Inputs
+# Archived Product Inputs — 2026-08 prototype concepts
+
+Status: Historical evidence only  
+Archived: 2026-09-02
+
+Q-002A/C 已移出网站范围；本文件只保留早期七脉轮构思和当时的商品输入，不得作为
+Storefront 商品事实或发布门禁。当前商品模型和数据要求见 `../COMMERCE_SPEC.md`，
+运行时商品只以 Shopify Headless channel 为准。
+
+## Original input record
 
 Status: Active input record — 历史概念与当前 Shopify 测试商品分离
 Owner: Project owner  
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 Source: `构思中的系列.docx`（业务方提供，2026-08-03）
 
 Additional sources: 业务方提供的 5 张七脉轮系列概念图（2026-08-03）。
 
 本文件保留早期系列构思，但不把构思自动升级为可销售事实。运行时商品只以
 Shopify Headless channel 当前发布的 Product/Variant、价格、库存和媒体为准；
-生产首发 assortment 仍需负责人单独批准。
+具体商品开发、SKU 和 assortment 由 Shopify/业务运营流程管理，不再作为网站仓库的
+独立开放问题或发布门禁。
 
 ## 当前 Shopify Catalog
 
@@ -25,10 +35,10 @@ Shopify Headless channel 当前发布的 Product/Variant、价格、库存和媒
   不显示。
 - Shopify Spanish context 在最近审计时仍回退 English，不得视为已审校西语
   商品内容。
-- 这些商品用于运行 Shopify-only storefront；正式首发 assortment 仍需负责人按
-  Q-002C 明确批准，不能只凭 Headless 已发布自动推断。
+- 这些商品用于运行 Shopify-only storefront；网站不维护第二份 assortment 批准清单，
+  只按 Shopify Headless channel 的发布状态和商品完整度读取。
 - 业务方确认每件商品随附一份 Joya Mana 专属 guidebook；这是已确认 package
-  contents。礼盒、礼品留言与其他包装配置仍属独立待定范围。
+  contents。礼盒、礼品留言与其他礼赠配置已移出当前网站范围。
 
 ## 历史七脉轮原型输入
 
@@ -68,7 +78,7 @@ Shopify Headless channel 当前发布的 Product/Variant、价格、库存和媒
 - 业务方提供的 5 张图按“概念图”使用，不声明为实际商品摄影或一物一图。
 - 英文名、西班牙文名和描述是开发文案，发布前需人工审校。
 
-### Pending clarification
+### Historical product-development notes（网站范围外）
 
 - “七脉轮普通款（11）”具体指 11 个 Chakra-focused 款、11 个 SKU、11 个
   Variant，还是其他组合。
@@ -96,6 +106,6 @@ Shopify Headless channel 当前发布的 Product/Variant、价格、库存和媒
 若进入商品或内容规划，必须遵守 `CONTENT_SEO_GEO_SPEC.md` 的 claims policy，
 不得承诺财富、健康、保护或人生结果。
 
-上述历史资料可用作测试 fixture 或未来产品讨论输入，但只有 Q-002C 批准将其纳入
-正式 assortment，且 Q-002A 的 SKU、材料、定价、图片和库存全部批准并发布到
-Shopify 后，才能成为客户可见 Catalog；任何情况下都不得恢复为运行时 fallback。
+上述历史资料可用作测试 fixture 或未来产品讨论输入，但不构成客户可见事实。若业务方
+未来在 Shopify 发布相关商品，其 SKU、材料、定价、图片、库存和披露必须在 Shopify
+运营流程中完整准确；网站不得从本文件生成商品，也不得恢复为运行时 fallback。
