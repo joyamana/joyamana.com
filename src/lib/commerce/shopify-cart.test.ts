@@ -372,6 +372,15 @@ describe("Shopify Checkout boundary", () => {
         { storeDomain: "joya-mana.myshopify.com" },
       ),
     ).toBe("https://joya-mana.myshopify.com/checkouts/token");
+
+    expect(
+      validateCheckoutUrl(
+        "https://joya-mana.myshopify.com/es/cart/c/token?key=secret",
+        { storeDomain: "joya-mana.myshopify.com" },
+      ),
+    ).toBe(
+      "https://joya-mana.myshopify.com/es/cart/c/token?key=secret",
+    );
   });
 
   it.each([
@@ -379,6 +388,7 @@ describe("Shopify Checkout boundary", () => {
     "https://evil.example/cart/c/token",
     "https://another-store.myshopify.com/checkouts/token",
     "https://joya-mana.myshopify.com/products/example",
+    "https://joya-mana.myshopify.com/fr/cart/c/token",
     "https://user:password@joya-mana.myshopify.com/cart/c/token",
     "javascript:alert(1)",
   ])("rejects an unsafe Checkout URL: %s", (url) => {

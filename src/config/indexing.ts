@@ -30,7 +30,7 @@ export const indexingPolicy = {
     // Home, Contact, About, Accessibility
     core: true,
     // Shop, Category, Collection, Product
-    commerce: false,
+    commerce: true,
     // Shipping, Returns, Privacy, Terms
     policies: true,
     // Blog, Crystal Guide

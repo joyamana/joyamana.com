@@ -175,8 +175,8 @@ Storefront API 与安全的 Cart smoke 已确认：
 - Policy/Accessibility 的双向 hreflang 已按各语言真实 readiness 过滤；fallback 页继续
   noindex，并退出 sitemap/Schema。
 - Product/Collection 尚无法自动识别 Spanish 真实翻译与 English fallback；在增加
-  Commerce translation readiness 验证前保持 es-US Commerce scope 关闭。en-US Commerce
-  已获业务方批准开放，不再被西语缺口阻塞。
+  Commerce translation readiness 验证前，已获业务方批准开放的 es-US Commerce 依赖
+  每次发布的人工逐页核对。这仍是自动化缺口和发布风险，不再作为 scope 配置阻塞项。
 - en-US/es-US 已在初始 HTML 输出正确的 document-level `<html lang>`。
 - Header 目录已使用不含价格/库存/正文的导航专用 query/projection；上游失败时降级为
   基础导航并保留页面主体，不恢复本地 Catalog。监控/告警仍属于 Q-105。

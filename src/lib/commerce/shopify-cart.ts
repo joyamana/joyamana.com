@@ -600,7 +600,7 @@ export function validateCheckoutUrl(
     normalizeConfiguredHost(config.checkoutDomain),
     normalizeConfiguredHost(config.storeDomain),
   ].filter((host): host is string => Boolean(host));
-  const hasCheckoutPath = /^\/(?:cart\/c|checkouts)(?:\/|$)/.test(
+  const hasCheckoutPath = /^\/(?:es\/)?(?:cart\/c|checkouts)(?:\/|$)/.test(
     url.pathname,
   );
 
