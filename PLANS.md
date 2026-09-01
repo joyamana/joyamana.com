@@ -304,7 +304,9 @@ Vercel 只转发平台保护且验证为 IP 的 `x-vercel-forwarded-for`；请�
 - 2026-09-01：按 D-045 增加部署级索引总开关，以及 `src/config/indexing.ts` 中
   en-US/es-US + 四页面组的版本控制门禁，未知路径 fail closed；按 D-046 后置 webhook
   并接受内容/导航 5 分钟窗口。六个细分索引环境变量已移除，preflight、metadata、
-  sitemap、hreflang、Schema 和文档已同步；当前为 29 个测试文件、181 项 Vitest。
+  sitemap、hreflang、Schema 和文档已同步；当前为 29 个测试文件、182 项 Vitest。
+- 2026-09-01：PDP 低库存提示改为更清晰的双语状态标签；商品卡为 Available/Unavailable
+  增加独立文字、状态点与视觉层级，Unavailable 同时增加图片标签和适度弱化效果。
 
 ## Risks
 

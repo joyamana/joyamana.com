@@ -38,9 +38,15 @@ export function productShippingReturnsSummary(locale: Locale) {
 
 export function lowStockMessage(locale: Locale, count: number) {
   return uiText(locale, {
-    en: `Only ${count} left`,
-    es: count === 1 ? "Solo queda 1" : `Solo quedan ${count}`,
-    fr: count === 1 ? "Plus qu’un article" : `Plus que ${count} articles`,
+    en: `Low stock · Only ${count} left`,
+    es:
+      count === 1
+        ? "Pocas unidades · Solo queda 1"
+        : `Pocas unidades · Solo quedan ${count}`,
+    fr:
+      count === 1
+        ? "Stock faible · Plus qu’un article"
+        : `Stock faible · Plus que ${count} articles`,
   });
 }
 

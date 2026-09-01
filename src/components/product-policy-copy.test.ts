@@ -36,10 +36,14 @@ describe("product policy copy", () => {
   });
 
   it("localizes exact low-stock counts", () => {
-    expect(lowStockMessage("en-US", 1)).toBe("Only 1 left");
-    expect(lowStockMessage("en-US", 3)).toBe("Only 3 left");
-    expect(lowStockMessage("es-US", 1)).toBe("Solo queda 1");
-    expect(lowStockMessage("es-US", 3)).toBe("Solo quedan 3");
+    expect(lowStockMessage("en-US", 1)).toBe("Low stock · Only 1 left");
+    expect(lowStockMessage("en-US", 3)).toBe("Low stock · Only 3 left");
+    expect(lowStockMessage("es-US", 1)).toBe(
+      "Pocas unidades · Solo queda 1",
+    );
+    expect(lowStockMessage("es-US", 3)).toBe(
+      "Pocas unidades · Solo quedan 3",
+    );
   });
 
   it("preserves sanitized Shopify product description structure", () => {
