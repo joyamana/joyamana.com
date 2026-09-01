@@ -57,7 +57,8 @@ Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyam
   过滤。商品与 Collection 的 Spanish Storefront fallback 尚无可重复检测，因此仍
   不能开放 es-US Commerce 索引范围。
 - `NEXT_PUBLIC_SITE_INDEXABLE` 保留为部署级索引总开关，并按 D-045 叠加版本控制的
-  `src/config/indexing.ts` 中 en-US/es-US 与 Core/Commerce/Policies/Editorial 子门禁；
+  `src/config/indexing.ts` locale/page-group 矩阵；当前 en-US Commerce、双语言 Core/
+  Policies 开放，es-US Commerce 与双语言 Editorial 关闭；
   `SHOPIFY_CHECKOUT_ENABLED` 和
   `CONTACT_FORM_ENABLED` 是三个独立发布门禁；仓库示例值及未配置时的代码默认值
   均为关闭，各 Preview/Production 部署必须分别核验实际环境值。

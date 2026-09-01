@@ -144,7 +144,7 @@ Storefront API 验证。Headless `Your Privacy Choices`、Customer Privacy API �
   Blog 和 Crystal Guide 已使用 Shopify Blog/Article。不完整、未引用或未翻译内容
   fail closed/noindex，本地正文 fallback 已删除。
 - Product、Shop/Category/Design Collection、About 与 Article 的 metadata/
-  适用 Schema/sitemap 映射已完成并受总开关、语言和页面组索引门禁保护。
+  适用 Schema/sitemap 映射已完成并受总开关与 locale/page-group 索引矩阵保护。
 - `info@joyamana.com` 已确认可以收信，当前正式支持方式为 Email-only；Contact 表单、
   Resend 与滥用防护延后，负责人/备援、出站投递与服务流程仍待验收。
 - 当前 Search 仅检索 Product；Home Organization/WebSite、ContactPage Schema、

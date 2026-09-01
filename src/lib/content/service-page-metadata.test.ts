@@ -11,8 +11,13 @@ vi.mock("./shopify-content-pages", () => contentMocks);
 vi.mock("./shopify-policies", () => policyMocks);
 vi.mock("@/config/indexing", () => ({
   indexingPolicy: {
-    locales: { "en-US": true, "es-US": true },
-    groups: {
+    "en-US": {
+      core: true,
+      commerce: true,
+      policies: true,
+      editorial: true,
+    },
+    "es-US": {
       core: true,
       commerce: true,
       policies: true,

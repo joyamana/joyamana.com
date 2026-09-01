@@ -159,4 +159,5 @@ Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端
 - `/collections/bracelets` 永久跳转 `/category/bracelets`；未知或普通后台 Collection
   不成为公开页面。
 - Category、Collection 与 Product 的 canonical、breadcrumbs、sitemap 和可见链接一致。
-- Commerce 索引子门禁与总门禁、Checkout gate 只在各自生产验收完成后开启。
+- en-US Commerce scope 已获批准；es-US Commerce、索引总门禁与 Checkout gate 仍只在
+  各自生产验收完成后开启。

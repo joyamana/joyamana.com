@@ -267,8 +267,9 @@ Content/SEO 规格。
   HTML 的 `<html lang>` 与当前 locale 一致。语言切换跨 root layout 会发生完整文档
   navigation，这是换取正确 document metadata 的明确边界。
 - Product/Collection 目前无法从 Storefront response 自动识别 Spanish 是真实翻译
-  还是 English fallback。完成 Commerce translation readiness 验证前保持 es-US 或
-  Commerce 索引子门禁关闭，避免 metadata alternate 与 sitemap 引用 fallback URL。
+  还是 English fallback。完成 Commerce translation readiness 验证前保持 es-US
+  Commerce scope 关闭，避免 metadata alternate 与 sitemap 引用 fallback URL；
+  en-US Commerce 已独立开放。
 - Currency 不进入 URL；若未来一个 Market 支持多个 Currency，选择保存在
   会话/Shopify buyer context 中。
 
@@ -290,8 +291,9 @@ Content/SEO 规格。
 当前 `.env.example` 只包含部署环境变量名和说明，分为：
 
 - `NEXT_PUBLIC_SITE_URL` 与部署级 `NEXT_PUBLIC_SITE_INDEXABLE` 索引总开关；en-US/es-US
-  语言门禁和 Core/Commerce/Policies/Editorial 页面组门禁统一维护在版本控制的
-  `src/config/indexing.ts`。页面需同时通过总开关、语言和页面组三层控制。打开总开关时
+  各自的 Core/Commerce/Policies/Editorial scope 统一维护在版本控制的
+  `src/config/indexing.ts` locale/page-group 矩阵。页面需同时通过总开关与对应矩阵 scope。
+  打开总开关时
   canonical URL 必须是非本地 HTTPS origin，配置缺失或仍指向 localhost 时构建 fail
   closed，避免发布错误 canonical 与 sitemap。
 - `SHOPIFY_STORE_DOMAIN`、`SHOPIFY_STOREFRONT_ACCESS_TOKEN` 与

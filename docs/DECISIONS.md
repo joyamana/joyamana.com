@@ -705,7 +705,7 @@ Consequence: Vercel Production 必须设置
 `NEXT_PUBLIC_SITE_URL=https://www.joyamana.com`，build preflight 对 Production 强制
 校验该值；Preview 保持 noindex。修改环境值后必须 redeploy 并从公开 HTML 复核。
 
-### D-045 — 索引门禁按语言与页面组细分
+### D-045 — 索引门禁按语言与页面组矩阵细分
 
 Date: 2026-09-01
 Status: Accepted
@@ -717,19 +717,21 @@ Alternatives: 保留单一全站开关会继续形成不必要的全有或全无
 环境变量过于繁琐且容易漂移；把语言和页面组也放入环境变量会增加各部署环境之间的
 不可见差异，且仍需 redeploy；仅依赖 sitemap 不足以控制页面 robots 与 Schema。
 Decision: 保留 `NEXT_PUBLIC_SITE_INDEXABLE` 作为部署级紧急总开关，并在版本控制的
-`src/config/indexing.ts` 中维护 en-US/es-US 语言门禁及 Core、Commerce、Policies、
-Editorial 页面组门禁。页面只有在总开关、语言开关和所属页面组开关同时开启，且页面
-自身内容 readiness 通过时才可 index、进入 sitemap、输出 hreflang/Schema。未知或未来
-新增路径默认 noindex；Cart、Search 和参数页的永久 noindex 规则不变。
+`src/config/indexing.ts` 中按 locale 分别维护 Core、Commerce、Policies、Editorial
+页面组矩阵。页面只有在总开关与对应 locale/page-group scope 同时开启，且页面自身内容
+readiness 通过时才可 index、进入 sitemap、输出 hreflang/Schema。未知或未来新增路径
+默认 noindex；Cart、Search 和参数页的永久 noindex 规则不变。2026-09-01 业务方批准
+en-US Commerce 开放，同时保持 es-US Commerce 关闭；en-US/es-US Core 与 Policies
+开放，Editorial 继续关闭。
 Reason: 可以先开放真实完成的范围，同时让测试内容、未审校语言和未验收 Commerce
 继续 fail closed，并确保 metadata、sitemap、hreflang 与 Schema 使用同一判断。
 Consequences: 细分策略可在 Git 中 review、测试和回滚，但策略变更仍需部署才生效；
 Vercel 各环境只需分别管理总开关，Preview 仍禁止打开总开关。只打开总开关不会开放
-任何仓库策略仍关闭的页面。Product/Collection 缺少自动翻译识别时，可以保持 es-US
-或 Commerce 门禁关闭。
-Migration / rollback: 移除六个旧的细分索引环境变量，仓库策略默认均为 false，因此
-部署不会意外开放索引。先提交并部署已验收的细分策略，最后打开 Production 总开关并
-redeploy；紧急回退时关闭总开关即可恢复全站 noindex。
+任何仓库策略仍关闭的页面。按 locale/page-group 建模可在不关闭西语 Core/Policies 的
+前提下单独关闭 es-US Commerce。
+Migration / rollback: 六个旧的细分索引环境变量已移除；当前矩阵显式记录每个 scope，
+未知 locale/path 仍 fail closed。先提交并部署已验收矩阵，最后打开 Production 总开关
+并 redeploy；紧急回退时关闭总开关即可恢复全站 noindex。
 
 ### D-046 — 当前阶段接受五分钟内容缓存窗口
 

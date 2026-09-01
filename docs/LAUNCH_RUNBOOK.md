@@ -8,7 +8,7 @@ Last updated: 2026-09-01
 提供 storefront，`https://checkout.joyamana.com` 已指向 Shopify Online Store；
 联系人、Shopify Admin 支付配置、dashboard 和完整发布验收仍是待填项。
 索引、Shopify Checkout 和 Contact 表单投递是三个独立门禁族；索引进一步采用部署级
-总开关，以及 `src/config/indexing.ts` 中版本控制的语言和页面组子门禁。总开关示例值
+总开关，以及 `src/config/indexing.ts` 中版本控制的 locale/page-group 矩阵。总开关示例值
 和仓库细分策略均默认关闭，各 Preview/Production deployment 必须分别核验总开关。
 仓库尚无 CI、自动化浏览器/支付 E2E 或
 Analytics/consent 运行时。Playwright 按 D-043 暂缓；当前发布使用有记录的人工
@@ -18,7 +18,7 @@ Webhook/cache invalidation 按 D-046 后置，发布流程接受并记录 5 分�
 2026-08-31 外部基线：`www` 与 `checkout` 均返回 HTTP 200，apex 返回 308 至 `www`；
 Production storefront 仍输出 `noindex, nofollow, noarchive`，sitemap 为空。
 D-044 的 `www` canonical、apex 308 和公开 `og:url` 已复核。其他 SEO blocker 完成前
-保持索引总门禁关闭；后续只打开 D-045 中通过验收的语言和页面组。
+保持索引总门禁关闭；后续只打开 D-045 中通过验收的 locale/page-group scope。
 
 ## 1. 发布角色
 
@@ -43,7 +43,7 @@ D-044 的 `www` canonical、apex 308 和公开 `og:url` 已复核。其他 SEO b
 - Production Shopify Catalog、Markets、payment、shipping、tax 配置获批。
 - 域名、SSL、Checkout domain、Email sender 和 support inbox 可用。
 - Production secrets 与 Preview/local 分离。
-- `SHOPIFY_CHECKOUT_ENABLED`、`NEXT_PUBLIC_SITE_INDEXABLE`、仓库内语言/页面组策略，与
+- `SHOPIFY_CHECKOUT_ENABLED`、`NEXT_PUBLIC_SITE_INDEXABLE`、仓库内索引矩阵，与
   `CONTACT_FORM_ENABLED` 分别有明确 owner、验收记录和回退方式，不用一个
   总开关同时放开。
 - 数据备份/导出责任与 Vercel rollback 方式明确。
@@ -109,9 +109,9 @@ build: pnpm build
 - Product/Collection 的 Spanish 翻译已通过可重复的 Commerce translation readiness
   检查，不依赖人眼猜测 Storefront fallback；`<html lang>` 在 en-US/es-US 页面均
   与 document locale 一致。后半项已实现，前半项仍是索引 blocker。
-- D-045 的索引总开关与仓库内语言/页面组门禁只为已验收范围开启。Product/Collection
-  尚无逐页 Spanish fallback 检测，因此在完成可重复验证前保持 es-US 或 Commerce
-  子门禁关闭；未知路径默认 noindex。
+- D-045 的索引总开关与仓库内 locale/page-group scope 只为已验收范围开启。
+  Product/Collection 尚无逐页 Spanish fallback 检测，因此在完成可重复验证前保持
+  es-US Commerce scope 关闭；en-US Commerce 已获批准，未知路径默认 noindex。
 
 ## 6. Accessibility 与 Performance
 
@@ -195,7 +195,7 @@ build: pnpm build
     tax 与 notification 配置。若业务/支付规则允许，完成获批的低额真实订单、退款与
     对账；否则记录可接受的替代验收证据。测试模式未退出时不得 go-live。
 11. 完成拟开放范围的内容/翻译/SEO/privacy 检查并确认 Production 非本地 HTTPS
-    canonical 后，先 review、提交并部署 `src/config/indexing.ts` 中对应的语言和页面组
+    canonical 后，先 review、提交并部署 `src/config/indexing.ts` 中对应的矩阵 scope
     策略，同时保持 `NEXT_PUBLIC_SITE_INDEXABLE=false`；随后打开总开关并 redeploy。
     此时保留临时访问保护，逐组检查 metadata、sitemap、hreflang 和 Schema；细分回退
     通过恢复仓库策略并部署完成，紧急全站回退则关闭总开关并 redeploy。

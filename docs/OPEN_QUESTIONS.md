@@ -170,13 +170,13 @@ Storefront API 与安全的 Cart smoke 已确认：
   有记录的人工浏览器/Checkout smoke。
 - Search metadata 已与 Product-only 运行时一致，不再声称检索 editorial content。
 - 参数请求已输出 `noindex, nofollow, noarchive`，保留 clean canonical 并移除 hreflang；
-  clean URL 由 D-045 的部署级总开关与 `src/config/indexing.ts` 中的语言/页面组子门禁
+  clean URL 由 D-045 的部署级总开关与 `src/config/indexing.ts` 中的 locale/page-group scope
   共同控制。
 - Policy/Accessibility 的双向 hreflang 已按各语言真实 readiness 过滤；fallback 页继续
   noindex，并退出 sitemap/Schema。
 - Product/Collection 尚无法自动识别 Spanish 真实翻译与 English fallback；在增加
-  Commerce translation readiness 验证前保持 es-US 或 Commerce 索引子门禁关闭，不再
-  阻塞已审核的 en-US Core/Policies 页面组。
+  Commerce translation readiness 验证前保持 es-US Commerce scope 关闭。en-US Commerce
+  已获业务方批准开放，不再被西语缺口阻塞。
 - en-US/es-US 已在初始 HTML 输出正确的 document-level `<html lang>`。
 - Header 目录已使用不含价格/库存/正文的导航专用 query/projection；上游失败时降级为
   基础导航并保留页面主体，不恢复本地 Catalog。监控/告警仍属于 Q-105。

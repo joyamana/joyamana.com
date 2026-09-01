@@ -153,8 +153,8 @@ Contact 表单/Resend 后置。Blog/Crystal Guide 的两篇测试 Article 因暂
 不得把它们视为正式内容或开放索引。
 
 Canada 只保留未启用的 typed 规划配置。仓库示例值及未配置时的代码默认值为全站
-noindex；索引采用部署级总开关 + `src/config/indexing.ts` 中版本控制的语言/页面组
-fail-closed 三层门禁，并关闭 Shopify Checkout 和 Contact 投递；各部署环境必须单独
+noindex；索引采用部署级总开关 + `src/config/indexing.ts` 中版本控制的 locale/page-group
+fail-closed 矩阵，并关闭 Shopify Checkout 和 Contact 投递；各部署环境必须单独
 核验总开关。当前没有 CI 或 format check；
 Shopify webhook 失效链路按 D-046 后置，接受内容/导航 5 分钟窗口。Playwright 按 D-043 暂时封存，只有
 复杂度触发后才重新评估；当前必须记录人工浏览器/Checkout smoke 的范围和结果。
