@@ -11,6 +11,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
   const copy = getCopy(locale);
   const marketId = marketIdForLocale(locale);
   const products = await getProducts(marketId, locale);
+  const availableProducts = products.filter(
+    (product) => product.availableForSale,
+  );
 
   return (
     <>
@@ -38,7 +41,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
               className="button button--ghost-light"
               href={localePath(
                 locale,
-                products[0] ? `/products/${products[0].handle}` : "/shop",
+                availableProducts[0]
+                  ? `/products/${availableProducts[0].handle}`
+                  : "/shop",
               )}
             >
               {uiText(locale, {
@@ -72,7 +77,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
           <p>{copy.home.featuredIntro}</p>
         </div>
         <div className="product-grid">
-          {products.slice(0, 4).map((product) => (
+          {availableProducts.slice(0, 4).map((product) => (
             <ProductCard key={product.id} product={product} locale={locale} />
           ))}
         </div>
