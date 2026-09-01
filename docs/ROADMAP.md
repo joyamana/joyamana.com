@@ -91,7 +91,7 @@ Production 当前仍 noindex、sitemap 为空。D-044 已确认 `www` canonical 
 - Commerce integration 与 E2E 测试。
 
 2026-09-01 阶段结果：Catalog/PDP/Bag/Buy now/Checkout adapter 已完成；仓库共有
-183 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
+185 项 Vitest unit/integration-style tests。Catalog/Variant 已全量分页并遵循 Shopify quantity rule；
 真实 Cart 合约 smoke 已覆盖 create、库存冲突 warning、update/remove 与 HTTPS
 Checkout URL。Storefront 现会读取 `quantityAvailable` 与 `currentlyNotInStock`，
 并把它们与 contextual quantity rule 用于 PDP/Bag 数量上限；PDP 仅对明确商品模型且
@@ -150,8 +150,8 @@ Storefront API 验证。Headless `Your Privacy Choices`、Customer Privacy API �
 - 当前 Search 仅检索 Product；Home Organization/WebSite、ContactPage Schema、
   完整 Design Series Metaobject 故事模块、正式 Article/Crystal Guide 内容与西语审核、GSC/Merchant Center
   与 crawler policy 仍待完成。
-- Commerce Product/Collection 的 Spanish fallback 仍无自动识别；这是当前剩余的
-  translation/index blocker。document-level `<html lang>`、Policy/Accessibility
+- Commerce Product/Collection 的 Spanish fallback 仍无自动识别；es-US Commerce 已获
+  业务方批准开放并暂以人工逐页发布验收控制风险。document-level `<html lang>`、Policy/Accessibility
   readiness hreflang、Product-only Search metadata 和参数页 noindex 已完成并有测试。
 
 ### 退出条件

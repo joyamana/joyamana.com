@@ -18,7 +18,7 @@ describe("version-controlled indexing policy", () => {
       },
       "es-US": {
         core: true,
-        commerce: false,
+        commerce: true,
         policies: true,
         editorial: false,
       },

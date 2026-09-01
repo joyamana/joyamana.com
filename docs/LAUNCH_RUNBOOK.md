@@ -110,8 +110,9 @@ build: pnpm build
   检查，不依赖人眼猜测 Storefront fallback；`<html lang>` 在 en-US/es-US 页面均
   与 document locale 一致。后半项已实现，前半项仍是索引 blocker。
 - D-045 的索引总开关与仓库内 locale/page-group scope 只为已验收范围开启。
-  Product/Collection 尚无逐页 Spanish fallback 检测，因此在完成可重复验证前保持
-  es-US Commerce scope 关闭；en-US Commerce 已获批准，未知路径默认 noindex。
+  en-US/es-US Commerce 均已获业务方批准；Product/Collection 尚无逐页 Spanish fallback
+  自动检测，因此每次发布必须人工逐页核对西语正文、metadata 和 hreflang，发现 fallback
+  时关闭 es-US Commerce scope 或先修复内容。未知路径默认 noindex。
 
 ## 6. Accessibility 与 Performance
 

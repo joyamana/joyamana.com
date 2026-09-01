@@ -54,11 +54,11 @@ Production DNS/平台指向；Shipping/Returns 与 About 已确认，`info@joyam
   availability 与 UI 的最小可履约数量边界也仍需统一验收。
 - en-US 与 es-US 已各自输出正确的 document-level `<html lang>`；参数请求会 noindex
   并 canonical 回干净路径，Policy/Accessibility hreflang 也按真实翻译 readiness
-  过滤。商品与 Collection 的 Spanish Storefront fallback 尚无可重复检测，因此仍
-  不能开放 es-US Commerce 索引范围。
+  过滤。商品与 Collection 的 Spanish Storefront fallback 尚无可重复检测；业务方已
+  明确批准 es-US Commerce scope，但正式部署前仍需人工逐页验证真实西语正文和 metadata。
 - `NEXT_PUBLIC_SITE_INDEXABLE` 保留为部署级索引总开关，并按 D-045 叠加版本控制的
-  `src/config/indexing.ts` locale/page-group 矩阵；当前 en-US Commerce、双语言 Core/
-  Policies 开放，es-US Commerce 与双语言 Editorial 关闭；
+  `src/config/indexing.ts` locale/page-group 矩阵；当前双语言 Core/Commerce/Policies
+  开放，双语言 Editorial 关闭；
   `SHOPIFY_CHECKOUT_ENABLED` 和
   `CONTACT_FORM_ENABLED` 是三个独立发布门禁；仓库示例值及未配置时的代码默认值
   均为关闭，各 Preview/Production 部署必须分别核验实际环境值。

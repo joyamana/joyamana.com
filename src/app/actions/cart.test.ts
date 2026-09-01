@@ -267,6 +267,27 @@ describe("Checkout server actions", () => {
     });
   });
 
+  it("accepts Shopify's localized Spanish Checkout path", async () => {
+    process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
+    mocks.cookies.mockResolvedValue(cookieStore(oldCartId));
+    mocks.getCart.mockResolvedValue(
+      makeCart({
+        id: oldCartId,
+        checkoutUrl:
+          "https://joya-mana.myshopify.com/es/cart/c/checkout-token?key=checkout-secret",
+      }),
+    );
+
+    const result = await checkoutAction("es-US");
+
+    expect(mocks.getCart).toHaveBeenCalledWith(oldCartId, "ES");
+    expect(result).toEqual({
+      ok: true,
+      checkoutUrl:
+        "https://joya-mana.myshopify.com/es/cart/c/checkout-token?key=checkout-secret",
+    });
+  });
+
   it("rejects an untrusted Checkout URL without returning upstream details", async () => {
     process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
     mocks.cookies.mockResolvedValue(cookieStore(oldCartId));

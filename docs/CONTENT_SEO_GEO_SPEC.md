@@ -102,8 +102,9 @@ Policy、About、Accessibility 和 Article 的西语请求命中 Shopify 默认�
 及 Policy/Accessibility 的 alternate 均按每种语言的真实 readiness 过滤，不输出指向
 fallback 西语页的 hreflang。
 当前 Commerce Product/Collection response 也没有等价的“是否回退默认语言”标记；
-在所有西语商品/系列完成审核及可持续 translation readiness 验证前，保持 es-US
-Commerce scope 关闭；en-US Commerce 及其他已验收 scope 不再被这一局部缺口阻塞。
+业务方已明确批准 es-US Commerce scope。自动 translation readiness 仍是缺口，因此
+每次正式发布必须人工逐页确认 Product/Collection 的西语正文、metadata 和等价关系；
+发现 fallback 时应立即关闭 es-US Commerce scope 或修正内容后重新部署。
 
 ## 5. 内容模型
 
@@ -389,8 +390,8 @@ noindex。metadata、hreflang、Schema 与 sitemap 共用同一页面组判断�
 
 当前 `buildMetadata` 只为同一路径中已打开 locale/page-group scope 的等价页生成 alternate，
 动态 sitemap 也按相同规则聚合路径。由于 Commerce adapter 尚不能自动识别默认语言
-fallback，在完成 translation readiness 检查前必须保持 es-US Commerce scope 关闭；
-当前已开放的 en-US Commerce 与其他已审核 scope 不受其阻塞。
+fallback，当前已获批准的 es-US Commerce 必须依赖有记录的人工逐页发布验收；这项
+人工控制不得被表述为已有自动检测。
 
 Policy/Accessibility 的 fallback 页自身与 sitemap 已按 readiness 保护，英文
 counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参数请求会 canonical

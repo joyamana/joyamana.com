@@ -267,9 +267,9 @@ Content/SEO 规格。
   HTML 的 `<html lang>` 与当前 locale 一致。语言切换跨 root layout 会发生完整文档
   navigation，这是换取正确 document metadata 的明确边界。
 - Product/Collection 目前无法从 Storefront response 自动识别 Spanish 是真实翻译
-  还是 English fallback。完成 Commerce translation readiness 验证前保持 es-US
-  Commerce scope 关闭，避免 metadata alternate 与 sitemap 引用 fallback URL；
-  en-US Commerce 已独立开放。
+  还是 English fallback。en-US 与 es-US Commerce 均已获业务方批准开放；自动验证实现前，
+  es-US Product/Collection 必须在每次发布时人工逐页检查，发现 fallback 时关闭对应
+  scope 或先修正 Shopify 内容。
 - Currency 不进入 URL；若未来一个 Market 支持多个 Currency，选择保存在
   会话/Shopify buyer context 中。
 
