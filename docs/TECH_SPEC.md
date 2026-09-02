@@ -72,7 +72,7 @@ Shopify webhook/cache invalidation 按 D-046 当前后置，不属于上图运�
 ### Current implementation
 
 - Next.js 16.2.12 + React/React DOM 19.2.4
-- pnpm 11.22.0 + frozen lockfile
+- pnpm 11.24.0 + frozen lockfile
 - Node 24 production target（`.nvmrc` 与 `package.json#engines`）
 - Next.js global CSS + CSS variables/tokens，无 Tailwind/UI kit
 - Vitest 3 + Node test environment，未安装 Testing Library
