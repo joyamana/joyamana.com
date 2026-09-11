@@ -7,6 +7,24 @@ Archived: 2026-09-11
 状态来源；当前决策、开放问题和项目状态分别以 `../DECISIONS.md`、
 `../OPEN_QUESTIONS.md`、`../PROJECT_SPEC.md` 和根目录 `PLANS.md` 为准。
 
+## 繁中 Web Font — 2026-09-11
+
+业务方采用 Noto Serif HK + Noto Sans HK：品牌/PDP 标题用宋体 500，正文、商品卡
+及移动导航用黑体；Latin 保留 Newsreader/Manrope。通过繁中 layout 的 next/font
+自托管 unicode-range 分片，禁用 CJK preload，保留系统 fallback；OFL 随站点保留。
+商品卡字号收敛至 18–22px、字重 500、行高 1.5，EN/ES 样式不变。
+
+Node 24 下 preflight、lint、typecheck、32 个测试文件/209 项测试与 production build
+通过。本地 Chrome headless（直接 CDP，无 Playwright）验证三语言初始 HTML/noindex、
+真实字体、无访客 Google 字体请求、EN/ES 不下载 CJK WOFF2；Turbopack 会合并部分
+字体 CSS 声明，未为此启用实验性 bundling 配置。繁中首页/Shop/PDP/About/Shipping/
+Bag/Search 在 360/390/1440px 共 21 次布局检查无横向溢出；移动导航字体正确。
+阻止 WOFF2 请求后，标题仍通过系统 Songti TC 可见，无横向溢出。已检查桌面/手机截图。
+连续导航期间服务日志出现 `The destination stream closed early`；上述页面与字体检查
+通过，本轮未追溯该流中断日志，也不将其记录为已修复问题。测试服务与临时浏览器已关闭。
+这些是本机 Chrome 渲染与只读 smoke，不代表 iOS Safari、Android 真机、Vercel Preview
+或托管 Checkout 验收。本轮未操作 Checkout、后台、索引配置、main 或部署。
+
 ## US 繁体中文接入 — zh-Hant-US
 
 状态：Complete — dev 代码接入完成；不代表部署或繁中内容/支付验收

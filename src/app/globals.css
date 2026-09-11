@@ -18,11 +18,11 @@
   --page: clamp(1.25rem, 4vw, 4.5rem);
 }
 
-/* Keep Latin brand fonts; prefer locally installed Hong Kong CJK glyphs.
-   No additional font download or new font licence is required. */
+/* Latin keeps the brand fonts; the Chinese layout supplies self-hosted HK fonts.
+   Installed system fonts remain available while the web fonts load. */
 html[lang="zh-Hant-US"] {
-  --font-display: var(--font-newsreader), "Noto Serif HK", "Songti TC", "PingFang HK", serif;
-  --font-sans: var(--font-manrope), "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", sans-serif;
+  --font-display: var(--font-newsreader), var(--font-noto-serif-hk), "Songti TC", "PingFang HK", serif;
+  --font-sans: var(--font-manrope), var(--font-noto-sans-hk), "PingFang HK", "Microsoft JhengHei", sans-serif;
   line-break: strict;
 }
 
@@ -2497,6 +2497,20 @@ html[lang="zh-Hant-US"] .hero h1 {
   max-width: 12em;
   font-size: clamp(2.5rem, 5.3vw, 5.5rem);
   line-height: 1.25;
+}
+
+html[lang="zh-Hant-US"] .product-card h3 {
+  font-family: var(--font-sans);
+  font-size: clamp(1.125rem, 1.35vw, 1.375rem);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+html[lang="zh-Hant-US"] :is(.mobile-menu__primary a, .mobile-nav-dropdown summary) {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
 }
 
 html[lang="zh-Hant-US"] :is(.eyebrow, .microcopy, .button, .text-link, .back-link, .product-card__availability) {

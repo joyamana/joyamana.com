@@ -16,6 +16,8 @@ Last updated: 2026-09-11
 ### Confirmed
 
 - 品牌名称：Joya Mana。
+- 网站字体：英/西语 Newsreader + Manrope；繁中 Noto Serif HK（品牌/PDP 标题）+
+  Noto Sans HK（正文、商品卡与操作界面）。拉丁字母与价格数字沿用原有字体。
 
 ### Working
 

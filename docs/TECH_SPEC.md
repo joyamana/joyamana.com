@@ -222,7 +222,12 @@ Content/SEO 规格。
 - `config/locales.ts` 是无循环依赖的 locale/类型注册表，集中 provider、format 与 OG
   映射；`config/markets.ts` 引用受限类型，`lib/i18n` 提供 path helper、语言列表和启用门禁。
   zh-Hant-US 对应 Storefront `ZH_TW`、Admin `zh-TW`、Intl `zh-HK`、OG `zh_US`。
-  使用系统香港字体 fallback，无新增远程 CJK 下载或依赖。
+  字体仅在繁中 root layout 声明 Noto Serif HK 500 与 Noto Sans HK variable；
+  使用既有 `next/font/google` 构建时下载、自托管 WOFF2/`unicode-range` 分片，
+  `preload: false`、`display: swap`，访客只向本站按需请求字体。EN/ES 不下载中文 WOFF2；
+  Turbopack 可能合并部分字体 CSS 声明，验收须以真实字体请求而非 import 位置为准。
+  拉丁文本保留 Newsreader/Manrope，中文加载期间回退系统字体；无新增包或运行时第三方平台。
+  字体上游来源与 OFL 授权随站点保留在 `public/fonts/OFL-Noto-HK.txt`。
 - US/CA 使用独立 Catalog、Currency、Availability 和 Cart context；语言切换
   不改变 Market，Market 切换不得复用另一 Market 的 Cart。
 - 路径使用小写、短横线；推荐无尾斜杠并由重定向统一。
