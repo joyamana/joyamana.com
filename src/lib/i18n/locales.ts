@@ -1,15 +1,13 @@
 import { markets, type MarketId } from "@/config/markets";
+import { localeRegistry, type SupportedLocale } from "@/config/locales";
 
-export const locales = ["en-US", "es-US", "en-CA", "fr-CA"] as const;
-export type Locale = (typeof locales)[number];
+export type Locale = SupportedLocale;
+export const locales = Object.keys(localeRegistry) as Locale[];
 
 export const defaultLocale: Locale = "en-US";
-export const localePrefixes: Record<Locale, string> = {
-  "en-US": "",
-  "es-US": "/es-us",
-  "en-CA": "/en-ca",
-  "fr-CA": "/fr-ca",
-};
+export const localePrefixes = Object.fromEntries(
+  locales.map((locale) => [locale, localeRegistry[locale].prefix]),
+) as Record<Locale, string>;
 
 export function localePath(locale: Locale, path = "/") {
   const prefix = localePrefixes[locale];
@@ -17,31 +15,40 @@ export function localePath(locale: Locale, path = "/") {
   return prefix ? `${prefix}${normalizedPath}` || prefix : path;
 }
 
-export function alternateLanguageLocale(locale: Locale): Locale | null {
-  if (locale === "en-US") return "es-US";
-  if (locale === "es-US") return "en-US";
-  if (locale === "en-CA") return "fr-CA";
-  if (locale === "fr-CA") return "en-CA";
-  return null;
-}
-
 export function marketForLocale(locale: Locale) {
-  const market = Object.values(markets).find((item) =>
-    (item.locales as readonly string[]).includes(locale),
-  );
-  if (!market) throw new Error(`No market is configured for locale ${locale}.`);
-  return market;
+  return markets[localeRegistry[locale].market];
 }
 
 export function marketIdForLocale(locale: Locale): MarketId {
-  return marketForLocale(locale).id as MarketId;
+  return localeRegistry[locale].market;
 }
 
 export function isLocaleEnabled(locale: Locale) {
-  return marketForLocale(locale).status !== "planned";
+  return (
+    localeRegistry[locale].enabled && marketForLocale(locale).status !== "planned"
+  );
 }
 
 export const enabledLocales = locales.filter(isLocaleEnabled);
+
+export function languageOptionsFor(locale: Locale) {
+  return enabledLocales
+    .filter((candidate) => marketIdForLocale(candidate) === marketIdForLocale(locale))
+    .map((candidate) => ({
+      locale: candidate,
+      label: localeRegistry[candidate].label,
+      shortLabel: localeRegistry[candidate].shortLabel,
+    }));
+}
+
+export function localeForPath(pathname: string): Locale {
+  return (
+    locales.find((locale) => {
+      const prefix = localePrefixes[locale];
+      return prefix && (pathname === prefix || pathname.startsWith(`${prefix}/`));
+    }) ?? defaultLocale
+  );
+}
 
 export function stripLocalePrefix(pathname: string) {
   for (const prefix of Object.values(localePrefixes).filter(Boolean)) {

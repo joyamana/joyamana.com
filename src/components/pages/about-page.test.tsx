@@ -30,6 +30,18 @@ function page(
 }
 
 describe("About content page", () => {
+  it("keeps all Chinese child links and readable English fallback per D-049", () => {
+    const fallback = { requestedLocale: "zh-Hant-US", contentLocale: "en-US", usedDefaultLanguage: true } as const;
+    const root = page("about", "About", fallback);
+    const tree = {root, children: [page("founder", "Founder", fallback), page("approach", "Approach", fallback)]};
+    const html = renderToStaticMarkup(<AboutContentPage locale="zh-Hant-US" page={root} tree={tree} />);
+    expect(html).toContain('href="/zh-hant-us/about/founder"');
+    expect(html).toContain('href="/zh-hant-us/about/approach"');
+    expect(html).toContain("本頁內容目前以英文提供。");
+    expect(html).toContain('lang="en-US"');
+    expect(html).toContain("About body.");
+    expect(html).not.toContain("application/ld+json");
+  });
   it("does not render a tab navigation when the root has no children", () => {
     const root = page("about", "About Joya Mana");
     const tree: StorefrontAboutTree = { root, children: [] };

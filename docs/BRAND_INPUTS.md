@@ -75,9 +75,9 @@ Last updated: 2026-09-11
 ### Confirmed
 
 - 当前只运营 United States Market / USD。
-- 同一个 US Catalog 支持 en-US 与 es-US；两种语言共享商品、库存、价格、
+- 同一个 US Catalog 支持 en-US、es-US、zh-Hant-US；各语言共享商品、库存、价格、
   配送、税务和法律上下文。
-- URL 使用根路径表示 en-US，使用 `/es-us/` 表示美国西语；货币不进入 URL。
+- URL 使用根路径表示 en-US，`/es-us/` 表示美国西语，`/zh-hant-us/` 表示美国繁中；货币不进入 URL。
 - 不开放 Canada、UK、EU、Australia 或其他国际市场。
 - 不提前编码未来市场价格、语言、税费或配送业务逻辑。
 - Shopify hosted checkout，优先评估 Shopify Payments 及账户可用的钱包/支付。
@@ -114,9 +114,11 @@ Last updated: 2026-09-11
   独立 Headless CMS 后置。
 - URL 与前端栏目名统一使用 `Blog`；不使用 Journal/Diario/Guides 作为同一
   栏目的替代名称。
-- 网站支持 en-US 与 es-US；西语是同一 US Market 的内容翻译，不是
+- 网站支持 en-US、es-US，dev 已接入 zh-Hant-US；语言版本是同一 US Market 的内容翻译，不是
   独立商品或西班牙 Market。
 - 新增或未审校西语内容不得开放索引；当前批准范围见 D-045。
+- US `zh-Hant-US` 的 dev 代码接入已批准：繁体字配香港惯用书面语，不默认采用粤语口语。
+  业务方允许缺译页面显示 Shopify 英文回退、不隐藏页面；这不等于译文已审校或索引获批，见 D-049。
 - 接受现有 claims policy：传统/文化/个人实践需限定；不诊断、治疗、治愈、
   预防疾病，不保证财富、爱情、好运、保护或人生结果。
 - 不虚构作者、专家、资历、来源或 Reviewed by。

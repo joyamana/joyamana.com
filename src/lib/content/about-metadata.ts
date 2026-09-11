@@ -42,11 +42,13 @@ export async function buildAboutMetadata({
   searchParams?: PageSearchParams;
 }): Promise<Metadata> {
   const fallbackTitle = uiText(locale, {
+    zh: "關於 Joya Mana",
     en: "About Joya Mana",
     es: "Sobre Joya Mana",
     fr: "À propos de Joya Mana",
   });
   const fallbackDescription = uiText(locale, {
+    zh: "了解 Joya Mana 的理念與商品標準。",
     en: "Learn about Joya Mana's perspective and product standards.",
     es: "Conoce la perspectiva y los estándares de producto de Joya Mana.",
     fr: "Découvrez la perspective et les normes produit de Joya Mana.",

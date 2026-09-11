@@ -24,7 +24,7 @@ Last updated: 2026-09-11
 
 - Production：Vercel `https://www.joyamana.com`；apex 308 至 www。
   Shopify hosted Checkout 使用 `https://checkout.joyamana.com`。
-- US en-US 根路径与 es-US `/es-us` 共享 Catalog/USD；Canada 仅保留 typed planned
+- US en-US 根路径、es-US `/es-us` 与 dev 的 zh-Hant-US `/zh-hant-us` 共享 Catalog/USD；Canada 仅保留 typed planned
   配置，停用与未知市场路径统一 404，无预建业务模板。
 - Shopify-only：Product/Variant/Category/Design Collection、实时价格/可售性/数量、
   Bag/独立 Buy now，以及 Policy、About subtree、Accessibility、Blog/Guide。
@@ -69,12 +69,22 @@ Last updated: 2026-09-11
 | 维度 | 决定 |
 |---|---|
 | 市场 | United States |
-| 语言 | English (`en-US`) + US Spanish (`es-US`) |
+| 语言 | en-US、es-US；dev 已接入 zh-Hant-US（香港书面语） |
 | 货币 | USD |
 | 收入 | 自有商品销售 |
 | Checkout | Shopify hosted checkout |
 | 账户 | 不强制；MVP 不建设自定义账户门户 |
-| URL | en-US 使用根路径；es-US 使用 `/es-us/` |
+| URL | en-US 根路径；es-US `/es-us/`；zh-Hant-US `/zh-hant-us/` |
+
+### Traditional Chinese in US
+
+dev 已完整接入 `zh-Hant-US`（繁体中文、香港惯用书面语），不迁移 EN/ES URL。
+中央注册表区分站点标签、路径、Shopify `ZH_TW` 和 Intl `zh-HK`；沿用 US/USD/Bag，
+加入香港用语 UI、中文排版、全部共享页面、三语言导航及安全 Checkout URL 支持。
+Shopify 繁体语言已发布；正文当前仍有英文回退。按 D-049 不隐藏缺译页面，About 子页
+入口保留；政策/About/Editorial 的已知回退保留真实内容语言标记。未实现商品逐字段
+翻译检测，不把英文正文标称为已审校繁中。繁中四组索引全部关闭，未合并 main 或部署。
+完整译文、托管 Checkout/通知及人工设备验收仍独立跟踪。
 
 ### Planned Market
 
@@ -122,7 +132,7 @@ Working 输入用于产品设计，不自动成为获批外部事实；不在多
 - Metadata、canonical、必要 Schema、sitemap、robots、Open Graph。
 - 基础 Analytics、Search Console、错误监控、性能和无障碍验证。
 - US market typed configuration，为未来扩展预留而不生成未来 URL。
-- 同一 US Catalog 的 en-US 根路径与 `/es-us/` 语言版本；语言切换不改变
+- 同一 US Catalog 的 en-US 根路径、`/es-us/` 与 `/zh-hant-us/` 语言版本；语言切换不改变
   商品、库存、价格或政策事实来源。
 
 ### 明确不在 MVP

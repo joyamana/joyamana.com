@@ -54,7 +54,8 @@
   静态生成、ISR 或动态服务端渲染，不强制每次请求 SSR。
 - 不建设独立业务后端。允许在 Next.js 中使用必要的 Route Handlers、
   Server Actions、缓存失效端点和安全的服务端适配层。
-- 当前只启用 US / US Catalog / USD：en-US 根路径、es-US `/es-us/`。
+- 当前只启用 US / US Catalog / USD：en-US 根路径、es-US `/es-us/`、
+  zh-Hant-US `/zh-hant-us/`（香港惯用书面语）。
 - CA / CA Catalog / CAD 只保留 typed planned 配置；`/en-ca/` 与 `/fr-ca/`
   不生成、不导航并返回 404，直到业务方重新批准启用。
 - 同一 Market 内语言共享 Catalog、价格、库存和政策事实；跨 Market 必须隔离
@@ -97,7 +98,7 @@
   业务价值、数据边界、成本和退出路径。
 - 使用明确的类型、集中式配置和薄适配层；不要把国家、货币、canonical、
   Schema 或 tracking 逻辑散落在组件中。
-- 代码标识符使用英文；UI 文案支持 en-US 与 es-US，西语发布前必须人工审校；
+- 代码标识符使用英文；UI 文案支持 en-US、es-US、zh-Hant-US，译文须人工审校；
   项目规划文档可使用中文。
 - 保留用户已有的无关改动，不以顺手重构扩大任务范围。
 
@@ -140,8 +141,10 @@
 本文件不重复日期化部署与审批记录。
 
 - Node 保持 24；精确依赖以 package.json/lockfile 为准，使用相互兼容的稳定版本。
-- 当前只有 US en-US/es-US；索引矩阵见 src/config/indexing.ts。
+- US 语言注册与 provider/format 映射见 src/config/locales.ts；索引矩阵见 src/config/indexing.ts。
   Preview 必须 noindex；Production canonical 为 `https://www.joyamana.com`。
+- 按 D-049，dev 已接入繁中全部页面与 Commerce，缺译页面不隐藏，允许 Shopify
+  默认英文回退；不得因此复制本地正文。繁中四组索引关闭，开放前须另行验收译文。
 - Playwright 按 D-043 封存；记录人工浏览器/Checkout smoke 的范围与结果。
 - 内容/导航按 D-046 使用五分钟再验证缓存，webhook 后置；商业数据保持 no-store。
 - 代码缺省的索引、Checkout 和 Contact form 门禁关闭；各部署按批准范围单独核验。

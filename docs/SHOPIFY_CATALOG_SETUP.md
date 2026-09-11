@@ -8,6 +8,22 @@ Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
 本文件说明 D-036 所需的 Shopify Admin 配置。它不包含 credential，也不授权代码或
 自动化工具修改 Shopify；运营人员完成配置后，Storefront API 只读消费这些事实。
 
+## US 繁体中文（D-049）
+
+- 使用现有店铺、US Market、Headless channel 与 token；不新建香港/台湾市场。
+- 站点 `zh-Hant-US` / `/zh-hant-us`；Storefront `ZH_TW`；后台翻译语言 `zh-TW`。
+  后台已发布 Chinese (Traditional)，无需再改网站路径或货币。
+- 商品 title/description/SEO/options/alt、Collection 和 content_page Metaobjects 的译文
+  在 Shopify 维护，使用香港书面语；Policies 也需提供经过审核的正式译文。
+  `handle`、SKU、ID、metafield 枚举、USD 与 US 政策事实不随翻译改变。
+- 缺译时前台按业务要求直接显示 Shopify 默认语言，不隐藏页面；后台补译后由现有
+  adapter 读取。内容与导航可能经历五分钟再验证窗口，商业查询保持 no-store。
+- 商品逐字段翻译检测尚未实现。繁中索引四组全关；开放前单独审校并建立持续 readiness，
+  不把语言已发布或页面返回 200 当成翻译验收。
+- 托管 Checkout、订单状态和交易通知的可编辑内容另外审校；平台默认繁体不保证
+  香港措辞。已验证新繁中 Cart 与英文 Cart 的繁中读取返回 `/zh-tw/cart/c/…`，
+  但该合约检查不替代浏览器/支付验收。
+
 ## 1. 商品类别
 
 在 Shopify Admin 的每个 Product 中设置最具体的 Shopify Standard Product Category。

@@ -6,28 +6,12 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import {
   localePath,
-  marketIdForLocale,
+  languageOptionsFor,
   stripLocalePrefix,
 } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 
-const optionsByMarket = {
-  us: [
-    { locale: "en-US", label: "English" },
-    { locale: "es-US", label: "Español" },
-  ],
-  ca: [
-    { locale: "en-CA", label: "English" },
-    { locale: "fr-CA", label: "Français" },
-  ],
-} satisfies Record<string, Array<{ locale: Locale; label: string }>>;
-
-const localeLabels: Record<Locale, string> = {
-  "en-US": "EN",
-  "es-US": "ES",
-  "en-CA": "EN",
-  "fr-CA": "FR",
-};
+import { localeRegistry } from "@/config/locales";
 
 function LanguageIcon() {
   return (
@@ -48,8 +32,9 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
   const basePath = stripLocalePrefix(pathname);
-  const options = optionsByMarket[marketIdForLocale(locale)];
+  const options = languageOptionsFor(locale);
   const selectorLabel = uiText(locale, {
+    zh: "選擇語言",
     en: "Choose language",
     es: "Elegir idioma",
     fr: "Choisir la langue",
@@ -87,13 +72,13 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
         aria-controls={panelId}
         aria-expanded={open}
         aria-haspopup="true"
-        aria-label={`${selectorLabel}: ${localeLabels[locale]}`}
+        aria-label={`${selectorLabel}: ${localeRegistry[locale].shortLabel}`}
         className="language-switch__trigger"
         type="button"
         onClick={() => setOpen((current) => !current)}
       >
         <LanguageIcon />
-        <span>{localeLabels[locale]}</span>
+        <span>{localeRegistry[locale].shortLabel}</span>
         <span aria-hidden="true" className="language-switch__chevron">
           ▾
         </span>

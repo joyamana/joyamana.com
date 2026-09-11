@@ -1,6 +1,19 @@
 import type { Locale } from "./locales";
 
 const copy = {
+  "zh-Hant-US": {
+    nav: { shop: "選購", collections: "系列", crystals: "水晶指南", blog: "Blog", about: "關於我們", search: "搜尋", cart: "購物袋" },
+    home: {
+      eyebrow: "水晶首飾 · 獨特之選",
+      title: "天然形態，自有意義。",
+      intro: "現代水晶首飾與獨特飾物，因其天然個性而獲選，為日常留一點空間，沉澱思緒、梳理意念。",
+      cta: "探索 Joya Mana",
+      secondaryCta: "探索獨一無二的飾物",
+      featured: "精選飾物",
+      featuredIntro: "瀏覽目前的商品、價格及供應狀況。",
+    },
+    labels: { exactPiece: "實物如圖", naturalVariation: "天然差異", testPrice: "價格", viewPiece: "查看商品", addToCart: "加入購物袋", soldOut: "暫未能購買", details: "商品資料", care: "保養", shipping: "送貨", related: "你或許也會留意", all: "全部", read: "閱讀" },
+  },
   "en-US": {
     nav: {
       shop: "Shop",

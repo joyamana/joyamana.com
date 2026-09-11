@@ -35,6 +35,18 @@ function connection<T>(
   };
 }
 
+it("reads Traditional Chinese products without changing country, money or hiding fallback", async () => {
+  shopifyFetchMock.mockResolvedValueOnce({ products: connection([productFixture()]) });
+  const products = await getShopifyProducts("zh-Hant-US");
+  expect(products[0].title).toBe("Seven-Chakra Bracelet");
+  expect(products[0].priceRange.minVariantPrice.currencyCode).toBe("USD");
+  expect(shopifyFetchMock).toHaveBeenCalledWith(
+    SHOPIFY_PRODUCTS_QUERY,
+    expect.objectContaining({ country: "US", language: "ZH_TW" }),
+    expect.objectContaining({cache: "no-store"}),
+  );
+});
+
 function productFixture(): ShopifyProductNode {
   return {
     id: "gid://shopify/Product/1",

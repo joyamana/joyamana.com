@@ -1,3 +1,4 @@
+import { localeRegistry } from "@/config/locales";
 import type { Metadata } from "next";
 import { brand } from "@/config/brand";
 import { isIndexingEnabledFor, siteConfig } from "@/config/site";
@@ -102,14 +103,7 @@ export function buildMetadata({
       title: normalizedTitle,
       description,
       siteName: brand.name,
-      locale:
-        locale === "es-US"
-          ? "es_US"
-          : locale === "en-CA"
-            ? "en_CA"
-            : locale === "fr-CA"
-              ? "fr_CA"
-            : "en_US",
+      locale: localeRegistry[locale].openGraph,
       type: "website",
       url: canonical,
     },

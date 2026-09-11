@@ -19,6 +19,7 @@ export function ProductCard({
     product.featuredImage ?? product.images[0] ?? product.variants[0]?.image;
   const availabilityLabel = product.availableForSale
     ? uiText(locale, {
+        zh: "可購買",
         en: "Available",
         es: "Disponible",
         fr: "Disponible",
@@ -48,6 +49,7 @@ export function ProductCard({
         ) : (
           <span className="product-media-unavailable product-media-unavailable--compact">
             {uiText(locale, {
+              zh: "暫無圖片",
               en: "Image unavailable",
               es: "Imagen no disponible",
               fr: "Image indisponible",

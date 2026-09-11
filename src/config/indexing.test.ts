@@ -10,6 +10,7 @@ describe("version-controlled indexing policy", () => {
       "editorial",
     ]);
     expect(indexingPolicy).toEqual({
+      "zh-Hant-US": { core: false, commerce: false, policies: false, editorial: false },
       "en-US": {
         core: true,
         commerce: true,

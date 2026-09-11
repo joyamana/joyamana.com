@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatMoney, formatPrice, formatPriceRange } from "./format";
+import { formatDate, formatMoney, formatPrice, formatPriceRange } from "./format";
 
 describe("formatPrice", () => {
+  it("uses Hong Kong formatting without turning USD into HKD", () => {
+    expect(formatPrice("35.50", "zh-Hant-US", "USD")).toBe("US$35.50 USD");
+    expect(formatDate("2026-09-11T00:00:00Z", "zh-Hant-US")).toBe("2026年9月11日");
+  });
   it("makes the US currency explicit", () => {
     expect(formatPrice(68, "en-US", "USD")).toBe("$68 USD");
   });

@@ -1,3 +1,4 @@
+import { isEnabledLocale, shopifyContextForLocale } from "@/config/locales";
 import type { Locale } from "@/lib/i18n/locales";
 import { sanitizeShopifyHtml } from "@/lib/content/shopify-html";
 import { shopifyFetch, type ShopifyFetchOptions } from "./shopify";
@@ -481,12 +482,11 @@ export const SHOPIFY_NAVIGATION_COLLECTIONS_QUERY = `#graphql
 `;
 
 function shopifyContext(locale: Locale) {
-  if (locale === "en-US") return { country: "US", language: "EN" } as const;
-  if (locale === "es-US") return { country: "US", language: "ES" } as const;
+  if (isEnabledLocale(locale)) return shopifyContextForLocale(locale);
 
   throw new ShopifyCatalogError(
     "unsupported-locale",
-    "The enabled Shopify catalog only supports en-US and es-US.",
+    "This locale is not enabled for the Shopify catalog.",
   );
 }
 

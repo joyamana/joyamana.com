@@ -138,8 +138,11 @@ About 使用下列受控关系：
   非 `content_page` 或未引用条目全部 fail closed。
 - 当前只允许一层子页面；child 自身的引用不生成更深 URL。
 - 建议页内导航总项数不超过 5；超过时先重新评估目录模式，不静默截断内容。
-- en-US 与 es-US 共享英文 handle；正文与 SEO 未完成真实翻译的 fallback 页面不得进入
+- US 各语言共享英文 handle；正文与 SEO 未完成真实翻译的 fallback 页面不得进入
   sitemap/hreflang。
+- zh-Hant-US 按 D-049 保留缺译页面及 About 有效子页入口；四个索引组全部关闭，
+  不因代码接入或 Shopify 发布语言就生成繁中 sitemap/hreflang/Schema。未来开放前
+  另行验收翻译与持续 readiness 流程。
 
 ### Product knowledge
 

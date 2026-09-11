@@ -33,7 +33,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
     <form action={formAction} className="contact-form" ref={formRef}>
       <div className="contact-form__field">
         <label htmlFor="contact-topic">
-          {uiText(locale, { en: "Topic", es: "Tema", fr: "Sujet" })}
+          {uiText(locale, { zh: "查詢類別", en: "Topic", es: "Tema", fr: "Sujet" })}
         </label>
         <select
           aria-describedby={errorId("topic")}
@@ -45,6 +45,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
         >
           <option disabled value="">
             {uiText(locale, {
+              zh: "選擇查詢類別",
               en: "Choose a topic",
               es: "Selecciona un tema",
               fr: "Choisissez un sujet",
@@ -52,6 +53,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
           </option>
           <option value="order">
             {uiText(locale, {
+              zh: "訂單查詢",
               en: "Order help",
               es: "Ayuda con un pedido",
               fr: "Aide avec une commande",
@@ -59,6 +61,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
           </option>
           <option value="return">
             {uiText(locale, {
+              zh: "退貨或商品損壞",
               en: "Return or damaged item",
               es: "Devolución o artículo dañado",
               fr: "Retour ou article endommagé",
@@ -66,6 +69,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
           </option>
           <option value="product">
             {uiText(locale, {
+              zh: "商品查詢",
               en: "Product question",
               es: "Pregunta sobre un producto",
               fr: "Question sur un produit",
@@ -73,13 +77,14 @@ export function ContactForm({ locale }: { locale: Locale }) {
           </option>
           <option value="accessibility">
             {uiText(locale, {
+              zh: "無障礙使用",
               en: "Accessibility",
               es: "Accesibilidad",
               fr: "Accessibilité",
             })}
           </option>
           <option value="other">
-            {uiText(locale, { en: "Other", es: "Otro", fr: "Autre" })}
+            {uiText(locale, { zh: "其他", en: "Other", es: "Otro", fr: "Autre" })}
           </option>
         </select>
         <FieldError id={errorId("topic")} message={state.fieldErrors.topic} />
@@ -89,6 +94,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
         <div className="contact-form__field">
           <label htmlFor="contact-name">
             {uiText(locale, {
+              zh: "姓名（選填）",
               en: "Name (optional)",
               es: "Nombre (opcional)",
               fr: "Nom (facultatif)",
@@ -109,6 +115,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
         <div className="contact-form__field">
           <label htmlFor="contact-email">
             {uiText(locale, {
+              zh: "電郵",
               en: "Email",
               es: "Correo electrónico",
               fr: "Courriel",
@@ -132,6 +139,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
       <div className="contact-form__field">
         <label htmlFor="contact-order">
           {uiText(locale, {
+            zh: "訂單編號（選填）",
             en: "Order number (optional)",
             es: "Número de pedido (opcional)",
             fr: "Numéro de commande (facultatif)",
@@ -156,7 +164,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
 
       <div className="contact-form__field">
         <label htmlFor="contact-message">
-          {uiText(locale, { en: "Message", es: "Mensaje", fr: "Message" })}
+          {uiText(locale, { zh: "訊息", en: "Message", es: "Mensaje", fr: "Message" })}
         </label>
         <textarea
           aria-describedby={errorId("message")}
@@ -188,12 +196,14 @@ export function ContactForm({ locale }: { locale: Locale }) {
 
       <p className="contact-form__notice">
         {uiText(locale, {
+          zh: "請勿填寫付款卡資料或密碼。我們只會使用這些資料回覆本次查詢；提交表格不代表訂閱推廣訊息。",
           en: "Please do not include payment card information or passwords. We use these details only to respond to this request; submitting this form does not subscribe you to marketing.",
           es: "No incluyas datos de tarjetas de pago ni contraseñas. Usamos esta información solo para responder a esta solicitud; enviar el formulario no te suscribe a comunicaciones de marketing.",
           fr: "N’indiquez aucun numéro de carte ni mot de passe. Ces renseignements servent uniquement à répondre à cette demande; l’envoi du formulaire ne vous inscrit pas au marketing.",
         })}{" "}
         <Link href={localePath(locale, "/privacy")}>
           {uiText(locale, {
+            zh: "私隱",
             en: "Privacy",
             es: "Privacidad",
             fr: "Confidentialité",
@@ -214,11 +224,13 @@ export function ContactForm({ locale }: { locale: Locale }) {
       <button className="button button--primary" disabled={pending} type="submit">
         {pending
           ? uiText(locale, {
+              zh: "正在傳送…",
               en: "Sending…",
               es: "Enviando…",
               fr: "Envoi…",
             })
           : uiText(locale, {
+              zh: "傳送訊息",
               en: "Send message",
               es: "Enviar mensaje",
               fr: "Envoyer le message",

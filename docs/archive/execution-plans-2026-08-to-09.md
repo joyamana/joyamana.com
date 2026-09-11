@@ -7,6 +7,63 @@ Archived: 2026-09-11
 状态来源；当前决策、开放问题和项目状态分别以 `../DECISIONS.md`、
 `../OPEN_QUESTIONS.md`、`../PROJECT_SPEC.md` 和根目录 `PLANS.md` 为准。
 
+## US 繁体中文接入 — zh-Hant-US
+
+状态：Complete — dev 代码接入完成；不代表部署或繁中内容/支付验收
+负责人：Project owner / Engineering
+最后更新：2026-09-11
+关联：D-049、D-043、D-045
+
+### Objective / scope
+
+同一 US Catalog / USD 添加 /zh-hant-us，HTML 使用 zh-Hant-US，Storefront 请求 ZH_TW，
+格式使用 zh-HK，但不新增 HK/TW Market 或改变 US 价格、库存、政策与 Bag cookie。
+复用全部现有页面（包括永久 noindex 的 Search/Bag 和暂不索引的 Editorial），
+覆盖香港书面语 UI、导航、metadata、购买动作、错误恢复与中文排版。
+不引入新依赖、翻译平台或本地商业正文；使用港式系统字体 fallback，不新增远程 CJK 字库。
+
+### Decisions / user amendment
+
+业务方批准完整代码接入，并明确缺译页面不隐藏。Shopify 默认语言回退正常可读，
+不建立此前规划的商品审核 allowlist，不添加待完善占位；保留实际内容语言标记及既有
+fallback noindex。About 导航也保留繁中路径上的有效子页。四个繁中索引组全关；
+EN/ES 保持不变。未来索引开放必须另行审核内容及持续 readiness，不等于本轮代码验收。
+不改后台、main、Vercel 或环境变量。Playwright 按 D-043 封存。
+
+### Milestones
+
+1. [x] 批准 D-049 和最新范围；只读确认 US 下 ZH_TW 已发布。
+2. [x] 中央 locale/Shopify 映射、完整 UI、所有薄路由和三语言导航。
+3. [x] Cart/Checkout、金额日期、错误恢复和中文排版。
+4. [x] Node 24 lint/typecheck/test/build、HTTP/Shopify 合约验证及文档同步。
+
+### Evidence / remaining checks
+
+只读对照已确认请求实际为 ZH_TW，但 32 个商品、1 个系列、5 个 content_page 与
+4 项政策当前仍返回与英文相同的内容；语言发布不等于译文完成，不阻塞本轮代码接入。
+Node 24 最终 preflight/lint/typecheck/test（31 files / 205 tests）与 production build 已通过；本地 noindex
+构建 96 条 HTTP 检查通过（含全部 32 个繁中商品）。新 EN/ZH_TW 临时 Cart 与旧 EN Cart
+用 ZH_TW 读取已实测 US/USD、同一 Cart 身份和 `/zh-tw/cart/c/…` URL，测试商品已清空。
+未访问 Checkout 或创建订单。Production-like 配置另有 27 条 HTTP 检查通过；EN/ES
+sitemap 保持 94 个 URL，繁中无 sitemap/hreflang/Schema。首页 canonical 无尾斜杠与
+根 URL 规范化后等价；已修正检查器的字符串比较。最终恢复本地默认 noindex 构建，
+复核 6 个页面与空 sitemap，测试服务已关闭。git diff --check 通过，未新增依赖或环境变量。
+最终 Checkout 文案、支付、交易通知、移动端字形与键盘/读屏仍需
+人工验收；不将 HTTP 或 Cart 合约测试称作支付 E2E。
+既有 Next 404 初始 HTML 空壳仍在：404/noindex 正确，繁中恢复提示存在于 RSC payload，
+人工浏览器可见性与无 JavaScript 恢复仍待验收，不在本轮扩大为 Next 错误框架迁移。
+
+### Rollback
+
+回退 dev 本次代码即可撤回新语言；EN/ES 与现有 US Cart 不迁移。
+本轮无中文索引 URL；将来开放索引后下线须另行决定 URL 生命周期。
+
+### Outcome
+
+已按最新指示完整接入全部共享页面、香港用语 UI 与 US Commerce，缺译页面不隐藏。
+本轮没有提交、推送、部署、修改 main 或店铺设置。测试 Cart 不含客户资料，商品已清空。
+正文翻译和人工浏览器/Checkout 验收转入当前 OPEN_QUESTIONS/ROADMAP；不是代码占位。
+
 ## 依赖稳定版升级与代码/文档精简
 
 状态：Complete

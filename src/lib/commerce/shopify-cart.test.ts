@@ -355,6 +355,11 @@ describe("Shopify Cart Storefront operations", () => {
 });
 
 describe("Shopify Checkout boundary", () => {
+  it.each(["/zh-tw/cart/c/token?key=secret", "/zh-tw/checkouts/token?key=secret"])("accepts the verified Traditional Chinese prefix: %s", (path) => {
+    const url = `https://checkout.joyamana.com${path}`;
+    expect(validateCheckoutUrl(url, {checkoutDomain: "checkout.joyamana.com"})).toBe(url);
+  });
+
   it("accepts only explicitly configured checkout hosts", () => {
     expect(
       validateCheckoutUrl(
@@ -389,6 +394,12 @@ describe("Shopify Checkout boundary", () => {
     "https://another-store.myshopify.com/checkouts/token",
     "https://joya-mana.myshopify.com/products/example",
     "https://joya-mana.myshopify.com/fr/cart/c/token",
+    "https://joya-mana.myshopify.com/zh-hant-us/cart/c/token",
+    "https://joya-mana.myshopify.com/zh-cn/cart/c/token",
+    "https://joya-mana.myshopify.com/zh-tw/products/token",
+    "https://joya-mana.myshopify.com/zh-tw/cart/c/token#fragment",
+    "https://joya-mana.myshopify.com:444/zh-tw/cart/c/token",
+    "https://joya-mana.myshopify.com.evil.example/zh-tw/cart/c/token",
     "https://user:password@joya-mana.myshopify.com/cart/c/token",
     "javascript:alert(1)",
   ])("rejects an unsafe Checkout URL: %s", (url) => {

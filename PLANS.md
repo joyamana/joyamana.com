@@ -7,12 +7,8 @@
 
 ## Current status
 
-当前无 Active 执行计划。已完成任务及验证记录见上述 Archive；项目状态分别见：
-
-- [`docs/DECISIONS.md`](docs/DECISIONS.md)
-- [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
-- [`docs/ROADMAP.md`](docs/ROADMAP.md)
-- [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)
+当前无 Active 执行计划。US 繁体中文 dev 代码接入已完成，记录见上述 Archive。
+后续内容/设备/Checkout 验收和索引批准见 ROADMAP / OPEN_QUESTIONS；Production 发布另行验收。
 
 ## 何时使用
 

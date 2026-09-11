@@ -32,11 +32,13 @@ export async function ProductPage({
   if (!product) notFound();
   const copy = getCopy(locale);
   const homeLabel = uiText(locale, {
+    zh: "首頁",
     en: "Home",
     es: "Inicio",
     fr: "Accueil",
   });
   const shopLabel = uiText(locale, {
+    zh: "選購",
     en: "Shop",
     es: "Comprar",
     fr: "Boutique",
@@ -76,6 +78,7 @@ export async function ProductPage({
       <nav
         className="breadcrumbs"
         aria-label={uiText(locale, {
+          zh: "頁面路徑",
           en: "Breadcrumb",
           es: "Ruta de navegación",
           fr: "Fil d’Ariane",

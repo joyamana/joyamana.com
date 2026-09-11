@@ -61,11 +61,13 @@ export function AboutContentPage({
   const isRoot = !handle;
   const path = isRoot ? "/about" : `/about/${page.handle}`;
   const homeLabel = uiText(locale, {
+    zh: "首頁",
     en: "Home",
     es: "Inicio",
     fr: "Accueil",
   });
   const aboutLabel = uiText(locale, {
+    zh: "關於我們",
     en: "About",
     es: "Nosotros",
     fr: "À propos",
@@ -100,6 +102,7 @@ export function AboutContentPage({
       ) : null}
       <nav
         aria-label={uiText(locale, {
+          zh: "頁面路徑",
           en: "Breadcrumb",
           es: "Ruta de navegación",
           fr: "Fil d’Ariane",
@@ -131,6 +134,7 @@ export function AboutContentPage({
         {page.usedDefaultLanguage ? (
           <p className="policy-language-notice">
             {uiText(locale, {
+              zh: "本頁內容目前以英文提供。",
               en: "This page is currently available in English.",
               es: "Esta página está disponible actualmente en inglés.",
               fr: "Cette page est actuellement disponible en anglais.",
@@ -157,7 +161,7 @@ function AboutSectionNavigation({
   tree: StorefrontAboutTree;
 }) {
   const children = tree.children.filter(
-    (page) => !page.usedDefaultLanguage || page.handle === activeHandle,
+    (page) => locale === "zh-Hant-US" || !page.usedDefaultLanguage || page.handle === activeHandle,
   );
   if (!children.length) return null;
 
@@ -165,6 +169,7 @@ function AboutSectionNavigation({
   return (
     <nav
       aria-label={uiText(locale, {
+        zh: "關於 Joya Mana 的各個章節",
         en: "About Joya Mana sections",
         es: "Secciones sobre Joya Mana",
         fr: "Sections à propos de Joya Mana",
@@ -177,6 +182,7 @@ function AboutSectionNavigation({
           const isActive = itemHandle === activeHandle;
           return (
             <Link
+              lang={item.contentLocale}
               aria-current={isActive ? "page" : undefined}
               href={localePath(
                 locale,
@@ -199,6 +205,7 @@ function AboutUnavailable({ locale }: { locale: Locale }) {
       <header className="about-content-heading">
         <h1>
           {uiText(locale, {
+            zh: "關於 Joya Mana",
             en: "About Joya Mana",
             es: "Sobre Joya Mana",
             fr: "À propos de Joya Mana",
@@ -206,6 +213,7 @@ function AboutUnavailable({ locale }: { locale: Locale }) {
         </h1>
         <p>
           {uiText(locale, {
+            zh: "品牌故事暫時未能載入，請稍後再試。",
             en: "Our story is temporarily unavailable. Please try again shortly.",
             es: "Nuestra historia no está disponible temporalmente. Inténtalo de nuevo en unos minutos.",
             fr: "Notre histoire est temporairement indisponible. Veuillez réessayer sous peu.",

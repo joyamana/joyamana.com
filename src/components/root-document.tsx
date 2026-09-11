@@ -51,6 +51,7 @@ export function RootDocument({
       <body>
         <a className="skip-link" href="#main-content">
           {uiText(locale, {
+            zh: "跳至主要內容",
             en: "Skip to content",
             es: "Saltar al contenido",
             fr: "Aller au contenu",

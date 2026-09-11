@@ -146,11 +146,11 @@ describe("Shopify catalog facade", () => {
     ).resolves.toBeNull();
   });
 
-  it("uses one enabled US catalog for English and Spanish", () => {
+  it("uses one enabled US catalog for all three languages", () => {
     expect(activeMarket.regions).toEqual(["US"]);
     expect(activeMarket.defaultCurrency).toBe("USD");
     expect(activeMarket.currencies).toEqual(["USD"]);
-    expect(activeMarket.locales).toEqual(["en-US", "es-US"]);
+    expect(activeMarket.locales).toEqual(["en-US", "es-US", "zh-Hant-US"]);
     expect(activeMarket.catalog).toBe("us");
   });
 

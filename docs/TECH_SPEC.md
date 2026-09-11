@@ -215,12 +215,14 @@ Content/SEO 规格。
 
 ### MVP
 
-- US Market 的 en-US 使用根路径，es-US 使用 `/es-us/`。
+- US Market 的 en-US 使用根路径，es-US 使用 `/es-us/`，zh-Hant-US 使用 `/zh-hant-us/`。
 - CA 规划 Market 保留 en-CA `/en-ca/`、fr-CA `/fr-ca/` 的未来路径规则，但
   第一阶段不生成、导航、索引或响应这些 URL。
-- 不生成 `/en-us/`；两个语言路径解析到同一 US Catalog 和运营上下文。
-- `config/markets.ts` 提供启用的 US 与 planned CA Market，`lib/i18n` 提供统一
-  path helper 和 enabled-locale gate。
+- 不生成 `/en-us/`；三个语言路径解析到同一 US Catalog 和运营上下文。
+- `config/locales.ts` 是无循环依赖的 locale/类型注册表，集中 provider、format 与 OG
+  映射；`config/markets.ts` 引用受限类型，`lib/i18n` 提供 path helper、语言列表和启用门禁。
+  zh-Hant-US 对应 Storefront `ZH_TW`、Admin `zh-TW`、Intl `zh-HK`、OG `zh_US`。
+  使用系统香港字体 fallback，无新增远程 CJK 下载或依赖。
 - US/CA 使用独立 Catalog、Currency、Availability 和 Cart context；语言切换
   不改变 Market，Market 切换不得复用另一 Market 的 Cart。
 - 路径使用小写、短横线；推荐无尾斜杠并由重定向统一。
@@ -236,7 +238,7 @@ Content/SEO 规格。
   未引用、错误类型、不完整或未知 handle 返回 404，不按所有 Metaobject 自动建路由。
 - About root 与子页在服务端输出同一有序页内导航；语言 fallback 保持 noindex 且不进入
   sitemap/hreflang。
-- en-US/es-US 各自拥有 root document layout，初始 HTML 的 lang 与 locale 一致；
+- en-US/es-US/zh-Hant-US 各自拥有 root document layout，初始 HTML 的 lang 与 locale 一致；
   跨 root layout 语言切换是完整文档 navigation。
   停用市场与未知路径由统一 catch-all 返回 noindex/404，不预建业务模板。
   当前 notFound 响应未在初始 HTML 渲染提示正文，需在 Preview 验证客户端恢复；
@@ -245,6 +247,9 @@ Content/SEO 规格。
   还是 English fallback。en-US 与 es-US Commerce 均已获业务方批准开放；自动验证实现前，
   es-US Product/Collection 必须在每次发布时人工逐页检查，发现 fallback 时关闭对应
   scope 或先修正 Shopify 内容。
+- zh-Hant-US 按 D-049 允许相同 fallback 可读；About 有效子页不因缺译隐藏。
+  四组索引全关，不实现商品翻译 allowlist。现有 US cookie 不变；新 Cart 和旧 Cart
+  以 ZH_TW 请求，Checkout 校验仅增加实测 `/zh-tw/` 前缀，不改写 opaque URL。
 - Currency 不进入 URL；若未来一个 Market 支持多个 Currency，选择保存在
   会话/Shopify buyer context 中。
 

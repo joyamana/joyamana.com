@@ -14,7 +14,7 @@ Product
 
 ## 1. 产品目标
 
-在一个可信、快速、移动端友好的美国 en-US + es-US 品牌站中，让访客能够：
+在一个可信、快速、移动端友好的美国 en-US + es-US + zh-Hant-US 品牌站中，让访客能够：
 
 1. 理解品牌和商品是否适合自己。
 2. 按商品类型或晶体类型发现商品。
@@ -88,9 +88,11 @@ URL 名称遵循已确认的 Joya Mana 信息架构与 D-007/D-036：
 - Cart 数量可访问且不会导致布局跳动。
 - 移动 Header 提供 Menu、居中 Wordmark、Search 与 Bag；Language 位于 Menu
   底部。Menu 支持背景滚动锁定、Escape、焦点锁定、焦点返回和 44px 触控目标。
-- 语言切换器在 en-US 与 es-US 等价页之间切换；不得因此改变 US Catalog、
+- 语言切换器在 en-US、es-US 与 zh-Hant-US 对应页之间切换；不得因此改变 US Catalog、
   商品 ID、USD 价格、库存或政策。
 - 当前只有一个 US Market，不显示伪造的国家或 Currency 选择器。
+- zh-Hant-US 按 D-049 允许 Shopify 英文回退页面正常访问；不按缺译隐藏入口，
+  不将回退视为翻译完成，繁中索引全部关闭。
 - Header 始终保留单一 About 入口，不为 About 子页建立 Header dropdown；子页通过
   `/about` 范围内共享的页内导航发现。
 

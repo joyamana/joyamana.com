@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { isEnabledLocale, localeRegistry } from "@/config/locales";
 import type {
   CartActionFailure,
   CartActionResult,
@@ -34,7 +35,7 @@ function isCheckoutEnabled() {
 }
 
 function safeLanguageForLocale(locale: string): ShopifyCartLanguage {
-  return locale === "es-US" ? "ES" : "EN";
+  return isEnabledLocale(locale) ? localeRegistry[locale].shopify.language : "EN";
 }
 
 function failure(
@@ -51,8 +52,7 @@ function requireCheckout() {
 }
 
 function languageForLocale(locale: string): ShopifyCartLanguage {
-  if (locale === "en-US") return "EN";
-  if (locale === "es-US") return "ES";
+  if (isEnabledLocale(locale)) return localeRegistry[locale].shopify.language;
   throw new ShopifyCartError("INVALID_INPUT");
 }
 

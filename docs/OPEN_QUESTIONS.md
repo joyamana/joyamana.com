@@ -22,6 +22,9 @@ Resolved input: `BRAND_INPUTS.md`、D-047、D-048
 
 ## External setup and release dependencies
 
+- [ ] 完成 zh-Hant-US 商品、系列、About/Accessibility、Policies 等香港用语译文，及
+  托管 Checkout/通知审校、人工设备验收。Shopify 语言已发布、dev 代码已接入；
+  不阻塞允许英文回退的页面访问，只阻塞正式繁中内容验收和索引开放。
 - [ ] 上线/变更商品前复核 Shopify Standard Product Category。
 - [ ] 为正式商品完整填充并审核 Product knowledge metafields：materials、dimensions/
   fit、care、origin/treatment disclosure、package contents 和 related content。

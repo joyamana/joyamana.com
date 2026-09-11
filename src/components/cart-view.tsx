@@ -1,4 +1,5 @@
 "use client";
+import { isEnabledLocale, localeRegistry } from "@/config/locales";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -36,6 +37,7 @@ export function CartView({ locale }: { locale: Locale }) {
       <div className="empty-state" aria-live="polite">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "你的選擇",
             en: "Your selection",
             es: "Tu selección",
             fr: "Votre sélection",
@@ -43,6 +45,7 @@ export function CartView({ locale }: { locale: Locale }) {
         </p>
         <h1>
           {uiText(locale, {
+            zh: "正在載入購物袋…",
             en: "Loading your bag…",
             es: "Cargando tu bolsa…",
             fr: "Chargement de votre panier…",
@@ -57,6 +60,7 @@ export function CartView({ locale }: { locale: Locale }) {
       <div className="empty-state">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "你的選擇",
             en: "Your selection",
             es: "Tu selección",
             fr: "Votre sélection",
@@ -64,6 +68,7 @@ export function CartView({ locale }: { locale: Locale }) {
         </p>
         <h1>
           {uiText(locale, {
+            zh: "購物袋內暫無商品。",
             en: "Your bag is empty.",
             es: "Tu bolsa está vacía.",
             fr: "Votre panier est vide.",
@@ -74,6 +79,7 @@ export function CartView({ locale }: { locale: Locale }) {
             <p>{error.message}</p>
             <button className="text-button" type="button" onClick={() => refresh()}>
               {uiText(locale, {
+                zh: "再試一次",
                 en: "Try again",
                 es: "Intentar de nuevo",
                 fr: "Réessayer",
@@ -83,6 +89,7 @@ export function CartView({ locale }: { locale: Locale }) {
         ) : (
           <p>
             {uiText(locale, {
+              zh: "加入的商品會儲存於此瀏覽器的購物袋。",
               en: "Items added here are saved for this browser session.",
               es: "Los artículos añadidos aquí se guardan durante esta sesión del navegador.",
               fr: "Les articles ajoutés ici sont enregistrés pour cette session de navigation.",
@@ -94,6 +101,7 @@ export function CartView({ locale }: { locale: Locale }) {
           href={localePath(locale, "/shop")}
         >
           {uiText(locale, {
+            zh: "探索商品",
             en: "Explore products",
             es: "Explorar productos",
             fr: "Explorer les produits",
@@ -105,10 +113,11 @@ export function CartView({ locale }: { locale: Locale }) {
 
   return (
     <div className="cart-layout">
-      <section aria-label={uiText(locale, { en: "Bag items", es: "Artículos de la bolsa", fr: "Articles du panier" })}>
+      <section aria-label={uiText(locale, { zh: "購物袋商品", en: "Bag items", es: "Artículos de la bolsa", fr: "Articles du panier" })}>
         <header className="cart-heading">
           <p className="eyebrow">
             {uiText(locale, {
+              zh: "你的選擇",
               en: "Your selection",
               es: "Tu selección",
               fr: "Votre sélection",
@@ -116,6 +125,7 @@ export function CartView({ locale }: { locale: Locale }) {
           </p>
           <h1>
             {uiText(locale, {
+              zh: "你的購物袋",
               en: "Your bag",
               es: "Tu bolsa",
               fr: "Votre panier",
@@ -127,7 +137,7 @@ export function CartView({ locale }: { locale: Locale }) {
             {isBlockingInventoryWarning(warning.code)
               ? cartErrorMessage(
                   "UNAVAILABLE",
-                  locale === "es-US" ? "ES" : "EN",
+                  isEnabledLocale(locale) ? localeRegistry[locale].shopify.language : "EN",
                 )
               : warning.message}
           </p>
@@ -160,6 +170,7 @@ export function CartView({ locale }: { locale: Locale }) {
               ) : (
                 <span className="product-media-unavailable product-media-unavailable--cart">
                   {uiText(locale, {
+                    zh: "暫無圖片",
                     en: "Image unavailable",
                     es: "Imagen no disponible",
                     fr: "Image indisponible",
@@ -171,11 +182,13 @@ export function CartView({ locale }: { locale: Locale }) {
               <p className="microcopy">
                 {line.availableForSale
                   ? uiText(locale, {
+                      zh: "可購買",
                       en: "Available",
                       es: "Disponible",
                       fr: "Disponible",
                     })
                   : uiText(locale, {
+                      zh: "查看供應狀況",
                       en: "Review availability",
                       es: "Revisar disponibilidad",
                       fr: "Vérifier la disponibilité",
@@ -197,7 +210,7 @@ export function CartView({ locale }: { locale: Locale }) {
                 )}
               </p>
               <div className="cart-line__actions">
-                <div className="cart-quantity" aria-label={uiText(locale, { en: "Quantity", es: "Cantidad", fr: "Quantité" })}>
+                <div className="cart-quantity" aria-label={uiText(locale, { zh: "數量", en: "Quantity", es: "Cantidad", fr: "Quantité" })}>
                   <button
                     type="button"
                     disabled={
@@ -209,7 +222,7 @@ export function CartView({ locale }: { locale: Locale }) {
                         line.currentlyNotInStock,
                       )
                     }
-                    aria-label={uiText(locale, { en: "Decrease quantity", es: "Disminuir cantidad", fr: "Diminuer la quantité" })}
+                    aria-label={uiText(locale, { zh: "減少數量", en: "Decrease quantity", es: "Disminuir cantidad", fr: "Diminuer la quantité" })}
                     onClick={() => updateItem(line.id, decreaseQuantity)}
                   >
                     −
@@ -226,7 +239,7 @@ export function CartView({ locale }: { locale: Locale }) {
                         line.currentlyNotInStock,
                       )
                     }
-                    aria-label={uiText(locale, { en: "Increase quantity", es: "Aumentar cantidad", fr: "Augmenter la quantité" })}
+                    aria-label={uiText(locale, { zh: "增加數量", en: "Increase quantity", es: "Aumentar cantidad", fr: "Augmenter la quantité" })}
                     onClick={() => updateItem(line.id, increaseQuantity)}
                   >
                     +
@@ -239,6 +252,7 @@ export function CartView({ locale }: { locale: Locale }) {
                   onClick={() => removeItem(line.id)}
                 >
                   {uiText(locale, {
+                    zh: "移除",
                     en: "Remove",
                     es: "Eliminar",
                     fr: "Retirer",
@@ -252,10 +266,11 @@ export function CartView({ locale }: { locale: Locale }) {
       </section>
       <aside className="cart-summary">
         <p className="eyebrow">
-          {uiText(locale, { en: "Summary", es: "Resumen", fr: "Résumé" })}
+          {uiText(locale, { zh: "訂單摘要", en: "Summary", es: "Resumen", fr: "Résumé" })}
         </p>
         <h2>
           {uiText(locale, {
+            zh: "小計",
             en: "Subtotal",
             es: "Subtotal",
             fr: "Sous-total",
@@ -268,6 +283,7 @@ export function CartView({ locale }: { locale: Locale }) {
         </h2>
         <p>
           {uiText(locale, {
+            zh: "折扣、稅項、運費及最終總額會在結帳時確認。",
             en: "Discounts, tax, shipping, and the final total are confirmed at checkout.",
             es: "Los descuentos, los impuestos, el envío y el total final se confirman al pagar.",
             fr: "Les réductions, taxes, frais d’expédition et le total final sont confirmés au moment du paiement.",
@@ -291,11 +307,13 @@ export function CartView({ locale }: { locale: Locale }) {
         >
           {checkoutEnabled
             ? uiText(locale, {
+                zh: "結帳",
                 en: "Checkout",
                 es: "Ir al pago",
                 fr: "Passer au paiement",
               })
             : uiText(locale, {
+                zh: "暫時未能結帳",
                 en: "Checkout unavailable",
                 es: "Pago no disponible",
                 fr: "Paiement indisponible",
@@ -304,6 +322,7 @@ export function CartView({ locale }: { locale: Locale }) {
         {!checkoutEnabled ? (
           <p className="checkout-note">
             {uiText(locale, {
+              zh: "結帳服務暫時未能使用。",
               en: "Checkout is temporarily unavailable.",
               es: "El pago no está disponible temporalmente.",
               fr: "Le paiement est temporairement indisponible.",
@@ -322,6 +341,7 @@ export function CartView({ locale }: { locale: Locale }) {
           onClick={() => clear()}
         >
           {uiText(locale, {
+            zh: "清空購物袋",
             en: "Clear bag",
             es: "Vaciar bolsa",
             fr: "Vider le panier",

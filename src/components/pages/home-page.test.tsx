@@ -39,6 +39,17 @@ beforeEach(() => {
 });
 
 describe("Home page", () => {
+  it("renders Chinese UI and links while retaining Shopify English product content", async () => {
+    mocks.getProducts.mockResolvedValue([product("english-piece", "English piece", true)]);
+    const html = renderToStaticMarkup(await HomePage({ locale: "zh-Hant-US" }));
+    expect(mocks.getProducts).toHaveBeenCalledWith("us", "zh-Hant-US");
+    expect(html).toContain("天然形態，自有意義。");
+    expect(html).toContain("精選飾物");
+    expect(html).toContain("English piece");
+    expect(html).toContain('href="/zh-hant-us/products/english-piece"');
+    expect(html).toContain('href="/zh-hant-us/about"');
+    expect(html).toContain("US$35 USD");
+  });
   it("uses the approved editorial hero and omits Blog and Collection modules", async () => {
     const html = renderToStaticMarkup(await HomePage({ locale: "en-US" }));
 

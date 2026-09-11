@@ -17,8 +17,8 @@ Working 为可替换实现选择，Proposed 为未批准建议，Pending 必须�
 | D-003 | Frontend | Accepted | Next.js App Router |
 | D-004 | Deployment | Accepted | Vercel |
 | D-005 | Backend boundary | Accepted | 不建独立业务后端 |
-| D-006 | Launch market | Accepted | US / USD；同一 US Catalog 支持 en-US 与 es-US |
-| D-007 | URL | Accepted | en-US 使用根路径，es-US 使用 `/es-us/` |
+| D-006 | Launch market | Accepted | US / USD；同一 US Catalog 支持 en-US、es-US、zh-Hant-US |
+| D-007 | URL | Accepted | en-US 根路径，es-US `/es-us/`，zh-Hant-US `/zh-hant-us/` |
 | D-008 | Customer entry | Accepted | 游客结账，不强制账户 |
 | D-009 | Content source | Accepted | MVP 使用 Shopify 原生内容能力 |
 | D-010 | Customer account | Accepted | 自定义账户门户不进入 MVP |
@@ -60,6 +60,7 @@ Working 为可替换实现选择，Proposed 为未批准建议，Pending 必须�
 | D-046 | Content cache window | Accepted | 内容与导航五分钟再验证；webhook 后置 |
 | D-047 | Website blocker boundary | Accepted | Q-001A/B、Q-002A/B/C 移出网站范围；Q-003A/F 已解决 |
 | D-048 | Checkout/payment readiness | Accepted | 下单支付完整支持；Payment test mode 流程测试通过 |
+| D-049 | US Traditional Chinese | Accepted | dev 完整接入 zh-Hant-US / 香港用语；允许后台英文回退，繁中索引关闭 |
 
 Superseded 决策正文移至
 [`archive/superseded-decisions-2026-08.md`](archive/superseded-decisions-2026-08.md)；
@@ -88,8 +89,8 @@ Superseded 决策正文移至
 
 ### D-006 / D-007 — US 市场与 URL
 
-US / US Catalog / USD；en-US 根路径、es-US `/es-us/`，不创建 `/en-us/`。
-两种语言共享商品身份、库存、价格、税务、配送和政策；翻译需人工审核。
+US / US Catalog / USD；en-US 根路径、es-US `/es-us/`、zh-Hant-US `/zh-hant-us/`，不创建 `/en-us/`。
+三种语言共享商品身份、库存、价格、税务、配送和政策；翻译需人工审核。
 当前索引开放范围见 D-045。
 
 ### D-008 / D-010 — 游客购买与账户后置
@@ -194,7 +195,7 @@ URL、导航、metadata 与内容模型统一使用 `/blog` 和 Blog；
 
 ### D-029 — Header 语言入口
 
-Header 只切当前 Market 的语言，US 为 EN/ES；中性图标配可读代码和 accessible name。
+Header 只切当前 Market 的语言，US 为 EN/ES/繁中；中性图标配可读代码和 accessible name。
 切换不改变 Market/Catalog/Currency/Cart；未来地区选择放在 Footer。
 目录入口按 D-036 数据驱动，当前 Footer 不展示虚假的市场切换器。
 
@@ -237,7 +238,7 @@ About 内容按 D-040 读取，不注入未获批品牌故事。
 ### D-036 — Category 与 Design Collection
 
 `/shop` 全商品；`/category/{handle}` 表达 Shopify Standard Product Category；
-`/collections` 与详情只表达设计系列。稳定英文 handle 在两种语言间共享。
+`/collections` 与详情只表达设计系列。稳定英文 handle 在 US 各语言间共享。
 分类由 taxonomy ID allowlist 映射，不按 title/tag/Product Type 猜测。
 
 只有 Headless 可见、非空且 `custom.collection_kind=design_series` 的系列进入导航。
@@ -282,7 +283,8 @@ navigation_title 缺失回退 title；summary 明确填写才展示，seo_descri
 当前页 aria-current，不使用隐藏 panel 替代 URL。
 
 About hub 使用 AboutPage，子页使用 WebPage/BreadcrumbList；各自有 H1、metadata 与 canonical。
-翻译 fallback 可阅读，但 noindex、不进 sitemap/hreflang，也不进入该语言 root tabs。
+翻译 fallback 可阅读，但 noindex、不进 sitemap/hreflang；es-US 不将 fallback 子页放入
+root tabs，zh-Hant-US 按 D-049 保留有效子页的入口。
 当前 About/Philosophy/Approach/Founder EN/ES 正文与其中事实陈述已获业务方确认。
 改公开 handle 或移除子页前须决定 redirect/410，不能批量跳首页。
 
@@ -321,6 +323,7 @@ Production `NEXT_PUBLIC_SITE_URL` 必须精确匹配；canonical/OG/hreflang/sit
 部署总开关 `NEXT_PUBLIC_SITE_INDEXABLE` + 仓库 `src/config/indexing.ts`
 locale/page-group 矩阵 + 页面自身 readiness，共同决定索引、sitemap、hreflang 与 Schema。
 当前 en-US/es-US Core、Commerce、Policies 开放，Editorial 关闭。
+zh-Hant-US 四组全部关闭；语言可访问不等于索引获批。
 Cart、Search、参数页、未知路径与未上线 locale 始终排除；Preview 总开关必须关闭。
 
 es-US Commerce 已获批准，商品/Collection fallback 尚无自动检测；
@@ -355,6 +358,36 @@ test mode 证据不代表已执行 live charge、退款或 payout 对账，后�
 搜索/用户触发抓取与训练用途分别决定。
 实施前核对供应商当前 User-Agent 与官方说明，集中生成 robots 规则；
 不得把代码默认当成业务批准。
+
+## 语言扩展
+
+### D-049 — US 繁体中文与香港用语
+
+Status: Accepted — 已批准 dev 完整代码接入；不授权 main 合并、部署或繁中索引开放
+Date: 2026-09-11
+Owner: Project owner / Engineering
+
+业务方要求在 dev 完整接入同一 US Market 的 `zh-Hant-US`，采用繁体字和香港惯用书面语。
+不新增香港/台湾 Market，不改变 US Catalog、USD、库存、购物袋、配送或政策事实。
+Shopify 繁体语言已发布。最新要求允许缺译页面正常访问并显示 Shopify 默认语言正文，
+不隐藏页面、不复制本地业务正文、不新增待完善占位。英文回退不视为繁中译文完成。
+
+URL 为 `/zh-hant-us`，HTML/hreflang 使用 `zh-Hant-US`；Shopify 接口分别映射
+`ZH_TW` / `zh-TW`，不将平台语言编码当作交易国家。香港措辞与格式偏好独立维护，
+不用 `zh-HK` 路径误表达市场，也不拼接多个 region subtag。
+
+实施优先使用独立 locale registry/类型、语言级发布状态、共享 adapter 与薄路由，
+不迁移 EN/ES，不引入大型翻译平台。替代方案中的仅简转繁无法保证香港用语；
+新增 HK Market 或复制 storefront 会错误改变商业边界。
+迁移须覆盖三语言导航、Cart/Checkout、字体和内容 readiness；新语言索引初始全关。
+本轮不实施规划中的缺译隐藏或商品审核 allowlist；四个繁中索引组全部关闭。
+以后开放索引前另行验收译文和持续 readiness 流程，不能只切配置即认为已审校。
+Checkout 默认繁体不保证香港措辞，单独验收。
+回退只收回新语言范围；已索引 URL 的下线需按现有生命周期规则处理，不批量跳首页。
+
+运行映射见 `src/config/locales.ts` 和 [TECH_SPEC.md](TECH_SPEC.md)，后台维护步骤见
+[SHOPIFY_CATALOG_SETUP.md](SHOPIFY_CATALOG_SETUP.md)；执行与验证记录见 Archive。
+本条修订 D-006/007/029/045 的语言范围，不改变现有 EN/ES 索引批准。
 
 ## 新决策模板
 

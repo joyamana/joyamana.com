@@ -1,3 +1,4 @@
+import { marketIdForLocale } from "@/lib/i18n/locales";
 import type { Locale } from "@/lib/i18n/locales";
 import { getCatalogNavigationData } from "@/lib/commerce/catalog";
 import { localePath } from "@/lib/i18n/locales";
@@ -12,7 +13,7 @@ export async function LocaleShell({
   locale: Locale;
   children: React.ReactNode;
 }) {
-  const marketId = locale === "en-CA" || locale === "fr-CA" ? "ca" : "us";
+  const marketId = marketIdForLocale(locale);
   const { categories, collections } = await getCatalogNavigationData(
     marketId,
     locale,

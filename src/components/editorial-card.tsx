@@ -17,7 +17,7 @@ export function EditorialCard({
     <article className="editorial-card">
       <p className="eyebrow">
         {entry.tags[0] ||
-          uiText(locale, { en: "Article", es: "Artículo", fr: "Article" })}
+          uiText(locale, { zh: "文章", en: "Article", es: "Artículo", fr: "Article" })}
       </p>
       <h3>
         <Link href={localePath(locale, `${basePath}/${entry.handle}`)}>
@@ -29,7 +29,7 @@ export function EditorialCard({
         className="text-link"
         href={localePath(locale, `${basePath}/${entry.handle}`)}
       >
-        {uiText(locale, { en: "Read", es: "Leer", fr: "Lire" })} →
+        {uiText(locale, { zh: "閱讀", en: "Read", es: "Leer", fr: "Lire" })} →
       </Link>
     </article>
   );

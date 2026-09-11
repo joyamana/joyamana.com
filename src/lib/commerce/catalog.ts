@@ -1,3 +1,4 @@
+import { isEnabledLocale } from "@/config/locales";
 import { cache } from "react";
 import {
   localizeProductCategory,
@@ -58,9 +59,9 @@ function catalogNavigationFromSnapshot(
 }
 
 function assertEnabledUsLocale(locale: Locale) {
-  if (locale !== "en-US" && locale !== "es-US") {
+  if (!isEnabledLocale(locale)) {
     throw new CatalogConfigurationError(
-      "The enabled US catalog only supports en-US and es-US.",
+      "This locale is not enabled for the US catalog.",
     );
   }
 }

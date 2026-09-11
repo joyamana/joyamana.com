@@ -97,7 +97,10 @@ build: pnpm build
   的 sitemap/Schema，并且不被其他语言页面的 hreflang 引用。当前 fallback 页自身
   noindex/sitemap/Schema 门禁以及 About/Article/Policy/Accessibility alternate
   readiness 过滤均已实现。
-- `<html lang>` 在 en-US/es-US 页面与 document locale 一致；停用市场及未知路径返回 404。
+- `<html lang>` 在 en-US/es-US/zh-Hant-US 页面与 document locale 一致；停用市场及未知路径返回 404。
+- zh-Hant-US 按 D-049 允许英文回退，不隐藏页面；繁中四组索引全关。发布时检查
+  三语言菜单、US Bag 跨语言恢复、新 Bag/Buy now、`/zh-tw/` Checkout、长标题和 CJK
+  字形；托管结帐和交易通知需独立人工验收，不复用 EN/ES 支付结论。
 - D-045 的索引总开关与仓库内 locale/page-group scope 只为已验收范围开启。
   en-US/es-US Commerce 均已获业务方批准；Product/Collection 尚无逐页 Spanish fallback
   自动检测，因此每次发布必须人工逐页核对西语正文、metadata 和 hreflang，发现 fallback

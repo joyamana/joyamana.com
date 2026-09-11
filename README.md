@@ -1,12 +1,14 @@
 # Joya Mana Storefront
 
 面向美国市场的水晶 DTC 品牌站：Next.js App Router + Shopify Headless，部署于 Vercel。
-en-US 使用根路径，es-US 使用 `/es-us`；共享 US Catalog / USD。
+en-US 使用根路径，es-US 使用 `/es-us`，zh-Hant-US 使用 `/zh-hant-us`；共享 US Catalog / USD。
 Production canonical 为 `https://www.joyamana.com`，Checkout 使用 `checkout.joyamana.com`。
 
 当前能力与缺口见 [Project Spec](docs/PROJECT_SPEC.md)，优先级见 [Roadmap](docs/ROADMAP.md)。
 下单支付已获业务方确认，Payment test mode 流程未发现问题。
-Core、Commerce、Policies 的双语言索引已开放；Editorial 仍关闭。Contact 为 Email-only。
+en-US/es-US 的 Core、Commerce、Policies 索引已开放；Editorial 仍关闭。Contact 为 Email-only。
+dev 已接入香港用语繁中 UI；缺译页面照常显示 Shopify 英文回退，繁中索引全部关闭。
+代码接入不等于 Production 部署、译文审校或支付验收。
 
 ## 本地开发
 
@@ -60,4 +62,4 @@ Vitest/build/HTTP 检查不替代人工浏览器与 Checkout 验收。
 | [PLANS.md](PLANS.md) | 当前执行计划与模板 |
 
 [Archive](docs/archive/README.md) 仅用于历史追溯，不作为当前实现依据。
-文档以中文为主；代码标识符用英文；客户文案支持 en-US/es-US，西语须人工审校。
+文档以中文为主；代码标识符用英文；客户文案支持 en-US/es-US/zh-Hant-US，译文须人工审校。
