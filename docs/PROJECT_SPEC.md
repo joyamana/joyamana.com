@@ -40,6 +40,7 @@ Last updated: 2026-09-11
   live provider/payout 等后续证据单独记录，不推断已执行。
 - Production 索引范围为 en-US/es-US Core、Commerce、Policies；
   Editorial、Cart、Search、参数页、Preview 与不满足 readiness 的条目排除。
+  dev 仓库矩阵已按业务要求将 zh-Hant-US 的 Core/Commerce/Policies 同样开启；部署后另行核验。
   Blog/Guide 当前测试文章暂不处理。
 - 已实现 document-level locale、参数 noindex、canonical/OG、metadata、部分 Schema、
   hreflang/readiness 与动态 sitemap。Commerce 西语 fallback 尚无自动检测，
@@ -81,9 +82,10 @@ Last updated: 2026-09-11
 dev 已完整接入 `zh-Hant-US`（繁体中文、香港惯用书面语），不迁移 EN/ES URL。
 中央注册表区分站点标签、路径、Shopify `ZH_TW` 和 Intl `zh-HK`；沿用 US/USD/Bag，
 加入香港用语 UI、中文排版、全部共享页面、三语言导航及安全 Checkout URL 支持。
-Shopify 繁体语言已发布；正文当前仍有英文回退。按 D-049 不隐藏缺译页面，About 子页
+Shopify 繁体语言已发布；缺译时仍允许英文回退。按 D-049 不隐藏缺译页面，About 子页
 入口保留；政策/About/Editorial 的已知回退保留真实内容语言标记。未实现商品逐字段
-翻译检测，不把英文正文标称为已审校繁中。繁中四组索引全部关闭，未合并 main 或部署。
+翻译检测，不把英文正文标称为已审校繁中。最新仓库矩阵已批准开启繁中 Core/Commerce/
+Policies，Editorial 关闭；部署总开关和单页 readiness 仍生效，未合并 main 或发布至 Production。
 完整译文、托管 Checkout/通知及人工设备验收仍独立跟踪。
 
 ### Planned Market

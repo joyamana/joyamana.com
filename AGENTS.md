@@ -144,7 +144,8 @@
 - US 语言注册与 provider/format 映射见 src/config/locales.ts；索引矩阵见 src/config/indexing.ts。
   Preview 必须 noindex；Production canonical 为 `https://www.joyamana.com`。
 - 按 D-049，dev 已接入繁中全部页面与 Commerce，缺译页面不隐藏，允许 Shopify
-  默认英文回退；不得因此复制本地正文。繁中四组索引关闭，开放前须另行验收译文。
+  默认英文回退；不得因此复制本地正文。三语言索引范围按 D-045 开放 Core/Commerce/
+  Policies，Editorial 关闭；保留部署总开关和单页 readiness，不把配置批准视为译文验收。
 - Playwright 按 D-043 封存；记录人工浏览器/Checkout smoke 的范围与结果。
 - 内容/导航按 D-046 使用五分钟再验证缓存，webhook 后置；商业数据保持 no-store。
 - 代码缺省的索引、Checkout 和 Contact form 门禁关闭；各部署按批准范围单独核验。

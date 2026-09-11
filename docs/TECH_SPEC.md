@@ -253,7 +253,8 @@ Content/SEO 规格。
   es-US Product/Collection 必须在每次发布时人工逐页检查，发现 fallback 时关闭对应
   scope 或先修正 Shopify 内容。
 - zh-Hant-US 按 D-049 允许相同 fallback 可读；About 有效子页不因缺译隐藏。
-  四组索引全关，不实现商品翻译 allowlist。现有 US cookie 不变；新 Cart 和旧 Cart
+  Core/Commerce/Policies 的索引矩阵已按 D-045 开启，Editorial 关闭；保留总开关和单页
+  readiness，不实现商品翻译 allowlist。现有 US cookie 不变；新 Cart 和旧 Cart
   以 ZH_TW 请求，Checkout 校验仅增加实测 `/zh-tw/` 前缀，不改写 opaque URL。
 - Currency 不进入 URL；若未来一个 Market 支持多个 Currency，选择保存在
   会话/Shopify buyer context 中。
@@ -276,7 +277,7 @@ Content/SEO 规格。
 当前 `.env.example` 只包含部署环境变量名和说明，分为：
 
 - `NEXT_PUBLIC_SITE_URL` 与部署级 `NEXT_PUBLIC_SITE_INDEXABLE` 索引总开关；en-US/es-US
-  各自的 Core/Commerce/Policies/Editorial scope 统一维护在版本控制的
+  与 zh-Hant-US 各自的 Core/Commerce/Policies/Editorial scope 统一维护在版本控制的
   `src/config/indexing.ts` locale/page-group 矩阵。页面需同时通过总开关与对应矩阵 scope。
   打开总开关时
   canonical URL 必须是非本地 HTTPS origin，配置缺失或仍指向 localhost 时构建 fail

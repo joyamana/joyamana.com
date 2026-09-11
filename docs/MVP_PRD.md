@@ -92,7 +92,8 @@ URL 名称遵循已确认的 Joya Mana 信息架构与 D-007/D-036：
   商品 ID、USD 价格、库存或政策。
 - 当前只有一个 US Market，不显示伪造的国家或 Currency 选择器。
 - zh-Hant-US 按 D-049 允许 Shopify 英文回退页面正常访问；不按缺译隐藏入口，
-  不将回退视为翻译完成，繁中索引全部关闭。
+  不将回退视为翻译完成。三语言 Core/Commerce/Policies 的矩阵配置已按 D-045 开启，
+  Editorial 保持关闭，部署总开关和单页 readiness 仍生效。
 - Header 始终保留单一 About 入口，不为 About 子页建立 Header dropdown；子页通过
   `/about` 范围内共享的页内导航发现。
 

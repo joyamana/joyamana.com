@@ -7,6 +7,22 @@ Archived: 2026-09-11
 状态来源；当前决策、开放问题和项目状态分别以 `../DECISIONS.md`、
 `../OPEN_QUESTIONS.md`、`../PROJECT_SPEC.md` 和根目录 `PLANS.md` 为准。
 
+## 三语言索引矩阵 — 2026-09-11
+
+业务方明确将所有已启用语言的 Core/Commerce/Policies 设为 true，Editorial 保持 false。
+实际新增的是 zh-Hant-US 三个 scope，并移除繁中布局的固定 noindex，统一继承部署
+默认值与页面 metadata；未修改总开关、参数/私有页、停用市场或单页 readiness。
+D-045/049 及当前文档已同步；索引范围批准不代表译文或 Production 发布已验收。
+
+Node 24 lint/typecheck、32 文件/213 项测试及生产式构建通过。仅命令环境设置 master=true
+和 www canonical，本机 42 项 HTTP 检查通过：三语言公开组 metadata/canonical/hreflang、
+适用 Schema、参数 noindex/clean canonical、Editorial/Bag/Search 关闭、CA/未知路径 404。
+当时 sitemap 共 141 条，其中繁中 47 条；繁中 About root、Accessibility、四项 Policy
+已通过现有 adapter 的内容判断，单页索引和 sitemap 一致，不等于人工译文审校。
+未执行 Checkout、浏览器/手机真机测试、线上部署或 Shopify 写入；回归不涉及 UI 布局。
+参数页仍保留既有 clean-entity Schema，未将该行为改成新的索引策略。
+核验后关闭测试服务并通过本地默认配置重新构建，未修改环境文件；git diff --check 通过。
+
 ## 繁中 Web Font — 2026-09-11
 
 业务方采用 Noto Serif HK + Noto Sans HK：品牌/PDP 标题用宋体 500，正文、商品卡

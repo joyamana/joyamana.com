@@ -23,8 +23,9 @@ Last updated: 2026-09-11
   不把这些范围扩大成全站 blocker。
 - 保持 Commerce 西语逐页人工验收，直到建立可靠的 default-language fallback 检测。
 - dev 已完整接入 `zh-Hant-US`，按 D-049 允许缺译页面正常访问。后续补齐 Shopify 香港
-  用语译文、人工审校、托管 Checkout/交易通知与 Preview 设备验收；繁中索引保持关闭，
-  开放前建立持续翻译 readiness 流程，不自动继承 EN/ES 的批准。
+  用语译文、人工审校、托管 Checkout/交易通知与 Preview 设备验收。繁中 Core/Commerce/
+  Policies 的矩阵已单独获批开启、Editorial 关闭；发布前复核内容与实际索引输出，建立
+  持续翻译 readiness 流程，不把配置批准视为译文已验收。
 
 ## Priority 2 — Privacy, discovery and structured entities
 

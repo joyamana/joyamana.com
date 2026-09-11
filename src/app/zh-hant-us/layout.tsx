@@ -24,7 +24,6 @@ const notoSansHK = Noto_Sans_HK({
 export const metadata: Metadata = {
   ...rootMetadata,
   description: "現代水晶首飾與獨特飾物，因其形態、寓意與天然個性而獲選。",
-  robots: { index: false, follow: false, noarchive: true },
 };
 
 export default function TraditionalChineseUSLayout({
