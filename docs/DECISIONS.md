@@ -60,7 +60,7 @@ Working 为可替换实现选择，Proposed 为未批准建议，Pending 必须�
 | D-046 | Content cache window | Accepted | 内容与导航五分钟再验证；webhook 后置 |
 | D-047 | Website blocker boundary | Accepted | Q-001A/B、Q-002A/B/C 移出网站范围；Q-003A/F 已解决 |
 | D-048 | Checkout/payment readiness | Accepted | 下单支付完整支持；Payment test mode 流程测试通过 |
-| D-049 | US Traditional Chinese | Accepted | dev 完整接入 zh-Hant-US / 香港用语；允许后台英文回退，繁中索引关闭 |
+| D-049 | US Traditional Chinese | Accepted | dev 完整接入 zh-Hant-US / 香港用语；允许后台英文回退，索引范围遵循 D-045 |
 
 Superseded 决策正文移至
 [`archive/superseded-decisions-2026-08.md`](archive/superseded-decisions-2026-08.md)；
@@ -326,12 +326,14 @@ Production `NEXT_PUBLIC_SITE_URL` 必须精确匹配；canonical/OG/hreflang/sit
 
 部署总开关 `NEXT_PUBLIC_SITE_INDEXABLE` + 仓库 `src/config/indexing.ts`
 locale/page-group 矩阵 + 页面自身 readiness，共同决定索引、sitemap、hreflang 与 Schema。
-当前 en-US/es-US Core、Commerce、Policies 开放，Editorial 关闭。
-zh-Hant-US 四组全部关闭；语言可访问不等于索引获批。
+业务方已明确批准所有已启用语言 en-US/es-US/zh-Hant-US 的 Core、Commerce、Policies
+配置为 true，Editorial 保持 false。配置变更随部署生效，不代表 Production 已更新。
 Cart、Search、参数页、未知路径与未上线 locale 始终排除；Preview 总开关必须关闭。
 
-es-US Commerce 已获批准，商品/Collection fallback 尚无自动检测；
-每次发布逐页人工检查真实西语正文和 metadata。发现 fallback 时先修内容或关闭对应 scope。
+这替代了继续关闭繁中 scope 的发布选择，不改变 URL、语言可见性、部署总开关或单页
+readiness。索引范围批准不代表译文已审校：Product/Collection fallback 尚无自动检测，
+缺译商品也可能进入 sitemap/hreflang/Schema；每次发布仍须人工核对 ES/繁中正文、
+metadata 与等价关系。已检测到回退的 Policy/About/Accessibility 等单页继续 noindex。
 策略与环境变化都需部署；紧急关闭总开关可全站 noindex，细分回退通过恢复矩阵部署完成。
 
 ### D-046 — 内容/导航五分钟缓存
@@ -367,7 +369,7 @@ test mode 证据不代表已执行 live charge、退款或 payout 对账，后�
 
 ### D-049 — US 繁体中文与香港用语
 
-Status: Accepted — 已批准 dev 完整代码接入；不授权 main 合并、部署或繁中索引开放
+Status: Accepted — dev 完整代码接入；索引批准见 D-045，main 合并与 Production 部署另行授权
 Date: 2026-09-11
 Owner: Project owner / Engineering
 
@@ -383,9 +385,9 @@ URL 为 `/zh-hant-us`，HTML/hreflang 使用 `zh-Hant-US`；Shopify 接口分别
 实施优先使用独立 locale registry/类型、语言级发布状态、共享 adapter 与薄路由，
 不迁移 EN/ES，不引入大型翻译平台。替代方案中的仅简转繁无法保证香港用语；
 新增 HK Market 或复制 storefront 会错误改变商业边界。
-迁移须覆盖三语言导航、Cart/Checkout、字体和内容 readiness；新语言索引初始全关。
-本轮不实施规划中的缺译隐藏或商品审核 allowlist；四个繁中索引组全部关闭。
-以后开放索引前另行验收译文和持续 readiness 流程，不能只切配置即认为已审校。
+接入覆盖三语言导航、Cart/Checkout、字体和内容 readiness。
+不实施缺译隐藏或商品审核 allowlist；最新索引批准统一见 D-045，Editorial 仍关闭。
+正式译文和持续 readiness 流程继续验收，不能只切配置即认为已审校。
 Checkout 默认繁体不保证香港措辞，单独验收。
 回退只收回新语言范围；已索引 URL 的下线需按现有生命周期规则处理，不批量跳首页。
 

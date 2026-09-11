@@ -98,13 +98,14 @@ build: pnpm build
   noindex/sitemap/Schema 门禁以及 About/Article/Policy/Accessibility alternate
   readiness 过滤均已实现。
 - `<html lang>` 在 en-US/es-US/zh-Hant-US 页面与 document locale 一致；停用市场及未知路径返回 404。
-- zh-Hant-US 按 D-049 允许英文回退，不隐藏页面；繁中四组索引全关。发布时检查
+- zh-Hant-US 按 D-049 允许英文回退，不隐藏页面；Core/Commerce/Policies 的矩阵已按
+  D-045 开启，Editorial 关闭，已知 fallback 单页保护仍在。发布时检查
   三语言菜单、US Bag 跨语言恢复、新 Bag/Buy now、`/zh-tw/` Checkout、长标题和 CJK
   字形；托管结帐和交易通知需独立人工验收，不复用 EN/ES 支付结论。
-- D-045 的索引总开关与仓库内 locale/page-group scope 只为已验收范围开启。
-  en-US/es-US Commerce 均已获业务方批准；Product/Collection 尚无逐页 Spanish fallback
-  自动检测，因此每次发布必须人工逐页核对西语正文、metadata 和 hreflang，发现 fallback
-  时关闭 es-US Commerce scope 或先修复内容。未知路径默认 noindex。
+- D-045 已批准三语言 Core/Commerce/Policies 的矩阵；Production 总开关与发布另行核验，
+  Preview 总开关关闭。Product/Collection 尚无逐页 ES/繁中 fallback 自动检测，因此每次
+  发布必须人工核对正文、metadata 和 hreflang；发现 fallback 时修复内容或回退对应 scope。
+  未知路径默认 noindex，矩阵开启不绕过单页 readiness，也不代表翻译已审校。
 
 ## 6. Accessibility 与 Performance
 

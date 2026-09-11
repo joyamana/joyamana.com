@@ -102,9 +102,9 @@ Policy、About、Accessibility 和 Article 的西语请求命中 Shopify 默认�
 及 Policy/Accessibility 的 alternate 均按每种语言的真实 readiness 过滤，不输出指向
 fallback 西语页的 hreflang。
 当前 Commerce Product/Collection response 也没有等价的“是否回退默认语言”标记；
-业务方已明确批准 es-US Commerce scope。自动 translation readiness 仍是缺口，因此
-每次正式发布必须人工逐页确认 Product/Collection 的西语正文、metadata 和等价关系；
-发现 fallback 时应立即关闭 es-US Commerce scope 或修正内容后重新部署。
+业务方已明确批准 es-US/zh-Hant-US Commerce scope。自动 translation readiness 仍是缺口，
+因此每次正式发布必须人工确认 Product/Collection 的西语/繁中正文、metadata 和等价关系；
+发现 fallback 时应修正内容或关闭对应 scope，不把配置批准当作译文已审校。
 
 ## 5. 内容模型
 
@@ -140,9 +140,9 @@ About 使用下列受控关系：
 - 建议页内导航总项数不超过 5；超过时先重新评估目录模式，不静默截断内容。
 - US 各语言共享英文 handle；正文与 SEO 未完成真实翻译的 fallback 页面不得进入
   sitemap/hreflang。
-- zh-Hant-US 按 D-049 保留缺译页面及 About 有效子页入口；四个索引组全部关闭，
-  不因代码接入或 Shopify 发布语言就生成繁中 sitemap/hreflang/Schema。未来开放前
-  另行验收翻译与持续 readiness 流程。
+- zh-Hant-US 按 D-049 保留缺译页面及 About 有效子页入口；D-045 已批准 Core/Commerce/
+  Policies 的矩阵，Editorial 关闭。只有总开关及单页 readiness 同时通过时才生成
+  sitemap/hreflang/Schema；已知内容回退仍排除，译文与持续 readiness 另行验收。
 
 ### Product knowledge
 
@@ -363,6 +363,8 @@ Category   Design Collection
 Product）、Policies（Shipping、Returns、Privacy、Terms）和 Editorial（Blog、Crystal
 Guide）。对应矩阵 scope 开启后，页面仍须通过自身内容/翻译 readiness；未知路径默认
 noindex。metadata、hreflang、Schema 与 sitemap 共用同一页面组判断。
+当前仓库中 en-US/es-US/zh-Hant-US 的 Core、Commerce、Policies 均为 true，Editorial
+均为 false；停用 Canada 不在发布矩阵中。配置更新不自动修改部署环境或证明内容已审校。
 
 ### Sitemap
 
@@ -382,6 +384,7 @@ noindex。metadata、hreflang、Schema 与 sitemap 共用同一页面组判断�
 
 当前公开 Production storefront 已为 en-US/es-US 的 Core、Commerce、Policies 打开
 索引，Editorial 继续关闭；永久 noindex 页面和未通过内容 readiness 的单页仍排除。
+仓库已单独批准 zh-Hant-US 相同的三个 scope；生产部署生效后按下列规则核验。
 已开放的等价页面遵循：
 
 - 每个等价页面双向输出 self 和 alternate。
@@ -394,7 +397,7 @@ noindex。metadata、hreflang、Schema 与 sitemap 共用同一页面组判断�
 
 当前 `buildMetadata` 只为同一路径中已打开 locale/page-group scope 的等价页生成 alternate，
 动态 sitemap 也按相同规则聚合路径。由于 Commerce adapter 尚不能自动识别默认语言
-fallback，当前已获批准的 es-US Commerce 必须依赖有记录的人工逐页发布验收；这项
+fallback，当前已获批准的 es-US/zh-Hant-US Commerce 必须依赖有记录的人工逐页发布验收；这项
 人工控制不得被表述为已有自动检测。
 
 Policy/Accessibility 的 fallback 页自身与 sitemap 已按 readiness 保护，英文
