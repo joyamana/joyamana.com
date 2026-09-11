@@ -14,6 +14,7 @@ import { getPublishedShopifyAboutPaths } from "@/lib/content/shopify-about-pages
 import { getPublishedShopifyPolicyPaths } from "@/lib/content/shopify-policies";
 import { getPublishedShopifyContentPagePaths } from "@/lib/content/shopify-content-pages";
 import { enabledLocales, localePath } from "@/lib/i18n/locales";
+import { getCollectionSeoDescription } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +91,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...(products.length ? ["/shop"] : []),
         ...(collections.length ? ["/collections"] : []),
         ...categories.map(({ handle }) => `/category/${handle}`),
-        ...collections.map(({ handle }) => `/collections/${handle}`),
+        ...collections
+          .filter(getCollectionSeoDescription)
+          .map(({ handle }) => `/collections/${handle}`),
         ...products.map(({ handle }) => `/products/${handle}`),
         ...policyPaths,
         ...contentPagePaths,

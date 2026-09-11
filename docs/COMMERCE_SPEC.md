@@ -2,7 +2,7 @@
 
 Status: Working — Catalog/Cart 核心切片已实现，生产 Catalog 与 hardening 待完成
 Owner: Commerce / Operations  
-Last updated: 2026-09-02
+Last updated: 2026-09-11
 Related: `MVP_PRD.md`, `TECH_SPEC.md`, `CUSTOMER_LIFECYCLE.md`
 
 Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
@@ -196,14 +196,14 @@ E2E。Playwright 按 D-043 暂缓；在重新批准前以有记录的人工浏�
 - 成功订单以 Shopify Order 为准；Analytics purchase 不能反向创建业务事实。
 - Order confirmation 与 Shopify Order Status 可被游客使用。
 
-2026-09-02 operations note: 业务方确认当前下单与支付已完整支持，Shopify Payment
-test mode 下的下单、支付、confirmation 与后续流程测试未发现问题；Checkout 不再是
-未实现功能或开放问题。`SHOPIFY_CHECKOUT_ENABLED` 仍保留为部署级安全门禁，仓库默认
+D-048 已确认下单支付完整支持，Payment test mode 流程未发现问题。`SHOPIFY_CHECKOUT_ENABLED` 仍保留为部署级安全门禁，仓库默认
 关闭，各环境单独验收。test mode 结果不替代未来需要的 live provider/payout 对账记录。
 
 ## 10. Shipping、Returns 与 Taxes
 
-下列内容全部是公开销售与 Checkout 的必需业务输入，当前不得假设：
+公开承诺必须与获批运营事实一致。履约模式、handling 与 Shipping/Returns 正文已确认；
+特殊配送覆盖、实际运费/免邮及税费/进口责任继续按 Q-003B/C/E 跟踪。
+发布/修改时检查以下触点，不将已确认项重新列为 Pending：
 
 - fulfillment origin 与 handling time
 - service levels、cost、free-shipping threshold

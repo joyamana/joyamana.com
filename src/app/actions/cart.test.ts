@@ -105,6 +105,41 @@ afterEach(() => {
 });
 
 describe("Bag server actions", () => {
+  it("uses ZH_TW for all Bag actions without changing the US cookie identity", async () => {
+    const store = cookieStore(oldCartId);
+    const cart = makeCart({ id: oldCartId, checkoutUrl: "https://joya-mana.myshopify.com/zh-tw/cart/c/token?key=secret" });
+    mocks.cookies.mockResolvedValue(store);
+    mocks.getCart.mockResolvedValue(cart);
+    mocks.addWithRecovery.mockResolvedValue({ cart, warnings: [], replacedCart: false });
+    mocks.updateLines.mockResolvedValue({ cart, warnings: [] });
+    mocks.removeLines.mockResolvedValue({ cart, warnings: [] });
+    mocks.clearCart.mockResolvedValue({ cart, warnings: [] });
+    expect((await getCartAction("zh-Hant-US")).ok).toBe(true);
+    expect((await addCartLineAction(merchandiseId, 1, "zh-Hant-US")).ok).toBe(true);
+    expect((await updateCartLineAction(lineId, 1, "zh-Hant-US")).ok).toBe(true);
+    expect((await removeCartLineAction(lineId, "zh-Hant-US")).ok).toBe(true);
+    expect((await clearCartAction("zh-Hant-US")).ok).toBe(true);
+    process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
+    expect(await checkoutAction("zh-Hant-US")).toEqual({ok: true, checkoutUrl: cart.checkoutUrl});
+    expect(mocks.getCart).toHaveBeenCalledWith(oldCartId, "ZH_TW");
+    expect(mocks.addWithRecovery).toHaveBeenCalledWith(oldCartId, {merchandiseId, quantity: 1}, "ZH_TW");
+    expect(mocks.updateLines).toHaveBeenCalledWith(oldCartId, [{id: lineId, quantity: 1}], "ZH_TW");
+    expect(mocks.removeLines).toHaveBeenCalledWith(oldCartId, [lineId], "ZH_TW");
+    expect(mocks.clearCart).toHaveBeenCalledWith(oldCartId, "ZH_TW");
+    expect(store.set).toHaveBeenCalledWith("joya-mana-shopify-cart-us", oldCartId, expect.objectContaining({httpOnly: true, path: "/"}));
+    expect(mocks.createCart).not.toHaveBeenCalled();
+  });
+
+  it("creates an independent Chinese Buy now cart and localizes safe failures", async () => {
+    process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
+    const cart = makeCart({checkoutUrl: "https://joya-mana.myshopify.com/zh-tw/cart/c/token?key=secret"});
+    mocks.createCart.mockResolvedValue({cart, warnings: []});
+    expect(await buyNowAction(merchandiseId, 1, "zh-Hant-US")).toEqual({ok: true, checkoutUrl: cart.checkoutUrl});
+    expect(mocks.createCart).toHaveBeenCalledWith([{merchandiseId, quantity: 1}], "ZH_TW");
+    expect(mocks.cookies).not.toHaveBeenCalled();
+    expect(await buyNowAction(merchandiseId, 0, "zh-Hant-US")).toMatchObject({ok: false, error: {code: "INVALID_QUANTITY", message: "請選擇有效的整數數量。"}});
+    expect(await buyNowAction(merchandiseId, 1, "zh-TW")).toMatchObject({ok: false, error: {code: "INVALID_INPUT"}});
+  });
   it("returns an empty public Cart without creating a Shopify Cart", async () => {
     const store = cookieStore();
     mocks.cookies.mockResolvedValue(store);

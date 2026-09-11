@@ -116,9 +116,7 @@ export async function shopifyFetch<T>(
     options.buyerIp === undefined
       ? await getTrustedBuyerIp()
       : normalizeBuyerIp(options.buyerIp);
-  const request: RequestInit & {
-    next?: { revalidate: number | false; tags?: string[] };
-  } = {
+  const request: RequestInit = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -222,61 +220,4 @@ export function shopifyMutation<T>(
   variables: Record<string, unknown> = {},
 ) {
   return shopifyFetch<T>(mutation, variables, { cache: "no-store" });
-}
-
-export interface ShopifyConnectionSnapshot {
-  shop: {
-    name: string;
-    primaryDomain: { url: string };
-  };
-  localization: {
-    country: {
-      isoCode: string;
-      currency: { isoCode: string };
-    };
-    availableCountries: Array<{
-      isoCode: string;
-      currency: { isoCode: string };
-    }>;
-    availableLanguages: Array<{
-      isoCode: string;
-      endonymName: string;
-    }>;
-  };
-  products: {
-    nodes: Array<{ id: string; handle: string; title: string }>;
-  };
-}
-
-const connectionQuery = `#graphql
-  query ShopifyConnectionSnapshot {
-    shop {
-      name
-      primaryDomain { url }
-    }
-    localization {
-      country {
-        isoCode
-        currency { isoCode }
-      }
-      availableCountries {
-        isoCode
-        currency { isoCode }
-      }
-      availableLanguages {
-        isoCode
-        endonymName
-      }
-    }
-    products(first: 1) {
-      nodes { id handle title }
-    }
-  }
-`;
-
-export function getShopifyConnectionSnapshot() {
-  return shopifyFetch<ShopifyConnectionSnapshot>(connectionQuery, {}, {
-    buyerIp: null,
-    revalidate: 60,
-  });
 }

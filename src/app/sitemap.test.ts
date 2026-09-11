@@ -28,7 +28,7 @@ vi.mock("@/lib/content/shopify-content-pages", () => ({
   getPublishedShopifyContentPagePaths:
     mocks.getPublishedShopifyContentPagePaths,
 }));
-vi.mock("@/config/indexing", () => ({
+const policy = vi.hoisted(() => ({
   indexingPolicy: {
     "en-US": {
       core: true,
@@ -45,13 +45,42 @@ vi.mock("@/config/indexing", () => ({
   },
 }));
 
+vi.mock("@/config/indexing", () => policy);
+
 afterEach(() => {
+  policy.indexingPolicy["en-US"].commerce = false;
   vi.clearAllMocks();
   vi.unstubAllEnvs();
   vi.resetModules();
 });
 
 describe("granular sitemap gates", () => {
+  it("excludes collections that metadata keeps noindex for missing content", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
+    policy.indexingPolicy["en-US"].commerce = true;
+    mocks.getProducts.mockResolvedValue([]);
+    mocks.productCategoriesForProducts.mockReturnValue([]);
+    mocks.getPublishedShopifyAboutPaths.mockResolvedValue([]);
+    mocks.getPublishedShopifyContentPagePaths.mockResolvedValue([]);
+    mocks.getDesignCollections.mockResolvedValue([
+      { handle: "thin-series", description: " ", seoDescription: " " },
+      { handle: "body-series", description: "Collection story" },
+      {
+        handle: "seo-series",
+        description: "",
+        seoDescription: "Series introduction",
+      },
+    ]);
+
+    const { default: sitemap } = await import("./sitemap");
+    const urls = (await sitemap()).map((entry) => entry.url);
+    expect(urls).toContain("https://www.joyamana.com/collections");
+    expect(urls).toContain("https://www.joyamana.com/collections/body-series");
+    expect(urls).toContain("https://www.joyamana.com/collections/seo-series");
+    expect(urls).not.toContain("https://www.joyamana.com/collections/thin-series");
+  });
+
   it("loads and publishes only the enabled locale and page group", async () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");

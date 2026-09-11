@@ -1,19 +1,20 @@
 # MVP Product Requirements
 
-Status: Working — 核心技术切片已实现，完整 MVP 与发布验收未完成
+Status: Active requirements — 按当前公开范围持续验收
 Owner: Product owner  
-Last updated: 2026-09-01
+Last updated: 2026-09-11
 Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
 
 当前实现已覆盖 Shopify Catalog/Cart、主要路由和部分内容/SEO adapter，但正式
 Product knowledge、exact/representative image 披露、内容到商品关系、Home Email opt-in、
-完整 Schema、Analytics/consent 与浏览器/支付 E2E 仍是缺口；webhook 按 D-046 后置。
+完整 Schema、Analytics/consent 与剩余设备/运营验收仍是缺口；webhook 按 D-046 后置。
+下单支付已通过业务方的 Payment test mode 验收；Playwright 按 D-043 暂缓。
 Product
 `custom.product_model` 已映射并用于可信低库存门禁；西语 document-level language 已修复。
 
 ## 1. 产品目标
 
-在一个可信、快速、移动端友好的美国 en-US + es-US 品牌站中，让访客能够：
+在一个可信、快速、移动端友好的美国 en-US + es-US + zh-Hant-US 品牌站中，让访客能够：
 
 1. 理解品牌和商品是否适合自己。
 2. 按商品类型或晶体类型发现商品。
@@ -87,9 +88,11 @@ URL 名称遵循已确认的 Joya Mana 信息架构与 D-007/D-036：
 - Cart 数量可访问且不会导致布局跳动。
 - 移动 Header 提供 Menu、居中 Wordmark、Search 与 Bag；Language 位于 Menu
   底部。Menu 支持背景滚动锁定、Escape、焦点锁定、焦点返回和 44px 触控目标。
-- 语言切换器在 en-US 与 es-US 等价页之间切换；不得因此改变 US Catalog、
+- 语言切换器在 en-US、es-US 与 zh-Hant-US 对应页之间切换；不得因此改变 US Catalog、
   商品 ID、USD 价格、库存或政策。
 - 当前只有一个 US Market，不显示伪造的国家或 Currency 选择器。
+- zh-Hant-US 按 D-049 允许 Shopify 英文回退页面正常访问；不按缺译隐藏入口，
+  不将回退视为翻译完成，繁中索引全部关闭。
 - Header 始终保留单一 About 入口，不为 About 子页建立 Header dropdown；子页通过
   `/about` 范围内共享的页内导航发现。
 

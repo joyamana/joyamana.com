@@ -1,8 +1,9 @@
 import type { Money } from "@/lib/commerce/types";
+import { localeRegistry, type SupportedLocale } from "@/config/locales";
 
 export function formatPrice(
   value: number | string,
-  locale: string,
+  locale: SupportedLocale,
   currency: "USD" | "CAD",
 ) {
   const numericValue = typeof value === "number" ? value : Number(value);
@@ -11,7 +12,7 @@ export function formatPrice(
   }
 
   const fractionDigits = Number.isInteger(numericValue) ? 0 : 2;
-  const amount = new Intl.NumberFormat(locale, {
+  const amount = new Intl.NumberFormat(localeRegistry[locale].formatLocale, {
     style: "currency",
     currency,
     minimumFractionDigits: fractionDigits,
@@ -21,13 +22,13 @@ export function formatPrice(
   return `${amount} ${currency}`;
 }
 
-export function formatMoney(money: Money, locale: string) {
+export function formatMoney(money: Money, locale: SupportedLocale) {
   return formatPrice(money.amount, locale, money.currencyCode);
 }
 
 export function formatPriceRange(
   range: { minVariantPrice: Money; maxVariantPrice: Money },
-  locale: string,
+  locale: SupportedLocale,
 ) {
   const { minVariantPrice, maxVariantPrice } = range;
   if (
@@ -38,4 +39,11 @@ export function formatPriceRange(
   }
 
   return `${formatMoney(minVariantPrice, locale)} – ${formatMoney(maxVariantPrice, locale)}`;
+}
+
+export function formatDate(value: string, locale: SupportedLocale) {
+  return new Intl.DateTimeFormat(localeRegistry[locale].formatLocale, {
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(new Date(value));
 }

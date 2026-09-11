@@ -18,6 +18,14 @@
   --page: clamp(1.25rem, 4vw, 4.5rem);
 }
 
+/* Latin keeps the brand fonts; the Chinese layout supplies self-hosted HK fonts.
+   Installed system fonts remain available while the web fonts load. */
+html[lang="zh-Hant-US"] {
+  --font-display: var(--font-newsreader), var(--font-noto-serif-hk), "Songti TC", "PingFang HK", serif;
+  --font-sans: var(--font-manrope), var(--font-noto-sans-hk), "PingFang HK", "Microsoft JhengHei", sans-serif;
+  line-break: strict;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -2475,6 +2483,43 @@ textarea {
     padding-right: 0.45rem;
     padding-left: 0.45rem;
   }
+}
+
+/* CJK headings need breathing room and natural line breaks, not Latin tracking. */
+html[lang="zh-Hant-US"] :is(h1, h2, h3) {
+  letter-spacing: 0;
+  line-height: 1.3;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+html[lang="zh-Hant-US"] .hero h1 {
+  max-width: 12em;
+  font-size: clamp(2.5rem, 5.3vw, 5.5rem);
+  line-height: 1.25;
+}
+
+html[lang="zh-Hant-US"] .product-card h3 {
+  font-family: var(--font-sans);
+  font-size: clamp(1.125rem, 1.35vw, 1.375rem);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+html[lang="zh-Hant-US"] :is(.mobile-menu__primary a, .mobile-nav-dropdown summary) {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+html[lang="zh-Hant-US"] :is(.eyebrow, .microcopy, .button, .text-link, .back-link, .product-card__availability) {
+  letter-spacing: 0.025em;
+  line-height: 1.6;
+}
+
+html[lang="zh-Hant-US"] :is(.about-rich-text, .policy-rich-text, .product-description) {
+  line-height: 1.85;
 }
 
 @media (prefers-reduced-motion: reduce) {

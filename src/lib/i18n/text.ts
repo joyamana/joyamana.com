@@ -1,10 +1,9 @@
 import type { Locale } from "./locales";
+import { localeRegistry } from "@/config/locales";
 
 export function uiText(
   locale: Locale,
-  values: { en: string; es: string; fr: string },
+  values: Record<(typeof localeRegistry)[Locale]["textKey"], string>,
 ) {
-  if (locale === "es-US") return values.es;
-  if (locale === "fr-CA") return values.fr;
-  return values.en;
+  return values[localeRegistry[locale].textKey];
 }

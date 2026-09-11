@@ -2,7 +2,7 @@
 
 Status: Active reference index  
 Owner: Project team  
-Last verified: 2026-08-02
+Last updated: 2026-09-11（本次核对工具链；其他领域实施前重新验证）
 
 本文件列出规划时使用的主要官方资料。技术平台、crawler、Search feature 和
 法规会变化；实现相关能力前必须重新核对当前官方文档，不能把本索引当永久版本
@@ -19,6 +19,9 @@ Last verified: 2026-08-02
 
 ## Next.js
 
+- [Next.js 16.3 release](https://nextjs.org/blog/next-16-3)
+- [Error page retry API](https://nextjs.org/docs/app/api-reference/file-conventions/error)
+- [Fetch cache and revalidation](https://nextjs.org/docs/app/api-reference/functions/fetch)
 - [Next.js App Router documentation](https://nextjs.org/docs/app)
 - [Metadata and OG images](https://nextjs.org/docs/app/getting-started/metadata-and-og-images)
 - [Incremental Static Regeneration](https://nextjs.org/docs/app/guides/incremental-static-regeneration)
@@ -27,6 +30,21 @@ Last verified: 2026-08-02
 
 实现时确认所安装稳定版本的 Server Components、fetch/cache、metadata、
 route handler 和国际化示例，不直接复制旧版本代码。
+
+## Toolchain
+
+- [npm 官方 registry](https://registry.npmjs.org/)：核对 stable latest 与 peer/engine 声明。
+- [Node.js release archive](https://nodejs.org/en/download/archive/v24.21.0)：本项目保持 Node 24。
+- [pnpm 12 release](https://github.com/pnpm/pnpm/releases/tag/v12.0.0)
+- [Vitest 5 migration](https://vitest.dev/guide/migration/)
+- [Vitest 4 migration](https://v4.vitest.dev/guide/migration)
+- [TypeScript 6 release](https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/)
+- [TypeScript 7 release and tooling boundary](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)
+- [typescript-eslint supported versions](https://typescript-eslint.io/users/dependency-versions/)
+- [ESLint version support](https://eslint.org/version-support/)
+
+精确项目版本在 package.json；当前 ESLint 9 / TypeScript 6 的兼容限制见 TECH_SPEC。
+每次升级重新验证，不能把本次限制当成永久基线。
 
 ## Shopify Headless
 

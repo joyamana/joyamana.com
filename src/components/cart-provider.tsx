@@ -10,6 +10,8 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
+import { localeForPath } from "@/lib/i18n/locales";
+import { isEnabledLocale, localeRegistry, type StorefrontLanguage } from "@/config/locales";
 import {
   addCartLineAction,
   buyNowAction,
@@ -59,16 +61,13 @@ const emptyCart: CartView = {
 };
 
 function connectionFailureForLanguage(
-  language: "EN" | "ES",
+  language: StorefrontLanguage,
 ): CartActionFailure {
   return {
     ok: false,
     error: {
       code: "SHOPIFY_ERROR",
-      message:
-        language === "ES"
-          ? "No se pudo actualizar la bolsa. Inténtalo de nuevo."
-          : "The bag could not be updated. Please try again.",
+      message: cartErrorMessage("SHOPIFY_ERROR", language),
     },
   };
 }
@@ -92,11 +91,9 @@ export function CartProvider({
   checkoutEnabled: boolean;
 }) {
   const pathname = usePathname();
-  const locale =
-    pathname === "/es-us" || pathname.startsWith("/es-us/")
-      ? "es-US"
-      : "en-US";
-  const language = locale === "es-US" ? "ES" : "EN";
+  const pathLocale = localeForPath(pathname);
+  const locale = isEnabledLocale(pathLocale) ? pathLocale : "en-US";
+  const language = localeRegistry[locale].shopify.language;
   const connectionFailure = useMemo(
     () => connectionFailureForLanguage(language),
     [language],

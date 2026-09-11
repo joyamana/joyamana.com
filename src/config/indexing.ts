@@ -6,7 +6,7 @@ export const indexGroups = [
 ] as const;
 
 export type IndexGroup = (typeof indexGroups)[number];
-export type IndexLocale = "en-US" | "es-US";
+export type IndexLocale = import("./locales").EnabledLocale;
 
 /**
  * Version-controlled indexing release policy.
@@ -16,6 +16,8 @@ export type IndexLocale = "en-US" | "es-US";
  * unapproved scopes false; policy changes require review and deploy.
  */
 export const indexingPolicy = {
+  // Accessible, including Shopify default-language fallback; not approved for indexing.
+  "zh-Hant-US": { core: false, commerce: false, policies: false, editorial: false },
   "en-US": {
     // Home, Contact, About, Accessibility
     core: true,

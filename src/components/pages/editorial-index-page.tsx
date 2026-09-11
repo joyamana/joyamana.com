@@ -29,6 +29,7 @@ export async function EditorialIndexPage({
   const title = isBlog
     ? "Blog"
     : uiText(locale, {
+        zh: "水晶指南",
         en: "Crystal guide",
         es: "Guía de cristales",
         fr: "Guide des cristaux",
@@ -40,11 +41,13 @@ export async function EditorialIndexPage({
         <p className="eyebrow">
           {isBlog
             ? uiText(locale, {
+                zh: "故事與指南",
                 en: "Stories & guidance",
                 es: "Historias y orientación",
                 fr: "Histoires et conseils",
               })
             : uiText(locale, {
+                zh: "材質參考",
                 en: "Material reference",
                 es: "Referencia de materiales",
                 fr: "Référence des matériaux",
@@ -55,11 +58,13 @@ export async function EditorialIndexPage({
           {index.seoDescription ||
             (isBlog
               ? uiText(locale, {
+                  zh: "關於水晶飾物、選購知識與個人意義的故事及實用指南。",
                   en: "Stories and practical guidance about crystal objects, clear buying, and personal meaning.",
                   es: "Historias y orientación práctica sobre cristales, compras claras y significado personal.",
                   fr: "Histoires et conseils pratiques sur les cristaux, l’achat éclairé et le sens personnel.",
                 })
               : uiText(locale, {
+                  zh: "認識水晶的特質、保養方法與傳統文化寓意。",
                   en: "A reference guide to crystal characteristics, care, and traditional associations.",
                   es: "Una guía de referencia sobre las características, el cuidado y las asociaciones tradicionales de los cristales.",
                   fr: "Un guide de référence sur les caractéristiques, l’entretien et les associations traditionnelles des cristaux.",
@@ -69,6 +74,7 @@ export async function EditorialIndexPage({
       {index.usedDefaultLanguage ? (
         <p className="policy-language-notice editorial-language-notice">
           {uiText(locale, {
+            zh: "本欄目內容目前以英文提供。",
             en: "This section is currently available in English.",
             es: "Esta sección está disponible actualmente en inglés.",
             fr: "Cette section est actuellement disponible en anglais.",
@@ -113,7 +119,7 @@ function CrystalDirectory({
             <p>{entry.excerpt}</p>
           </div>
           <Link
-            aria-label={`${uiText(locale, { en: "Read", es: "Leer", fr: "Lire" })}: ${entry.title}`}
+            aria-label={`${uiText(locale, { zh: "閱讀", en: "Read", es: "Leer", fr: "Lire" })}: ${entry.title}`}
             className="editorial-arrow"
             href={localePath(locale, `/crystals/${entry.handle}`)}
           >
@@ -140,6 +146,7 @@ function BlogIndex({
       <article className="blog-featured">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "精選",
             en: "Featured",
             es: "Destacado",
             fr: "À la une",
@@ -157,6 +164,7 @@ function BlogIndex({
           href={localePath(locale, `/blog/${featured.handle}`)}
         >
           {uiText(locale, {
+            zh: "閱讀文章",
             en: "Read article",
             es: "Leer artículo",
             fr: "Lire l’article",
@@ -177,7 +185,7 @@ function BlogIndex({
               <p>{entry.excerpt}</p>
             </div>
             <Link
-              aria-label={`${uiText(locale, { en: "Read", es: "Leer", fr: "Lire" })}: ${entry.title}`}
+              aria-label={`${uiText(locale, { zh: "閱讀", en: "Read", es: "Leer", fr: "Lire" })}: ${entry.title}`}
               className="editorial-arrow"
               href={localePath(locale, `/blog/${entry.handle}`)}
             >
@@ -198,8 +206,9 @@ function entryCategory(
   return (
     entry.tags[0] ||
     (kind === "blog"
-      ? uiText(locale, { en: "Article", es: "Artículo", fr: "Article" })
+      ? uiText(locale, { zh: "文章", en: "Article", es: "Artículo", fr: "Article" })
       : uiText(locale, {
+          zh: "水晶指南",
           en: "Crystal guide",
           es: "Guía de cristales",
           fr: "Guide des cristaux",
@@ -221,6 +230,7 @@ function EditorialUnavailable({
         {isBlog
           ? "Blog"
           : uiText(locale, {
+              zh: "水晶指南",
               en: "Crystal guide",
               es: "Guía de cristales",
               fr: "Guide des cristaux",
@@ -228,6 +238,7 @@ function EditorialUnavailable({
       </p>
       <h1>
         {uiText(locale, {
+          zh: "目前沒有文章。",
           en: "New stories are on the way.",
           es: "Próximamente habrá nuevas historias.",
           fr: "De nouvelles histoires arrivent bientôt.",
@@ -235,6 +246,7 @@ function EditorialUnavailable({
       </h1>
       <p>
         {uiText(locale, {
+          zh: "瀏覽其他內容。",
           en: "Please check back soon.",
           es: "Vuelve a visitarnos pronto.",
           fr: "Revenez bientôt.",

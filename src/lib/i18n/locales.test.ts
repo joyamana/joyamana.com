@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
-  alternateLanguageLocale,
-  canadaLocaleFromSegment,
+  languageOptionsFor,
+  localeForPath,
+  locales,
   enabledLocales,
   isLocaleEnabled,
   localePath,
   marketIdForLocale,
   stripLocalePrefix,
 } from "./locales";
+import { localeRegistry, isEnabledLocale, shopifyContextForLocale } from "@/config/locales";
 
 describe("locale routing", () => {
   it("keeps English at the root", () => {
@@ -34,11 +36,28 @@ describe("locale routing", () => {
     );
     expect(marketIdForLocale("en-CA")).toBe("ca");
     expect(marketIdForLocale("fr-CA")).toBe("ca");
-    expect(alternateLanguageLocale("en-CA")).toBe("fr-CA");
+    expect(languageOptionsFor("en-CA")).toEqual([]);
     expect(isLocaleEnabled("en-CA")).toBe(false);
     expect(isLocaleEnabled("fr-CA")).toBe(false);
-    expect(canadaLocaleFromSegment("en-ca")).toBeNull();
-    expect(canadaLocaleFromSegment("fr-ca")).toBeNull();
-    expect(enabledLocales).toEqual(["en-US", "es-US"]);
+    expect(enabledLocales).toEqual(["en-US", "es-US", "zh-Hant-US"]);
+  });
+
+  it("keeps BCP 47 identity distinct from paths and provider/format codes", () => {
+    for (const locale of locales) {
+      expect(Intl.getCanonicalLocales(locale)).toEqual([locale]);
+      const path = localePath(locale, "/products/example");
+      expect(localeForPath(path)).toBe(locale);
+      expect(stripLocalePrefix(path)).toBe("/products/example");
+    }
+    expect(localePath("zh-Hant-US")).toBe("/zh-hant-us");
+    expect(localeForPath("/zh-hant-us-extra")).toBe("en-US");
+    expect(stripLocalePrefix("/zh-hant-us-extra")).toBe("/zh-hant-us-extra");
+    expect(shopifyContextForLocale("zh-Hant-US")).toEqual({country: "US", language: "ZH_TW"});
+    expect(localeRegistry["zh-Hant-US"].formatLocale).toBe("zh-HK");
+    expect(marketIdForLocale("zh-Hant-US")).toBe("us");
+    expect(isEnabledLocale("zh-TW")).toBe(false);
+    expect(isEnabledLocale("__proto__")).toBe(false);
+    expect(isEnabledLocale("zh-Hant-US")).toBe(true);
+    expect(languageOptionsFor("zh-Hant-US").map(o=>o.shortLabel)).toEqual(["EN", "ES", "繁中"]);
   });
 });

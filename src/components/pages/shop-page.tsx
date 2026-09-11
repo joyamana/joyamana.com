@@ -18,16 +18,19 @@ export async function ShopPage({ locale }: { locale: Locale }) {
   const products = await getProducts(marketId, locale);
   const categories = productCategoriesForProducts(products, locale);
   const homeLabel = uiText(locale, {
+    zh: "首頁",
     en: "Home",
     es: "Inicio",
     fr: "Accueil",
   });
   const shopLabel = uiText(locale, {
+    zh: "選購",
     en: "Shop",
     es: "Comprar",
     fr: "Boutique",
   });
   const pageDescription = uiText(locale, {
+    zh: "瀏覽 Joya Mana 美國網店目前已發佈的所有商品。",
     en: "Browse all products currently published to the Joya Mana US storefront.",
     es: "Explora todos los productos publicados actualmente en la tienda estadounidense de Joya Mana.",
     fr: "Découvrez tous les produits actuellement publiés dans la boutique américaine Joya Mana.",
@@ -59,6 +62,7 @@ export async function ShopPage({ locale }: { locale: Locale }) {
       <nav
         className="breadcrumbs"
         aria-label={uiText(locale, {
+          zh: "頁面路徑",
           en: "Breadcrumb",
           es: "Ruta de navegación",
           fr: "Fil d’Ariane",
@@ -71,6 +75,7 @@ export async function ShopPage({ locale }: { locale: Locale }) {
       <header className="page-hero">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "美國商品目錄 · USD",
             en: "US catalog · USD",
             es: "Catálogo de EE. UU. · USD",
             fr: "Catalogue États-Unis · USD",
@@ -83,13 +88,14 @@ export async function ShopPage({ locale }: { locale: Locale }) {
         <nav
           className="filter-row"
           aria-label={uiText(locale, {
+            zh: "商品類別",
             en: "Product categories",
             es: "Categorías de productos",
             fr: "Catégories de produits",
           })}
         >
           <a href="#all">
-            {uiText(locale, { en: "All", es: "Todo", fr: "Tout" })}
+            {uiText(locale, { zh: "全部", en: "All", es: "Todo", fr: "Tout" })}
           </a>
           {categories.map((category) => (
             <Link
@@ -112,6 +118,7 @@ export async function ShopPage({ locale }: { locale: Locale }) {
           <div className="empty-state empty-state--compact">
             <h2>
               {uiText(locale, {
+                zh: "目前沒有已發佈的商品。",
                 en: "No products are published yet.",
                 es: "Aún no hay productos publicados.",
                 fr: "Aucun produit n’est encore publié.",
@@ -119,6 +126,7 @@ export async function ShopPage({ locale }: { locale: Locale }) {
             </h2>
             <p>
               {uiText(locale, {
+                zh: "瀏覽其他內容。",
                 en: "New pieces will appear here as soon as they are available.",
                 es: "Nuevas piezas aparecerán aquí en cuanto estén disponibles.",
                 fr: "De nouvelles pièces apparaîtront ici dès qu’elles seront disponibles.",

@@ -1,11 +1,160 @@
 # Archived Execution Plans — 2026-08 to 2026-09
 
 Status: Historical evidence only  
-Archived: 2026-09-02
+Archived: 2026-09-11
 
 本文件保存已经完成的执行计划及当时的验证、风险和状态快照。它不是当前需求或发布
 状态来源；当前决策、开放问题和项目状态分别以 `../DECISIONS.md`、
 `../OPEN_QUESTIONS.md`、`../PROJECT_SPEC.md` 和根目录 `PLANS.md` 为准。
+
+## 繁中 Web Font — 2026-09-11
+
+业务方采用 Noto Serif HK + Noto Sans HK：品牌/PDP 标题用宋体 500，正文、商品卡
+及移动导航用黑体；Latin 保留 Newsreader/Manrope。通过繁中 layout 的 next/font
+自托管 unicode-range 分片，禁用 CJK preload，保留系统 fallback；OFL 随站点保留。
+商品卡字号收敛至 18–22px、字重 500、行高 1.5，EN/ES 样式不变。
+
+Node 24 下 preflight、lint、typecheck、32 个测试文件/209 项测试与 production build
+通过。本地 Chrome headless（直接 CDP，无 Playwright）验证三语言初始 HTML/noindex、
+真实字体、无访客 Google 字体请求、EN/ES 不下载 CJK WOFF2；Turbopack 会合并部分
+字体 CSS 声明，未为此启用实验性 bundling 配置。繁中首页/Shop/PDP/About/Shipping/
+Bag/Search 在 360/390/1440px 共 21 次布局检查无横向溢出；移动导航字体正确。
+阻止 WOFF2 请求后，标题仍通过系统 Songti TC 可见，无横向溢出。已检查桌面/手机截图。
+连续导航期间服务日志出现 `The destination stream closed early`；上述页面与字体检查
+通过，本轮未追溯该流中断日志，也不将其记录为已修复问题。测试服务与临时浏览器已关闭。
+这些是本机 Chrome 渲染与只读 smoke，不代表 iOS Safari、Android 真机、Vercel Preview
+或托管 Checkout 验收。本轮未操作 Checkout、后台、索引配置、main 或部署。
+
+## US 繁体中文接入 — zh-Hant-US
+
+状态：Complete — dev 代码接入完成；不代表部署或繁中内容/支付验收
+负责人：Project owner / Engineering
+最后更新：2026-09-11
+关联：D-049、D-043、D-045
+
+### Objective / scope
+
+同一 US Catalog / USD 添加 /zh-hant-us，HTML 使用 zh-Hant-US，Storefront 请求 ZH_TW，
+格式使用 zh-HK，但不新增 HK/TW Market 或改变 US 价格、库存、政策与 Bag cookie。
+复用全部现有页面（包括永久 noindex 的 Search/Bag 和暂不索引的 Editorial），
+覆盖香港书面语 UI、导航、metadata、购买动作、错误恢复与中文排版。
+不引入新依赖、翻译平台或本地商业正文；使用港式系统字体 fallback，不新增远程 CJK 字库。
+
+### Decisions / user amendment
+
+业务方批准完整代码接入，并明确缺译页面不隐藏。Shopify 默认语言回退正常可读，
+不建立此前规划的商品审核 allowlist，不添加待完善占位；保留实际内容语言标记及既有
+fallback noindex。About 导航也保留繁中路径上的有效子页。四个繁中索引组全关；
+EN/ES 保持不变。未来索引开放必须另行审核内容及持续 readiness，不等于本轮代码验收。
+不改后台、main、Vercel 或环境变量。Playwright 按 D-043 封存。
+
+### Milestones
+
+1. [x] 批准 D-049 和最新范围；只读确认 US 下 ZH_TW 已发布。
+2. [x] 中央 locale/Shopify 映射、完整 UI、所有薄路由和三语言导航。
+3. [x] Cart/Checkout、金额日期、错误恢复和中文排版。
+4. [x] Node 24 lint/typecheck/test/build、HTTP/Shopify 合约验证及文档同步。
+
+### Evidence / remaining checks
+
+只读对照已确认请求实际为 ZH_TW，但 32 个商品、1 个系列、5 个 content_page 与
+4 项政策当前仍返回与英文相同的内容；语言发布不等于译文完成，不阻塞本轮代码接入。
+Node 24 最终 preflight/lint/typecheck/test（31 files / 205 tests）与 production build 已通过；本地 noindex
+构建 96 条 HTTP 检查通过（含全部 32 个繁中商品）。新 EN/ZH_TW 临时 Cart 与旧 EN Cart
+用 ZH_TW 读取已实测 US/USD、同一 Cart 身份和 `/zh-tw/cart/c/…` URL，测试商品已清空。
+未访问 Checkout 或创建订单。Production-like 配置另有 27 条 HTTP 检查通过；EN/ES
+sitemap 保持 94 个 URL，繁中无 sitemap/hreflang/Schema。首页 canonical 无尾斜杠与
+根 URL 规范化后等价；已修正检查器的字符串比较。最终恢复本地默认 noindex 构建，
+复核 6 个页面与空 sitemap，测试服务已关闭。git diff --check 通过，未新增依赖或环境变量。
+最终 Checkout 文案、支付、交易通知、移动端字形与键盘/读屏仍需
+人工验收；不将 HTTP 或 Cart 合约测试称作支付 E2E。
+既有 Next 404 初始 HTML 空壳仍在：404/noindex 正确，繁中恢复提示存在于 RSC payload，
+人工浏览器可见性与无 JavaScript 恢复仍待验收，不在本轮扩大为 Next 错误框架迁移。
+
+### Rollback
+
+回退 dev 本次代码即可撤回新语言；EN/ES 与现有 US Cart 不迁移。
+本轮无中文索引 URL；将来开放索引后下线须另行决定 URL 生命周期。
+
+### Outcome
+
+已按最新指示完整接入全部共享页面、香港用语 UI 与 US Commerce，缺译页面不隐藏。
+本轮没有提交、推送、部署、修改 main 或店铺设置。测试 Cart 不含客户资料，商品已清空。
+正文翻译和人工浏览器/Checkout 验收转入当前 OPEN_QUESTIONS/ROADMAP；不是代码占位。
+
+## 依赖稳定版升级与代码/文档精简
+
+状态：Complete
+最后更新：2026-09-11
+关联：D-018、D-035、D-042、D-043、TECH_SPEC
+
+### Objective / scope
+
+在 Node 24 下升级到 registry `latest` 稳定依赖；Node 类型定义保持 24 系列。
+按官方迁移说明调整 API，删除无调用或停用的旧实现，不引入历史兼容层。
+当前文档保留有效约束、状态与操作步骤，历史证据移入 archive。
+本次不改变市场、索引、Checkout 或 consent 边界；不启用 Playwright。
+
+### Milestones
+
+1. [x] 核实稳定版本、peer/engine 与官方迁移说明，准备 Node 24 验证环境。
+2. [x] 更新依赖与 lockfile，调整受影响代码并删除可证明冗余实现。
+3. [x] 精简当前文档，保留 Accepted 决策和未解决输入，归档历史。
+4. [x] 运行 frozen install、preflight、lint、typecheck、tests、build 与 HTTP smoke。
+
+### Validation / recovery
+
+- Node 24 下验证依赖安装、编译和测试；检查初始 HTML、locale、canonical、Schema、
+  参数 noindex、sitemap 与停用市场 404。Commerce 通过已有 mapper/Cart 合约测试检查。
+- 不把 HTTP/合约测试描述为人工浏览器或支付 E2E；无法完成的验收明确记录。
+- 使用 Git diff 审阅范围；未提交变更可单独回退，不改变 Shopify 数据或部署配置。
+
+### Progress
+
+- 2026-09-11：工作区干净；已读取当前规范。官方 registry 确认 Next 16.3.4、React
+  19.3.0、TypeScript 7.0.2、ESLint 10.10.0、Vitest 5.0.0、pnpm 12.3.4；Node 24
+  当前补丁 24.21.0，类型定义 24.13.4。迁移兼容性尚待验证。
+- 2026-09-11：上游插件实测不支持 TS 7 / ESLint 10，业务方选择最新兼容稳定组合
+  TS 6.0.3 / ESLint 9.39.5。安装、peer check、lint、185 tests、build 和依赖 audit
+  已通过；HTTP smoke 已覆盖默认 noindex，正在复核临时可索引构建。
+- 2026-09-11：HTTP 复核发现已有 Collection metadata noindex 与 sitemap/Schema 不一致；
+  统一内容就绪判断并增加回归测试，不改变既有 D-045 索引策略。
+
+### Outcome
+
+- 使用 Node 24.21.0 / pnpm 12.3.4 验证；Next 16.3.4、React 19.3.0、Vitest 5.0.0，
+  TypeScript 6.0.3 / ESLint 9.39.5 按业务方批准保留最新兼容组合。无旧版本兼容层。
+- 删除 17 个停用市场页面及独立 layout，改由 en-US 下单一 catch-all 返回 404；
+  CA typed planned 配置保留。删除未使用的连接探针、mock-era localized 类型与目录 helper。
+- Header 持久缓存统一到 fetch，React cache 只请求内去重；客户端只拿导航链接字段。
+  Error boundary 使用稳定 retry API；正则转义使用 Node 24 原生 API。
+- Vitest config 改用 .mts；typecheck 先生成 Next 路由类型；移除已无依赖的 esbuild
+  build allowlist，固定所有直接依赖版本。
+- Collection 缺描述时继续可浏览，使用中性 metadata；metadata、sitemap 与 Schema
+  一致排除未就绪系列。新增有效描述与 sitemap 回归测试。
+- 精简 README、AGENTS、有效决策、工程规格、发布流程与重复状态；审批/部署/工具链
+  历史移至 maintenance-history-through-2026-09.md，根 PLANS 只保留入口与模板。
+- frozen install、preflight、peer check、lint、typecheck、production build 全部通过；
+  Vitest 29 files / 187 tests 通过，完整依赖 audit 未发现已知漏洞。
+- 本地临时启用批准索引矩阵的生产构建：47 个路径检查通过，sitemap 94 项；
+  覆盖 EN/ES 初始主要内容、locale、canonical/OG/hreflang、PDP 可见 USD 价格与
+  Product Offers、参数 noindex、Editorial/Cart/Search 排除、缺描述系列排除、
+  404 状态/noindex 与永久类别重定向。
+- 已恢复与本地环境一致的默认 noindex 构建；再次检查 12 个 EN/ES 页面无 canonical、
+  全部 noindex，sitemap 为空。临时服务器已停止，未改变 .env、Vercel 或 Shopify 配置。
+- 本次未 commit、push 或部署，未创建 Cart/订单或发送联系表单。
+
+### Remaining validation / risks
+
+- 当前 Next notFound 响应状态码与 noindex 正确，但提示正文不在初始 HTML 中，仅在
+  RSC payload；未知路径及缺失商品页均复现。尚未验证浏览器客户端恢复与无 JavaScript
+  入口，已加入 Roadmap；不为此引入实验性 global-not-found 或手写旧版本兼容层。
+- 未运行人工浏览器、移动端/键盘、retry 交互及 Checkout payment smoke：当前无可用
+  浏览器检查工具，Playwright 按 D-043 封存。Preview 发布前须补上述检查和新增西语
+  metadata 文案审校；HTTP/合约测试不等于浏览器或支付 E2E。
+- ESLint 9 已被上游标记 EOL；本次由兼容性限制保留，下一次维护优先复核插件支持。
+- Shopify 内容读取按 D-046 再验证，刷新失败可继续提供旧内容；五分钟不是硬失效保证。
+
 
 ## Original planning conventions
 

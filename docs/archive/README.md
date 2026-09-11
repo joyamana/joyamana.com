@@ -8,6 +8,7 @@ Codex 与开发人员不得从本目录推导当前需求。
 
 当前归档包括：
 
+- `maintenance-history-through-2026-09.md`：工具链升级、日期化业务/部署记录和首次上线流程。
 - `execution-plans-2026-08-to-09.md`：已完成计划及当时的验证记录。
 - `open-questions-history-2026-08-to-09.md`：旧开放问题、Shopify/Production 审计快照
   和 resolved log。

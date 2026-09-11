@@ -36,9 +36,11 @@ export const rootMetadata: Metadata = {
 
 export function RootDocument({
   children,
+  fontClassName = "",
   locale,
 }: {
   children: React.ReactNode;
+  fontClassName?: string;
   locale: Locale;
 }) {
   const checkoutEnabled = process.env.SHOPIFY_CHECKOUT_ENABLED === "true";
@@ -46,11 +48,12 @@ export function RootDocument({
   return (
     <html
       lang={locale}
-      className={`${newsreader.variable} ${manrope.variable}`}
+      className={`${newsreader.variable} ${manrope.variable} ${fontClassName}`.trim()}
     >
       <body>
         <a className="skip-link" href="#main-content">
           {uiText(locale, {
+            zh: "跳至主要內容",
             en: "Skip to content",
             es: "Saltar al contenido",
             fr: "Aller au contenu",

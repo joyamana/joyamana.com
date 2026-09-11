@@ -5,6 +5,7 @@ import { getDesignCollection } from "@/lib/commerce/catalog";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import { getCollectionSeoDescription } from "@/lib/seo";
 import {
   buildCollectionStructuredData,
   serializeIndexableStructuredData,
@@ -30,11 +31,13 @@ export async function CollectionPage({
   );
   if (!collection) notFound();
   const homeLabel = uiText(locale, {
+    zh: "首頁",
     en: "Home",
     es: "Inicio",
     fr: "Accueil",
   });
   const collectionsLabel = uiText(locale, {
+    zh: "系列",
     en: "Collections",
     es: "Colecciones",
     fr: "Collections",
@@ -47,17 +50,19 @@ export async function CollectionPage({
       path: `/collections/${collection.handle}`,
     },
   ];
-  const structuredData = serializeIndexableStructuredData(
-    buildCollectionStructuredData({
-      name: collection.title,
-      description: collection.description,
-      path: `/collections/${collection.handle}`,
-      products: collection.products,
-      locale,
-      breadcrumbs,
-    }),
-    { locale, path: `/collections/${collection.handle}` },
-  );
+  const structuredData = getCollectionSeoDescription(collection)
+    ? serializeIndexableStructuredData(
+        buildCollectionStructuredData({
+          name: collection.title,
+          description: collection.description,
+          path: `/collections/${collection.handle}`,
+          products: collection.products,
+          locale,
+          breadcrumbs,
+        }),
+        { locale, path: `/collections/${collection.handle}` },
+      )
+    : null;
 
   return (
     <>
@@ -70,6 +75,7 @@ export async function CollectionPage({
       <nav
         className="breadcrumbs"
         aria-label={uiText(locale, {
+          zh: "頁面路徑",
           en: "Breadcrumb",
           es: "Ruta de navegación",
           fr: "Fil d’Ariane",
@@ -86,6 +92,7 @@ export async function CollectionPage({
       <header className="page-hero">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "設計系列",
             en: "Design collection",
             es: "Colección de diseño",
             fr: "Collection de design",
@@ -104,6 +111,7 @@ export async function CollectionPage({
         ) : (
           <p>
             {uiText(locale, {
+              zh: "此系列目前沒有已發佈的商品。",
               en: "No published products are currently assigned to this collection.",
               es: "Actualmente no hay productos publicados asignados a esta colección.",
               fr: "Aucun produit publié n’est actuellement attribué à cette collection.",

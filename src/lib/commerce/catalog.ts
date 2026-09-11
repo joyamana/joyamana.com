@@ -1,5 +1,5 @@
+import { isEnabledLocale } from "@/config/locales";
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
 import {
   localizeProductCategory,
   productCategoryDefinitionForHandle,
@@ -40,7 +40,7 @@ export interface CatalogNavigationData {
   collections: Array<{ handle: string; title: string }>;
 }
 
-export function catalogNavigationFromSnapshot(
+function catalogNavigationFromSnapshot(
   navigation: ShopifyCatalogNavigationSnapshot,
   locale: Locale,
 ): CatalogNavigationData {
@@ -52,16 +52,16 @@ export function catalogNavigationFromSnapshot(
       const { handle, title } = localizeProductCategory(definition, locale);
       return [{ handle, title }];
     }),
-    collections: navigation.collections.filter(
-      (collection) => collection.kind === "design_series",
-    ),
+    collections: navigation.collections
+      .filter((collection) => collection.kind === "design_series")
+      .map(({ handle, title }) => ({ handle, title })),
   };
 }
 
 function assertEnabledUsLocale(locale: Locale) {
-  if (locale !== "en-US" && locale !== "es-US") {
+  if (!isEnabledLocale(locale)) {
     throw new CatalogConfigurationError(
-      "The enabled US catalog only supports en-US and es-US.",
+      "This locale is not enabled for the US catalog.",
     );
   }
 }
@@ -122,7 +122,7 @@ export async function getDesignCollections(
   );
 }
 
-const getCachedShopifyCatalogNavigation = unstable_cache(
+const getCachedShopifyCatalogNavigation = cache(
   async (locale: Locale): Promise<CatalogNavigationData> => {
     const fetchOptions = {
       buyerIp: null,
@@ -133,14 +133,12 @@ const getCachedShopifyCatalogNavigation = unstable_cache(
     const navigation = await getShopifyCatalogNavigation(locale, fetchOptions);
     return catalogNavigationFromSnapshot(navigation, locale);
   },
-  ["shopify-catalog-navigation-v2"],
-  { revalidate: 300, tags: ["shopify-catalog-navigation"] },
 );
 
 /**
  * Header taxonomy changes much less often than price or inventory. Keep this
- * server-only projection briefly cached so a page build or traffic burst does
- * not multiply identical Storefront API requests for every route.
+ * query cached for five minutes. React cache deduplicates reads within a render;
+ * fetch owns the persistent cache so the two layers cannot renew stale data.
  */
 export async function getCatalogNavigationData(
   marketId: MarketId = "us",
@@ -175,14 +173,6 @@ function mapStorefrontCategory(
 
   const localized = localizeProductCategory(definition, locale);
   return { ...localized, products: categoryProducts };
-}
-
-export async function getProductCategories(
-  marketId: MarketId = "us",
-  locale: Locale = "en-US",
-): Promise<StorefrontProductCategory[]> {
-  const products = await getProducts(marketId, locale);
-  return productCategoriesForProducts(products, locale);
 }
 
 export function productCategoriesForProducts(

@@ -1,3 +1,4 @@
+import { shopifyContextForLocale, defaultLocaleForMarket } from "@/lib/i18n/shopify-context";
 import { shopifyFetch } from "@/lib/commerce/shopify";
 import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
@@ -10,20 +11,6 @@ const shopifyBlogHandles: Record<EditorialKind, string> = {
   crystals: "crystals",
 };
 
-const storefrontContext: Record<
-  Locale,
-  { country: "US" | "CA"; language: "EN" | "ES" | "FR" }
-> = {
-  "en-US": { country: "US", language: "EN" },
-  "es-US": { country: "US", language: "ES" },
-  "en-CA": { country: "CA", language: "EN" },
-  "fr-CA": { country: "CA", language: "FR" },
-};
-
-const defaultLocaleForMarket: Record<"us" | "ca", Locale> = {
-  us: "en-US",
-  ca: "en-CA",
-};
 
 interface ShopifyImageNode {
   url: string;
@@ -249,7 +236,7 @@ async function fetchBlog(kind: EditorialKind, locale: Locale) {
     const data: ShopifyBlogPageData = await shopifyFetch<ShopifyBlogPageData>(
       SHOPIFY_EDITORIAL_INDEX_QUERY,
       {
-        ...storefrontContext[locale],
+        ...shopifyContextForLocale(locale),
         blogHandle,
         after,
       },
@@ -291,7 +278,7 @@ async function fetchArticle(
   const data = await shopifyFetch<ShopifyArticleData>(
     SHOPIFY_EDITORIAL_ARTICLE_QUERY,
     {
-      ...storefrontContext[locale],
+      ...shopifyContextForLocale(locale),
       blogHandle,
       articleHandle: normalizedHandle,
     },

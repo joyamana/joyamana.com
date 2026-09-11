@@ -7,6 +7,7 @@ import type {
 } from "./cart-types";
 import { cartErrorMessage } from "./cart-types";
 import { shopifyFetch } from "./shopify";
+import type { StorefrontLanguage } from "@/config/locales";
 import {
   STOREFRONT_MAX_QUANTITY,
   isValidProductQuantity,
@@ -15,7 +16,7 @@ import {
 } from "./types";
 
 const MAX_CART_LINES = 250;
-export type ShopifyCartLanguage = "EN" | "ES";
+export type ShopifyCartLanguage = StorefrontLanguage;
 
 interface ShopifyMoney {
   amount: string;
@@ -600,7 +601,8 @@ export function validateCheckoutUrl(
     normalizeConfiguredHost(config.checkoutDomain),
     normalizeConfiguredHost(config.storeDomain),
   ].filter((host): host is string => Boolean(host));
-  const hasCheckoutPath = /^\/(?:es\/)?(?:cart\/c|checkouts)(?:\/|$)/.test(
+  // Prefixes verified against Shopify EN, ES and ZH_TW cart responses.
+  const hasCheckoutPath = /^\/(?:(?:es|zh-tw)\/)?(?:cart\/c|checkouts)(?:\/|$)/.test(
     url.pathname,
   );
 

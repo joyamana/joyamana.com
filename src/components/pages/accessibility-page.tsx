@@ -1,6 +1,7 @@
 import type { Locale } from "@/lib/i18n/locales";
 import { getShopifyContentPage } from "@/lib/content/shopify-content-pages";
 import { uiText } from "@/lib/i18n/text";
+import { formatDate } from "@/lib/format";
 
 export async function AccessibilityPage({ locale }: { locale: Locale }) {
   let page;
@@ -12,34 +13,33 @@ export async function AccessibilityPage({ locale }: { locale: Locale }) {
 
   if (!page || !page.html) return <AccessibilityUnavailable locale={locale} />;
 
-  const formattedDate = new Intl.DateTimeFormat(page.contentLocale, {
-    dateStyle: "long",
-    timeZone: "UTC",
-  }).format(new Date(`${page.lastUpdated}T00:00:00Z`));
+  const formattedDate = formatDate(`${page.lastUpdated}T00:00:00Z`, locale);
 
   return (
     <article className="policy-page policy-page--published">
       <header className="trust-page__header">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "無障礙使用聲明",
             en: "Accessibility statement",
             es: "Declaración de accesibilidad",
             fr: "Déclaration d’accessibilité",
           })}
         </p>
-        <h1>{page.title}</h1>
+        <h1 lang={page.contentLocale}>{page.title}</h1>
       </header>
 
       {page.usedDefaultLanguage ? (
-        <p className="policy-language-notice" lang="en-US">
-          This statement is currently available in English.
+        <p className="policy-language-notice">
+          {uiText(locale, { en: "This statement is currently available in English.", es: "Esta declaración está disponible actualmente en inglés.", fr: "Cette déclaration est actuellement disponible en anglais.", zh: "本聲明目前以英文提供。" })}
         </p>
       ) : null}
 
       <div className="policy-rich-text" lang={page.contentLocale}>
-        <p>
+        <p lang={locale}>
           <strong>
-            {uiText(page.contentLocale, {
+            {uiText(locale, {
+              zh: "最後更新：",
               en: "Last updated:",
               es: "Última actualización:",
               fr: "Dernière mise à jour :",
@@ -59,6 +59,7 @@ function AccessibilityUnavailable({ locale }: { locale: Locale }) {
       <header className="trust-page__header">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "無障礙使用聲明",
             en: "Accessibility statement",
             es: "Declaración de accesibilidad",
             fr: "Déclaration d’accessibilité",
@@ -66,6 +67,7 @@ function AccessibilityUnavailable({ locale }: { locale: Locale }) {
         </p>
         <h1>
           {uiText(locale, {
+            zh: "無障礙使用",
             en: "Accessibility",
             es: "Accesibilidad",
             fr: "Accessibilité",
@@ -73,6 +75,7 @@ function AccessibilityUnavailable({ locale }: { locale: Locale }) {
         </h1>
         <p className="trust-page__lede">
           {uiText(locale, {
+            zh: "此聲明暫時未能載入。請稍後再試，或電郵至 info@joyamana.com 尋求協助。",
             en: "This statement is temporarily unavailable. Please try again shortly or contact info@joyamana.com for assistance.",
             es: "Esta declaración no está disponible temporalmente. Inténtalo de nuevo en unos minutos o contacta con info@joyamana.com para obtener ayuda.",
             fr: "Cette déclaration est temporairement indisponible. Veuillez réessayer sous peu ou contacter info@joyamana.com pour obtenir de l’aide.",

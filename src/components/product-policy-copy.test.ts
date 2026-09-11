@@ -36,6 +36,11 @@ describe("product policy copy", () => {
   });
 
   it("localizes exact low-stock counts", () => {
+    expect(lowStockMessage("zh-Hant-US", 1)).toBe("庫存不多 · 僅餘 1 件");
+    expect(lowStockMessage("zh-Hant-US", 3)).toBe("庫存不多 · 僅餘 3 件");
+    expect(productShippingReturnsSummary("zh-Hant-US")).toContain("1–3 個工作天");
+    expect(productShippingReturnsSummary("zh-Hant-US")).toContain("15 天");
+    expect(checkoutDisabledNote("zh-Hant-US")).toContain("你仍可將此商品加入購物袋");
     expect(lowStockMessage("en-US", 1)).toBe("Low stock · Only 1 left");
     expect(lowStockMessage("en-US", 3)).toBe("Low stock · Only 3 left");
     expect(lowStockMessage("es-US", 1)).toBe(

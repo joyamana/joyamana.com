@@ -11,7 +11,7 @@ import {
 import { brand } from "@/config/brand";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
-import { localePath, stripLocalePrefix } from "@/lib/i18n/locales";
+import { localePath, stripLocalePrefix, languageOptionsFor } from "@/lib/i18n/locales";
 import {
   collectionNavigationFor,
   type CatalogNavigationLink,
@@ -19,28 +19,6 @@ import {
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 import { LanguageSwitch } from "./language-switch";
-
-const mobileLanguages: Record<
-  Locale,
-  Array<{ locale: Locale; label: string; shortLabel: string }>
-> = {
-  "en-US": [
-    { locale: "en-US", label: "English", shortLabel: "EN" },
-    { locale: "es-US", label: "Español", shortLabel: "ES" },
-  ],
-  "es-US": [
-    { locale: "en-US", label: "English", shortLabel: "EN" },
-    { locale: "es-US", label: "Español", shortLabel: "ES" },
-  ],
-  "en-CA": [
-    { locale: "en-CA", label: "English", shortLabel: "EN" },
-    { locale: "fr-CA", label: "Français", shortLabel: "FR" },
-  ],
-  "fr-CA": [
-    { locale: "en-CA", label: "English", shortLabel: "EN" },
-    { locale: "fr-CA", label: "Français", shortLabel: "FR" },
-  ],
-};
 
 function MenuIcon() {
   return (
@@ -225,6 +203,7 @@ export function SiteHeader({
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLElement>(null);
   const menuLabel = uiText(locale, {
+    zh: "選單",
     en: "Menu",
     es: "Menú",
     fr: "Menu",
@@ -233,6 +212,7 @@ export function SiteHeader({
     {
       href: localePath(locale, "/shop"),
       label: uiText(locale, {
+        zh: "選購所有商品",
         en: "Shop all",
         es: "Ver todo",
         fr: "Tout voir",
@@ -245,6 +225,7 @@ export function SiteHeader({
     {
       href: localePath(locale, "/collections"),
       label: uiText(locale, {
+        zh: "查看全部",
         en: "View all",
         es: "Ver todas",
         fr: "Tout voir",
@@ -333,6 +314,7 @@ export function SiteHeader({
           <DesktopNavDropdown
             active={basePath === "/shop" || basePath.startsWith("/category/")}
             groupLabel={uiText(locale, {
+              zh: "選購",
               en: "Shop",
               es: "Comprar",
               fr: "Boutique",
@@ -358,6 +340,7 @@ export function SiteHeader({
             <DesktopNavDropdown
               active={basePath.startsWith("/collections")}
               groupLabel={uiText(locale, {
+                zh: "系列",
                 en: "Collections",
                 es: "Colecciones",
                 fr: "Collections",
@@ -416,6 +399,7 @@ export function SiteHeader({
         {openDesktopMenu ? (
           <button
             aria-label={uiText(locale, {
+              zh: "關閉導覽選單",
               en: "Close navigation menu",
               es: "Cerrar el menú de navegación",
               fr: "Fermer le menu de navigation",
@@ -435,6 +419,7 @@ export function SiteHeader({
       >
         <nav
           aria-label={uiText(locale, {
+            zh: "流動版導覽",
             en: "Mobile navigation",
             es: "Navegación móvil",
             fr: "Navigation mobile",
@@ -446,6 +431,7 @@ export function SiteHeader({
             <span className="wordmark">{brand.name}</span>
             <button
               aria-label={uiText(locale, {
+                zh: "關閉選單",
                 en: "Close menu",
                 es: "Cerrar menú",
                 fr: "Fermer le menu",
@@ -503,13 +489,14 @@ export function SiteHeader({
           <div className="mobile-menu__language">
             <p className="eyebrow">
               {uiText(locale, {
+                zh: "語言",
                 en: "Language",
                 es: "Idioma",
                 fr: "Langue",
               })}
             </p>
             <div>
-              {mobileLanguages[locale].map((item) => (
+              {languageOptionsFor(locale).map((item) => (
                 <Link
                   aria-current={item.locale === locale ? "page" : undefined}
                   href={localePath(item.locale, basePath)}

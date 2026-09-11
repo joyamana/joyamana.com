@@ -30,6 +30,7 @@ function uniqueImages(images: Array<ProductImage | null | undefined>) {
 
 export function productShippingReturnsSummary(locale: Locale) {
   return uiText(locale, {
+    zh: "訂單一般於 1–3 個工作天內備妥。符合條件的退貨可於收貨後 15 天內申請。運費及預計送達時間會在結帳時顯示。",
     en: "Orders are typically prepared within 1–3 business days. Eligible returns may be requested within 15 days of delivery. Rates and delivery estimates are shown at checkout.",
     es: "Los pedidos suelen prepararse en un plazo de 1 a 3 días hábiles. Las devoluciones elegibles pueden solicitarse dentro de los 15 días posteriores a la entrega. Las tarifas y las fechas estimadas de entrega se muestran al pagar.",
     fr: "Les modalités d’expédition et de retour seront confirmées avant l’ouverture du marché canadien.",
@@ -38,6 +39,7 @@ export function productShippingReturnsSummary(locale: Locale) {
 
 export function lowStockMessage(locale: Locale, count: number) {
   return uiText(locale, {
+    zh: `庫存不多 · 僅餘 ${count} 件`,
     en: `Low stock · Only ${count} left`,
     es:
       count === 1
@@ -119,6 +121,7 @@ export function ProductPurchase({
         <h1>{product.title}</h1>
         <p>
           {uiText(locale, {
+            zh: "此商品暫時未能購買。",
             en: "This product is not currently available for purchase.",
             es: "Este producto no está disponible para comprar en este momento.",
             fr: "Ce produit n’est pas disponible à l’achat pour le moment.",
@@ -156,6 +159,7 @@ export function ProductPurchase({
   const unavailableLabel = quantityRuleSupported
     ? copy.labels.soldOut
     : uiText(locale, {
+        zh: "暫未能網上購買",
         en: "Unavailable online",
         es: "No disponible en línea",
         fr: "Indisponible en ligne",
@@ -178,6 +182,7 @@ export function ProductPurchase({
             ) : (
               <div className="product-media-unavailable">
                 {uiText(locale, {
+                  zh: "暫無商品圖片",
                   en: "Product image unavailable",
                   es: "Imagen del producto no disponible",
                   fr: "Image du produit indisponible",
@@ -189,6 +194,7 @@ export function ProductPurchase({
             <div
               className="product-gallery__thumbs"
               aria-label={uiText(locale, {
+                zh: "商品圖片",
                 en: "Product images",
                 es: "Imágenes del producto",
                 fr: "Images du produit",
@@ -201,6 +207,7 @@ export function ProductPurchase({
                   className={image.url === activeImage?.url ? "is-selected" : ""}
                   onClick={() => setSelectedImageUrl(image.url)}
                   aria-label={`${uiText(locale, {
+                    zh: "查看圖片",
                     en: "View image",
                     es: "Ver imagen",
                     fr: "Voir l’image",
@@ -223,6 +230,7 @@ export function ProductPurchase({
       <div className="product-detail__info">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "Joya Mana 系列",
             en: "Joya Mana collection",
             es: "Colección Joya Mana",
             fr: "Collection Joya Mana",
@@ -244,6 +252,7 @@ export function ProductPurchase({
           <fieldset className="variant-picker">
             <legend>
               {uiText(locale, {
+                zh: "已選款式",
                 en: "Selected option",
                 es: "Opción seleccionada",
                 fr: "Option sélectionnée",
@@ -276,6 +285,7 @@ export function ProductPurchase({
           <div className="quantity-picker">
             <span id="product-quantity-label">
               {uiText(locale, {
+                zh: "數量",
                 en: "Quantity",
                 es: "Cantidad",
                 fr: "Quantité",
@@ -285,6 +295,7 @@ export function ProductPurchase({
               <button
                 type="button"
                 aria-label={uiText(locale, {
+                  zh: "減少數量",
                   en: "Decrease quantity",
                   es: "Disminuir cantidad",
                   fr: "Diminuer la quantité",
@@ -328,6 +339,7 @@ export function ProductPurchase({
               <button
                 type="button"
                 aria-label={uiText(locale, {
+                  zh: "增加數量",
                   en: "Increase quantity",
                   es: "Aumentar cantidad",
                   fr: "Augmenter la quantité",
@@ -349,6 +361,7 @@ export function ProductPurchase({
         ) : !quantityRuleSupported ? (
           <p className="action-error" role="status">
             {uiText(locale, {
+              zh: "此數量暫時未能網上訂購。",
               en: "This quantity option is not available online.",
               es: "Esta opción de cantidad no está disponible en línea.",
               fr: "Cette option de quantité n’est pas disponible en ligne.",
@@ -371,11 +384,13 @@ export function ProductPurchase({
             label={copy.labels.addToCart}
             unavailableLabel={unavailableLabel}
             limitReachedLabel={uiText(locale, {
+              zh: "購物袋內已達可購買數量上限",
               en: "Maximum quantity is already in your bag",
               es: "La cantidad máxima ya está en tu bolsa",
               fr: "La quantité maximale est déjà dans votre panier",
             })}
             addedLabel={uiText(locale, {
+              zh: "已加入",
               en: "Added",
               es: "Agregado",
               fr: "Ajouté",
@@ -393,6 +408,7 @@ export function ProductPurchase({
           <div>
             <dt>
               {uiText(locale, {
+                zh: "供應狀況",
                 en: "Availability",
                 es: "Disponibilidad",
                 fr: "Disponibilité",
@@ -401,6 +417,7 @@ export function ProductPurchase({
             <dd>
               {available
                 ? uiText(locale, {
+                    zh: "可於美國購買。",
                     en: "Available for purchase in the United States.",
                     es: "Disponible para comprar en Estados Unidos.",
                     fr: "Disponible à l’achat aux États-Unis.",
@@ -428,6 +445,7 @@ export function ProductPurchase({
             <div>
               <dt>
                 {uiText(locale, {
+                  zh: "尺寸",
                   en: "Dimensions",
                   es: "Medidas",
                   fr: "Dimensions",
@@ -445,6 +463,7 @@ export function ProductPurchase({
           <div>
             <dt>
               {uiText(locale, {
+                zh: "送貨及退貨",
                 en: "Shipping & returns",
                 es: "Envío y devoluciones",
                 fr: "Expédition et retours",
@@ -466,6 +485,7 @@ export function ProductPurchase({
                   href={localePath(locale, "/returns")}
                 >
                   {uiText(locale, {
+                    zh: "退貨及退款",
                     en: "Returns & refunds",
                     es: "Devoluciones y reembolsos",
                     fr: "Retours et remboursements",

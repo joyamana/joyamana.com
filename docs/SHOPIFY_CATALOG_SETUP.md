@@ -2,11 +2,27 @@
 
 Status: Active implementation guide
 Owner: Commerce / Content operations
-Last updated: 2026-09-01
+Last updated: 2026-09-11
 Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
 
 本文件说明 D-036 所需的 Shopify Admin 配置。它不包含 credential，也不授权代码或
 自动化工具修改 Shopify；运营人员完成配置后，Storefront API 只读消费这些事实。
+
+## US 繁体中文（D-049）
+
+- 使用现有店铺、US Market、Headless channel 与 token；不新建香港/台湾市场。
+- 站点 `zh-Hant-US` / `/zh-hant-us`；Storefront `ZH_TW`；后台翻译语言 `zh-TW`。
+  后台已发布 Chinese (Traditional)，无需再改网站路径或货币。
+- 商品 title/description/SEO/options/alt、Collection 和 content_page Metaobjects 的译文
+  在 Shopify 维护，使用香港书面语；Policies 也需提供经过审核的正式译文。
+  `handle`、SKU、ID、metafield 枚举、USD 与 US 政策事实不随翻译改变。
+- 缺译时前台按业务要求直接显示 Shopify 默认语言，不隐藏页面；后台补译后由现有
+  adapter 读取。内容与导航可能经历五分钟再验证窗口，商业查询保持 no-store。
+- 商品逐字段翻译检测尚未实现。繁中索引四组全关；开放前单独审校并建立持续 readiness，
+  不把语言已发布或页面返回 200 当成翻译验收。
+- 托管 Checkout、订单状态和交易通知的可编辑内容另外审校；平台默认繁体不保证
+  香港措辞。已验证新繁中 Cart 与英文 Cart 的繁中读取返回 `/zh-tw/cart/c/…`，
+  但该合约检查不替代浏览器/支付验收。
 
 ## 1. 商品类别
 
@@ -21,11 +37,8 @@ Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
 | Apparel & Accessories > Jewelry > Earrings | `/category/earrings` |
 | Arts & Entertainment > Hobbies & Creative Arts > Collectibles > Rocks & Fossils > Gemstones | `/category/gemstones` |
 
-Aquamarine bracelet 在 2026-08-30 Storefront 抽查时可通过 Bracelets Category
-发现，但生产发布前仍应在 Admin 复核。若未来上架 Palm Stone、Sphere、
-Guardian Figure 等实物，仅在 Shopify 准确 taxonomy 确认后才使用 Gemstones；
-这些名称不表示当前 Headless Catalog 已有对应商品。Product Type 不是公开
-Category 的事实来源。
+发布商品前在 Admin 复核准确 taxonomy。Palm Stone、Sphere、Guardian Figure 等
+形态只有在实际分类匹配时才使用 Gemstones；Product Type 不作为公开 Category 来源。
 
 Category route 只在当前 Headless channel 至少有一个商品使用对应 taxonomy ID 时出现。
 代码不按标题、Tag 或 Product Type 推断归属。
@@ -118,10 +131,7 @@ Storefront access: enabled
 渲染 Metaobject 中的 story/lookbook 字段。按 D-036 发布完整设计系列前，还需实现并
 验证该读取链路；不能只创建 Metaobject 就声称系列故事已接入。
 
-2026-08-31 current state: `Patron Saint` 已是非空、Headless 可见且
-`custom.collection_kind=design_series` 的 Collection，基础路由和商品成员显示正常。
-其 description/SEO 仍为空；是否已建 Design Series Metaobject/reference 无法由当前
-Storefront query 验证，且即使已建，前端也尚未读取 story/lookbook。
+当前系列状态与缺口统一见 [PROJECT_SPEC.md](PROJECT_SPEC.md)。
 
 ## 5. 建立系列 Collection
 
@@ -155,7 +165,7 @@ Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端
 - Header 的 Shop 下拉只显示非空 Category；设计系列为 0 个时隐藏 Header 系列入口、
   1–2 个时直接显示、3 个及以上时合并为 Collections 下拉。不要用空 Collection 测试
   或触发该阈值。导航结构使用 5 分钟短缓存，Admin 发布变化可能不会即时出现在
-  Header；验收时等待缓存刷新或通过已批准的缓存失效流程处理。
+  Header；验收时等待再验证并确认实际响应，当前没有手动缓存失效端点。
 - `/collections/bracelets` 永久跳转 `/category/bracelets`；未知或普通后台 Collection
   不成为公开页面。
 - Category、Collection 与 Product 的 canonical、breadcrumbs、sitemap 和可见链接一致。

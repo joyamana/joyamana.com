@@ -2,34 +2,13 @@
 
 Status: Active planning — Production 已公开，当前聚焦数据完整度、privacy/measurement 与 hardening
 Owner: Project owner  
-Last updated: 2026-09-02
+Last updated: 2026-09-11
 
 本文件只记录当前及未来优先级。已完成阶段与日期化实施记录见
 [`archive/roadmap-2026-08-to-09.md`](archive/roadmap-2026-08-to-09.md)。详细验收以
 `MVP_PRD.md` 和对应领域规格为准。
 
-## Current release state
-
-- Production storefront 与 Shopify Checkout 已使用正式域名公开。
-- 下单支付完整支持；Shopify Payment test mode 流程测试未发现问题。
-- en-US/es-US Core、Commerce、Policies 已开放索引；Editorial 关闭，Cart、Search、
-  Preview 和参数页继续 noindex。
-- Catalog、价格、库存、Bag、Buy now、Policy、About、Accessibility 与 Editorial adapter
-  均为 Shopify-only，缺失或异常时 fail closed。
-- Contact 正式采用 Email-only；客服 inbox、负责人/备援、外发认证和投递表现已确认。
-- Playwright 按 D-043 后置；当前使用 Vitest、build、contract smoke 和人工浏览器/
-  Checkout 验收。内容/导航按 D-046 接受最多 5 分钟缓存窗口。
-
-## Completed foundation
-
-- Next.js App Router、TypeScript、pnpm/Node 基线、Vercel Preview/Production。
-- US en-US `/` 与 es-US `/es-us` 共享 US Catalog、USD、库存和政策上下文。
-- Shopify Product/Variant/Category/Design Collection、Cart 与 hosted Checkout。
-- PDP 格式化描述、Variant/quantity rule、库存上限和严格条件下的准确低库存披露。
-- Shopify Policies、About subtree、Accessibility、Blog 与 Crystal Guide adapter。
-- Canonical、metadata、参数页保护、document locale、Policy/Accessibility hreflang、
-  sitemap 和 locale/page-group 索引矩阵。
-- Header 最小导航 query、上游失败降级、环境 preflight 与 secret 边界。
+当前能力与发布范围统一见 [PROJECT_SPEC.md](PROJECT_SPEC.md)。
 
 ## Priority 1 — Product and Commerce completeness
 
@@ -43,6 +22,9 @@ Last updated: 2026-09-02
 - 解决 `OPEN_QUESTIONS.md` 中仍适用的特殊地址覆盖、配送费率/免邮与税费/进口责任；
   不把这些范围扩大成全站 blocker。
 - 保持 Commerce 西语逐页人工验收，直到建立可靠的 default-language fallback 检测。
+- dev 已完整接入 `zh-Hant-US`，按 D-049 允许缺译页面正常访问。后续补齐 Shopify 香港
+  用语译文、人工审校、托管 Checkout/交易通知与 Preview 设备验收；繁中索引保持关闭，
+  开放前建立持续翻译 readiness 流程，不自动继承 EN/ES 的批准。
 
 ## Priority 2 — Privacy, discovery and structured entities
 
@@ -63,6 +45,8 @@ Last updated: 2026-09-02
   tests 和 production build。
 - 完成关键设备/浏览器的 Accessibility、响应式、性能、链接、404、redirect、售罄与
   API 故障人工验收；达到 D-043 触发条件后再启用 Playwright。
+- 复核 Next 404 提示的客户端恢复：当前 HTTP 404/noindex 正确，但初始 HTML 是空壳，
+  提示仅在 RSC payload 中；浏览器可见性与禁用 JavaScript 的恢复入口尚待完善。
 - 复核 CSP、安全响应头、日志/PII、第三方脚本和生产/Preview secret 隔离。
 - 完成监控告警、owner、保留策略、rollback target 和发布值守记录。
 - 按内容/运营变化持续复核索引矩阵、sitemap、hreflang、Schema 与 Checkout smoke。

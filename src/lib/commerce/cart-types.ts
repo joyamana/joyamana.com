@@ -1,4 +1,5 @@
 import type { CurrencyCode, ProductQuantityRule } from "./types";
+import type { StorefrontLanguage } from "@/config/locales";
 
 export interface CartMoney {
   amount: string;
@@ -63,9 +64,20 @@ export type CartActionErrorCode =
   | "UNAVAILABLE";
 
 const cartErrorMessages: Record<
-  "EN" | "ES",
+  StorefrontLanguage,
   Record<CartActionErrorCode, string>
 > = {
+  ZH_TW: {
+    CART_EXPIRED: "購物袋已過期，請重新加入商品。",
+    CART_NOT_FOUND: "未能找到你的購物袋。",
+    CHECKOUT_DISABLED: "結帳服務暫時未能使用。",
+    CHECKOUT_URL_INVALID: "結帳服務暫時未能使用，請再試一次。",
+    EMPTY_CART: "購物袋內暫無商品。",
+    INVALID_INPUT: "購物袋請求無效，請重新操作。",
+    INVALID_QUANTITY: "請選擇有效的整數數量。",
+    SHOPIFY_ERROR: "未能更新購物袋，請再試一次。",
+    UNAVAILABLE: "此商品目前無法提供所選數量。",
+  },
   EN: {
     CART_EXPIRED: "Your bag expired. Add the item again to start a new bag.",
     CART_NOT_FOUND: "Your bag could not be found.",
@@ -95,7 +107,7 @@ const cartErrorMessages: Record<
 
 export function cartErrorMessage(
   code: CartActionErrorCode,
-  language: "EN" | "ES" = "EN",
+  language: StorefrontLanguage = "EN",
 ) {
   return cartErrorMessages[language][code];
 }

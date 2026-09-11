@@ -26,11 +26,13 @@ export async function CategoryPage({
   if (!category) notFound();
 
   const homeLabel = uiText(locale, {
+    zh: "首頁",
     en: "Home",
     es: "Inicio",
     fr: "Accueil",
   });
   const shopLabel = uiText(locale, {
+    zh: "選購",
     en: "Shop",
     es: "Comprar",
     fr: "Boutique",
@@ -63,6 +65,7 @@ export async function CategoryPage({
       <nav
         className="breadcrumbs"
         aria-label={uiText(locale, {
+          zh: "頁面路徑",
           en: "Breadcrumb",
           es: "Ruta de navegación",
           fr: "Fil d’Ariane",
@@ -77,6 +80,7 @@ export async function CategoryPage({
       <header className="page-hero">
         <p className="eyebrow">
           {uiText(locale, {
+            zh: "按類別選購",
             en: "Shop by category",
             es: "Comprar por categoría",
             fr: "Acheter par catégorie",

@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/zh-hant-us/collections/:handle(bracelets|rings|necklaces|earrings)",
+        destination: "/zh-hant-us/category/:handle",
+        permanent: true,
+      },
+      {
         source:
           "/collections/:handle(bracelets|rings|necklaces|earrings)",
         destination: "/category/:handle",
