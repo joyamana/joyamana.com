@@ -1,11 +1,85 @@
 # Archived Execution Plans — 2026-08 to 2026-09
 
 Status: Historical evidence only  
-Archived: 2026-09-02
+Archived: 2026-09-11
 
 本文件保存已经完成的执行计划及当时的验证、风险和状态快照。它不是当前需求或发布
 状态来源；当前决策、开放问题和项目状态分别以 `../DECISIONS.md`、
 `../OPEN_QUESTIONS.md`、`../PROJECT_SPEC.md` 和根目录 `PLANS.md` 为准。
+
+## 依赖稳定版升级与代码/文档精简
+
+状态：Complete
+最后更新：2026-09-11
+关联：D-018、D-035、D-042、D-043、TECH_SPEC
+
+### Objective / scope
+
+在 Node 24 下升级到 registry `latest` 稳定依赖；Node 类型定义保持 24 系列。
+按官方迁移说明调整 API，删除无调用或停用的旧实现，不引入历史兼容层。
+当前文档保留有效约束、状态与操作步骤，历史证据移入 archive。
+本次不改变市场、索引、Checkout 或 consent 边界；不启用 Playwright。
+
+### Milestones
+
+1. [x] 核实稳定版本、peer/engine 与官方迁移说明，准备 Node 24 验证环境。
+2. [x] 更新依赖与 lockfile，调整受影响代码并删除可证明冗余实现。
+3. [x] 精简当前文档，保留 Accepted 决策和未解决输入，归档历史。
+4. [x] 运行 frozen install、preflight、lint、typecheck、tests、build 与 HTTP smoke。
+
+### Validation / recovery
+
+- Node 24 下验证依赖安装、编译和测试；检查初始 HTML、locale、canonical、Schema、
+  参数 noindex、sitemap 与停用市场 404。Commerce 通过已有 mapper/Cart 合约测试检查。
+- 不把 HTTP/合约测试描述为人工浏览器或支付 E2E；无法完成的验收明确记录。
+- 使用 Git diff 审阅范围；未提交变更可单独回退，不改变 Shopify 数据或部署配置。
+
+### Progress
+
+- 2026-09-11：工作区干净；已读取当前规范。官方 registry 确认 Next 16.3.4、React
+  19.3.0、TypeScript 7.0.2、ESLint 10.10.0、Vitest 5.0.0、pnpm 12.3.4；Node 24
+  当前补丁 24.21.0，类型定义 24.13.4。迁移兼容性尚待验证。
+- 2026-09-11：上游插件实测不支持 TS 7 / ESLint 10，业务方选择最新兼容稳定组合
+  TS 6.0.3 / ESLint 9.39.5。安装、peer check、lint、185 tests、build 和依赖 audit
+  已通过；HTTP smoke 已覆盖默认 noindex，正在复核临时可索引构建。
+- 2026-09-11：HTTP 复核发现已有 Collection metadata noindex 与 sitemap/Schema 不一致；
+  统一内容就绪判断并增加回归测试，不改变既有 D-045 索引策略。
+
+### Outcome
+
+- 使用 Node 24.21.0 / pnpm 12.3.4 验证；Next 16.3.4、React 19.3.0、Vitest 5.0.0，
+  TypeScript 6.0.3 / ESLint 9.39.5 按业务方批准保留最新兼容组合。无旧版本兼容层。
+- 删除 17 个停用市场页面及独立 layout，改由 en-US 下单一 catch-all 返回 404；
+  CA typed planned 配置保留。删除未使用的连接探针、mock-era localized 类型与目录 helper。
+- Header 持久缓存统一到 fetch，React cache 只请求内去重；客户端只拿导航链接字段。
+  Error boundary 使用稳定 retry API；正则转义使用 Node 24 原生 API。
+- Vitest config 改用 .mts；typecheck 先生成 Next 路由类型；移除已无依赖的 esbuild
+  build allowlist，固定所有直接依赖版本。
+- Collection 缺描述时继续可浏览，使用中性 metadata；metadata、sitemap 与 Schema
+  一致排除未就绪系列。新增有效描述与 sitemap 回归测试。
+- 精简 README、AGENTS、有效决策、工程规格、发布流程与重复状态；审批/部署/工具链
+  历史移至 maintenance-history-through-2026-09.md，根 PLANS 只保留入口与模板。
+- frozen install、preflight、peer check、lint、typecheck、production build 全部通过；
+  Vitest 29 files / 187 tests 通过，完整依赖 audit 未发现已知漏洞。
+- 本地临时启用批准索引矩阵的生产构建：47 个路径检查通过，sitemap 94 项；
+  覆盖 EN/ES 初始主要内容、locale、canonical/OG/hreflang、PDP 可见 USD 价格与
+  Product Offers、参数 noindex、Editorial/Cart/Search 排除、缺描述系列排除、
+  404 状态/noindex 与永久类别重定向。
+- 已恢复与本地环境一致的默认 noindex 构建；再次检查 12 个 EN/ES 页面无 canonical、
+  全部 noindex，sitemap 为空。临时服务器已停止，未改变 .env、Vercel 或 Shopify 配置。
+- 本次未 commit、push 或部署，未创建 Cart/订单或发送联系表单。
+
+### Remaining validation / risks
+
+- 当前 Next notFound 响应状态码与 noindex 正确，但提示正文不在初始 HTML 中，仅在
+  RSC payload；未知路径及缺失商品页均复现。尚未验证浏览器客户端恢复与无 JavaScript
+  入口，已加入 Roadmap；不为此引入实验性 global-not-found 或手写旧版本兼容层。
+- 未运行人工浏览器、移动端/键盘、retry 交互及 Checkout payment smoke：当前无可用
+  浏览器检查工具，Playwright 按 D-043 封存。Preview 发布前须补上述检查和新增西语
+  metadata 文案审校；HTTP/合约测试不等于浏览器或支付 E2E。
+- ESLint 9 已被上游标记 EOL；本次由兼容性限制保留，下一次维护优先复核插件支持。
+- Shopify 内容读取按 D-046 再验证，刷新失败可继续提供旧内容；五分钟不是硬失效保证。
+
 
 ## Original planning conventions
 

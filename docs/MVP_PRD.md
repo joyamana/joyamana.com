@@ -1,13 +1,14 @@
 # MVP Product Requirements
 
-Status: Working — 核心技术切片已实现，完整 MVP 与发布验收未完成
+Status: Active requirements — 按当前公开范围持续验收
 Owner: Product owner  
-Last updated: 2026-09-01
+Last updated: 2026-09-11
 Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
 
 当前实现已覆盖 Shopify Catalog/Cart、主要路由和部分内容/SEO adapter，但正式
 Product knowledge、exact/representative image 披露、内容到商品关系、Home Email opt-in、
-完整 Schema、Analytics/consent 与浏览器/支付 E2E 仍是缺口；webhook 按 D-046 后置。
+完整 Schema、Analytics/consent 与剩余设备/运营验收仍是缺口；webhook 按 D-046 后置。
+下单支付已通过业务方的 Payment test mode 验收；Playwright 按 D-043 暂缓。
 Product
 `custom.product_model` 已映射并用于可信低库存门禁；西语 document-level language 已修复。
 

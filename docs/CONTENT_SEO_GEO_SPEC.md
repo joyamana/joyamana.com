@@ -2,7 +2,7 @@
 
 Status: Working — Shopify 内容/SEO 技术边界已实现，正式内容与 crawler policy 待批准
 Owner: Content / SEO  
-Last updated: 2026-09-02
+Last updated: 2026-09-11
 Supersedes: `docs/archive/` 中两份 SEO/GEO 架构总结的实施结论
 
 ## 1. 核心原则
@@ -176,8 +176,8 @@ Design Series Metaobject 不另行生成第二个可索引页面；公开 canoni
 SEO 与 products；Design Series Metaobject reference 与 story/lookbook 模块尚未接入。
 因此“Metaobject 承载系列故事”仍是 Admin/后续实施要求，不得写成当前已完成功能。
 `Patron Saint` 已通过非空、Headless 与 `design_series` 基础门禁，但 description/SEO
-为空；当前 metadata 会把“缺少描述”误判为 Collection unavailable，需修正 fallback，
-在此之前该系列页不具备索引资格。
+为空，系列详情保持 noindex。metadata 使用中性浏览说明，不误报商品系列不可用；
+metadata、sitemap 和 Schema 共用有效描述判断，内容不足时不收录详情或输出 Schema。
 
 ### Crystal Guide Article
 
@@ -398,11 +398,6 @@ Policy/Accessibility 的 fallback 页自身与 sitemap 已按 readiness 保护�
 counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参数请求会 canonical
 到 clean URL，同时输出 `noindex, nofollow, noarchive` 并移除 hreflang；clean URL
 保持自身正常索引规则。
-
-2026-09-02 已复核 Production canonical 与 `og:url` 使用
-`https://www.joyamana.com`，apex 308 至 `www`；首页与 `/es-us` 为 `index, follow`，
-sitemap 已非空。后续仍按 D-045 只打开完成验收的 locale/page-group scope，不把总门禁
-开启误作 Editorial、fallback 或永久 noindex 页面也已获批。
 
 ## 12. Structured data
 

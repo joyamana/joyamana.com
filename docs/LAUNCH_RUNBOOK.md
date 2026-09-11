@@ -2,29 +2,20 @@
 
 Status: Active — Production 已公开并开放已审核索引/交易范围；剩余内容与运营项继续验收
 Owner: Engineering / Operations  
-Last updated: 2026-09-02
+Last updated: 2026-09-11
 
-本 Runbook 只描述可重复的发布控制。`https://www.joyamana.com` 已由 Vercel 公开
-提供 storefront，`https://checkout.joyamana.com` 已指向 Shopify Online Store；
-业务方已确认下单支付完整支持，Payment test mode 流程测试未发现问题；发布角色、
-dashboard、Analytics/consent 和剩余运营验收仍需持续维护。
-索引、Shopify Checkout 和 Contact 表单投递是三个独立门禁族；索引进一步采用部署级
-总开关，以及 `src/config/indexing.ts` 中版本控制的 locale/page-group 矩阵。总开关示例值
-默认关闭；当前仓库矩阵已打开 en-US/es-US Core、Commerce、Policies，Editorial 关闭。
-各 Preview/Production deployment 必须分别核验总开关，Preview 始终 noindex。
-仓库尚无 CI、自动化浏览器/支付 E2E 或
-Analytics/consent 运行时。Playwright 按 D-043 暂缓；当前发布使用有记录的人工
-浏览器/Checkout smoke，不能声称自动化 E2E 已通过。
-Webhook/cache invalidation 按 D-046 后置，发布流程接受并记录 5 分钟内容/导航窗口。
+本文件用于已上线站点的持续发布与回滚。当前能力和批准范围见
+[PROJECT_SPEC.md](PROJECT_SPEC.md)，未解决输入按 OPEN_QUESTIONS 的 Blocks 限定影响。
+dev 对应受保护 Vercel Preview，main 对应 Production。
 
-2026-09-02 当前外部基线：Production 首页和 `/es-us` 均为 `index, follow`；sitemap
-包含双语言 Core、Commerce、Policies，Editorial 仍 noindex，Cart/Search/参数页继续
-永久 noindex。D-048 记录 Checkout/payment 已通过当前 test mode 运营验收。旧外部基线
-见 `archive/open-questions-history-2026-08-to-09.md`。
+三个门禁独立：索引总开关 + indexing.ts 矩阵、Shopify Checkout、Contact form。
+Preview 始终 noindex；Production 保持已获批范围。Contact 当前 Email-only。
+内容/导航按 D-046 使用五分钟再验证窗口，更新后须检查实际响应。
+Playwright 当前封存；发布仍需记录人工浏览器/Checkout 验收。
 
 ## 1. 发布角色
 
-上线前填写：
+每次发布记录实际负责人；表格不代表已完成角色分配：
 
 | Role | Owner | Responsibility |
 |---|---|---|
@@ -38,9 +29,7 @@ Webhook/cache invalidation 按 D-046 后置，发布流程接受并记录 5 分�
 
 ## 2. Go/no-go 前置条件
 
-- `OPEN_QUESTIONS.md` 中剩余问题按各自 `Blocks` 验收；Q-001A/B、Q-002A/B/C 已移出
-  网站范围，Q-003A/F 已解决，不再把它们恢复成 Public Catalog、index 或 Checkout 的
-  笼统 blocker。
+- `OPEN_QUESTIONS.md` 中剩余问题按各自 `Blocks` 验收，不扩大为全站 blocker。
 - MVP PRD 的发布验收没有未接受的 blocker。
 - Production Shopify Catalog、Markets、payment、shipping、tax 配置获批。
 - 域名、SSL、Checkout domain、Email sender 和 support inbox 可用。
@@ -53,7 +42,7 @@ Webhook/cache invalidation 按 D-046 后置，发布流程接受并记录 5 分�
 
 ## 3. 代码质量检查
 
-当前真实命令：
+在 Node 24 下运行；依赖版本使用 package.json 与 frozen lockfile：
 
 ```text
 install: pnpm install --frozen-lockfile
@@ -94,8 +83,7 @@ build: pnpm build
   crawler；当前 D-016 仍是 Pending，不得把代码默认当成业务批准。
 - Sitemap 只包含 200、canonical、indexable、published URL。
 - Cart、Search、参数页和内部状态页永久 `noindex` 且不进入 sitemap；参数不得制造
-  canonical/indexable 变体。参数请求已 canonical 回 clean path，并独立输出 noindex、
-  移除 hreflang；临时 indexable production build 已验证 clean/parameter 两种响应。
+  canonical/indexable 变体。核对 clean canonical、noindex 与 hreflang 移除。
 - `NEXT_PUBLIC_SITE_URL` 必须是获批的非本地 HTTPS origin；缺失或不安全时索引
   fail closed，不输出 Preview/staging canonical。
 - Title、description、OG image、H1、breadcrumbs；当前缺少 OG image，发布前补齐。
@@ -109,9 +97,7 @@ build: pnpm build
   的 sitemap/Schema，并且不被其他语言页面的 hreflang 引用。当前 fallback 页自身
   noindex/sitemap/Schema 门禁以及 About/Article/Policy/Accessibility alternate
   readiness 过滤均已实现。
-- Product/Collection 的 Spanish 翻译已通过可重复的 Commerce translation readiness
-  检查，不依赖人眼猜测 Storefront fallback；`<html lang>` 在 en-US/es-US 页面均
-  与 document locale 一致。后半项已实现，前半项仍是索引 blocker。
+- `<html lang>` 在 en-US/es-US 页面与 document locale 一致；停用市场及未知路径返回 404。
 - D-045 的索引总开关与仓库内 locale/page-group scope 只为已验收范围开启。
   en-US/es-US Commerce 均已获业务方批准；Product/Collection 尚无逐页 Spanish fallback
   自动检测，因此每次发布必须人工逐页核对西语正文、metadata 和 hreflang，发现 fallback
@@ -173,42 +159,27 @@ build: pnpm build
 
 ## 8. 发布步骤
 
-1. 冻结非必要内容和配置变更。
-2. 记录当前 Production deployment 和 Shopify 配置快照/导出方式。
-3. 运行全部自动检查和有记录的人工 production 浏览器/Checkout smoke；D-043 有效时
-   不等待 Playwright，也不把人工结果写成自动化 E2E。
-4. 在三个发布门禁均关闭的状态下，将已批准 commit 部署到受保护 Preview；如必须
-   使用 Production，先建立受控发布窗口并确认访问、支付和回退范围。
-5. 验证域名、SSL、首页、PDP、Bag、Policy、Contact Email 入口和全站 noindex。
-   内容/导航使用 5 分钟缓存且当前无 webhook；变更后等待/清除约定窗口再做 smoke，
-   并把这段陈旧窗口写入发布记录。
-6. 先完成 Shopify Admin 中 Payment test mode、guest checkout、shipping、tax、
-   branding、policy link 和 notification 配置验收；随后在受保护目标环境单独设置
-   `SHOPIFY_CHECKOUT_ENABLED`，创建新 deployment/redeploy，再运行测试订单并验证
-   payment、confirmation、Order Status 与 notification。失败时恢复门禁并再次部署。
-7. 当前保持 `CONTACT_FORM_ENABLED=false`，以已确认可收信的 Email-only 渠道提供支持，
-   不等待 Resend 或表单上线。未来若另行批准表单，再完成数据、发件域和滥用验收，
-   在目标环境单独启用并创建新 deployment/redeploy 验证投递与降级。
-8. 清理测试 Product/Article/订单标记和其他会被索引的测试数据，等待或清除已约定的
-   5 分钟缓存窗口，再重验 Catalog、内容、Policy、Search 和内部链接。
-9. 将同一已验收 commit promote/deploy 到受控 Production，先保持三个门禁关闭；
-   单独核对 Production 的 domain、secret、Shopify context、访问保护和 rollback target。
-   再按已批准记录逐个设置 Checkout/Contact gate，每次创建新 deployment/redeploy 并
-   重做 Production smoke，不直接继承 Preview 环境值。
-10. 退出 Shopify Payment test mode，复核 live provider、payout、Checkout、shipping、
-    tax 与 notification 配置。若业务/支付规则允许，完成获批的低额真实订单、退款与
-    对账；否则记录可接受的替代验收证据。测试模式未退出时不得 go-live。
-11. 完成拟开放范围的内容/翻译/SEO/privacy 检查并确认 Production 非本地 HTTPS
-    canonical 后，先 review、提交并部署 `src/config/indexing.ts` 中对应的矩阵 scope
-    策略，同时保持 `NEXT_PUBLIC_SITE_INDEXABLE=false`；随后打开总开关并 redeploy。
-    此时保留临时访问保护，逐组检查 metadata、sitemap、hreflang 和 Schema；细分回退
-    通过恢复仓库策略并部署完成，紧急全站回退则关闭总开关并 redeploy。
-12. Launch lead go/no-go 后解除 Production 临时访问保护，立即从外部网络验证首页、
-    Checkout、Contact、robots、sitemap、Schema、hreflang 和永久 noindex 页面，再提交
-    Search Console 与 Merchant Center。若外部 smoke 失败，恢复保护/门禁并 redeploy。
-13. 每个门禁 deployment 均记录版本、环境值、smoke 和 rollback target；不要在同一
-    未验证 deployment 中连续打开多个门禁。记录 go-live 时间与已知例外，开始
-    launch monitoring window。
+1. 确认变更范围、未决依赖、发布负责人、当前 Production deployment 与 rollback target。
+   发布窗口内避免同时修改相关 Shopify 内容/运营配置。
+2. 在 Node 24 下完成 frozen install、preflight、lint、typecheck、tests 和 build。
+   记录 commit、验证范围与具体例外。
+3. 推送 dev 并检查受保护 Preview。总索引门禁必须关闭；需要 Checkout smoke 时，
+   仅按该环境已获批的测试配置启用。Contact 继续关闭。
+4. 在 Preview 验证受影响页面、初始 HTML/metadata、EN/ES、移动端、404、Cart 与
+   Checkout 流程。Shopify 内容变更后等待缓存窗口，并确认实际正文已更新。
+   HTTP/合约测试不能替代人工交互和 Payment test mode 验收。
+5. 将同一已验收提交快进/合并到 main，使用 Production 独立环境配置部署。
+   例行代码发布保持已获批索引/Checkout 范围；只有存在具体风险时才临时关闭相应门禁，
+   不把首次上线的全关流程用于每次更新。
+6. 若本次扩大索引、启用 Contact 或更改支付/配送/税务配置，先完成各自审批与测试，
+   再单独发布并验证该变化。仓库矩阵或环境变量变化都需要新 deployment。
+   Payment test mode 验收不代表已经完成真实扣款、退款或 payout 对账。
+7. 从外部访问 Production，核对 www canonical、apex 308、受影响页面/Checkout、
+   robots/sitemap、hreflang/Schema、参数 noindex。关键失败时按下一节回滚。
+8. 记录 deployment、门禁范围、人工 smoke、例外、rollback target 与监控链接。
+   只在相关功能已启用时检查 Analytics/purchase 对账；不为无变更的功能伪造验收记录。
+
+首次上线的原始流程见 [历史记录](archive/maintenance-history-through-2026-09.md)。
 
 ## 9. 监控窗口
 

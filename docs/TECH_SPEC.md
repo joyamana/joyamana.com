@@ -2,8 +2,7 @@
 
 Status: Working — Production 已公开部署，工程 hardening 与发布验收待完成
 Owner: Engineering  
-Last updated: 2026-09-02
-Supersedes: 旧版 `TECH_SPEC.md` 与归档文档中的 Hydrogen/Oxygen 方案
+Last updated: 2026-09-11
 
 ## 1. 架构目标
 
@@ -40,7 +39,7 @@ Browser / Search crawler / AI Search crawler
 
 MVP 没有独立数据库、业务 API 服务、身份服务、PIM、搜索服务或队列。
 Shopify webhook/cache invalidation 按 D-046 当前后置，不属于上图运行链路；低频内容与
-导航接受明确的 5 分钟陈旧窗口。
+导航使用五分钟再验证窗口；更新后须检查实际响应。
 
 ## 3. 职责与数据所有权
 
@@ -61,42 +60,29 @@ Shopify webhook/cache invalidation 按 D-046 当前后置，不属于上图运�
 
 ## 4. 技术基线
 
-### Accepted
+Next.js App Router、TypeScript strict、React Server Components、Shopify Storefront API、
+Vercel；Node 24 系列。直接依赖精确版本统一在 [package.json](../package.json)，
+传递依赖由 pnpm-lock.yaml 固定，不在多份文档重复维护补丁版本。
 
-- Next.js App Router
-- TypeScript strict mode
-- React Server Components 优先
-- Shopify Storefront API
-- Vercel
+当前使用 Next 16.3、React 19.3、Vitest 5、pnpm 12；Vitest 使用 Node environment。
+ESLint 9.x / TypeScript 6.0.x 是已接受的最新兼容稳定组合：
+Next 依赖的 import/React/a11y 插件不支持 ESLint 10，typescript-eslint 不支持 TypeScript 7。
+ESLint 9 已被上游标记停止支持；下一次维护优先复核该限制，不能把它视为长期升级策略。
+当前不覆盖 peer 声明、不禁用 lint，也不并存两套 TypeScript 编译器。
+验证以 Node 24 下的 frozen install、peer check、lint、typecheck、tests、build 为准。
 
-### Current implementation
-
-- Next.js 16.2.12 + React/React DOM 19.2.4
-- pnpm 11.24.0 + frozen lockfile
-- Node 24 production target（`.nvmrc` 与 `package.json#engines`）
-- Next.js global CSS + CSS variables/tokens，无 Tailwind/UI kit
-- Vitest 3 + Node test environment，未安装 Testing Library
-- 手写且集中的 Storefront GraphQL document 与显式 TypeScript response/normalized types，
-  无 GraphQL code generation
-
-### Deferred quality/infrastructure
-
-- Playwright/browser automation（D-043：当前阶段封存；复杂度触发后再评估）
-- CI、Vercel Preview 与自动化 promotion pipeline；Production 已公开部署
-- format check/coverage gate
-- Shopify webhook HMAC + cache invalidation（D-046：按触发条件后置）
-
-依赖和 API 版本只以 `package.json`、lockfile 和 `.env.example` 中的当前固定值为准；
-Shopify Storefront API 至少每季度检查 deprecated 字段和升级窗口。
+使用 Next global CSS + variables/tokens；无 UI kit、GraphQL codegen 或独立 CMS。
+CI、format/coverage gate 尚未建立；Vercel dev Preview 与 main Production 已建立。
+Playwright 按 D-043 暂缓，webhook 按 D-046 后置。
+Shopify API 版本以 .env.example/部署配置为准，至少每季度复核字段与支持窗口。
 
 ## 5. 当前目录边界
 
 ```text
 src/
 ├── app/
-│   ├── (english)/           # en-US root routes
+│   ├── (english)/           # en-US root routes + [...path] 404 boundary
 │   ├── es-us/               # explicit US Spanish routes
-│   ├── [marketLocale]/      # reject/planned locale boundary
 │   ├── actions/              # Cart and Contact server actions
 │   ├── robots.ts
 │   └── sitemap.ts
@@ -170,23 +156,9 @@ src/
 Shopify 原始响应先映射到页面所需的薄实体，再供 UI、metadata、JSON-LD 和
 Analytics 使用：
 
-```ts
-type MarketContext = {
-  marketId: 'us' | 'ca'
-  regions: ['US'] | ['CA']
-  catalog: 'us' | 'ca'
-  locale: 'en-US' | 'es-US' | 'en-CA' | 'fr-CA'
-  defaultCurrency: 'USD' | 'CAD'
-  currencies: ['USD'] | ['CAD']
-  shippingZone: 'us-pending' | 'ca-pending'
-  taxProfile: 'us-pending' | 'ca-pending'
-  legalProfile: 'us-pending' | 'ca-pending'
-}
-```
-
-`Market` 是商业运营单元，不等同于 Country、Language 或 Currency。Language
-决定内容版本，region 参与 Market 解析，Currency 只参与价格展示和交易上下文。
-未来多币种选择不得生成新的 SEO URL。
+Market/Locale/Currency 的真实类型定义见 `src/config/markets.ts` 和
+`src/lib/i18n/locales.ts`，字段不得从文档示例复制为第二份实现。
+Language 决定内容，地区参与 Market 解析，Currency 只参与价格/交易上下文。
 
 当前已实现的薄实体包括：
 
@@ -230,14 +202,14 @@ Content/SEO 规格。
 - Header navigation 上游失败时 Locale shell 降级为空的动态目录链接，保留 Shop all、
   Search、Bag、语言切换和页面主体；不恢复本地 Catalog，也不让 Header 数据故障触发
   全页 error boundary。
-- 当前实现：按 D-046 接受内容/导航的 5 分钟陈旧窗口；
-  Product、Collection 及包含实时商品的 Home 使用 request-time Server Rendering
-  与 `no-store`。这仍在初始响应输出完整 HTML，也避免把瞬时 Shopify 请求变成
-  production build 的发布依赖；sitemap 同样在请求时从 Catalog 生成。未来达到
-  D-046 触发条件后再评估 webhook、ISR 或更广的 tag cache，不预先承诺切换。
-- 数据不可确认时展示可恢复错误，不显示缓存外的猜测值。
-- About、Policy、Accessibility、Blog/Article 当前也是 dynamic route + 5 分钟 cached
-  fetch；发布操作必须等待该窗口，未来达到 D-046 触发条件后再评估失效端点或 ISR。
+- 持久缓存只由 fetch 的 `revalidate: 300` 管理；React `cache` 仅做请求内去重。
+  Header 不再叠加 `unstable_cache`，避免两层缓存续存旧导航。
+- Collection 的 metadata、sitemap 与 Schema 共用有效描述判断；存在但缺少描述的
+  系列保留商品浏览与中性 metadata，详情保持 noindex，不进入 sitemap 或输出 Schema。
+- 五分钟是再验证周期，不是硬失效上限；再验证失败可能继续提供旧内容。
+  内容更新后等待并检查实际响应，紧急失效需求按 D-046 重新评估。
+- 运行时数据获取不作为 build 发布依赖；不可确认时展示可恢复错误。
+  Error page 使用 Next 16.3 的 `retry()` 重新获取服务端子树。
 
 ## 9. 路由与国际化
 
@@ -264,9 +236,11 @@ Content/SEO 规格。
   未引用、错误类型、不完整或未知 handle 返回 404，不按所有 Metaobject 自动建路由。
 - About root 与子页在服务端输出同一有序页内导航；语言 fallback 保持 noindex 且不进入
   sitemap/hreflang。
-- en-US、es-US 和未来 Market route boundary 各自拥有 root document layout；初始
-  HTML 的 `<html lang>` 与当前 locale 一致。语言切换跨 root layout 会发生完整文档
-  navigation，这是换取正确 document metadata 的明确边界。
+- en-US/es-US 各自拥有 root document layout，初始 HTML 的 lang 与 locale 一致；
+  跨 root layout 语言切换是完整文档 navigation。
+  停用市场与未知路径由统一 catch-all 返回 noindex/404，不预建业务模板。
+  当前 notFound 响应未在初始 HTML 渲染提示正文，需在 Preview 验证客户端恢复；
+  不将正确的 404 状态码等同于完整的无 JavaScript 错误页体验。
 - Product/Collection 目前无法从 Storefront response 自动识别 Spanish 是真实翻译
   还是 English fallback。en-US 与 es-US Commerce 均已获业务方批准开放；自动验证实现前，
   es-US Product/Collection 必须在每次发布时人工逐页检查，发现 fallback 时关闭对应
@@ -319,12 +293,7 @@ Vercel 部署必须提供 canonical origin 与 Shopify credential；Production o
 精确为 `https://www.joyamana.com`；Preview 必须 noindex；Checkout/Contact 门禁开启
 时必须具备对应 credential。运行时 adapter 仍保留自身校验，不能只依赖 build。
 
-2026-09-02 外部响应检查确认 `https://www.joyamana.com` 由 Vercel 提供服务，
-`https://checkout.joyamana.com` 由 Shopify 提供服务。Production 首页与 `/es-us` 当前
-输出 `index, follow`，sitemap 已包含双语言 Core、Commerce、Policies；Editorial、Cart、
-Search 和参数页继续 noindex。D-044 已确认 `https://www.joyamana.com` 是唯一 canonical
-origin，apex 308 至 `www`，公开 canonical/OG 已使用 `www`。D-048 记录 Checkout/payment
-已通过当前 test mode 运营验收；Preview 仍必须保持 `NEXT_PUBLIC_SITE_INDEXABLE=false`。
+当前部署状态见 [PROJECT_SPEC.md](PROJECT_SPEC.md)，具体发布步骤见 Runbook。
 
 ## 11. Security 与 Privacy
 
@@ -353,7 +322,7 @@ Webhook 按 D-046 后置；未来实施时上述安全边界是启用条件。�
 ### 每次变更
 
 - `pnpm lint`
-- `pnpm typecheck`
+- `pnpm typecheck`（先 `next typegen`，再 `tsc --noEmit`）
 - `pnpm test`（或至少相关 Vitest）
 - `pnpm build`（影响 build/runtime 时）
 
@@ -398,18 +367,11 @@ Webhook 按 D-046 后置；未来实施时上述安全边界是启用条件。�
 
 ## 13. CI/CD 与发布
 
-当前仓库没有 CI workflow。Vercel Production 已在 `https://www.joyamana.com` 公开
-响应；本地 `dev` 分支已建立用于后续 Preview，但只有推送到远端并由 Vercel 成功构建
-后才算 Preview 已建立。下列仍是待完成的发布目标：
-
-- Git 主分支发布 Production；PR 生成 Vercel Preview。
-- Preview 使用隔离配置并全站 `noindex`，避免真实客户数据。
-- 合并前运行 lint、typecheck、tests 和 build。
-- 发布前执行 Shopify API 合约 smoke test 与有记录的人工浏览器/Checkout smoke；
-  D-043 仍有效时不得把它写成自动化 E2E。
-- Production 回滚使用上一个已验证 Vercel deployment；不对 Shopify 业务数据
-  做自动回滚。
-- 发布步骤、监控和回滚见 `LAUNCH_RUNBOOK.md`。
+当前 `dev` 已关联 Vercel Preview，`main` 关联 Production；尚无 CI workflow。
+提交前运行相关检查；Preview 必须 noindex，secret 与 Production 分离。
+同一已验收 commit 发布到 Production，按批准范围核验环境与功能门禁，不复用 Preview 值。
+回滚使用已验证 Vercel deployment，不回滚 Shopify 订单/库存数据。
+详细流程、监控和验收记录见 [LAUNCH_RUNBOOK.md](LAUNCH_RUNBOOK.md)。
 
 ## 14. 架构升级触发条件
 

@@ -2,18 +2,26 @@ import type { Metadata } from "next";
 import { brand } from "@/config/brand";
 import { isIndexingEnabledFor, siteConfig } from "@/config/site";
 import { enabledLocales, localePath, type Locale } from "@/lib/i18n/locales";
+import type { Collection } from "@/lib/commerce/types";
 
 export type PageSearchParams = Record<
   string,
   string | string[] | undefined
 >;
 
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** Shared by collection metadata, sitemap eligibility, and structured data. */
+export function getCollectionSeoDescription(
+  collection: Pick<Collection, "description" | "seoDescription"> | null,
+) {
+  return (
+    collection?.seoDescription?.trim() ||
+    collection?.description.trim() ||
+    undefined
+  );
 }
 
 const trailingBrandPattern = new RegExp(
-  `(?:\\s*(?:\\||·|•|—|–|-)\\s*${escapeRegExp(brand.name)})+\\s*$`,
+  `(?:\\s*(?:\\||·|•|—|–|-)\\s*${RegExp.escape(brand.name)})+\\s*$`,
   "i",
 );
 

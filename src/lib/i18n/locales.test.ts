@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   alternateLanguageLocale,
-  canadaLocaleFromSegment,
   enabledLocales,
   isLocaleEnabled,
   localePath,
@@ -37,8 +36,6 @@ describe("locale routing", () => {
     expect(alternateLanguageLocale("en-CA")).toBe("fr-CA");
     expect(isLocaleEnabled("en-CA")).toBe(false);
     expect(isLocaleEnabled("fr-CA")).toBe(false);
-    expect(canadaLocaleFromSegment("en-ca")).toBeNull();
-    expect(canadaLocaleFromSegment("fr-ca")).toBeNull();
     expect(enabledLocales).toEqual(["en-US", "es-US"]);
   });
 });

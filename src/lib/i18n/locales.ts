@@ -25,19 +25,6 @@ export function alternateLanguageLocale(locale: Locale): Locale | null {
   return null;
 }
 
-export function localeFromSegment(segment: string): Locale | null {
-  const entry = Object.entries(localePrefixes).find(
-    ([, prefix]) => prefix === `/${segment.toLowerCase()}`,
-  );
-  return (entry?.[0] as Locale | undefined) ?? null;
-}
-
-export function canadaLocaleFromSegment(segment: string): Locale | null {
-  const locale = localeFromSegment(segment);
-  if (locale !== "en-CA" && locale !== "fr-CA") return null;
-  return isLocaleEnabled(locale) ? locale : null;
-}
-
 export function marketForLocale(locale: Locale) {
   const market = Object.values(markets).find((item) =>
     (item.locales as readonly string[]).includes(locale),
@@ -55,10 +42,6 @@ export function isLocaleEnabled(locale: Locale) {
 }
 
 export const enabledLocales = locales.filter(isLocaleEnabled);
-
-export const enabledCanadaLocaleSegments = enabledLocales
-  .filter((locale) => locale === "en-CA" || locale === "fr-CA")
-  .map((locale) => localePrefixes[locale].slice(1));
 
 export function stripLocalePrefix(pathname: string) {
   for (const prefix of Object.values(localePrefixes).filter(Boolean)) {

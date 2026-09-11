@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildMetadata,
   buildNoIndexMetadata,
+  getCollectionSeoDescription,
   withoutTrailingBrand,
 } from "./seo";
 
@@ -26,6 +27,19 @@ describe("metadata titles", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.resetModules();
+  });
+
+  it("uses meaningful collection SEO copy and rejects empty content", () => {
+    expect(getCollectionSeoDescription(null)).toBeUndefined();
+    expect(
+      getCollectionSeoDescription({ description: " ", seoDescription: " " }),
+    ).toBeUndefined();
+    expect(
+      getCollectionSeoDescription({ description: " Body ", seoDescription: " " }),
+    ).toBe("Body");
+    expect(
+      getCollectionSeoDescription({ description: "Body", seoDescription: " SEO " }),
+    ).toBe("SEO");
   });
 
   it("leaves the root layout as the single owner of the brand suffix", () => {

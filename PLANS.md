@@ -7,7 +7,7 @@
 
 ## Current status
 
-截至 2026-09-02，没有 Active Execution Plan。当前状态分别见：
+当前无 Active 执行计划。已完成任务及验证记录见上述 Archive；项目状态分别见：
 
 - [`docs/DECISIONS.md`](docs/DECISIONS.md)
 - [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)

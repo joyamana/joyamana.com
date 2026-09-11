@@ -1,5 +1,3 @@
-import type { Locale } from "@/lib/i18n/locales";
-
 export type CurrencyCode = "USD" | "CAD";
 export type ProductModel = "standard" | "natural-variation" | "one-of-one";
 export type CollectionKind =
@@ -212,21 +210,4 @@ export interface Collection {
 
 export interface ProductCollection extends Collection {
   products: Product[];
-}
-
-/**
- * Content entities still use localized records. Commerce entities above do
- * not: their strings are already resolved by the Shopify adapter.
- */
-export interface LocalizedText {
-  "en-US": string;
-  "es-US": string;
-  "en-CA"?: string;
-  "fr-CA"?: string;
-}
-
-export function localize(text: LocalizedText, locale: Locale) {
-  if (locale === "en-CA") return text["en-CA"] ?? text["en-US"];
-  if (locale === "fr-CA") return text["fr-CA"] ?? text["en-US"];
-  return text[locale];
 }

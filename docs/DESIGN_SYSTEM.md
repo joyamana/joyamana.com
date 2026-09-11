@@ -2,7 +2,7 @@
 
 Status: Working — 生产品牌资产已确认，组件与扩展规范继续演进
 Owner: Brand / Design  
-Last updated: 2026-09-02
+Last updated: 2026-09-11
 
 本文件定义体验和实现边界。业务方已确认 Logo、字体授权、颜色以及真实商品摄影/视频
 问题解决，不再作为生产资产 blocker。代码和 Shopify 媒体仍须只使用实际获批资产，
@@ -31,8 +31,7 @@ Last updated: 2026-09-02
 - Typography：Display 使用 Newsreader，正文与界面使用 Manrope；通过
   `next/font` 在构建时自托管，使用 Latin subset 和 variable font。系统字体
   仅作为加载失败时的 fallback。
-- Editorial image：AI 生成图只用于明确标注的原型 editorial 区域，不用作
-  真实商品图。
+- Editorial image：仅使用获批的抽象编辑图，不冒充真实商品、产地或工艺照片。
 
 这些参考是构图、信息层级与色温原则，不构成对第三方 trade dress 的复制。
 
@@ -86,7 +85,7 @@ layout:
 不在组件中散落任意 hex、font size、z-index 和 box shadow。Token 数量以实际
 组件需求增长，不预建完整企业级系统。
 
-测试站当前工作 token：
+当前 token（实际值以 `src/app/globals.css` 为准）：
 
 ```text
 background / paper: #F7F2E9 warm ivory
@@ -205,7 +204,7 @@ Checkout；不显示 Shopify、Headless、`design_series`、integration 或 rele
 
 - Crystal Guide：居中标题和定位说明，下方为极简资料目录、细分隔线和清晰入口。
 - Blog：居中标题和定位说明，下方为一个 Featured article 与其余编辑列表。
-- Home 首屏使用 2026-09-01 重新批准的抽象矿物编辑图
+- Home 首屏使用已批准的抽象矿物编辑图
   `public/images/joya-mana-home-hero.webp`：左侧保留深色文字空间，右侧为不对应具体
   在售商品的矿物光影。它是品牌编辑背景，不得用作商品事实或真实商品摄影。首页不展示
   Blog 推荐或 Design Collection 条带；这些内容保留在各自导航与独立页面中。

@@ -14,7 +14,7 @@ const shopifyCatalogMocks = vi.hoisted(() => ({
 vi.mock("./shopify-catalog", () => shopifyCatalogMocks);
 
 import {
-  catalogNavigationFromSnapshot,
+  getCatalogNavigationData,
   getCollection,
   getCollections,
   getDesignCollection,
@@ -89,28 +89,31 @@ describe("Shopify catalog facade", () => {
     ).resolves.toBeNull();
   });
 
-  it("projects cached Header navigation without product commerce fields", () => {
-    expect(
-      catalogNavigationFromSnapshot(
-        {
-          productCategoryIds: ["gid://shopify/TaxonomyCategory/aa-6-3"],
-          collections: [
-            {
-              handle: "patron-saint",
-              title: "Patron Saint",
-              kind: "design_series",
-            },
-            { handle: "featured", title: "Featured", kind: "merchandising" },
-          ],
-        },
-        "es-US",
-      ),
-    ).toEqual({
-      categories: [{ handle: "bracelets", title: "Pulseras" }],
+  it("uses only the public navigation fetch cache and returns link fields", async () => {
+    shopifyCatalogMocks.getShopifyCatalogNavigation.mockResolvedValue({
+      productCategoryIds: ["gid://shopify/TaxonomyCategory/aa-6-3"],
       collections: [
-        { handle: "patron-saint", title: "Patron Saint", kind: "design_series" },
+        {
+          handle: "patron-saint",
+          title: "Patron Saint",
+          kind: "design_series",
+        },
+        { handle: "featured", title: "Featured", kind: "merchandising" },
       ],
     });
+    await expect(getCatalogNavigationData("us", "es-US")).resolves.toEqual({
+      categories: [{ handle: "bracelets", title: "Pulseras" }],
+      collections: [{ handle: "patron-saint", title: "Patron Saint" }],
+    });
+    expect(shopifyCatalogMocks.getShopifyCatalogNavigation).toHaveBeenCalledWith(
+      "es-US",
+      {
+        buyerIp: null,
+        cache: "force-cache",
+        revalidate: 300,
+        tags: ["shopify-catalog-navigation"],
+      },
+    );
   });
 
   it("exposes only Shopify collections marked as design series", async () => {
@@ -157,6 +160,10 @@ describe("Shopify catalog facade", () => {
     await expect(getCollections("ca", "fr-CA")).resolves.toEqual([]);
     await expect(getCollection("anything", "ca", "fr-CA")).resolves.toBeNull();
     await expect(searchCatalog("quartz", "ca", "en-CA")).resolves.toEqual([]);
+    await expect(getCatalogNavigationData("ca", "fr-CA")).resolves.toEqual({
+      categories: [],
+      collections: [],
+    });
 
     expect(markets.ca.status).toBe("planned");
     expect(shopifyCatalogMocks.getShopifyProducts).not.toHaveBeenCalled();
@@ -205,5 +212,11 @@ describe("Shopify catalog facade", () => {
     shopifyCatalogMocks.getShopifyProducts.mockRejectedValueOnce(upstreamError);
 
     await expect(getProducts("us", "en-US")).rejects.toBe(upstreamError);
+    shopifyCatalogMocks.getShopifyCatalogNavigation.mockRejectedValueOnce(
+      upstreamError,
+    );
+    await expect(getCatalogNavigationData("us", "en-US")).rejects.toBe(
+      upstreamError,
+    );
   });
 });

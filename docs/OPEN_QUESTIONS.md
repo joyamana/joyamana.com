@@ -2,7 +2,7 @@
 
 Status: Active — 只记录当前未解决输入；按 `Blocks` 限定影响范围
 Owner: Project owner  
-Last updated: 2026-09-02
+Last updated: 2026-09-11
 Resolved input: `BRAND_INPUTS.md`、D-047、D-048
 
 本文件不保存已解决问题和历史审计快照。历史记录见
@@ -37,18 +37,6 @@ Resolved input: `BRAND_INPUTS.md`、D-047、D-048
 以上清单中的代码工作在对应输入或外部配置准备后进入 Roadmap，不等于全部阻塞当前
 Production。价格、库存、Cart、Checkout 和已接入内容继续以 Shopify 为事实来源。
 
-## Current production release state
-
-- `https://www.joyamana.com` 是唯一 canonical origin；apex 308 至 `www`。
-- Production 首页与 `/es-us` 已复核为 `index, follow`。en-US/es-US Core、Commerce、
-  Policies 已打开；Editorial 关闭，Cart、Search、Preview 和参数页继续 noindex。
-- `sitemap.xml` 已非空，只包含通过 scope 与页面 readiness 的 URL。
-- 下单支付已由业务方确认完整支持，Shopify Payment test mode 流程测试未发现问题。
-- Blog/Crystal Guide 测试 Article 暂不处理并保持 Editorial noindex。
-- `info@joyamana.com` 的 inbox、负责人/备援、外发认证和投递表现已确认；Contact 表单
-  继续后置。
-- Logo、字体授权、颜色和真实商品摄影/视频已确认完成。
-
 ## Deferred / conditional decisions
 
 | ID | Decision | Current handling |
@@ -61,10 +49,5 @@ Production。价格、库存、Cart、Checkout 和已接入内容继续以 Shopi
 | Q-107 | Future markets | 第一阶段仅 US；CA 保留 planned 配置且不创建公开 URL |
 | Q-108 | Gift Card/Wishlist/Loyalty | 依据购买和复购数据 |
 
-## Closed scope reference
-
-- Q-001A/B、Q-002A/B/C 已由 D-047 移出网站范围。
-- Q-003A/F 已解决；Organization/Site Settings 仍是公开字段映射的工程缺口，不是业务
-  决策缺口。
-- Q-003D、品牌资产、商品摄影和客服邮箱运营验收均已解决。
-- Checkout/payment 已由 D-048 接受，不再是开放问题。
+已解决输入见 [BRAND_INPUTS.md](BRAND_INPUTS.md) 与 D-047/048；
+当前发布状态见 [PROJECT_SPEC.md](PROJECT_SPEC.md)。

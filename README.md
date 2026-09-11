@@ -1,60 +1,20 @@
-# Crystal DTC Storefront
+# Joya Mana Storefront
 
-面向美国市场的水晶 DTC 品牌独立站。项目采用 `Brand + Content + Commerce`
-模式：以品牌体验和可信内容建立认知，以 Shopify 完成交易。
+面向美国市场的水晶 DTC 品牌站：Next.js App Router + Shopify Headless，部署于 Vercel。
+en-US 使用根路径，es-US 使用 `/es-us`；共享 US Catalog / USD。
+Production canonical 为 `https://www.joyamana.com`，Checkout 使用 `checkout.joyamana.com`。
 
-当前状态（截至 2026-09-02）：**Production storefront 已在
-`https://www.joyamana.com` 公开运行；Phase 3 与 Commerce hardening 仍在继续**。
-`https://checkout.joyamana.com` 已指向 Shopify Online Store；业务方确认下单支付完整
-支持，Payment test mode 流程测试未发现问题。特殊配送覆盖、费率、税费/进口责任、
-商品西语本地化和剩余发布验收仍按各自范围继续。
-商品/Cart 事实及已接入的 Policy、About/Accessibility、Blog/Guide 正文来自
-Shopify，不再使用本地样本商品或正文 fallback。Home、Contact、导航等界面文案仍由
-代码配置维护。索引、Shopify Checkout 和 Contact 表单投递分别受独立门禁保护；
-Production 当前已开放 en-US/es-US Core、Commerce、Policies 索引，Editorial 和永久
-noindex 页面继续关闭。Shipping/Returns、About、法律/审批输入、品牌资产与客服运营
-已确认，隐私/consent、商品西语自动验证和剩余发布验收仍未完成。当前输入与
-阻塞项分别见 [`docs/BRAND_INPUTS.md`](docs/BRAND_INPUTS.md) 和
-[`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)。
+当前能力与缺口见 [Project Spec](docs/PROJECT_SPEC.md)，优先级见 [Roadmap](docs/ROADMAP.md)。
+下单支付已获业务方确认，Payment test mode 流程未发现问题。
+Core、Commerce、Policies 的双语言索引已开放；Editorial 仍关闭。Contact 为 Email-only。
 
-## 已确定方向
+## 本地开发
 
-- 首发市场：United States
-- 启用 Market：United States，en-US `/` + es-US `/es-us`，US Catalog / USD
-- Planned Market：Canada 配置保留，但 `/en-ca` 与 `/fr-ca` 第一阶段不公开
-- 前端：Next.js App Router + TypeScript
-- Commerce：Shopify Headless / Storefront API / Shopify hosted checkout
-- 部署：Vercel
-- 购买方式：游客结账优先，不强制账户
-- 增长基础：品牌体验、CRO、SEO、GEO/AI Search、Email
-- 架构原则：简单可靠，不建设无业务必要的独立后端
+需要 Node 24；pnpm 精确版本由 [package.json](package.json) 固定。
+本机使用 mise 时，可在命令前加 `mise exec node@24 --`；nvm 用户运行 `nvm use`。
 
-## 文档阅读顺序
-
-1. [`AGENTS.md`](AGENTS.md)：Codex 的仓库级工作约定。
-2. [`docs/DECISIONS.md`](docs/DECISIONS.md)：已接受、拟议与待定的决策。
-3. [`docs/BRAND_INPUTS.md`](docs/BRAND_INPUTS.md)：确认、工作假设与待定输入。
-4. [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)：项目目标、边界与风险。
-5. [`docs/MVP_PRD.md`](docs/MVP_PRD.md)：MVP 页面、流程和验收条件。
-6. 领域规格：
-   - [`docs/TECH_SPEC.md`](docs/TECH_SPEC.md)
-   - [`docs/COMMERCE_SPEC.md`](docs/COMMERCE_SPEC.md)
-   - [`docs/CONTENT_SEO_GEO_SPEC.md`](docs/CONTENT_SEO_GEO_SPEC.md)
-   - [`docs/CUSTOMER_LIFECYCLE.md`](docs/CUSTOMER_LIFECYCLE.md)
-   - [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)
-   - [`docs/ANALYTICS_AND_KPIS.md`](docs/ANALYTICS_AND_KPIS.md)
-7. [`docs/ROADMAP.md`](docs/ROADMAP.md)：阶段、依赖与退出条件。
-8. [`docs/LAUNCH_RUNBOOK.md`](docs/LAUNCH_RUNBOOK.md)：发布、监控与回滚。
-9. [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)：仍需确认的生产输入。
-10. [`docs/REFERENCES.md`](docs/REFERENCES.md)：时效性官方资料索引。
-11. [`PLANS.md`](PLANS.md)：复杂开发任务的执行计划模板；已完成计划保存在 archive。
-
-`docs/archive/` 仅保存历史研究、旧输入、审计快照和已完成计划，不是当前事实来源。出现冲突时，按
-`AGENTS.md` 中的文档优先级处理，并在同一变更中修正文档。
-
-## 开发命令
-
-需要 Node.js 24 LTS 与 pnpm：
+根据 [.env.example](.env.example) 配置本地 `.env.local`。
+Shopify 商品与正文没有本地数据 fallback；未配置时显示不可用状态。
 
 ```bash
 pnpm install --frozen-lockfile
@@ -66,44 +26,38 @@ pnpm test
 pnpm build
 ```
 
-当前尚未建立 CI 或 format check。Playwright 按 D-043 暂时封存，当前阶段不安装、
-不维护 Playwright suite；关键浏览器与支付流程继续使用有记录的人工/合约 smoke，
-不得把本地 Vitest 写成已通过浏览器、Preview 或支付端到端验收。
+`typecheck` 先生成 Next 路由类型；`build` 自动运行环境 preflight。
+依赖版本与互相兼容的稳定版例外见 [Technical Spec](docs/TECH_SPEC.md)。
+Playwright 当前封存；CI 与 format check 尚未建立。
+Vitest/build/HTTP 检查不替代人工浏览器与 Checkout 验收。
 
-Commerce 与 Shopify-backed 正文的数据路径只使用 Shopify Storefront API；Contact
-投递是受独立门禁保护的可选 Resend adapter。仓库示例值及未配置时的代码默认值以
-`NEXT_PUBLIC_SITE_INDEXABLE=false` 保持全站不可索引；各部署环境必须单独核验。
-不存在本地 Commerce provider 或样本 Catalog fallback；Shopify 缺失、数据无效或
-请求失败时页面必须 fail closed。Canada 的 Cart、Catalog 和 Currency context 只保留
-未来隔离模型，不生成公开 URL。正式内容、本地化与 SEO 验收完成前不得开启索引；
-真实商品/库存、政策和 Shopify 支付/配送/税务验收完成前不得在公开部署开启 Checkout。
+## 配置与发布
 
-已实现的内容路径包括 Shopify Policies、`content_page` 驱动的 About/
-Accessibility，以及 Shopify Blog `blog` / `crystals` 驱动的 Blog 和 Crystal
-Guide。`Patron Saint` 是当前非空、Headless 可见且标记为 `design_series` 的系列；
-description/SEO 与完整 story/lookbook 仍待补齐。Contact 当前正式采用 Email-only，
-`info@joyamana.com` 已确认可收信，负责人/备援、外发认证和投递表现也已确认；
-表单/Resend 后置。
-当前站内 Search
-只检索 Shopify 商品，内容检索、Analytics/consent 和自动化浏览器/支付 E2E 仍是待办；
-人工 Payment test mode 验收已通过。Playwright 按 D-043 暂缓，当前采用有记录的人工 smoke。
-Webhook 缓存失效按 D-046 后置，低频内容与导航接受并记录 5 分钟窗口。
+- `NEXT_PUBLIC_SITE_INDEXABLE` 是部署级总开关，叠加
+  [indexing.ts](src/config/indexing.ts) 的语言/页面组矩阵与页面 readiness。
+  Preview 必须关闭总开关。
+- `SHOPIFY_CHECKOUT_ENABLED` 与 `CONTACT_FORM_ENABLED` 独立控制 Checkout 和表单；
+  仓库示例/缺省值均关闭，Production 按获批范围配置。
+- 内容与导航使用五分钟再验证缓存；价格、库存和 Cart 使用 no-store。
+  内容更新后等待并核对实际响应；webhook 当前后置。
+- `dev` 对应 Vercel Preview，`main` 对应 Production。
+  发布、回滚与人工 smoke 见 [Launch Runbook](docs/LAUNCH_RUNBOOK.md)。
 
-2026-09-02 外部检查确认 apex 308 至 `https://www.joyamana.com`、`www` 返回 Vercel
-HTTP 200、`checkout` 返回 Shopify HTTP 200。D-044 确认 `www` 是唯一 canonical
-origin；Vercel Production 环境值已由业务方配置，当前公开 deployment 的
-canonical/OG 已复核为 `https://www.joyamana.com`。Production 首页和 `/es-us` 当前为
-`index, follow`，sitemap 已包含双语言 Core、Commerce、Policies；Editorial、Cart、
-Search 和参数页继续 noindex。D-045 使用部署总开关与仓库 locale/page-group 矩阵控制范围。
+## 文档入口
 
-当前代码已实现参数页 noindex、en-US/es-US document-level `<html lang>`、按真实
-翻译 readiness 过滤的 Policy/Accessibility hreflang、Product-only Search metadata、
-Header 专用轻量 Shopify query 与上游失败降级、细分索引门禁，以及 `pnpm preflight`。Vercel build
-会在 `prebuild` 阶段运行 preflight，并对 Production canonical、Preview noindex、
-Shopify credential 和启用功能所需 secret fail closed。
+| 文档 | 用途 |
+|---|---|
+| [AGENTS.md](AGENTS.md) | 仓库工作约束与文档优先级 |
+| [Decisions](docs/DECISIONS.md) | 有效决策与批准边界 |
+| [Brand Inputs](docs/BRAND_INPUTS.md) | 品牌、运营与内容的已确认/待定输入 |
+| [Project Spec](docs/PROJECT_SPEC.md) / [MVP PRD](docs/MVP_PRD.md) | 当前状态、范围与验收 |
+| [Technical](docs/TECH_SPEC.md) / [Commerce](docs/COMMERCE_SPEC.md) | 架构、数据与交易契约 |
+| [Content/SEO/GEO](docs/CONTENT_SEO_GEO_SPEC.md) / [Design](docs/DESIGN_SYSTEM.md) | 内容、索引与视觉规范 |
+| [Shopify Setup](docs/SHOPIFY_CATALOG_SETUP.md) | 后台字段与 Catalog 配置 |
+| [Analytics](docs/ANALYTICS_AND_KPIS.md) / [Customer Lifecycle](docs/CUSTOMER_LIFECYCLE.md) | 尚待实施的测量、consent 与客户服务范围 |
+| [Roadmap](docs/ROADMAP.md) / [Open Questions](docs/OPEN_QUESTIONS.md) | 优先级与未解决输入 |
+| [Launch Runbook](docs/LAUNCH_RUNBOOK.md) / [References](docs/REFERENCES.md) | 操作流程与官方资料 |
+| [PLANS.md](PLANS.md) | 当前执行计划与模板 |
 
-## 文档语言
-
-项目文档以中文为主；用户界面、商品内容和 metadata 支持 en-US 与 es-US。
-西语必须人工审校，面向客户的政策必须由授权负责人批准。代码标识符、提交
-信息和技术注释默认使用英文。
+[Archive](docs/archive/README.md) 仅用于历史追溯，不作为当前实现依据。
+文档以中文为主；代码标识符用英文；客户文案支持 en-US/es-US，西语须人工审校。

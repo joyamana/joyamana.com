@@ -2,8 +2,7 @@
 
 Status: Active input record  
 Owner: Project owner  
-Last updated: 2026-09-02
-Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-03）
+Last updated: 2026-09-11
 
 本文件把业务方回复分为 `Confirmed`、`Working` 和 `Pending`：
 
@@ -39,7 +38,7 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
 - 不使用恐惧、命运、焦虑或保证人生结果推动购买。
 - 不把 spiritual practice 写成医疗功效。
 - 避免廉价、杂乱、模板化 New Age 视觉，避免过量星座、塔罗、魔法与闪粉。
-- 工作名称、品牌文案和视觉 token 必须集中配置，域名与商标确认前可统一替换。
+- 品牌文案和视觉 token 集中配置；域名与品牌名称已确定。
 
 ### Pending
 
@@ -115,9 +114,9 @@ Source: `Bling Omen 品牌开放问题与执行约束.pdf`（11 pages, 2026-08-0
   独立 Headless CMS 后置。
 - URL 与前端栏目名统一使用 `Blog`；不使用 Journal/Diario/Guides 作为同一
   栏目的替代名称。
-- 测试站同时创建 en-US 与 es-US；西语是同一 US Market 的内容翻译，不是
+- 网站支持 en-US 与 es-US；西语是同一 US Market 的内容翻译，不是
   独立商品或西班牙 Market。
-- 西语翻译在人工审校前必须保持 prototype/noindex 状态。
+- 新增或未审校西语内容不得开放索引；当前批准范围见 D-045。
 - 接受现有 claims policy：传统/文化/个人实践需限定；不诊断、治疗、治愈、
   预防疾病，不保证财富、爱情、好运、保护或人生结果。
 - 不虚构作者、专家、资历、来源或 Reviewed by。

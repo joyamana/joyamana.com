@@ -2,7 +2,7 @@
 
 Status: Draft — 事件模型已定义，运行时 Analytics/consent 尚未实现
 Owner: Growth / Analytics  
-Last updated: 2026-08-31
+Last updated: 2026-09-11
 
 ## 1. 原则
 
@@ -16,7 +16,7 @@ Last updated: 2026-08-31
 当前实施状态：仓库没有 GA4、Shopify Customer Events、consent UI 或自定义事件
 运行时；`NEXT_PUBLIC_GA4_ID` 只是未使用的预留环境变量。Google site
 verification metadata 已支持可选配置，但不等于 GSC 账户已验证。本文件下列
-事件、KPI 和验收项目均是 Phase 4 完整发布、推广和可度量 Commerce 前要求。
+事件、KPI 和验收项目是启用测量与非必要追踪前的要求。
 虽然 `https://www.joyamana.com` 已公开响应，当前访问尚没有这套 Analytics/consent
 运行时，因此不能用站内事件衡量真实流量、漏斗或购买转化。
 

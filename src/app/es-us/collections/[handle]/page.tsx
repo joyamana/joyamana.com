@@ -4,6 +4,7 @@ import { getDesignCollection } from "@/lib/commerce/catalog";
 import {
   buildMetadata,
   buildNoIndexMetadata,
+  getCollectionSeoDescription,
   type PageSearchParams,
 } from "@/lib/seo";
 
@@ -18,11 +19,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { handle } = await params;
   const collection = await getDesignCollection(handle, "us", "es-US");
-  const description = collection?.seoDescription || collection?.description;
+  const description = getCollectionSeoDescription(collection);
   if (!collection || !description) {
     return buildNoIndexMetadata({
       title: collection?.title || "Colección no disponible",
-      description: "Esta colección no está disponible actualmente.",
+      description: collection
+        ? "Explora las piezas de esta colección de diseño de Joya Mana."
+        : "Esta colección no está disponible actualmente.",
     });
   }
   return buildMetadata({

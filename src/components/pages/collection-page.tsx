@@ -5,6 +5,7 @@ import { getDesignCollection } from "@/lib/commerce/catalog";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import { getCollectionSeoDescription } from "@/lib/seo";
 import {
   buildCollectionStructuredData,
   serializeIndexableStructuredData,
@@ -47,17 +48,19 @@ export async function CollectionPage({
       path: `/collections/${collection.handle}`,
     },
   ];
-  const structuredData = serializeIndexableStructuredData(
-    buildCollectionStructuredData({
-      name: collection.title,
-      description: collection.description,
-      path: `/collections/${collection.handle}`,
-      products: collection.products,
-      locale,
-      breadcrumbs,
-    }),
-    { locale, path: `/collections/${collection.handle}` },
-  );
+  const structuredData = getCollectionSeoDescription(collection)
+    ? serializeIndexableStructuredData(
+        buildCollectionStructuredData({
+          name: collection.title,
+          description: collection.description,
+          path: `/collections/${collection.handle}`,
+          products: collection.products,
+          locale,
+          breadcrumbs,
+        }),
+        { locale, path: `/collections/${collection.handle}` },
+      )
+    : null;
 
   return (
     <>

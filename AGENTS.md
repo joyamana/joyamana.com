@@ -133,44 +133,17 @@
 - 文档、决策记录、环境变量示例和运行命令与代码同步。
 - 最终交付说明变更、验证结果、剩余风险和需要业务方完成的事项。
 
-## 当前仓库状态
+## 当前状态与验证入口
 
-截至 2026-09-02，仓库包含 Next.js 16 App Router 测试站、pnpm 配置以及
-Shopify-only Storefront API 适配层。US en-US 根路径与 `/es-us/` 已共享同一
-Catalog/Cart；商品、Variant、Category、Design Collection、实时价格/可售性/可用数量、
-Bag 和独立 Buy now Cart 已接入。Product `custom.product_model` 已映射；PDP 仅对明确
-`standard` / `natural_variation` 且符合严格库存条件的 1–3 件显示准确低库存，
-`one_of_one`、未知模型和 oversell 排除。PDP 商品描述读取经过 allowlist 清理的 Shopify
-`descriptionHtml`，纯文本字段继续用于 metadata/Schema 和后备。Policy、About subtree、Accessibility、Blog/
-Crystal Guide 也由 Shopify 驱动；Contact 表单仅在受控配置后才投递。本地 mock
-Catalog 和业务正文 fallback 已删除，上游缺失时 fail closed。
+当前能力、上线范围和缺口以 [PROJECT_SPEC.md](docs/PROJECT_SPEC.md) 为统一摘要；
+业务输入见 BRAND_INPUTS，工作优先级见 ROADMAP，未决输入见 OPEN_QUESTIONS。
+本文件不重复日期化部署与审批记录。
 
-当前 `Patron Saint` 已是非空、Headless 可见且标记为 `design_series` 的 Collection；
-基础系列路由有效，但 description/SEO 与 Design Series story/lookbook 链路尚未完成。
-Shipping/Returns 与 About EN/ES 正文已获业务方确认，每件商品附带专属 guidebook；
-Terms 后台占位符已修正。`info@joyamana.com` 可收信，当前正式客服模式为 Email-only，
-负责人/备援、外发认证和回复投递表现已确认；Logo、字体授权、颜色及真实商品摄影/视频
-也已解决。Contact 表单/Resend 后置。Blog/Crystal Guide 的两篇测试 Article 因暂无正式内容暂不处理，
-不得把它们视为正式内容或开放索引。
-
-Canada 只保留未启用的 typed 规划配置。仓库示例值及未配置时的代码默认值为全站
-noindex；索引采用部署级总开关 + `src/config/indexing.ts` 中版本控制的 locale/page-group
-fail-closed 矩阵，并关闭 Shopify Checkout 和 Contact 投递；各部署环境必须单独
-核验总开关。当前没有 CI 或 format check；
-Shopify webhook 失效链路按 D-046 后置，接受内容/导航 5 分钟窗口。Playwright 按 D-043 暂时封存，只有
-复杂度触发后才重新评估；当前必须记录人工浏览器/Checkout smoke 的范围和结果。
-
-Production storefront 已通过 Vercel 在 `https://www.joyamana.com` 公开响应，
-`https://checkout.joyamana.com` 已指向 Shopify Online Store；本地 `dev` 分支用于后续
-开发并已由 Vercel 构建受保护 Preview。Production 总索引门禁已打开：en-US/es-US 的
-Core、Commerce、Policies 当前可索引，Editorial 继续关闭；公开首页为 `index, follow`，
-sitemap 已非空。D-044 已确认 `https://www.joyamana.com` 为 canonical origin，apex 308 至
-`www`，当前公开 canonical/OG 已复核为 `www`。参数页 noindex、
-document-level locale、Policy/Accessibility hreflang、Search metadata、Header
-专用 query/故障降级和环境 preflight 已实现。业务方已确认下单支付完整支持，Payment
-test mode 下的流程测试未发现问题；Commerce 西语 readiness 自动检测、
-Analytics/consent 和剩余发布运营验收尚未完成。Q-001A/B、Q-002A/B/C 已移出网站范围，
-Q-003A/F 已解决；Q-003B/C/E 只按各自配送/税费范围继续跟踪。
-
-常用命令：`pnpm dev`、`pnpm preflight`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、
-`pnpm build`。不得在实际运行前声称检查已通过。
+- Node 保持 24；精确依赖以 package.json/lockfile 为准，使用相互兼容的稳定版本。
+- 当前只有 US en-US/es-US；索引矩阵见 src/config/indexing.ts。
+  Preview 必须 noindex；Production canonical 为 `https://www.joyamana.com`。
+- Playwright 按 D-043 封存；记录人工浏览器/Checkout smoke 的范围与结果。
+- 内容/导航按 D-046 使用五分钟再验证缓存，webhook 后置；商业数据保持 no-store。
+- 代码缺省的索引、Checkout 和 Contact form 门禁关闭；各部署按批准范围单独核验。
+- 常用命令：`pnpm dev`、`pnpm preflight`、`pnpm lint`、`pnpm typecheck`、
+  `pnpm test`、`pnpm build`。不得在实际运行前声称检查已通过。
