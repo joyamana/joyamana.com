@@ -21,8 +21,10 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<PageSearchParams>;
 }) {
-  return <AboutPage handle={(await params).handle} locale="es-US" />;
+  return <AboutPage hasParameters={Object.keys(await searchParams).length > 0} handle={(await params).handle} locale="es-US" />;
 }

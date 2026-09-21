@@ -17,6 +17,6 @@ export async function generateMetadata({
   });
 }
 
-export default function Page() {
-  return <ShopPage locale="en-US" />;
+export default async function Page({ searchParams }: { searchParams: Promise<PageSearchParams> }) {
+  return <ShopPage locale="en-US" searchParams={await searchParams} />;
 }

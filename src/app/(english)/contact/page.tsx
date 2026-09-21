@@ -16,6 +16,6 @@ export async function generateMetadata({
   });
 }
 
-export default function Page() {
-  return <ContactPage locale="en-US" />;
+export default async function Page({ searchParams }: { searchParams: Promise<PageSearchParams> }) {
+  return <ContactPage locale="en-US" hasParameters={Object.keys(await searchParams).length > 0} />;
 }

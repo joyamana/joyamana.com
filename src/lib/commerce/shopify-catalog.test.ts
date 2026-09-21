@@ -11,6 +11,8 @@ import {
   getShopifyCollections,
   getShopifyProduct,
   getShopifyProducts,
+  getShopifyAvailableProducts,
+  getShopifyRelatedProducts,
   mapShopifyProduct,
   searchShopifyProducts,
   SHOPIFY_COLLECTION_QUERY,
@@ -20,6 +22,8 @@ import {
   SHOPIFY_PRODUCT_QUERY,
   SHOPIFY_PRODUCT_VARIANTS_QUERY,
   SHOPIFY_PRODUCTS_QUERY,
+  SHOPIFY_AVAILABLE_PRODUCTS_QUERY,
+  SHOPIFY_RELATED_PRODUCTS_QUERY,
   SHOPIFY_SEARCH_QUERY,
   ShopifyCatalogError,
 } from "./shopify-catalog";
@@ -134,6 +138,143 @@ afterEach(() => {
 });
 
 describe("Shopify catalog mapper and queries", () => {
+  it("maps only typed Shopify knowledge and preserves variant overrides", () => {
+    const node = productFixture();
+    node.summary = { type: "single_line_text_field", value: "  A short description.  " };
+    node.material = { type: "multi_line_text_field", value: "Quartz" };
+    node.dimensions = { type: "single_line_text_field", value: "12 mm beads" };
+    node.fit = { type: "single_line_text_field", value: "Fits approx. 16.5 cm wrist" };
+    node.treatment = { type: "single_line_text_field", value: "Heat treated" };
+    node.care = { type: "multi_line_text_field", value: "Wipe with a soft cloth." };
+    node.packageContents = { type: "multi_line_text_field", value: "Bracelet and guidebook" };
+    node.imageRepresentation = { type: "single_line_text_field", value: "representative" };
+    node.variants.nodes[0].fit = { type: "single_line_text_field", value: "Fits approx. 18 cm wrist" };
+    node.variants.nodes[0].material = { type: "single_line_text_field", value: "  " };
+
+    const mapped = mapShopifyProduct(node);
+    expect(mapped.facts).toEqual({
+      summary: "A short description.",
+      material: "Quartz",
+      dimensions: "12 mm beads",
+      fit: "Fits approx. 16.5 cm wrist",
+      treatment: "Heat treated",
+      care: "Wipe with a soft cloth.",
+      packageContents: "Bracelet and guidebook",
+      imageRepresentation: "representative",
+    });
+    expect(mapped.variants[0].facts).toEqual({ fit: "Fits approx. 18 cm wrist" });
+    expect({ ...mapped.facts, ...mapped.variants[0].facts }).toMatchObject({
+      material: "Quartz",
+      fit: "Fits approx. 18 cm wrist",
+      treatment: "Heat treated",
+    });
+    expect(SHOPIFY_PRODUCT_QUERY).toContain('key: "treatment") { type value }');
+    expect(SHOPIFY_PRODUCT_VARIANTS_QUERY).toContain('key: "fit") { type value }');
+  });
+
+  it("omits missing, blank, incompatible and unknown knowledge without reading the description", () => {
+    const node = productFixture();
+    node.description = "Untreated quartz, 12 mm beads, shown exact item.";
+    node.material = { type: "rich_text_field", value: '{"type":"root"}' };
+    node.fit = { type: "number_integer", value: "16" };
+    node.treatment = { type: "single_line_text_field", value: "  " };
+    node.imageRepresentation = { type: "single_line_text_field", value: "probably-exact" };
+    expect(mapShopifyProduct(node)).not.toHaveProperty("facts");
+    node.imageRepresentation.value = "exact_item";
+    expect(mapShopifyProduct(node).facts).toEqual({ imageRepresentation: "exact-item" });
+  });
+
+  it("maps related articles only into supported, nonempty storefront routes", () => {
+    const node = productFixture();
+    const article = {
+      __typename: "Article",
+      id: "gid://shopify/Article/1",
+      title: "Quartz care",
+      handle: "quartz-care",
+      content: "Q",
+      publishedAt: "2026-01-01T00:00:00Z",
+      blog: { handle: "crystals" },
+    };
+    node.relatedContent = {
+      type: "list.article_reference",
+      references: { nodes: [
+        article,
+        article,
+        { ...article, id: "gid://shopify/Article/2", blog: { handle: "unsupported" } },
+        { ...article, id: "gid://shopify/Article/3", handle: "../admin" },
+        { ...article, id: "gid://shopify/Article/4", content: "" },
+        { ...article, id: "gid://shopify/Article/5", publishedAt: "invalid" },
+        { __typename: "Product" },
+      ] },
+    };
+    expect(mapShopifyProduct(node).facts?.relatedContent).toEqual([
+      { id: article.id, title: "Quartz care", path: "/crystals/quartz-care" },
+    ]);
+    node.relatedContent.references = null;
+    expect(mapShopifyProduct(node)).not.toHaveProperty("facts");
+  });
+
+  it("loads a bounded available selection without full product or variant payloads", async () => {
+    shopifyFetchMock.mockResolvedValueOnce({
+      products: connection([productFixture()], true, "unused-cursor"),
+    });
+    const products = await getShopifyAvailableProducts("zh-Hant-US", 4);
+    expect(products).toHaveLength(1);
+    expect(products[0]).not.toHaveProperty("variants");
+    expect(products[0]).not.toHaveProperty("description");
+    expect(shopifyFetchMock).toHaveBeenCalledTimes(1);
+    expect(shopifyFetchMock).toHaveBeenCalledWith(
+      SHOPIFY_AVAILABLE_PRODUCTS_QUERY,
+      { country: "US", language: "ZH_TW", first: 4 },
+      { cache: "no-store" },
+    );
+    expect(SHOPIFY_AVAILABLE_PRODUCTS_QUERY).toContain('query: "available_for_sale:true"');
+    expect(SHOPIFY_AVAILABLE_PRODUCTS_QUERY).toContain("images(first: 1)");
+    expect(SHOPIFY_AVAILABLE_PRODUCTS_QUERY).not.toContain("descriptionHtml");
+    expect(SHOPIFY_AVAILABLE_PRODUCTS_QUERY).not.toContain("variants(");
+  });
+
+  it("keeps a genuine variant image when a product has no main image", async () => {
+    const node = productFixture();
+    const variantImage = node.images.nodes[0];
+    node.featuredImage = null;
+    node.images.nodes = [];
+    node.variants.nodes[0].image = variantImage;
+    expect(mapShopifyProduct(node).featuredImage?.url).toBe(variantImage.url);
+    shopifyFetchMock.mockResolvedValueOnce({
+      products: { nodes: [{ ...node, imageVariant: { image: variantImage } }] },
+    });
+    const selection = await getShopifyAvailableProducts("en-US");
+    expect(selection[0].featuredImage?.url).toBe(variantImage.url);
+  });
+
+  it("uses Shopify recommendations without catalog-wide reads or invented fallback products", async () => {
+    const source = productFixture();
+    const related = secondProductFixture();
+    shopifyFetchMock.mockResolvedValueOnce({ productRecommendations: [
+      source, related, related, { ...related, id: "gid://shopify/Product/3", availableForSale: false },
+    ] });
+    await expect(getShopifyRelatedProducts(source.id, "es-US", 3)).resolves.toEqual([
+      expect.objectContaining({ id: related.id }),
+    ]);
+    expect(shopifyFetchMock).toHaveBeenCalledTimes(1);
+    expect(shopifyFetchMock).toHaveBeenCalledWith(
+      SHOPIFY_RELATED_PRODUCTS_QUERY,
+      { country: "US", language: "ES", productId: source.id },
+      { cache: "no-store" },
+    );
+    expect(SHOPIFY_RELATED_PRODUCTS_QUERY).toContain("productRecommendations(productId: $productId, intent: RELATED)");
+    shopifyFetchMock.mockResolvedValueOnce({ productRecommendations: null });
+    await expect(getShopifyRelatedProducts(source.id, "es-US")).resolves.toEqual([]);
+  });
+
+  it("bounds selection sizes and rejects invalid recommendation identities before fetching", async () => {
+    await expect(getShopifyAvailableProducts("en-US", 100)).rejects.toThrow(RangeError);
+    await expect(getShopifyRelatedProducts("invalid", "en-US")).rejects.toThrow(ShopifyCatalogError);
+    await expect(getShopifyRelatedProducts("gid://shopify/Product/1", "en-US", 11)).rejects.toThrow(RangeError);
+    expect(shopifyFetchMock).not.toHaveBeenCalled();
+  });
+
   it("keeps MoneyV2 strings, all product images, and variant selections", () => {
     const product = mapShopifyProduct(productFixture());
 

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   getLowStockCount,
   getProductQuantityMaximum,
@@ -12,6 +12,7 @@ import {
   type ProductImage,
 } from "@/lib/commerce/types";
 import { formatMoney } from "@/lib/format";
+import { productCategoryDefinitionForTaxonomyId } from "@/config/catalog";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
@@ -52,40 +53,14 @@ export function lowStockMessage(locale: Locale, count: number) {
   });
 }
 
-export function ProductDescription({
-  description,
-  descriptionHtml,
-}: {
-  description: string;
-  descriptionHtml: string;
-}) {
-  if (descriptionHtml) {
-    return (
-      <div
-        className="product-description"
-        dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-      />
-    );
-  }
-
-  return (
-    <div className="product-description">
-      {description
-        .split(/\n{2,}/)
-        .filter(Boolean)
-        .map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
-        ))}
-    </div>
-  );
-}
-
 export function ProductPurchase({
   product,
   locale,
+  description,
 }: {
-  product: Product;
+  product: Omit<Product, "description" | "descriptionHtml">;
   locale: Locale;
+  description: ReactNode;
 }) {
   const initialVariant =
     product.variants.find((variant) => variant.availableForSale) ??
@@ -127,6 +102,7 @@ export function ProductPurchase({
             fr: "Ce produit n’est pas disponible à l’achat pour le moment.",
           })}
         </p>
+        {description}
       </section>
     );
   }
@@ -136,6 +112,28 @@ export function ProductPurchase({
       option.name.toLowerCase() !== "title" ||
       option.value.toLowerCase() !== "default title",
   );
+  const facts = { ...product.facts, ...selected.facts };
+  const isBracelet = product.category
+    ? productCategoryDefinitionForTaxonomyId(product.category.id)?.handle === "bracelets"
+    : false;
+  const hasSizeFacts = isBracelet
+    ? facts.dimensions && facts.fit
+    : facts.dimensions || facts.fit;
+  const hasKeyFacts = Boolean(facts.material && facts.treatment && hasSizeFacts);
+  const hasVisibleFacts = Boolean(
+    facts.material ||
+    facts.dimensions ||
+    facts.fit ||
+    facts.treatment ||
+    facts.imageRepresentation ||
+    (product.variants.length === 1 && meaningfulOptions.length),
+  );
+  const detailLabel = uiText(locale, {
+    zh: "商品資料",
+    en: "Product details",
+    es: "Detalles del producto",
+    fr: "Détails du produit",
+  });
   const quantityRule = selected.quantityRule;
   const quantityRuleSupported = isValidProductQuantity(
     quantityRule.minimum,
@@ -176,7 +174,7 @@ export function ProductPurchase({
                 alt={activeImage.altText || product.title}
                 width={activeImage.width}
                 height={activeImage.height}
-                priority
+                preload
                 sizes="(max-width: 760px) 100vw, 50vw"
               />
             ) : (
@@ -228,14 +226,6 @@ export function ProductPurchase({
         </div>
       </div>
       <div className="product-detail__info">
-        <p className="eyebrow">
-          {uiText(locale, {
-            zh: "Joya Mana 系列",
-            en: "Joya Mana collection",
-            es: "Colección Joya Mana",
-            fr: "Collection Joya Mana",
-          })}
-        </p>
         <h1>{product.title}</h1>
         <p className="display-price">
           {formatMoney(selected.price, locale)}
@@ -243,223 +233,225 @@ export function ProductPurchase({
             <del>{formatMoney(selected.compareAtPrice, locale)}</del>
           ) : null}
         </p>
-        <ProductDescription
-          description={product.description}
-          descriptionHtml={product.descriptionHtml}
-        />
-
-        {product.variants.length > 1 ? (
-          <fieldset className="variant-picker">
-            <legend>
+        {facts.summary ? <p className="product-summary">{facts.summary}</p> : null}
+        {!hasKeyFacts ? (
+          <>
+            <a className="product-purchase-jump text-link" href="#product-purchase-options">
               {uiText(locale, {
-                zh: "已選款式",
-                en: "Selected option",
-                es: "Opción seleccionada",
-                fr: "Option sélectionnée",
+                zh: "查看選購選項",
+                en: "View purchase options",
+                es: "Ver opciones de compra",
+                fr: "Voir les options d’achat",
               })}
-              : <strong>{selected.title}</strong>
-            </legend>
-            <div className="variant-picker__grid">
-              {product.variants.map((variant) => (
+            </a>
+            {description}
+          </>
+        ) : null}
+
+        <div
+          className="product-purchase-options"
+          id="product-purchase-options"
+          tabIndex={-1}
+        >
+          {product.variants.length > 1 ? (
+            <fieldset className="variant-picker">
+              <legend>
+                {uiText(locale, {
+                  zh: "已選款式",
+                  en: "Selected option",
+                  es: "Opción seleccionada",
+                  fr: "Option sélectionnée",
+                })}
+                : <strong>{selected.title}</strong>
+              </legend>
+              <div className="variant-picker__grid">
+                {product.variants.map((variant) => (
+                  <button
+                    type="button"
+                    key={variant.id}
+                    className={variant.id === selected.id ? "is-selected" : ""}
+                    disabled={!variant.availableForSale}
+                    onClick={() => {
+                      setSelectedId(variant.id);
+                      setQuantity(variant.quantityRule.minimum);
+                      if (variant.image) setSelectedImageUrl(variant.image.url);
+                    }}
+                    aria-pressed={variant.id === selected.id}
+                  >
+                    <span>{variant.title}</span>
+                    <small>{formatMoney(variant.price, locale)}</small>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
+          {hasVisibleFacts ? <dl className="product-key-facts">
+            {product.variants.length === 1 && meaningfulOptions.length ? (
+              <div>
+                <dt>{copy.labels.details}</dt>
+                <dd>{meaningfulOptions.map((option) => `${option.name}: ${option.value}`).join(" · ")}</dd>
+              </div>
+            ) : null}
+            {facts.material ? (
+              <div>
+                <dt>{uiText(locale, { zh: "材質", en: "Material", es: "Material", fr: "Matière" })}</dt>
+                <dd>{facts.material}</dd>
+              </div>
+            ) : null}
+            {facts.dimensions ? (
+              <div>
+                <dt>{uiText(locale, { zh: "尺寸", en: "Dimensions", es: "Medidas", fr: "Dimensions" })}</dt>
+                <dd>{facts.dimensions}</dd>
+              </div>
+            ) : null}
+            {facts.fit ? (
+              <div>
+                <dt>{uiText(locale, { zh: "佩戴尺寸", en: "Fit", es: "Ajuste", fr: "Taille" })}</dt>
+                <dd>{facts.fit}</dd>
+              </div>
+            ) : null}
+            {facts.treatment ? (
+              <div>
+                <dt>{uiText(locale, { zh: "處理方式", en: "Treatment", es: "Tratamiento", fr: "Traitement" })}</dt>
+                <dd>{facts.treatment}</dd>
+              </div>
+            ) : null}
+            {facts.imageRepresentation ? (
+              <div>
+                <dt>{uiText(locale, { zh: "商品圖片", en: "Product photography", es: "Fotografía del producto", fr: "Photographie du produit" })}</dt>
+                <dd>{facts.imageRepresentation === "exact-item"
+                  ? uiText(locale, { zh: "你收到的將是圖片中的實物。", en: "You will receive the exact piece shown.", es: "Recibirás la pieza exacta que se muestra.", fr: "Vous recevrez la pièce exacte présentée." })
+                  : uiText(locale, { zh: "圖片為同款商品示例；你收到的商品可能有天然差異。", en: "Images show a representative piece; natural variations may occur in the item you receive.", es: "Las imágenes muestran una pieza representativa; la que recibas puede presentar variaciones naturales.", fr: "Les images montrent une pièce représentative ; celle que vous recevrez peut présenter des variations naturelles." })}</dd>
+              </div>
+            ) : null}
+          </dl> : null}
+
+          {quantityRuleSupported && inventorySupportsMinimum ? (
+            <div className="quantity-picker">
+              <span id="product-quantity-label">
+                {uiText(locale, {
+                  zh: "數量",
+                  en: "Quantity",
+                  es: "Cantidad",
+                  fr: "Quantité",
+                })}
+              </span>
+              <div>
                 <button
                   type="button"
-                  key={variant.id}
-                  className={variant.id === selected.id ? "is-selected" : ""}
-                  disabled={!variant.availableForSale}
-                  onClick={() => {
-                    setSelectedId(variant.id);
-                    setQuantity(variant.quantityRule.minimum);
-                    if (variant.image) setSelectedImageUrl(variant.image.url);
-                  }}
-                  aria-pressed={variant.id === selected.id}
-                >
-                  <span>{variant.title}</span>
-                  <small>{formatMoney(variant.price, locale)}</small>
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        ) : null}
-
-        {quantityRuleSupported && inventorySupportsMinimum ? (
-          <div className="quantity-picker">
-            <span id="product-quantity-label">
-              {uiText(locale, {
-                zh: "數量",
-                en: "Quantity",
-                es: "Cantidad",
-                fr: "Quantité",
-              })}
-            </span>
-            <div>
-              <button
-                type="button"
-                aria-label={uiText(locale, {
-                  zh: "減少數量",
-                  en: "Decrease quantity",
-                  es: "Disminuir cantidad",
-                  fr: "Diminuer la quantité",
-                })}
-                disabled={
-                  quantity - quantityRule.increment < quantityRule.minimum
-                }
-                onClick={() =>
-                  setQuantity((current) =>
-                    Math.max(
-                      quantityRule.minimum,
-                      current - quantityRule.increment,
-                    ),
-                  )
-                }
-              >
-                −
-              </button>
-              <input
-                aria-labelledby="product-quantity-label"
-                inputMode="numeric"
-                min={quantityRule.minimum}
-                max={maximumQuantity}
-                step={quantityRule.increment}
-                onChange={(event) => {
-                  const next = Number(event.target.value);
-                  if (
-                    isValidAvailableProductQuantity(
-                      next,
-                      quantityRule,
-                      selected.quantityAvailable,
-                      selected.currentlyNotInStock,
-                    )
-                  ) {
-                    setQuantity(next);
+                  aria-label={uiText(locale, {
+                    zh: "減少數量",
+                    en: "Decrease quantity",
+                    es: "Disminuir cantidad",
+                    fr: "Diminuer la quantité",
+                  })}
+                  disabled={
+                    quantity - quantityRule.increment < quantityRule.minimum
                   }
-                }}
-                type="number"
-                value={quantity}
-              />
-              <button
-                type="button"
-                aria-label={uiText(locale, {
-                  zh: "增加數量",
-                  en: "Increase quantity",
-                  es: "Aumentar cantidad",
-                  fr: "Augmenter la quantité",
-                })}
-                disabled={quantity + quantityRule.increment > maximumQuantity}
-                onClick={() =>
-                  setQuantity((current) =>
-                    Math.min(
-                      maximumQuantity,
-                      current + quantityRule.increment,
-                    ),
-                  )
-                }
-              >
-                +
-              </button>
+                  onClick={() =>
+                    setQuantity((current) =>
+                      Math.max(
+                        quantityRule.minimum,
+                        current - quantityRule.increment,
+                      ),
+                    )
+                  }
+                >
+                  −
+                </button>
+                <input
+                  aria-labelledby="product-quantity-label"
+                  inputMode="numeric"
+                  min={quantityRule.minimum}
+                  max={maximumQuantity}
+                  step={quantityRule.increment}
+                  onChange={(event) => {
+                    const next = Number(event.target.value);
+                    if (
+                      isValidAvailableProductQuantity(
+                        next,
+                        quantityRule,
+                        selected.quantityAvailable,
+                        selected.currentlyNotInStock,
+                      )
+                    ) {
+                      setQuantity(next);
+                    }
+                  }}
+                  type="number"
+                  value={quantity}
+                />
+                <button
+                  type="button"
+                  aria-label={uiText(locale, {
+                    zh: "增加數量",
+                    en: "Increase quantity",
+                    es: "Aumentar cantidad",
+                    fr: "Augmenter la quantité",
+                  })}
+                  disabled={quantity + quantityRule.increment > maximumQuantity}
+                  onClick={() =>
+                    setQuantity((current) =>
+                      Math.min(
+                        maximumQuantity,
+                        current + quantityRule.increment,
+                      ),
+                    )
+                  }
+                >
+                  +
+                </button>
+              </div>
             </div>
+          ) : !quantityRuleSupported ? (
+            <p className="action-error" role="status">
+              {uiText(locale, {
+                zh: "此數量暫時未能網上訂購。",
+                en: "This quantity option is not available online.",
+                es: "Esta opción de cantidad no está disponible en línea.",
+                fr: "Cette option de quantité n’est pas disponible en ligne.",
+              })}
+            </p>
+          ) : null}
+
+          {lowStockCount !== null ? (
+            <p className="low-stock-note" aria-live="polite">
+              {lowStockMessage(locale, lowStockCount)}
+            </p>
+          ) : null}
+
+          <div className="purchase-actions">
+            <AddToCart
+              variantId={selected.id}
+              quantity={quantity}
+              available={available}
+              maximumQuantity={maximumQuantity}
+              label={copy.labels.addToCart}
+              unavailableLabel={unavailableLabel}
+              limitReachedLabel={uiText(locale, {
+                zh: "購物袋內已達可購買數量上限",
+                en: "Maximum quantity is already in your bag",
+                es: "La cantidad máxima ya está en tu bolsa",
+                fr: "La quantité maximale est déjà dans votre panier",
+              })}
+              addedLabel={uiText(locale, {
+                zh: "已加入",
+                en: "Added",
+                es: "Agregado",
+                fr: "Ajouté",
+              })}
+            />
+            <BuyNow
+              variantId={selected.id}
+              quantity={quantity}
+              available={available}
+              locale={locale}
+            />
           </div>
-        ) : !quantityRuleSupported ? (
-          <p className="action-error" role="status">
-            {uiText(locale, {
-              zh: "此數量暫時未能網上訂購。",
-              en: "This quantity option is not available online.",
-              es: "Esta opción de cantidad no está disponible en línea.",
-              fr: "Cette option de quantité n’est pas disponible en ligne.",
-            })}
-          </p>
-        ) : null}
-
-        {lowStockCount !== null ? (
-          <p className="low-stock-note" aria-live="polite">
-            {lowStockMessage(locale, lowStockCount)}
-          </p>
-        ) : null}
-
-        <div className="purchase-actions">
-          <AddToCart
-            variantId={selected.id}
-            quantity={quantity}
-            available={available}
-            maximumQuantity={maximumQuantity}
-            label={copy.labels.addToCart}
-            unavailableLabel={unavailableLabel}
-            limitReachedLabel={uiText(locale, {
-              zh: "購物袋內已達可購買數量上限",
-              en: "Maximum quantity is already in your bag",
-              es: "La cantidad máxima ya está en tu bolsa",
-              fr: "La quantité maximale est déjà dans votre panier",
-            })}
-            addedLabel={uiText(locale, {
-              zh: "已加入",
-              en: "Added",
-              es: "Agregado",
-              fr: "Ajouté",
-            })}
-          />
-          <BuyNow
-            variantId={selected.id}
-            quantity={quantity}
-            available={available}
-            locale={locale}
-          />
         </div>
 
-        <dl className="fact-list">
-          <div>
-            <dt>
-              {uiText(locale, {
-                zh: "供應狀況",
-                en: "Availability",
-                es: "Disponibilidad",
-                fr: "Disponibilité",
-              })}
-            </dt>
-            <dd>
-              {available
-                ? uiText(locale, {
-                    zh: "可於美國購買。",
-                    en: "Available for purchase in the United States.",
-                    es: "Disponible para comprar en Estados Unidos.",
-                    fr: "Disponible à l’achat aux États-Unis.",
-                  })
-                : unavailableLabel}
-            </dd>
-          </div>
-          {meaningfulOptions.length ? (
-            <div>
-              <dt>{copy.labels.details}</dt>
-              <dd>
-                {meaningfulOptions
-                  .map((option) => `${option.name}: ${option.value}`)
-                  .join(" · ")}
-              </dd>
-            </div>
-          ) : null}
-          {product.facts?.material ? (
-            <div>
-              <dt>{copy.labels.details}</dt>
-              <dd>{product.facts.material}</dd>
-            </div>
-          ) : null}
-          {product.facts?.dimensions ? (
-            <div>
-              <dt>
-                {uiText(locale, {
-                  zh: "尺寸",
-                  en: "Dimensions",
-                  es: "Medidas",
-                  fr: "Dimensions",
-                })}
-              </dt>
-              <dd>{product.facts.dimensions}</dd>
-            </div>
-          ) : null}
-          {product.facts?.care ? (
-            <div>
-              <dt>{copy.labels.care}</dt>
-              <dd>{product.facts.care}</dd>
-            </div>
-          ) : null}
+        <dl className="fact-list product-service-facts">
           <div>
             <dt>
               {uiText(locale, {
@@ -494,7 +486,32 @@ export function ProductPurchase({
               </span>
             </dd>
           </div>
+          {facts.packageContents ? (
+            <div>
+              <dt>{uiText(locale, { zh: "隨附內容", en: "Included with your piece", es: "Incluido con tu pieza", fr: "Inclus avec votre pièce" })}</dt>
+              <dd>{facts.packageContents}</dd>
+            </div>
+          ) : null}
+          {facts.care ? (
+            <div>
+              <dt>{copy.labels.care}</dt>
+              <dd>{facts.care}</dd>
+            </div>
+          ) : null}
         </dl>
+        {hasKeyFacts ? (
+          <section className="product-long-description" aria-labelledby="product-details-heading">
+            <h2 id="product-details-heading">{detailLabel}</h2>
+            {description}
+          </section>
+        ) : null}
+        {facts.relatedContent?.length ? (
+          <nav className="product-related-content" aria-label={uiText(locale, { zh: "相關閱讀", en: "Related reading", es: "Lecturas relacionadas", fr: "Lectures connexes" })}>
+            {facts.relatedContent.map((entry) => (
+              <Link className="text-link" key={entry.id} href={localePath(locale, entry.path)}>{entry.title}</Link>
+            ))}
+          </nav>
+        ) : null}
       </div>
     </section>
   );

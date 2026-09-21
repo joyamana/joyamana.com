@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { Product } from "@/lib/commerce/types";
+import type { ProductSummary } from "@/lib/commerce/types";
 import { formatPriceRange } from "@/lib/format";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
@@ -11,27 +11,14 @@ export function ProductCard({
   product,
   locale,
 }: {
-  product: Product;
+  product: ProductSummary;
   locale: Locale;
 }) {
   const copy = getCopy(locale);
-  const image =
-    product.featuredImage ?? product.images[0] ?? product.variants[0]?.image;
-  const availabilityLabel = product.availableForSale
-    ? uiText(locale, {
-        zh: "可購買",
-        en: "Available",
-        es: "Disponible",
-        fr: "Disponible",
-      })
-    : copy.labels.soldOut;
+  const image = product.featuredImage ?? product.images[0];
 
   return (
-    <article
-      className={`product-card product-card--${
-        product.availableForSale ? "available" : "unavailable"
-      }`}
-    >
+    <article className="product-card">
       <Link
         className="product-card__visual"
         href={localePath(locale, `/products/${product.handle}`)}
@@ -44,7 +31,7 @@ export function ProductCard({
             alt={image.altText || product.title}
             width={image.width}
             height={image.height}
-            sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 25vw"
+            sizes="(max-width: 359px) 100vw, (max-width: 1180px) 50vw, 25vw"
           />
         ) : (
           <span className="product-media-unavailable product-media-unavailable--compact">
@@ -56,34 +43,18 @@ export function ProductCard({
             })}
           </span>
         )}
-        {!product.availableForSale ? (
-          <span className="product-card__availability-badge" aria-hidden="true">
-            {availabilityLabel}
-          </span>
-        ) : null}
       </Link>
       <div className="product-card__body">
-        <div className="product-card__meta">
-          <p
-            className={`product-card__availability product-card__availability--${
-              product.availableForSale ? "available" : "unavailable"
-            }`}
-          >
-            <span
-              className="product-card__availability-dot"
-              aria-hidden="true"
-            />
-            {availabilityLabel}
-          </p>
-          <p className="product-card__price">
-            {formatPriceRange(product.priceRange, locale)}
-          </p>
-        </div>
         <h3>
           <Link href={localePath(locale, `/products/${product.handle}`)}>
             {product.title}
           </Link>
         </h3>
+        {product.facts?.dimensions ? <p className="product-card__detail">{product.facts.dimensions}</p> : null}
+        <p className="product-card__price">{formatPriceRange(product.priceRange, locale)}</p>
+        {!product.availableForSale ? (
+          <p className="product-card__availability">{copy.labels.soldOut}</p>
+        ) : null}
       </div>
     </article>
   );

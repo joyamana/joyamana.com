@@ -1,8 +1,8 @@
 # Content, SEO and GEO Specification
 
-Status: Working — Shopify 内容/SEO 技术边界已实现，正式内容与 crawler policy 待批准
+Status: Active — Shopify 内容与分层索引；正式内容和发布验收独立跟踪
 Owner: Content / SEO  
-Last updated: 2026-09-11
+Last updated: 2026-09-21
 Supersedes: `docs/archive/` 中两份 SEO/GEO 架构总结的实施结论
 
 ## 1. 核心原则
@@ -81,8 +81,8 @@ Blog 是唯一栏目名称与路径。不得创建 `/journal`、Journal UI 别�
   Accessibility，以及需要由 Headless storefront 读取的结构化品牌内容。
 - Shopify Blog/Article：`blog` 承载 Blog，`crystals` 承载 Crystal Guide；Article
   保存正文、发布状态、作者、日期、SEO，并按需使用 Metafields 保存结构化扩展。
-- Shopify merchant-owned Metaobjects：Design Series、Author、Source、
-  可复用 FAQ、Site Settings 等结构化实体。Design Series 保存系列故事与视觉；
+- Shopify merchant-owned Metaobjects：Design Series，以及有明确复用需要时的 Author、Source、
+  Site Settings 等结构化实体。Design Series 保存系列故事与视觉；
   对应 Shopify Collection 保存公开 URL、SEO 和商品归集，职责不得双写。
 
 Next.js 使用稳定的品牌化 URL 呈现这些内容，不暴露 `/pages/*` 或 Shopify 默认
@@ -108,20 +108,15 @@ fallback 西语页的 hreflang。
 
 ## 5. 内容模型
 
-### Organization / Site Settings
+### 品牌实体
 
-- brand display name
-- legal name
-- canonical domain
-- logo
-- verified social `sameAs`
-- customer service contact
-- founding/story facts
-- shipping/return policy references
-- sourcing/authenticity claims
-- default market/locale
+当前 Home/Contact 的最小品牌图谱使用集中 `brand.name`、`brand.supportEmail`、
+规范 origin 与正式 Logo，输出同一 `OnlineStore`（Organization 子类型）和 `WebSite`。
+`#organization`、`#website` 在语言间稳定，页面实体使用对应语言 URL。
+未知 legal name、地址、社交 `sameAs`、成立年份或采购声明不输出。
 
-缺失字段不输出，不用占位填充 Organization Schema。
+未来需由运营维护更多公开字段时，再按 Shopify Site Settings 契约接入；不得把非公开主体
+记录复制为网页数据，也不为填满 Schema 捏造字段。
 
 ### Content Page / About
 
@@ -146,21 +141,13 @@ About 使用下列受控关系：
 
 ### Product knowledge
 
-Commerce 核心字段见 `COMMERCE_SPEC.md`。内容扩展包括：
+Product/Variant 已接入可选摘要、材质、尺寸/fit、处理、护理、包含物与图片代表性，Product
+另接入已发布 Article 关联；精确字段与前端完整性规则见 [COMMERCE_SPEC](COMMERCE_SPEC.md)，
+后台步骤见 [SHOPIFY_CATALOG_SETUP](SHOPIFY_CATALOG_SETUP.md#33-product-knowledge)。
+origin、weight、craftsmanship 等其他知识仍无独立 mapper。
 
-- materials、dimensions、weight
-- origin 与 treatment disclosure
-- care、安全与天然差异
-- craftsmanship/process
-- packaging contents
-- use/occasion（非医疗功效）
-- visible FAQ
-- related Crystal/Article
-- source/reference（只有客观声明需要且可验证时）
-
-上述 Product knowledge metafields 尚未进入当前 Shopify mapper。在 definition、真实值、
-翻译与可见 PDP 同时完成前，不得从商品标题/描述猜测这些字段，也不得
-输出对应 Schema 扩展。
+代码可读不代表字段已经填充或译文已审校。只有真实值在页面可见并有对应 Schema 语义时才
+扩展结构化数据，不从标题、正文或图片猜测。实际输入统一见 [OPEN_QUESTIONS](OPEN_QUESTIONS.md)。
 
 ### Design Series
 
@@ -382,10 +369,8 @@ noindex。metadata、hreflang、Schema 与 sitemap 共用同一页面组判断�
 
 ## 11. hreflang 与多市场
 
-当前公开 Production storefront 已为 en-US/es-US 的 Core、Commerce、Policies 打开
-索引，Editorial 继续关闭；永久 noindex 页面和未通过内容 readiness 的单页仍排除。
-仓库已单独批准 zh-Hant-US 相同的三个 scope；生产部署生效后按下列规则核验。
-已开放的等价页面遵循：
+三语言批准范围见 D-045，当前公开响应与部署核验状态见 [PROJECT_SPEC](PROJECT_SPEC.md)。
+索引输出、译文审校、部署版本分别验收；已开放的等价页面遵循：
 
 - 每个等价页面双向输出 self 和 alternate。
 - 只列 200、indexable、内容等价、当前运营的版本。
@@ -400,10 +385,13 @@ noindex。metadata、hreflang、Schema 与 sitemap 共用同一页面组判断�
 fallback，当前已获批准的 es-US/zh-Hant-US Commerce 必须依赖有记录的人工逐页发布验收；这项
 人工控制不得被表述为已有自动检测。
 
-Policy/Accessibility 的 fallback 页自身与 sitemap 已按 readiness 保护，英文
-counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参数请求会 canonical
-到 clean URL，同时输出 `noindex, nofollow, noarchive` 并移除 hreflang；clean URL
-保持自身正常索引规则。
+Policy/Accessibility 的 fallback 页自身、sitemap 与 counterpart alternate 按真实 readiness
+保护。参数请求 canonical 到 clean URL，同时 `noindex, nofollow, noarchive`、移除 hreflang；
+Home/Contact/PDP/商品列表/About/Editorial 详情同步排除参数页 JSON-LD；
+Policy、Search 与 Editorial 索引当前不输出 JSON-LD。部署后仍须逐模板核对初始 HTML。
+clean URL 保持自身规则。Shop/Category/系列当前使用完整服务端列表，
+GET 排序/筛选不会生成独立索引页。未来分页必须先区分参数语义并批准索引迁移，不能让后续
+页一律 canonical 到首页或只输出依赖 JavaScript 的商品链接。
 
 ## 12. Structured data
 
@@ -411,7 +399,7 @@ counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参�
 
 | Page | Schema |
 |---|---|
-| Home | `Organization`, `WebSite`, `WebPage` |
+| Home | `OnlineStore`, `WebSite`, `WebPage` |
 | Product | `Product` + `Offer`/适用 Variant 模型 + `BreadcrumbList` |
 | Shop / Category | `CollectionPage`, visible `ItemList`, `BreadcrumbList` |
 | Design Collection | `CollectionPage`, visible `ItemList`, `BreadcrumbList` |
@@ -419,12 +407,15 @@ counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参�
 | Blog Article | `BlogPosting`/`Article`, real author, `BreadcrumbList` |
 | About hub | `AboutPage` + `BreadcrumbList` |
 | About child | `WebPage` + `BreadcrumbList` |
-| Contact | `ContactPage` |
+| Contact | 同一 `OnlineStore` / `WebSite` + `ContactPage` |
 | FAQ | `FAQPage`，仅适用于未来获批且完整问答在 UI 可见的场景；当前无 FAQ 路由 |
 
 规则：
 
 - 可购买 PDP 遵循 Google merchant listing 所需的 Product/Offer 字段。
+- Offer 与 UI 使用相同 Product/Variant 可售性和最小可履约数量判断；满足购买条件的
+  `currentlyNotInStock` 为 BackOrder，其他可售为 InStock，其余为 OutOfStock。
+  这不授权新的预售运营，也不将未知库存量猜成 0。
 - Variant URL/选择方式确定后，再按 Google 当前 ProductGroup/variant 指南
   建模；不为 Schema 改造无价值的重复 PDP。
 - Review/rating 只有真实、可见且符合规则时输出。
@@ -433,11 +424,10 @@ counterpart 也只在 es-US 正文真实就绪时输出 Spanish alternate。参�
 - 不把 Schema eligibility 或 rich result 展示当作保证。
 - 用自动测试验证 JSON-LD 可解析、关键字段与 UI 一致。
 
-当前 Product、Shop/Category/Design Collection、About 和 Article 详情已有受
-index gate 保护的 mapper。Home 的 `Organization`/`WebSite`/`WebPage` 与 Contact 的
-`ContactPage` 尚未实现。法律/审批输入和品牌资产已由业务方确认解决，但公开字段尚未
-映射为 Organization/Site Settings 规范化实体；这是实现与验收缺口，不可以用占位值、
-非公开记录或推断字段补齐。
+Home/Contact 最小品牌图谱与 Product、Shop/Category/系列、About、Article mapper 已实现。
+输出受部署总开关、locale/page-group 与单页 readiness 控制，参数保护范围见上一节；
+不以函数存在代替初始 HTML 验收。Policy 的配送/退货 Schema 扩展尚未接入；仅在获批正文与 Shopify 配置
+完全一致时添加，不用未知政策字段占位。
 
 ## 13. robots 与 AI crawler
 

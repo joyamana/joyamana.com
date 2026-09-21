@@ -30,13 +30,23 @@ export async function generateMetadata({
     locale: "en-US",
     path: `/products/${handle}`,
     searchParams: await searchParams,
+    images: product.featuredImage
+      ? [{
+          url: product.featuredImage.url,
+          width: product.featuredImage.width,
+          height: product.featuredImage.height,
+          alt: product.featuredImage.altText || product.title,
+        }]
+      : undefined,
   });
 }
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<PageSearchParams>;
 }) {
-  return <ProductPage locale="en-US" handle={(await params).handle} />;
+  return <ProductPage locale="en-US" handle={(await params).handle} hasParameters={Object.keys(await searchParams).length > 0} />;
 }

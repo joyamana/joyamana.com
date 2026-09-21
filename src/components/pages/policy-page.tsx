@@ -1,4 +1,5 @@
-import type { Locale } from "@/lib/i18n/locales";
+import Link from "next/link";
+import { localePath, type Locale } from "@/lib/i18n/locales";
 import {
   getShopifyPolicy,
   type ShopifyPolicyKind,
@@ -109,6 +110,14 @@ function PolicyUnavailable({
           })}
         </p>
       </header>
+      <div className="button-row">
+        <Link className="button button--primary" href={localePath(locale, "/contact")}>
+          {uiText(locale, { en: "Contact us", es: "Contáctanos", zh: "聯絡我們", fr: "Nous contacter" })}
+        </Link>
+        <Link className="button" href={localePath(locale, "/shop")}>
+          {uiText(locale, { en: "Shop all", es: "Ver todos los productos", zh: "選購全部商品", fr: "Voir tous les produits" })}
+        </Link>
+      </div>
     </article>
   );
 }

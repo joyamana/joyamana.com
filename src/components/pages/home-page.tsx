@@ -1,166 +1,114 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getProducts } from "@/lib/commerce/catalog";
+import { getAvailableProducts, getCatalogNavigationData } from "@/lib/commerce/catalog";
 import { getCopy } from "@/lib/i18n/copy";
-import type { Locale } from "@/lib/i18n/locales";
-import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
+import { localePath, marketIdForLocale, type Locale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { ProductCard } from "@/components/product-card";
+import { buildBrandStructuredData, serializeIndexableStructuredData } from "@/lib/structured-data";
 
-export async function HomePage({ locale }: { locale: Locale }) {
+export async function HomePage({ locale, hasParameters = false }: { locale: Locale; hasParameters?: boolean }) {
   const copy = getCopy(locale);
   const marketId = marketIdForLocale(locale);
-  const products = await getProducts(marketId, locale);
-  const availableProducts = products.filter(
-    (product) => product.availableForSale,
+  const [products, navigation] = await Promise.all([
+    getAvailableProducts(marketId, locale, 4),
+    getCatalogNavigationData(marketId, locale).catch(() => ({ categories: [], collections: [] })),
+  ]);
+  const availableProducts = products.filter((product) => product.availableForSale);
+  const featured = availableProducts.find((product) => product.featuredImage);
+  const viewAll = uiText(locale, { en: "View all", es: "Ver todo", zh: "查看全部", fr: "Tout voir" });
+  const story = uiText(locale, { en: "Our story", es: "Nuestra historia", zh: "我們的故事", fr: "Notre histoire" });
+  const structuredData = hasParameters ? null : serializeIndexableStructuredData(
+    buildBrandStructuredData({ locale, path: "/", name: copy.home.title, description: copy.home.intro, type: "WebPage" }),
+    { locale, path: "/" },
   );
 
   return (
     <>
+      {structuredData ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} /> : null}
       <section className="hero">
-        <Image
-          className="hero__image"
-          src="/images/joya-mana-home-hero.webp"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-        />
         <div className="hero__content">
           <p className="eyebrow">{copy.home.eyebrow}</p>
           <h1>{copy.home.title}</h1>
           <p>{copy.home.intro}</p>
           <div className="button-row">
-            <Link
-              className="button button--light"
-              href={localePath(locale, "/shop")}
-            >
-              {copy.home.cta}
-            </Link>
-            <Link
-              className="button button--ghost-light"
-              href={localePath(
-                locale,
-                availableProducts[0]
-                  ? `/products/${availableProducts[0].handle}`
-                  : "/shop",
-              )}
-            >
-              {uiText(locale, {
-                zh: "探索精選飾物",
-                en: "Discover a featured piece",
-                es: "Descubrir una pieza destacada",
-                fr: "Découvrir une pièce vedette",
-              })}
-            </Link>
+            <Link className="button button--primary" href={localePath(locale, "/shop")}>{copy.home.cta}</Link>
+            <Link className="text-link" href={localePath(locale, "/about")}>{story} <span aria-hidden="true">↗</span></Link>
           </div>
+        </div>
+        <div className={`hero__media${featured ? " hero__media--product" : ""}`}>
+          {featured?.featuredImage ? (
+            <Link href={localePath(locale, `/products/${featured.handle}`)} className="hero__piece">
+              <Image
+                src={featured.featuredImage.url}
+                alt={featured.featuredImage.altText || featured.title}
+                fill
+                preload
+                sizes="(max-width: 760px) 100vw, 55vw"
+                className="hero__image"
+              />
+              <span className="hero__caption">{featured.title}<span aria-hidden="true">↗</span></span>
+            </Link>
+          ) : (
+            <Image className="hero__image" src="/images/joya-mana-home-hero.webp" alt="" fill preload sizes="(max-width: 760px) 100vw, 55vw" />
+          )}
         </div>
       </section>
 
       <section className="section">
         <div className="section-heading">
-          <div>
-            <p className="eyebrow">
-              {marketId === "ca"
-                ? uiText(locale, {
-                    zh: "加拿大商品目錄 · CAD",
-                    en: "Canada catalog · CAD",
-                    es: "Canada catalog · CAD",
-                    fr: "Catalogue Canada · CAD",
-                  })
-                : uiText(locale, {
-                    zh: "美國商品目錄 · USD",
-                    en: "US catalog · USD",
-                    es: "Catálogo de EE. UU. · USD",
-                    fr: "Catalogue États-Unis · USD",
-                  })}
-            </p>
-            <h2>{copy.home.featured}</h2>
+          <h2>{copy.home.featured}</h2>
+          <Link className="text-link" href={localePath(locale, "/shop")}>{viewAll} <span aria-hidden="true">→</span></Link>
+        </div>
+        {availableProducts.length ? (
+          <div className="product-grid">
+            {availableProducts.map((product) => <ProductCard key={product.id} product={product} locale={locale} />)}
           </div>
-          <p>{copy.home.featuredIntro}</p>
-        </div>
-        <div className="product-grid">
-          {availableProducts.slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} />
-          ))}
-        </div>
+        ) : (
+          <div className="empty-state empty-state--compact">
+            <p>{uiText(locale, {
+              en: "No pieces are available to purchase at the moment.", es: "En este momento no hay piezas disponibles para comprar.",
+              zh: "目前暫無可購買的飾物。", fr: "Aucune pièce n’est disponible à l’achat pour le moment.",
+            })}</p>
+            <Link className="text-link" href={localePath(locale, "/shop")}>{viewAll}</Link>
+          </div>
+        )}
       </section>
 
+      {navigation.categories.length ? (
+        <section className="category-entry" aria-label={uiText(locale, { en: "Shop by category", es: "Comprar por categoría", zh: "按類別選購", fr: "Acheter par catégorie" })}>
+          {navigation.categories.map((category) => (
+            <Link href={localePath(locale, `/category/${category.handle}`)} key={category.handle}>
+              <span className="eyebrow">{copy.nav.shop}</span>
+              <h2>{category.title}</h2>
+              <span className="text-link">{viewAll} <span aria-hidden="true">→</span></span>
+            </Link>
+          ))}
+        </section>
+      ) : null}
+
       <section className="manifesto">
-        <div>
-          <p className="eyebrow">
-            {uiText(locale, {
-              zh: "我們的初衷",
-              en: "Our intention",
-              es: "Nuestro propósito",
-              fr: "Notre intention",
-            })}
-          </p>
-          <h2>
-            {uiText(locale, {
-              zh: "一顆水晶，也可以是回到自己的起點。",
-              en: "A crystal can be a way back to yourself.",
-              es: "Un cristal puede ser una forma de volver a ti.",
-              fr: "Un cristal peut être un chemin de retour vers soi.",
-            })}
-          </h2>
+        <div className="manifesto__heading">
+          <Image src="/brand/joya-mana-symbol.svg" alt="" width={96} height={54} />
+          <p className="eyebrow">{uiText(locale, { en: "Our intention", es: "Nuestro propósito", zh: "我們的初衷", fr: "Notre intention" })}</p>
+          <h2>{uiText(locale, {
+            en: "A crystal can be a way back to yourself.", es: "Un cristal puede ser una forma de volver a ti.",
+            zh: "一顆水晶，也可以是回到自己的起點。", fr: "Un cristal peut être un chemin de retour vers soi.",
+          })}</h2>
         </div>
         <div>
-          <p>
-            {uiText(locale, {
-              zh: "我們不將水晶視為個人選擇或行動的替代品，而是富有意義的物件，讓人留意內心、梳理意念，覺察當下。",
-              en: "We see crystals not as substitutes for personal choice or action, but as meaningful objects that invite reflection, intention, and awareness.",
-              es: "No vemos los cristales como sustitutos de las decisiones o las acciones personales, sino como objetos significativos que invitan a la reflexión, la intención y la conciencia.",
-              fr: "Nous ne voyons pas les cristaux comme des substituts aux choix ou aux actions personnels, mais comme des objets porteurs de sens qui invitent à la réflexion, à l’intention et à la conscience.",
-            })}
-          </p>
-          <dl className="principle-list">
-            <div>
-              <dt>01</dt>
-              <dd>
-                {uiText(locale, {
-                  zh: "停一停，回到此時此刻。",
-                  en: "Pause and return to the present moment.",
-                  es: "Haz una pausa y vuelve al momento presente.",
-                  fr: "Faire une pause et revenir au moment présent.",
-                })}
-              </dd>
-            </div>
-            <div>
-              <dt>02</dt>
-              <dd>
-                {uiText(locale, {
-                  zh: "細心聆聽自己的感受。",
-                  en: "Listen more closely to what you are feeling.",
-                  es: "Escucha con más atención lo que estás sintiendo.",
-                  fr: "Écouter plus attentivement ce que l’on ressent.",
-                })}
-              </dd>
-            </div>
-            <div>
-              <dt>03</dt>
-              <dd>
-                {uiText(locale, {
-                  zh: "讓覺察引導你的選擇與行動。",
-                  en: "Let awareness shape your choices and actions.",
-                  es: "Deja que la conciencia oriente tus decisiones y acciones.",
-                  fr: "Laisser la conscience guider ses choix et ses actions.",
-                })}
-              </dd>
-            </div>
-          </dl>
-          <Link
-            className="text-link"
-            href={localePath(locale, "/about")}
-          >
-            {uiText(locale, {
-              zh: "閱讀我們的故事",
-              en: "Read our story",
-              es: "Conoce nuestra historia",
-              fr: "Découvrir notre histoire",
-            })}{" "}
-            →
-          </Link>
+          <p>{uiText(locale, {
+            en: "We see crystals not as substitutes for personal choice or action, but as meaningful objects that invite reflection, intention, and awareness.",
+            es: "No vemos los cristales como sustitutos de las decisiones o las acciones personales, sino como objetos significativos que invitan a la reflexión, la intención y la conciencia.",
+            zh: "我們不將水晶視為個人選擇或行動的替代品，而是富有意義的物件，讓人留意內心、梳理意念，覺察當下。",
+            fr: "Nous voyons les cristaux comme des objets porteurs de sens qui invitent à la réflexion, à l’intention et à la conscience.",
+          })}</p>
+          <ol className="principle-list">
+            <li>{uiText(locale, { en: "Pause and notice.", es: "Haz una pausa y observa.", zh: "停一停，留意當下。", fr: "Faites une pause et observez." })}</li>
+            <li>{uiText(locale, { en: "Make room for reflection.", es: "Deja espacio para reflexionar.", zh: "留一點空間，聆聽自己。", fr: "Laissez place à la réflexion." })}</li>
+            <li>{uiText(locale, { en: "Choose your next step.", es: "Elige tu próximo paso.", zh: "選擇自己的下一步。", fr: "Choisissez votre prochain pas." })}</li>
+          </ol>
+          <Link className="text-link" href={localePath(locale, "/about")}>{uiText(locale, { en: "Read our story", es: "Conoce nuestra historia", zh: "閱讀我們的故事", fr: "Découvrir notre histoire" })} <span aria-hidden="true">→</span></Link>
         </div>
       </section>
     </>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   useCallback,
@@ -11,7 +12,7 @@ import {
 import { brand } from "@/config/brand";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
-import { localePath, stripLocalePrefix, languageOptionsFor } from "@/lib/i18n/locales";
+import { localePath, stripLocalePrefix } from "@/lib/i18n/locales";
 import {
   collectionNavigationFor,
   type CatalogNavigationLink,
@@ -19,6 +20,7 @@ import {
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 import { LanguageSwitch } from "./language-switch";
+import { LanguageLinks } from "./language-links";
 
 function MenuIcon() {
   return (
@@ -306,9 +308,12 @@ export function SiteHeader({
         <Link
           className="wordmark"
           href={localePath(locale)}
-          aria-label={`${brand.name} home`}
+          aria-label={uiText(locale, {
+            en: `${brand.name} home`, es: `${brand.name}, inicio`,
+            zh: `${brand.name} 首頁`, fr: `${brand.name}, accueil`,
+          })}
         >
-          {brand.name}
+          <Image src="/brand/joya-mana-wordmark.svg" alt="" width={212} height={20} />
         </Link>
         <nav className="desktop-nav" aria-label="Primary navigation">
           <DesktopNavDropdown
@@ -428,7 +433,7 @@ export function SiteHeader({
           ref={menuPanelRef}
         >
           <div className="mobile-menu__top">
-            <span className="wordmark">{brand.name}</span>
+            <Image className="wordmark" src="/brand/joya-mana-wordmark.svg" alt={brand.name} width={212} height={20} />
             <button
               aria-label={uiText(locale, {
                 zh: "關閉選單",
@@ -495,21 +500,7 @@ export function SiteHeader({
                 fr: "Langue",
               })}
             </p>
-            <div>
-              {languageOptionsFor(locale).map((item) => (
-                <Link
-                  aria-current={item.locale === locale ? "page" : undefined}
-                  href={localePath(item.locale, basePath)}
-                  hrefLang={item.locale}
-                  key={item.locale}
-                  lang={item.locale}
-                  onClick={() => closeMenu()}
-                >
-                  <span>{item.label}</span>
-                  <span>{item.shortLabel}</span>
-                </Link>
-              ))}
-            </div>
+            <LanguageLinks locale={locale} onNavigate={closeMenu} />
           </div>
         </nav>
       </div>

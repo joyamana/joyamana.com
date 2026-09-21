@@ -2,9 +2,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Product } from "@/lib/commerce/types";
 
-const mocks = vi.hoisted(() => ({ getProducts: vi.fn() }));
+const mocks = vi.hoisted(() => ({ getAvailableProducts: vi.fn(), getCatalogNavigationData: vi.fn() }));
 vi.mock("@/lib/commerce/catalog", () => ({
-  getProducts: mocks.getProducts,
+  getAvailableProducts: mocks.getAvailableProducts,
+  getCatalogNavigationData: mocks.getCatalogNavigationData,
 }));
 
 import { HomePage } from "./home-page";
@@ -34,28 +35,29 @@ function product(
 }
 
 beforeEach(() => {
-  mocks.getProducts.mockReset();
-  mocks.getProducts.mockResolvedValue([]);
+  mocks.getAvailableProducts.mockReset();
+  mocks.getCatalogNavigationData.mockResolvedValue({ categories: [], collections: [] });
+  mocks.getAvailableProducts.mockResolvedValue([]);
 });
 
 describe("Home page", () => {
   it("renders Chinese UI and links while retaining Shopify English product content", async () => {
-    mocks.getProducts.mockResolvedValue([product("english-piece", "English piece", true)]);
+    mocks.getAvailableProducts.mockResolvedValue([product("english-piece", "English piece", true)]);
     const html = renderToStaticMarkup(await HomePage({ locale: "zh-Hant-US" }));
-    expect(mocks.getProducts).toHaveBeenCalledWith("us", "zh-Hant-US");
+    expect(mocks.getAvailableProducts).toHaveBeenCalledWith("us", "zh-Hant-US", 4);
     expect(html).toContain("天然形態，自有意義。");
     expect(html).toContain("精選飾物");
     expect(html).toContain("English piece");
     expect(html).toContain('href="/zh-hant-us/products/english-piece"');
     expect(html).toContain('href="/zh-hant-us/about"');
-    expect(html).toContain("US$35 USD");
+    expect(html).toContain("USD\u00a035");
   });
-  it("uses the approved editorial hero and omits Blog and Collection modules", async () => {
+  it("falls back to the approved editorial image and omits Blog and Collection modules", async () => {
     const html = renderToStaticMarkup(await HomePage({ locale: "en-US" }));
 
     expect(html).toContain("Natural forms. Personal meaning.");
-    expect(html).toContain("Explore Joya Mana");
-    expect(html).toContain("Discover a featured piece");
+    expect(html).toContain("Shop all");
+    expect(html).toContain("Our story");
     expect(html).toContain("joya-mana-home-hero.webp");
     expect(html).not.toContain("bling-omen-editorial-hero.png");
     expect(html).not.toContain("From the blog");
@@ -79,8 +81,8 @@ describe("Home page", () => {
     expect(spanish).toContain("Conoce nuestra historia");
   });
 
-  it("excludes unavailable products from featured cards and the hero link", async () => {
-    mocks.getProducts.mockResolvedValue([
+  it("excludes unavailable products from featured cards", async () => {
+    mocks.getAvailableProducts.mockResolvedValue([
       product("unavailable-piece", "Unavailable piece", false),
       product("available-piece", "Available piece", true),
     ]);
@@ -92,4 +94,12 @@ describe("Home page", () => {
     expect(html).not.toContain("Unavailable piece");
     expect(html).not.toContain('href="/products/unavailable-piece"');
   });
+  it("keeps empty inventory honest and category links based on the full navigation source", async () => {
+    mocks.getCatalogNavigationData.mockResolvedValue({ categories: [{ handle: "gemstones", title: "Gemstones" }], collections: [] });
+    const html = renderToStaticMarkup(await HomePage({ locale: "en-US" }));
+    expect(html).toContain("No pieces are available to purchase");
+    expect(html).toContain('href="/category/gemstones"');
+    expect(html).not.toContain("product-card__price");
+  });
+
 });

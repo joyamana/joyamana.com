@@ -2,7 +2,7 @@
 
 Status: Active — 只记录当前未解决输入；按 `Blocks` 限定影响范围
 Owner: Project owner  
-Last updated: 2026-09-11
+Last updated: 2026-09-21
 Resolved input: `BRAND_INPUTS.md`、D-047、D-048
 
 本文件不保存已解决问题和历史审计快照。历史记录见
@@ -22,24 +22,21 @@ Resolved input: `BRAND_INPUTS.md`、D-047、D-048
 
 ## External setup and release dependencies
 
-- [ ] 完成 zh-Hant-US 商品、系列、About/Accessibility、Policies 等香港用语译文，及
-  托管 Checkout/通知审校、人工设备验收。Shopify 语言已发布、dev 代码已接入；
-  不阻塞允许英文回退的页面访问；Core/Commerce/Policies 的索引矩阵已按 D-045 获批，
-  但不等于正式繁中内容通过验收，已知 fallback 的单页索引保护仍保留。
-- [ ] 上线/变更商品前复核 Shopify Standard Product Category。
-- [ ] 为正式商品完整填充并审核 Product knowledge metafields：materials、dimensions/
-  fit、care、origin/treatment disclosure、package contents 和 related content。
-- [ ] 为所有正式商品填充 `custom.product_model`；未知或无效值继续 fail closed。
-- [ ] 定义并映射 exact item / representative image disclosure。
-- [ ] 完成 Design Series Metaobject、`custom.design_series` reference、story/lookbook；
-  `Patron Saint` 的非空 Collection 与 `collection_kind=design_series` 基础门禁已完成。
-- [ ] 配置并验收 GA4、Google Search Console 和 Merchant Center。
-- [ ] 决定并实现 Analytics/marketing consent 与 Headless `Your Privacy Choices`；不得向
-  浏览器暴露 server-only Storefront token。
-- [ ] Email/CRM 供应商与 consent/event 方案；Contact 当前保持已确认的 Email-only。
+以下为统一输入清单；其他规格描述验收契约并链接这里，不重复维护 SKU 或素材审批表。
+本轮未登录 Shopify Admin，代码接入不能替代后台实际填充与内容验收。
 
-以上清单中的代码工作在对应输入或外部配置准备后进入 Roadmap，不等于全部阻塞当前
-Production。价格、库存、Cart、Checkout 和已接入内容继续以 Shopify 为事实来源。
+| ID | 负责人/所需动作 | 完成证据 | 限定影响范围 |
+|---|---|---|---|
+| Q-201 | 商品运营：按 [Shopify setup](SHOPIFY_CATALOG_SETUP.md#33-product-knowledge) 填写真实知识字段及 `image_representation`；复核 Category、`product_model` | 至少覆盖处理材质、多 Variant、独件；字段值、图片语义及 Shopify/UI 对照记录 | 短规格、护理、关联内容和正文下移；不隐藏现有缺字段商品 |
+| Q-202 | 内容/翻译：审校 ES 与香港繁中商品、选项、字段、SEO、系列及内容页；另查托管 Checkout/通知 | 逐页译文/等价关系记录与三语言购物 smoke | 正式本地化与发布验收；保留 D-049 允许的英文回退访问 |
+| Q-203 | 品牌运营：补 `Patron Saint` 真实简介/SEO/主图，准备 Design Series reference 与 story/lookbook | 获批正文/媒体、关联定义与 Storefront 读取验证 | 系列故事及单页索引 readiness；现有商品网格可运行 |
+| Q-204 | 品牌设计：提供实际佩戴/尺度照片、guidebook 封面及允许公开内页的位置和网页裁切 | 可用原图、焦点/alt 与使用范围 | 对应新素材模块；现有 Logo/颜色/字体批准无需重做 |
+| Q-205 | 内容负责人：准备正式 Guide/Blog 稿、作者/来源和现有测试 URL 的替换/下线记录 | Shopify 发布内容及缓存后目录/详情实际响应 | 按 D-041 完成内容治理；Editorial 索引继续独立关闭 |
+| Q-206 | 运营/技术：确定 consent、Headless Privacy Choices/GPC 方案；配置 GA4、Search Console、Merchant Center | 接收方/成本/退出路径、权限及事件/feed 验收 | 新追踪/营销与发现工具；Contact 仍 Email-only |
+| Q-207 | 发布负责人：核对当前部署 SHA/时间并验收本次代码的 Preview、设备和三项门禁 | 部署记录、人工步骤/结果、回滚目标 | 新版本发布；2026-09-21 繁中公开 HTML 取样不代表完整译文验收 |
+
+商品知识与图片代表性 mapper 已接入；Product/Collection 翻译回退仍无可靠自动识别。
+已知 Policy/About 等内容回退保留 noindex 保护。以上事项只影响各自能力，不扩大为全站 blocker。
 
 ## Deferred / conditional decisions
 

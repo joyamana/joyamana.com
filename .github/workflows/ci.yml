@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Node 24 verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SITE_URL: https://www.joyamana.com
+      NEXT_PUBLIC_SITE_INDEXABLE: "false"
+      SHOPIFY_CHECKOUT_ENABLED: "false"
+      CONTACT_FORM_ENABLED: "false"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Set up the pinned pnpm version
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          run_install: false
+          cache: true
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
+
+      - name: Validate the environment
+        run: pnpm preflight
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Check types
+        run: pnpm typecheck
+
+      - name: Run unit and integration tests
+        run: pnpm test
+
+      # Dynamic Shopify routes need no credentials at build time. Google fonts
+      # are downloaded by next/font during this standard production build.
+      - name: Build
+        run: pnpm build

@@ -2,7 +2,7 @@
 
 Status: Active — Production 已公开，数据完善与发布验收持续进行
 Owner: Business owner  
-Last updated: 2026-09-11
+Last updated: 2026-09-21
 
 ## 1. 项目定义
 
@@ -23,14 +23,19 @@ Last updated: 2026-09-11
 ### 当前实施状态
 
 - Production：Vercel `https://www.joyamana.com`；apex 308 至 www。
-  Shopify hosted Checkout 使用 `https://checkout.joyamana.com`。
-- US en-US 根路径、es-US `/es-us` 与 dev 的 zh-Hant-US `/zh-hant-us` 共享 Catalog/USD；Canada 仅保留 typed planned
+  Checkout 由 Shopify 托管；域名配置与实际跳转按各部署验收。
+- US en-US 根路径、es-US `/es-us` 与 zh-Hant-US `/zh-hant-us` 共享 Catalog/USD；Canada 仅保留 typed planned
   配置，停用与未知市场路径统一 404，无预建业务模板。
 - Shopify-only：Product/Variant/Category/Design Collection、实时价格/可售性/数量、
   Bag/独立 Buy now，以及 Policy、About subtree、Accessibility、Blog/Guide。
   不完整或异常时 fail closed；界面结构和导航文案由代码维护。
-- PDP 支持格式化描述、quantity rule、准确低库存；Product knowledge metafields、
-  exact/representative image 披露、内容关联仍待完善。
+- 当前代码已接入正式 SVG 与浅紫/赭棕视觉，首页为品牌文案/真实商品图、精选、真实类别和
+  品牌主张；Header/Footer 切语言保留当前页，金额统一单一 USD code。本轮代码发布另行验收。
+- PDP 已接可选 Product/Variant knowledge、图片代表性及 Article 关联，真实填充/译文见
+  [OPEN_QUESTIONS](OPEN_QUESTIONS.md)。完整短事实就绪才下移正文；缺字段保持原披露在购买前。
+  数量/低库存/独立 Buy now 保留；Product Offer 现按同一最小可履约边界输出库存语义。
+- 首页和 PDP 推荐使用有限结果查询，推荐失败不阻断主商品。Shop/Category/系列保留完整
+  服务端列表，提供 GET 在售筛选与价格排序；没有增加分页或参数索引。
 - `Patron Saint` 已满足非空、Headless 可见和 design_series 门禁；
   description/SEO 与 Metaobject story/lookbook 尚未完成。
   系列详情的 metadata、sitemap 与 Schema 共用内容就绪判断，缺少有效描述时排除索引。
@@ -38,15 +43,17 @@ Last updated: 2026-09-11
   Contact 当前 Email-only，表单/Resend 后置。
 - 业务方确认下单支付完整支持，Payment test mode 流程未发现问题；
   live provider/payout 等后续证据单独记录，不推断已执行。
-- Production 索引范围为 en-US/es-US Core、Commerce、Policies；
-  Editorial、Cart、Search、参数页、Preview 与不满足 readiness 的条目排除。
-  dev 仓库矩阵已按业务要求将 zh-Hant-US 的 Core/Commerce/Policies 同样开启；部署后另行核验。
-  Blog/Guide 当前测试文章暂不处理。
+- 三语言 Core、Commerce、Policies 矩阵已获批准；Editorial、Cart、Search、参数页、Preview
+  与不满足 readiness 的条目排除。2026-09-21 公开 HTTP 取样中，繁中首页为 200/index，
+  首页 hreflang 含繁中，sitemap 138 条中有 46 条繁中 URL；这修正此前“尚未公开”的状态摘要，
+  不证明部署 SHA、全部译文或 Checkout 本地化通过。部署核对与内容待办统一见 OPEN_QUESTIONS。
 - 已实现 document-level locale、参数 noindex、canonical/OG、metadata、部分 Schema、
-  hreflang/readiness 与动态 sitemap。Commerce 西语 fallback 尚无自动检测，
+  hreflang/readiness 与动态 sitemap。Commerce ES/繁中 fallback 尚无自动检测，
   现按业务批准范围进行逐页人工发布验收。
-- Organization/Site Settings、Home/Contact/Policy Schema、consent/Analytics、
-  内容搜索、CI/format 与剩余设备/运营验收仍待完成。
+- Home/Contact 已接最小 OnlineStore/WebSite/页面 Schema，仅使用名称、正式 Logo、域名与客服
+  邮箱。Node 24 CI 已配置 install/preflight/lint/typecheck/tests/build；GitHub 实际运行待发布验收。
+  Policy Schema 扩展、consent/Analytics、format 与剩余设备/运营验收仍待完成；
+  独立 Site Settings 和内容搜索只在实际维护/检索需求出现时扩展。
 - 工程基线是 Node 24 + 相互兼容的稳定依赖。Header 使用独立轻量查询、故障降级和
   单层五分钟 fetch 再验证缓存；商业数据 no-store。
   错误页使用 Next `retry()` 重新获取服务端内容，类型检查先生成路由类型。
@@ -70,7 +77,7 @@ Last updated: 2026-09-11
 | 维度 | 决定 |
 |---|---|
 | 市场 | United States |
-| 语言 | en-US、es-US；dev 已接入 zh-Hant-US（香港书面语） |
+| 语言 | en-US、es-US、zh-Hant-US（香港书面语） |
 | 货币 | USD |
 | 收入 | 自有商品销售 |
 | Checkout | Shopify hosted checkout |
@@ -79,14 +86,14 @@ Last updated: 2026-09-11
 
 ### Traditional Chinese in US
 
-dev 已完整接入 `zh-Hant-US`（繁体中文、香港惯用书面语），不迁移 EN/ES URL。
+代码已完整接入 `zh-Hant-US`（繁体中文、香港惯用书面语），不迁移 EN/ES URL。
 中央注册表区分站点标签、路径、Shopify `ZH_TW` 和 Intl `zh-HK`；沿用 US/USD/Bag，
 加入香港用语 UI、中文排版、全部共享页面、三语言导航及安全 Checkout URL 支持。
 Shopify 繁体语言已发布；缺译时仍允许英文回退。按 D-049 不隐藏缺译页面，About 子页
 入口保留；政策/About/Editorial 的已知回退保留真实内容语言标记。未实现商品逐字段
 翻译检测，不把英文正文标称为已审校繁中。最新仓库矩阵已批准开启繁中 Core/Commerce/
-Policies，Editorial 关闭；部署总开关和单页 readiness 仍生效，未合并 main 或发布至 Production。
-完整译文、托管 Checkout/通知及人工设备验收仍独立跟踪。
+Policies，Editorial 关闭；部署总开关和单页 readiness 仍生效。公开响应取样见本文件
+“当前实施状态”，不据此推断具体分支或部署版本；完整译文与托管 Checkout/通知验收见 Q-202。
 
 ### Planned Market
 
@@ -188,25 +195,10 @@ Working 输入用于产品设计，不自动成为获批外部事实；不在多
 
 ## 8. 依赖
 
-### 业务依赖
-
-- Shopify 中公开商品的 SKU、图片、材料、尺寸、来源与处理信息必须真实完整；具体
-  assortment 和商品开发由业务运营管理，不在仓库维护第二份审批清单。
-- 特殊覆盖地区、Checkout 运费、税费和客服操作流程；履约模式及 Shipping/Returns
-  正文已确认。
-- 真实内容、作者背景与引用。
-- Shopify Checkout/Payment 已通过业务方验收，test mode 流程未发现问题；后续 live
-  provider/payout 对账属于运营记录，不把未执行证据写成已验证。Vercel Production 与
-  store/Headless channel 已具备运行能力。
-
-### 技术依赖
-
-- Shopify 生产 Catalog/内容/翻译完整度与最小 Storefront API 权限；测试
-  Product/Cart 读写和库存数量 scope 已验证。
-- 可用的开发与 Preview 环境；Production 与 canonical 环境值已建立，仍需新 deployment
-  的公开 HTML 和 release gate 复核。
-- 最小 Analytics 与 consent 方案。
-- 交易 Email 和支持邮箱配置；Production canonical origin 与域名/DNS 已建立。
+具体输入、负责人、完成证据及影响范围集中于 [OPEN_QUESTIONS](OPEN_QUESTIONS.md)。
+Shopify 后台填写方法见 [SHOPIFY_CATALOG_SETUP](SHOPIFY_CATALOG_SETUP.md)，执行优先级见
+[ROADMAP](ROADMAP.md)，发布步骤见 [LAUNCH_RUNBOOK](LAUNCH_RUNBOOK.md)。
+既有 Checkout test mode、客服和政策验收不因本次改版失效；新的代码、内容或部署仍各自验证。
 
 ## 9. 主要风险
 

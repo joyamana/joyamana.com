@@ -18,7 +18,9 @@ export async function EditorialDetailPage({
   locale,
   handle,
   kind,
+  hasParameters = false,
 }: {
+  hasParameters?: boolean;
   locale: Locale;
   handle: string;
   kind: EditorialKind;
@@ -36,7 +38,7 @@ export async function EditorialDetailPage({
           fr: "Guide des cristaux",
         });
   const path = `${basePath}/${entry.handle}`;
-  const structuredData = entry.usedDefaultLanguage
+  const structuredData = hasParameters || entry.usedDefaultLanguage
     ? null
     : serializeIndexableStructuredData(
         buildEditorialStructuredData({

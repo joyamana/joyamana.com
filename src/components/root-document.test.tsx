@@ -26,8 +26,20 @@ vi.mock("./locale-shell", () => ({
 import EnglishLayout from "@/app/(english)/layout";
 import SpanishUSLayout from "@/app/es-us/layout";
 import TraditionalChineseUSLayout from "@/app/zh-hant-us/layout";
+import { rootMetadata } from "./root-document";
 
 describe("Root document fonts", () => {
+  it("provides a brand share image to routes without page-specific Open Graph metadata", () => {
+    expect(rootMetadata.openGraph).toMatchObject({
+      images: [{
+        url: new URL("/brand/joya-mana-opengraph.png", rootMetadata.metadataBase!).toString(),
+        width: 1200,
+        height: 630,
+        alt: "Joya Mana",
+      }],
+    });
+  });
+
   it.each([
     ["en-US", EnglishLayout],
     ["es-US", SpanishUSLayout],

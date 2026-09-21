@@ -10,6 +10,13 @@ export type PageSearchParams = Record<
   string | string[] | undefined
 >;
 
+export const defaultOpenGraphImage = {
+  url: new URL("/brand/joya-mana-opengraph.png", siteConfig.url).toString(),
+  width: 1200,
+  height: 630,
+  alt: brand.name,
+};
+
 /** Shared by collection metadata, sitemap eligibility, and structured data. */
 export function getCollectionSeoDescription(
   collection: Pick<Collection, "description" | "seoDescription"> | null,
@@ -58,6 +65,7 @@ export function buildMetadata({
   path = "/",
   alternateLocales = enabledLocales,
   searchParams,
+  images,
 }: {
   title: string;
   description: string;
@@ -65,6 +73,7 @@ export function buildMetadata({
   path?: string;
   alternateLocales?: readonly Locale[];
   searchParams?: PageSearchParams;
+  images?: NonNullable<Metadata["openGraph"]>["images"];
 }): Metadata {
   const localizedPath = localePath(locale, path);
   const canonical = new URL(localizedPath, siteConfig.url).toString();
@@ -106,6 +115,7 @@ export function buildMetadata({
       locale: localeRegistry[locale].openGraph,
       type: "website",
       url: canonical,
+      images: images ?? [defaultOpenGraphImage],
     },
   };
 }

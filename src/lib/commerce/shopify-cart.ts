@@ -37,7 +37,6 @@ interface ShopifyProductVariant {
   currentlyNotInStock: boolean;
   quantityAvailable: number | null;
   image: ShopifyImage | null;
-  price: ShopifyMoney;
   quantityRule: ProductQuantityRule;
   product: {
     handle: string;
@@ -50,8 +49,10 @@ interface ShopifyCartLine {
   quantity: number;
   merchandise: ShopifyProductVariant;
   cost: {
+    amountPerQuantity: ShopifyMoney;
     totalAmount: ShopifyMoney;
   };
+  discountAllocations: { discountedAmount: ShopifyMoney }[];
 }
 
 export interface ShopifyCart {
@@ -125,7 +126,11 @@ const cartFields = `#graphql
         id
         quantity
         cost {
+          amountPerQuantity { amount currencyCode }
           totalAmount { amount currencyCode }
+        }
+        discountAllocations(lineLevelOnly: true) {
+          discountedAmount { amount currencyCode }
         }
         merchandise {
           ... on ProductVariant {
@@ -134,7 +139,6 @@ const cartFields = `#graphql
             availableForSale
             currentlyNotInStock
             quantityAvailable
-            price { amount currencyCode }
             quantityRule { minimum maximum increment }
             image { url altText width height }
             product { handle title }
@@ -353,8 +357,11 @@ function mapCartLine(line: ShopifyCartLine) {
     ...normalizeInventory(line.merchandise),
     quantity: line.quantity,
     quantityRule,
-    unitPrice: normalizeMoney(line.merchandise.price),
+    unitPrice: normalizeMoney(line.cost.amountPerQuantity),
     totalPrice: normalizeMoney(line.cost.totalAmount),
+    hasLineDiscount: line.discountAllocations
+      .map((allocation) => normalizeMoney(allocation.discountedAmount))
+      .some((discount) => Number(discount.amount) > 0),
   };
 }
 

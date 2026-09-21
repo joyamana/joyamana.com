@@ -4,6 +4,7 @@ import { brand } from "@/config/brand";
 import { siteConfig } from "@/config/site";
 import type { Locale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import { defaultOpenGraphImage } from "@/lib/seo";
 import { CartProvider } from "./cart-provider";
 
 const newsreader = Newsreader({
@@ -26,6 +27,9 @@ export const rootMetadata: Metadata = {
   },
   description:
     "Modern crystal jewelry and singular objects, selected for their form, symbolism, and natural character.",
+  openGraph: {
+    images: [defaultOpenGraphImage],
+  },
   robots: siteConfig.indexable
     ? { index: true, follow: true }
     : { index: false, follow: false, noarchive: true },

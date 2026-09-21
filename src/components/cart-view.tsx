@@ -31,6 +31,14 @@ export function CartView({ locale }: { locale: Locale }) {
   const [checkoutFailed, setCheckoutFailed] = useState(false);
   const checkoutErrorId = useId();
   const busy = status !== "ready";
+  const warningMessages = [...new Set(cart.warnings.map((warning) => (
+    isBlockingInventoryWarning(warning.code)
+      ? cartErrorMessage(
+          "UNAVAILABLE",
+          isEnabledLocale(locale) ? localeRegistry[locale].shopify.language : "EN",
+        )
+      : warning.message
+  )))].filter((message) => message !== error?.message);
 
   if (status === "loading") {
     return (
@@ -77,7 +85,7 @@ export function CartView({ locale }: { locale: Locale }) {
         {error ? (
           <div className="cart-feedback" role="alert">
             <p>{error.message}</p>
-            <button className="text-button" type="button" onClick={() => refresh()}>
+            <button className="text-button" type="button" disabled={busy} onClick={() => refresh()}>
               {uiText(locale, {
                 zh: "再試一次",
                 en: "Try again",
@@ -89,10 +97,10 @@ export function CartView({ locale }: { locale: Locale }) {
         ) : (
           <p>
             {uiText(locale, {
-              zh: "加入的商品會儲存於此瀏覽器的購物袋。",
-              en: "Items added here are saved for this browser session.",
-              es: "Los artículos añadidos aquí se guardan durante esta sesión del navegador.",
-              fr: "Les articles ajoutés ici sont enregistrés pour cette session de navigation.",
+              zh: "尋找一件對你有意義的飾物。",
+              en: "Find a piece that feels personal to you.",
+              es: "Encuentra una pieza con un significado personal para ti.",
+              fr: "Trouvez une pièce qui a du sens pour vous.",
             })}
           </p>
         )}
@@ -112,7 +120,7 @@ export function CartView({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="cart-layout">
+    <div className="cart-layout" aria-busy={busy}>
       <section aria-label={uiText(locale, { zh: "購物袋商品", en: "Bag items", es: "Artículos de la bolsa", fr: "Articles du panier" })}>
         <header className="cart-heading">
           <p className="eyebrow">
@@ -132,20 +140,23 @@ export function CartView({ locale }: { locale: Locale }) {
             })}
           </h1>
         </header>
-        {cart.warnings.map((warning) => (
-          <p className="cart-feedback" key={`${warning.code}:${warning.message}`} role="status">
-            {isBlockingInventoryWarning(warning.code)
-              ? cartErrorMessage(
-                  "UNAVAILABLE",
-                  isEnabledLocale(locale) ? localeRegistry[locale].shopify.language : "EN",
-                )
-              : warning.message}
+        {warningMessages.map((message) => (
+          <p className="cart-feedback" key={message} role="status">
+            {message}
           </p>
         ))}
-        {error ? (
-          <p className="cart-feedback" role="alert">
-            {error.message}
-          </p>
+        {error && !checkoutFailed ? (
+          <div className="cart-feedback" role="alert">
+            <p>{error.message}</p>
+            <button
+              className="text-button"
+              type="button"
+              disabled={busy}
+              onClick={() => refresh()}
+            >
+              {uiText(locale, { zh: "重新整理購物袋", en: "Refresh bag", es: "Actualizar bolsa", fr: "Actualiser le panier" })}
+            </button>
+          </div>
         ) : null}
         {cart.lines.map((line) => {
           const decreaseQuantity =
@@ -179,21 +190,16 @@ export function CartView({ locale }: { locale: Locale }) {
               )}
             </Link>
             <div>
-              <p className="microcopy">
-                {line.availableForSale
-                  ? uiText(locale, {
-                      zh: "可購買",
-                      en: "Available",
-                      es: "Disponible",
-                      fr: "Disponible",
-                    })
-                  : uiText(locale, {
+              {!line.availableForSale ? (
+                <p className="microcopy cart-line__availability">
+                  {uiText(locale, {
                       zh: "查看供應狀況",
                       en: "Review availability",
                       es: "Revisar disponibilidad",
                       fr: "Vérifier la disponibilité",
                     })}
-              </p>
+                </p>
+              ) : null}
               <h2>
                 <Link href={localePath(locale, `/products/${line.productHandle}`)}>
                   {line.productTitle}
@@ -202,13 +208,29 @@ export function CartView({ locale }: { locale: Locale }) {
               {line.variantTitle !== "Default Title" ? (
                 <p>{line.variantTitle}</p>
               ) : null}
-              <p>
+              <p className="cart-line__price">
                 {formatPrice(
                   line.totalPrice.amount,
                   locale,
                   line.totalPrice.currencyCode,
                 )}
               </p>
+              {line.quantity > 1 ? (
+                <p className="microcopy cart-line__unit-price">
+                  {uiText(locale, { zh: "每件", en: "Each", es: "Por unidad", fr: "À l’unité" })}{" "}
+                  {formatPrice(line.unitPrice.amount, locale, line.unitPrice.currencyCode)}
+                </p>
+              ) : null}
+              {line.hasLineDiscount ? (
+                <p className="microcopy">
+                  {uiText(locale, {
+                    zh: "上方合計已計入商品折扣。",
+                    en: "Item discounts are included in the total above.",
+                    es: "El total anterior incluye los descuentos de este artículo.",
+                    fr: "Le total ci-dessus inclut les remises sur cet article.",
+                  })}
+                </p>
+              ) : null}
               <div className="cart-line__actions">
                 <div className="cart-quantity" aria-label={uiText(locale, { zh: "數量", en: "Quantity", es: "Cantidad", fr: "Quantité" })}>
                   <button
@@ -223,7 +245,10 @@ export function CartView({ locale }: { locale: Locale }) {
                       )
                     }
                     aria-label={uiText(locale, { zh: "減少數量", en: "Decrease quantity", es: "Disminuir cantidad", fr: "Diminuer la quantité" })}
-                    onClick={() => updateItem(line.id, decreaseQuantity)}
+                    onClick={() => {
+                      setCheckoutFailed(false);
+                      void updateItem(line.id, decreaseQuantity);
+                    }}
                   >
                     −
                   </button>
@@ -240,7 +265,10 @@ export function CartView({ locale }: { locale: Locale }) {
                       )
                     }
                     aria-label={uiText(locale, { zh: "增加數量", en: "Increase quantity", es: "Aumentar cantidad", fr: "Augmenter la quantité" })}
-                    onClick={() => updateItem(line.id, increaseQuantity)}
+                    onClick={() => {
+                      setCheckoutFailed(false);
+                      void updateItem(line.id, increaseQuantity);
+                    }}
                   >
                     +
                   </button>
@@ -249,7 +277,10 @@ export function CartView({ locale }: { locale: Locale }) {
                   className="text-button"
                   type="button"
                   disabled={busy}
-                  onClick={() => removeItem(line.id)}
+                  onClick={() => {
+                    setCheckoutFailed(false);
+                    void removeItem(line.id);
+                  }}
                 >
                   {uiText(locale, {
                     zh: "移除",
@@ -290,6 +321,7 @@ export function CartView({ locale }: { locale: Locale }) {
           })}
         </p>
         <button
+          aria-busy={busy}
           aria-describedby={checkoutFailed ? checkoutErrorId : undefined}
           className="button button--primary button--wide"
           disabled={!checkoutEnabled || busy}
@@ -338,7 +370,10 @@ export function CartView({ locale }: { locale: Locale }) {
           className="text-button"
           type="button"
           disabled={busy}
-          onClick={() => clear()}
+          onClick={() => {
+            setCheckoutFailed(false);
+            void clear();
+          }}
         >
           {uiText(locale, {
             zh: "清空購物袋",
@@ -347,6 +382,9 @@ export function CartView({ locale }: { locale: Locale }) {
             fr: "Vider le panier",
           })}
         </button>
+        <Link className="text-link cart-continue" href={localePath(locale, "/shop")}>
+          {uiText(locale, { zh: "繼續選購", en: "Continue shopping", es: "Seguir comprando", fr: "Continuer vos achats" })}
+        </Link>
       </aside>
     </div>
   );

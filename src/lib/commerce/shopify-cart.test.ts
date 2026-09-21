@@ -41,8 +41,10 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
           id: lineId,
           quantity: 2,
           cost: {
+            amountPerQuantity: { amount: "68.00", currencyCode: "USD" },
             totalAmount: { amount: "136.00", currencyCode: "USD" },
           },
+          discountAllocations: [],
           merchandise: {
             id: merchandiseId,
             title: "Aquamarine",
@@ -56,7 +58,6 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
               height: 1200,
             },
             quantityRule: { minimum: 1, maximum: null, increment: 1 },
-            price: { amount: "68.00", currencyCode: "USD" },
             product: {
               handle: "aquamarine-bracelet-9-mm",
               title: "Aquamarine Bracelet",
@@ -100,6 +101,7 @@ describe("Shopify Cart mapper and validation", () => {
           quantityAvailable: 2,
           quantityRule: { minimum: 1, maximum: null, increment: 1 },
           unitPrice: { amount: "68.00", currencyCode: "USD" },
+          hasLineDiscount: false,
         },
       ],
       warnings: [
@@ -112,6 +114,36 @@ describe("Shopify Cart mapper and validation", () => {
     });
     expect(JSON.stringify(view)).not.toContain(cartId);
     expect(JSON.stringify(view)).not.toContain("checkout-secret");
+  });
+
+  it("uses Shopify cart unit prices and preserves discounted totals without dividing them", () => {
+    const cart = makeCart();
+    const line = cart.lines.nodes[0];
+    line.cost.amountPerQuantity = { amount: "49.00", currencyCode: "USD" };
+    line.cost.totalAmount = { amount: "78.00", currencyCode: "USD" };
+    line.discountAllocations = [
+      { discountedAmount: { amount: "20.00", currencyCode: "USD" } },
+    ];
+    // A catalog amount returned by an older response is not the cart unit price.
+    Object.assign(line.merchandise, {
+      price: { amount: "68.00", currencyCode: "USD" },
+    });
+    const view = mapShopifyCart(cart);
+
+    expect(view.lines[0]).toMatchObject({
+      quantity: 2,
+      unitPrice: { amount: "49.00", currencyCode: "USD" },
+      totalPrice: { amount: "78.00", currencyCode: "USD" },
+      hasLineDiscount: true,
+    });
+  });
+
+  it("does not describe zero-value discount allocations as savings", () => {
+    const cart = makeCart();
+    cart.lines.nodes[0].discountAllocations = [
+      { discountedAmount: { amount: "0.00", currencyCode: "USD" } },
+    ];
+    expect(mapShopifyCart(cart).lines[0].hasLineDiscount).toBe(false);
   });
 
   it.each(["CAD", "EUR"])(
@@ -195,6 +227,9 @@ describe("Shopify Cart Storefront operations", () => {
     expect(query).toContain("query JoyaManaCart");
     expect(query).toContain("language: $language");
     expect(query).toContain("quantityAvailable");
+    expect(query).toContain("amountPerQuantity { amount currencyCode }");
+    expect(query).toContain("discountAllocations(lineLevelOnly: true)");
+    expect(query).not.toContain("price { amount currencyCode }");
     expect(variables).toEqual({ id: cartId, language: "ES" });
     expect(options).toEqual({ cache: "no-store" });
   });

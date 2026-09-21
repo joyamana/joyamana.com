@@ -8,6 +8,8 @@ const shopifyCatalogMocks = vi.hoisted(() => ({
   getShopifyCollections: vi.fn(),
   getShopifyProduct: vi.fn(),
   getShopifyProducts: vi.fn(),
+  getShopifyAvailableProducts: vi.fn(),
+  getShopifyRelatedProducts: vi.fn(),
   searchShopifyProducts: vi.fn(),
 }));
 
@@ -22,6 +24,8 @@ import {
   getProduct,
   getProductCategory,
   getProducts,
+  getAvailableProducts,
+  getRelatedProducts,
   searchCatalog,
 } from "./catalog";
 
@@ -68,6 +72,16 @@ afterEach(() => {
 });
 
 describe("Shopify catalog facade", () => {
+  it("uses bounded Shopify selections in the requested US locale", async () => {
+    shopifyCatalogMocks.getShopifyAvailableProducts.mockResolvedValue([product]);
+    shopifyCatalogMocks.getShopifyRelatedProducts.mockResolvedValue([product]);
+    await expect(getAvailableProducts("us", "zh-Hant-US", 4)).resolves.toEqual([product]);
+    await expect(getRelatedProducts("gid://shopify/Product/2", "us", "es-US", 3)).resolves.toEqual([product]);
+    expect(shopifyCatalogMocks.getShopifyAvailableProducts).toHaveBeenCalledWith("zh-Hant-US", 4);
+    expect(shopifyCatalogMocks.getShopifyRelatedProducts).toHaveBeenCalledWith("gid://shopify/Product/2", "es-US", 3);
+    expect(shopifyCatalogMocks.getShopifyProducts).not.toHaveBeenCalled();
+  });
+
   it("builds category routes from Shopify taxonomy identity", async () => {
     shopifyCatalogMocks.getShopifyProducts.mockResolvedValue([product]);
 
@@ -155,6 +169,8 @@ describe("Shopify catalog facade", () => {
   });
 
   it("keeps planned Canada empty without consulting Shopify", async () => {
+    await expect(getAvailableProducts("ca", "en-CA")).resolves.toEqual([]);
+    await expect(getRelatedProducts("gid://shopify/Product/1", "ca", "en-CA")).resolves.toEqual([]);
     await expect(getProducts("ca", "en-CA")).resolves.toEqual([]);
     await expect(getProduct("anything", "ca", "en-CA")).resolves.toBeNull();
     await expect(getCollections("ca", "fr-CA")).resolves.toEqual([]);
@@ -167,6 +183,8 @@ describe("Shopify catalog facade", () => {
 
     expect(markets.ca.status).toBe("planned");
     expect(shopifyCatalogMocks.getShopifyProducts).not.toHaveBeenCalled();
+    expect(shopifyCatalogMocks.getShopifyAvailableProducts).not.toHaveBeenCalled();
+    expect(shopifyCatalogMocks.getShopifyRelatedProducts).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyCatalogNavigation).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyProduct).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyCollections).not.toHaveBeenCalled();

@@ -33,6 +33,7 @@ export interface CartLineView {
   quantityRule: ProductQuantityRule;
   unitPrice: CartMoney;
   totalPrice: CartMoney;
+  hasLineDiscount: boolean;
 }
 
 export interface CartWarningView {

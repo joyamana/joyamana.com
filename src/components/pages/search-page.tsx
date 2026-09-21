@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { searchCatalog } from "@/lib/commerce/catalog";
 import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
@@ -13,15 +14,12 @@ export async function SearchPage({
   query: string;
 }) {
   const marketId = marketIdForLocale(locale);
-  const results = await searchCatalog(query, marketId, locale);
+  const results = query
+    ? await searchCatalog(query, marketId, locale).catch(() => null)
+    : [];
 
   return (
     <section className="search-page">
-      <p className="eyebrow">
-        {marketId === "ca"
-          ? uiText(locale, { zh: "加拿大商品目錄 · CAD", en: "Canada catalog · CAD", es: "Canada catalog · CAD", fr: "Catalogue Canada · CAD" })
-          : uiText(locale, { zh: "共用美國商品目錄", en: "Shared US catalog", es: "Catálogo compartido de EE. UU.", fr: "Catalogue partagé des États-Unis" })}
-      </p>
       <h1>{uiText(locale, { zh: "搜尋", en: "Search", es: "Buscar", fr: "Rechercher" })}</h1>
       <form className="search-form" action={localePath(locale, "/search")}>
         <label className="sr-only" htmlFor="catalog-search">
@@ -38,7 +36,19 @@ export async function SearchPage({
           {uiText(locale, { zh: "搜尋", en: "Search", es: "Buscar", fr: "Rechercher" })}
         </button>
       </form>
-      {query ? (
+      {results === null ? (
+        <div className="empty-state" role="status">
+          <p>{uiText(locale, {
+            en: "Search is temporarily unavailable. Submit your search again or browse the shop.",
+            es: "La búsqueda no está disponible temporalmente. Vuelve a buscar o explora la tienda.",
+            zh: "搜尋暫時未能使用，請重新搜尋或瀏覽商店。",
+            fr: "La recherche est temporairement indisponible. Réessayez ou parcourez la boutique.",
+          })}</p>
+          <Link className="button" href={localePath(locale, "/shop")}>
+            {uiText(locale, { en: "Shop all", es: "Ver todos los productos", zh: "選購全部商品", fr: "Voir tous les produits" })}
+          </Link>
+        </div>
+      ) : query ? (
         <div className="search-results">
           <p>
             {uiText(locale, {
@@ -48,11 +58,28 @@ export async function SearchPage({
               fr: `${results.length} ${results.length === 1 ? "résultat de produit" : "résultats de produits"} pour « ${query} »`,
             })}
           </p>
-          <div className="product-grid product-grid--three">
+          {results.length === 0 ? (
+            <div className="empty-state">
+              <p>{uiText(locale, {
+                en: "Try a different product name or material, or browse all pieces.",
+                es: "Prueba con otro nombre de producto o material, o explora todos los productos.",
+                zh: "請嘗試其他商品名稱或材質，或瀏覽全部商品。",
+                fr: "Essayez un autre nom de produit ou matériau, ou parcourez tous les produits.",
+              })}</p>
+              <div className="button-row">
+                <Link className="button button--primary" href={localePath(locale, "/shop")}>
+                  {uiText(locale, { en: "Shop all", es: "Ver todos los productos", zh: "選購全部商品", fr: "Voir tous les produits" })}
+                </Link>
+                <Link className="button" href={localePath(locale, "/search")}>
+                  {uiText(locale, { en: "Clear search", es: "Borrar búsqueda", zh: "清除搜尋", fr: "Effacer la recherche" })}
+                </Link>
+              </div>
+            </div>
+          ) : <div className="product-grid product-grid--three">
             {results.map((product) => (
               <ProductCard key={product.id} product={product} locale={locale} />
             ))}
-          </div>
+          </div>}
         </div>
       ) : (
         <p>

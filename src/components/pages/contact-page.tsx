@@ -5,12 +5,41 @@ import { isContactFormEnabled } from "@/lib/contact-delivery.server";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import {
+  buildBrandStructuredData,
+  serializeIndexableStructuredData,
+} from "@/lib/structured-data";
 
-export function ContactPage({ locale }: { locale: Locale }) {
+export function ContactPage({
+  locale,
+  hasParameters = false,
+}: {
+  locale: Locale;
+  hasParameters?: boolean;
+}) {
   const formEnabled = isContactFormEnabled();
+  const title = uiText(locale, {
+    zh: "有甚麼可以幫到你？",
+    en: "How can we help?",
+    es: "¿En qué podemos ayudarte?",
+    fr: "Comment pouvons-nous vous aider?",
+  });
+  const description = uiText(locale, {
+    zh: "如有商品、訂單、退貨或無障礙使用方面的查詢，歡迎透過電郵聯絡我們。",
+    en: "For questions about a product, an order, a return, or accessibility, contact us by email.",
+    es: "Para preguntas sobre un producto, un pedido, una devolución o accesibilidad, contáctanos por correo electrónico.",
+    fr: "Pour toute question sur un produit, une commande, un retour ou l’accessibilité, écrivez-nous par courriel.",
+  });
+  const structuredData = hasParameters ? null : serializeIndexableStructuredData(
+    buildBrandStructuredData({ locale, path: "/contact", name: title, description, type: "ContactPage" }),
+    { locale, path: "/contact" },
+  );
 
   return (
     <section className="form-page">
+      {structuredData ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      ) : null}
       <div className="contact-intro">
         <p className="eyebrow">
           {uiText(locale, {
@@ -20,22 +49,8 @@ export function ContactPage({ locale }: { locale: Locale }) {
             fr: "Service à la clientèle",
           })}
         </p>
-        <h1>
-          {uiText(locale, {
-            zh: "有甚麼可以幫到你？",
-            en: "How can we help?",
-            es: "¿En qué podemos ayudarte?",
-            fr: "Comment pouvons-nous vous aider?",
-          })}
-        </h1>
-        <p>
-          {uiText(locale, {
-            zh: "如有商品、訂單、退貨或無障礙使用方面的查詢，歡迎透過電郵聯絡我們。",
-            en: "For questions about a product, an order, a return, or accessibility, contact us by email.",
-            es: "Para preguntas sobre un producto, un pedido, una devolución o accesibilidad, contáctanos por correo electrónico.",
-            fr: "Pour toute question sur un produit, une commande, un retour ou l’accessibilité, écrivez-nous par courriel.",
-          })}
-        </p>
+        <h1>{title}</h1>
+        <p>{description}</p>
         <a className="contact-email" href={`mailto:${brand.supportEmail}`}>
           {brand.supportEmail}
         </a>

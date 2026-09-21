@@ -6,6 +6,10 @@ import {
   withoutTrailingBrand,
 } from "./seo";
 
+const getProduct = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/commerce/catalog", () => ({ getProduct }));
+vi.mock("@/components/pages/product-page", () => ({ ProductPage: () => null }));
+
 vi.mock("@/config/indexing", () => ({
   indexingPolicy: {
     "en-US": {
@@ -53,6 +57,76 @@ describe("metadata titles", () => {
     expect(metadata.title).toBe("Aquamarine bracelet");
     expect(metadata.openGraph).toMatchObject({
       title: "Aquamarine bracelet",
+    });
+  });
+
+  it("resolves the default brand image against the configured site origin", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
+    vi.resetModules();
+    const { buildMetadata: buildSiteMetadata } = await import("./seo");
+    const metadata = buildSiteMetadata({
+      title: "About",
+      description: "The Joya Mana story.",
+      locale: "es-US",
+      path: "/about",
+    });
+
+    expect(metadata.openGraph).toMatchObject({
+      images: [{
+        url: "https://www.joyamana.com/brand/joya-mana-opengraph.png",
+        width: 1200,
+        height: 630,
+        alt: "Joya Mana",
+      }],
+    });
+  });
+
+  it("preserves an explicit page image instead of substituting the brand image", () => {
+    const images = [{
+      url: "https://cdn.shopify.com/s/files/1/product.jpg",
+      width: 1000,
+      height: 1200,
+      alt: "Quartz bracelet",
+    }];
+    const metadata = buildMetadata({
+      title: "Quartz bracelet",
+      description: "Product details.",
+      locale: "en-US",
+      images,
+    });
+
+    expect(metadata.openGraph).toMatchObject({ images });
+  });
+
+  it.each([
+    ["en-US", () => import("@/app/(english)/products/[handle]/page")],
+    ["es-US", () => import("@/app/es-us/products/[handle]/page")],
+    ["zh-Hant-US", () => import("@/app/zh-hant-us/products/[handle]/page")],
+  ] as const)("uses the normalized Shopify product image for %s shares", async (locale, loadRoute) => {
+    getProduct.mockResolvedValue({
+      title: "Quartz bracelet",
+      description: "Product details.",
+      featuredImage: {
+        url: "https://cdn.shopify.com/s/files/1/quartz.jpg",
+        width: 900,
+        height: 1200,
+        altText: "Quartz bracelet on linen",
+      },
+    });
+    const { generateMetadata } = await loadRoute();
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ handle: "quartz" }),
+      searchParams: Promise.resolve({}),
+    });
+
+    expect(getProduct).toHaveBeenCalledWith("quartz", "us", locale);
+    expect(metadata.openGraph).toMatchObject({
+      images: [{
+        url: "https://cdn.shopify.com/s/files/1/quartz.jpg",
+        width: 900,
+        height: 1200,
+        alt: "Quartz bracelet on linen",
+      }],
     });
   });
 

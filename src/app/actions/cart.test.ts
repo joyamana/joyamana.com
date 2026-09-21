@@ -57,8 +57,10 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
           id: lineId,
           quantity: 1,
           cost: {
+            amountPerQuantity: { amount: "68.00", currencyCode: "USD" },
             totalAmount: { amount: "68.00", currencyCode: "USD" },
           },
+          discountAllocations: [],
           merchandise: {
             id: merchandiseId,
             title: "Default Title",
@@ -67,7 +69,6 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
             quantityAvailable: 1,
             image: null,
             quantityRule: { minimum: 1, maximum: null, increment: 1 },
-            price: { amount: "68.00", currencyCode: "USD" },
             product: {
               handle: "aquamarine-bracelet-9-mm",
               title: "Aquamarine Bracelet",

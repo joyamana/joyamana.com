@@ -129,6 +129,7 @@ export interface ProductVariant {
   image: ProductImage | null;
   selectedOptions: SelectedOption[];
   quantityRule: ProductQuantityRule;
+  facts?: ProductFacts;
 }
 
 export function getLowStockCount(
@@ -158,9 +159,15 @@ export function getLowStockCount(
 }
 
 export interface ProductFacts {
+  summary?: string;
   material?: string;
   dimensions?: string;
+  fit?: string;
+  treatment?: string;
   care?: string;
+  packageContents?: string;
+  imageRepresentation?: "exact-item" | "representative";
+  relatedContent?: Array<{ id: string; title: string; path: string }>;
 }
 
 export interface ProductPriceRange {
@@ -196,6 +203,19 @@ export interface Product {
   model?: ProductModel;
   facts?: ProductFacts;
 }
+
+/** Display-only catalog data; purchase controls must load the complete Product. */
+export type ProductSummary = Pick<
+  Product,
+  | "id"
+  | "handle"
+  | "title"
+  | "availableForSale"
+  | "priceRange"
+  | "featuredImage"
+  | "images"
+  | "facts"
+>;
 
 export interface Collection {
   id: string;

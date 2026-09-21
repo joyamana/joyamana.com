@@ -22,17 +22,14 @@ const product: Product = {
 };
 
 describe("Product card", () => {
-  it("groups availability and price above a full-width product title", () => {
+  it("shows the complete name before its price without repeating normal availability", () => {
     const html = renderToStaticMarkup(
       <ProductCard product={product} locale="en-US" />,
     );
 
-    expect(html).toContain("product-card--available");
-    expect(html).toContain('class="product-card__meta"');
-    expect(html).toContain("product-card__availability--available");
-    expect(html).toContain("product-card__availability-dot");
     expect(html).toContain('class="product-card__price"');
-    expect(html).toContain("Available");
+    expect(html).not.toContain(">Available<");
+    expect(html.indexOf("<h3>")).toBeLessThan(html.indexOf('class="product-card__price"'));
     expect(html).toContain("Tiger&#x27;s Eye Bracelet, Multicolour — 14 mm");
     expect(html).not.toContain("Shopify");
   });
@@ -45,9 +42,8 @@ describe("Product card", () => {
       />,
     );
 
-    expect(html).toContain("product-card--unavailable");
-    expect(html).toContain("product-card__availability--unavailable");
-    expect(html).toContain("product-card__availability-badge");
+    expect(html).toContain("product-card__availability");
+    expect(html.match(/>Unavailable</g)).toHaveLength(1);
     expect(html).toContain("Unavailable");
   });
 });

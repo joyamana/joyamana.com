@@ -2,52 +2,42 @@
 
 Status: Active planning — Production 已公开，当前聚焦数据完整度、privacy/measurement 与 hardening
 Owner: Project owner  
-Last updated: 2026-09-11
+Last updated: 2026-09-21
 
 本文件只记录当前及未来优先级。已完成阶段与日期化实施记录见
 [`archive/roadmap-2026-08-to-09.md`](archive/roadmap-2026-08-to-09.md)。详细验收以
 `MVP_PRD.md` 和对应领域规格为准。
 
-当前能力与发布范围统一见 [PROJECT_SPEC.md](PROJECT_SPEC.md)。
+当前能力与发布范围统一见 [PROJECT_SPEC.md](PROJECT_SPEC.md)；所有待提供字段、译文、
+素材和外部配置集中在 [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)。
 
 ## Priority 1 — Product and Commerce completeness
 
-- 为正式商品完整填充并映射 Product knowledge metafields：materials、dimensions/fit、
-  care、origin/treatment、package contents 与 related content。
-- 为所有正式商品填充 `custom.product_model`，并实现 exact item / representative image
-  disclosure。
-- 补全 `Patron Saint` description/SEO；完成 Design Series Metaobject、reference、
-  story/lookbook 和商品关联。
-- 复核 Shopify Standard Product Category、商品正文、媒体、SKU、价格、库存和售罄行为。
-- 解决 `OPEN_QUESTIONS.md` 中仍适用的特殊地址覆盖、配送费率/免邮与税费/进口责任；
-  不把这些范围扩大成全站 blocker。
-- 保持 Commerce 西语逐页人工验收，直到建立可靠的 default-language fallback 检测。
-- dev 已完整接入 `zh-Hant-US`，按 D-049 允许缺译页面正常访问。后续补齐 Shopify 香港
-  用语译文、人工审校、托管 Checkout/交易通知与 Preview 设备验收。繁中 Core/Commerce/
-  Policies 的矩阵已单独获批开启、Editorial 关闭；发布前复核内容与实际索引输出，建立
-  持续翻译 readiness 流程，不把配置批准视为译文已验收。
+- 按 Q-201/202 完成真实商品知识、图片代表性与三语言验收；mapper 已接入，重点是
+  后台真实值、Variant 覆盖、原正文披露和购物路径。缺事实时保留全文，不猜测回填。
+- 按 Q-203 完成系列内容与 reference/story 读取；缺描述的系列维持现有 noindex。
+- 按 Q-204/207 验收新品牌资产、首页/PDP/Bag 与设备响应式，分切片发布和回滚。
+- 特殊配送与税费只按 Q-003B/C/E 范围跟踪；翻译持续 readiness 不等于关闭已批准语言。
 
 ## Priority 2 — Privacy, discovery and structured entities
 
-- 建立 Organization/Site Settings 规范化实体，使用获批公开字段实现 Home
-  Organization/WebSite/WebPage 与 ContactPage；不得复制非公开主体记录。
-- 决定并实现 Headless `Your Privacy Choices`、consent 分类与 GPC 行为；上线任何
-  analytics/marketing script 前先完成数据边界。
-- 配置并验收 GA4、Google Search Console 和 Merchant Center；建立最小可解释基线。
+- 验收 Home/Contact 已实现的最小品牌图谱与实际 HTML；新增公开字段或 Policy Schema 时
+  保持与内容事实来源一致，不复制非公开主体记录。
+- 按 Q-206 完成 privacy/measurement 与外部工具验收，再建立有效商业基线。
 - 当前 Search 保持 Product-only/noindex；只有内容规模证明需要时才接入 About、Blog、
   Crystal Guide，不提前引入独立搜索服务。
-- Blog/Crystal Guide 测试 Article 保持 Editorial noindex；有正式内容时再完成 claims、
-  author/source、SEO、图片和 EN/ES 审核。
+- 按 Q-205 完成正式 Editorial 内容治理；开放索引单独遵循 D-045，不随换色发布。
 - D-016 的 Search/User crawler 与 training crawler 策略单独决策。
 
 ## Priority 3 — Engineering and launch hardening
 
-- 建立 CI 与 format check，在固定 Node 24 环境运行 install、preflight、lint、typecheck、
-  tests 和 production build。
+- CI 已配置固定 Node 24 的 install/preflight/lint/typecheck/tests/build；验证 GitHub 实际执行，
+  格式检查按团队需要再引入，不新增仅用于本轮的工具依赖。
 - 完成关键设备/浏览器的 Accessibility、响应式、性能、链接、404、redirect、售罄与
   API 故障人工验收；达到 D-043 触发条件后再启用 Playwright。
 - 复核 Next 404 提示的客户端恢复：当前 HTTP 404/noindex 正确，但初始 HTML 是空壳，
-  提示仅在 RSC payload 中；浏览器可见性与禁用 JavaScript 的恢复入口尚待完善。
+  2026-09-21 生产构建的浏览器本语言提示/恢复链接已验证，禁用 JavaScript 的恢复入口未解决。
+  官方多 root layout 方案仍为实验性 global-not-found；稳定方案需单独评估布局/路由调整。
 - 复核 CSP、安全响应头、日志/PII、第三方脚本和生产/Preview secret 隔离。
 - 完成监控告警、owner、保留策略、rollback target 和发布值守记录。
 - 按内容/运营变化持续复核索引矩阵、sitemap、hreflang、Schema 与 Checkout smoke。

@@ -18,6 +18,6 @@ export async function generateMetadata({
   });
 }
 
-export default function Page() {
-  return <ShopPage locale="zh-Hant-US" />;
+export default async function Page({ searchParams }: { searchParams: Promise<PageSearchParams> }) {
+  return <ShopPage locale="zh-Hant-US" searchParams={await searchParams} />;
 }

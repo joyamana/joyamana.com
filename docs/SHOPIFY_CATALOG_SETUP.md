@@ -2,7 +2,7 @@
 
 Status: Active implementation guide
 Owner: Commerce / Content operations
-Last updated: 2026-09-11
+Last updated: 2026-09-21
 Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
 
 本文件说明 D-036 所需的 Shopify Admin 配置。它不包含 credential，也不授权代码或
@@ -86,7 +86,7 @@ Storefront access: enabled
 Storefront 对缺失和未知值 fail closed：不会显示低库存文案。PDP 仅对
 `standard` / `natural_variation` 中可售、非 oversell、购买增量为 1 且准确可用数量为
 1–3 的所选 Variant 显示 `Only X left`；`one_of_one` 永远排除。该字段目前只用于
-可信的库存披露，不替代后续仍需定义的 exact item / representative image disclosure。
+可信的库存披露；图片代表性必须另填下方 `custom.image_representation`，不能由模型推断。
 
 ### 3.2 Design series
 
@@ -100,6 +100,35 @@ Storefront access: enabled
 
 第一阶段每件商品只有一个主要设计系列。若未来确有跨系列商品，再另行批准改为 list；
 不要先为假设需求增加多值关系。
+
+### 3.3 Product knowledge
+
+以下字段已由 storefront 读取。先检查店铺已有 definition，再填充准确、可公开且经人工审校的值；
+不得把本文示例当作任何商品的真实数据。Product 为共享事实，需要随规格变化的字段可在
+Variant 使用同名 definition；有效 Variant 值覆盖 Product，空值不清除 Product 的已知事实。
+
+| Namespace/key | Shopify type | 内容与边界 |
+|---|---|---|
+| `custom.summary` | Single line 或 Multi-line text | 一句真实外观/材质摘要 |
+| `custom.materials` | Single line 或 Multi-line text | 可见材质，映射到 `facts.material` |
+| `custom.dimensions` | Single line 或 Multi-line text | 珠径、长度或实际尺寸及单位 |
+| `custom.fit` | Single line 或 Multi-line text | 适合手围/佩戴尺寸，必要限定语 |
+| `custom.treatment` | Single line 或 Multi-line text | 真实处理、染色、涂层或合成披露；未知不得填“未经处理” |
+| `custom.care` | Single line 或 Multi-line text | 适合该具体材质的护理 |
+| `custom.package_contents` | Single line 或 Multi-line text | 实际随附内容；guidebook 已确认，不自动包含礼盒服务 |
+| `custom.image_representation` | Single line text，preset choices | `exact_item` 或 `representative`；不得翻译枚举值 |
+| `custom.related_content` | List of Article references，Product only | 最多读取 6 项，只接受现有 `blog`/`crystals` 的有效 Article |
+
+为需要读取的 definition 开启 Storefront access。正文文本与字段译文同在 Shopify 维护；
+同一 US 商品的 EN/ES/香港繁中事实保持一致。`origin`、weight、craftsmanship 尚无独立映射，
+新增字段须先定义用途，不能期望写入任意 metafield 就自动显示。
+
+PDP 已知事实在购买前展示；已映射 bracelets 分类的完整正文下移门槛为 material + treatment
++ dimensions + fit，避免只提供珠径而遗漏适合手围；其他/未映射分类使用 material + treatment
++ dimensions/fit。必须补齐真实 taxonomy，前端不从标题猜测品类。
+尚未达到门槛时全文保持在购买前，不能为缩短页面删除现有处理披露。首轮验收至少覆盖一个
+有材质处理的商品、一个多 Variant 商品和一个独件；具体待填数据见
+[OPEN_QUESTIONS](OPEN_QUESTIONS.md)，不要在本文件维护第二份 SKU 审批表。
 
 ## 4. Collection metafields
 
@@ -157,7 +186,8 @@ Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端
 - Product 已发布到 Headless channel，Category 准确，价格/库存来自当前 US Catalog。
 - 每件正式 Product 已填充 `custom.product_model`；分别验证 `standard`、
   `natural_variation`、`one_of_one`、缺失值和 oversell Variant 的 PDP 行为。
-- Design Series Metaobject 与必要字段有已审核 EN/ES 内容。
+- Product knowledge 与图片代表性按实际商品填充；分别验证空字段、有效字段与 Variant 覆盖。
+- Design Series Metaobject 与必要字段按已发布语言完成内容审校。
 - Storefront 已实现并验证 `custom.design_series` reference 与必需故事/媒体字段读取；
   在此前只能验证 Collection 类型门禁和商品网格。
 - Series Collection 非空、handle 稳定、`collection_kind=design_series`，并发布到
@@ -170,5 +200,5 @@ Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端
 - `/collections/bracelets` 永久跳转 `/category/bracelets`；未知或普通后台 Collection
   不成为公开页面。
 - Category、Collection 与 Product 的 canonical、breadcrumbs、sitemap 和可见链接一致。
-- en-US/es-US Commerce scope 已获批准；es-US 商品与 Collection 仍需人工逐页确认非
-  fallback。索引总门禁与 Checkout gate 仍只在各自生产验收完成后开启。
+- 三语言 Commerce scope 已获批准；ES/繁中商品与 Collection 仍需人工逐页确认正文、
+  字段、metadata 与等价关系。索引总门禁、单页 readiness 与 Checkout gate 分别验收。

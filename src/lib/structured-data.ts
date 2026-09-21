@@ -1,5 +1,10 @@
 import { isIndexingEnabledFor, siteConfig } from "@/config/site";
-import type { Product } from "@/lib/commerce/types";
+import { brand } from "@/config/brand";
+import {
+  isValidAvailableProductQuantity,
+  type Product,
+  type ProductSummary,
+} from "@/lib/commerce/types";
 import { localePath, type Locale } from "@/lib/i18n/locales";
 
 export interface StructuredBreadcrumb {
@@ -17,7 +22,7 @@ interface CollectionStructuredDataInput {
   name: string;
   description?: string;
   path: string;
-  products: Product[];
+  products: ProductSummary[];
   locale: Locale;
   breadcrumbs: StructuredBreadcrumb[];
 }
@@ -41,6 +46,14 @@ interface EditorialStructuredDataInput {
   author?: string;
   publishedAt: string;
   image?: string;
+}
+
+interface BrandStructuredDataInput {
+  locale: Locale;
+  path: string;
+  name: string;
+  description?: string;
+  type: "WebPage" | "ContactPage";
 }
 
 function absoluteStorefrontUrl(locale: Locale, path: string) {
@@ -74,10 +87,53 @@ function productImages(product: Product) {
   });
 }
 
-function productCardImage(product: Product) {
-  return (
-    product.featuredImage ?? product.images[0] ?? product.variants[0]?.image ?? null
-  );
+function productCardImage(product: ProductSummary) {
+  return product.featuredImage ?? product.images[0] ?? null;
+}
+
+export function buildBrandStructuredData({
+  locale,
+  path,
+  name,
+  description,
+  type,
+}: BrandStructuredDataInput) {
+  const siteUrl = new URL("/", siteConfig.url).toString();
+  const organizationId = `${siteUrl}#organization`;
+  const websiteId = `${siteUrl}#website`;
+  const pageUrl = absoluteStorefrontUrl(locale, path);
+  const normalizedDescription = nonEmptyText(description);
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "OnlineStore",
+        "@id": organizationId,
+        name: brand.name,
+        url: siteUrl,
+        email: brand.supportEmail,
+        logo: new URL("/brand/joya-mana-lockup.svg", siteConfig.url).toString(),
+      },
+      {
+        "@type": "WebSite",
+        "@id": websiteId,
+        name: brand.name,
+        url: siteUrl,
+        publisher: { "@id": organizationId },
+      },
+      {
+        "@type": type,
+        "@id": `${pageUrl}#web-page`,
+        url: pageUrl,
+        name,
+        ...(normalizedDescription ? { description: normalizedDescription } : {}),
+        inLanguage: locale,
+        isPartOf: { "@id": websiteId },
+        about: { "@id": organizationId },
+      },
+    ],
+  };
 }
 
 function buildBreadcrumbList(
@@ -98,17 +154,29 @@ function buildBreadcrumbList(
 }
 
 function buildProductOffers(product: Product, pageUrl: string) {
-  return product.variants.map((variant) => ({
-    "@type": "Offer",
-    "@id": `${pageUrl}#offer-${stableFragment(variant.id)}`,
-    url: pageUrl,
-    price: variant.price.amount,
-    priceCurrency: variant.price.currencyCode,
-    availability:
-      product.availableForSale && variant.availableForSale
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-  }));
+  return product.variants.map((variant) => {
+    const purchasable = product.availableForSale && variant.availableForSale &&
+      isValidAvailableProductQuantity(
+        variant.quantityRule.minimum,
+        variant.quantityRule,
+        variant.quantityAvailable,
+        variant.currentlyNotInStock,
+      );
+    const availability = !purchasable
+      ? "OutOfStock"
+      : variant.currentlyNotInStock
+        ? "BackOrder"
+        : "InStock";
+
+    return {
+      "@type": "Offer",
+      "@id": `${pageUrl}#offer-${stableFragment(variant.id)}`,
+      url: pageUrl,
+      price: variant.price.amount,
+      priceCurrency: variant.price.currencyCode,
+      availability: `https://schema.org/${availability}`,
+    };
+  });
 }
 
 export function buildProductStructuredData({

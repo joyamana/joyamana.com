@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import {
   localizeProductCategory,
   productCategoryDefinitionForTaxonomyId,
 } from "@/config/catalog";
-import { getProduct, getProducts } from "@/lib/commerce/catalog";
+import { getProduct, getRelatedProducts } from "@/lib/commerce/catalog";
 import { getCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
@@ -17,20 +18,75 @@ import {
   type StructuredBreadcrumb,
 } from "@/lib/structured-data";
 
+export function ProductDescription({
+  description,
+  descriptionHtml,
+}: {
+  description: string;
+  descriptionHtml: string;
+}) {
+  if (descriptionHtml) {
+    return (
+      <div
+        className="product-description"
+        dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+      />
+    );
+  }
+
+  return (
+    <div className="product-description">
+      {description.split(/\n{2,}/).filter(Boolean).map((paragraph) => (
+        <p key={paragraph}>{paragraph}</p>
+      ))}
+    </div>
+  );
+}
+
+export async function RelatedProducts({
+  productId,
+  locale,
+}: {
+  productId: string;
+  locale: Locale;
+}) {
+  // Recommendations are optional. A failure must not hide the primary product
+  // or prevent a shopper from choosing a variant and using the purchase actions.
+  const products = await getRelatedProducts(
+    productId,
+    marketIdForLocale(locale),
+    locale,
+    3,
+  ).catch(() => []);
+  if (!products.length) return null;
+
+  return (
+    <section className="section section--bordered">
+      <div className="section-heading">
+        <h2>{getCopy(locale).labels.related}</h2>
+      </div>
+      <div className="product-grid product-grid--three">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} locale={locale} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export async function ProductPage({
   locale,
   handle,
+  hasParameters = false,
 }: {
   locale: Locale;
   handle: string;
+  hasParameters?: boolean;
 }) {
   const marketId = marketIdForLocale(locale);
-  const [product, allProducts] = await Promise.all([
-    getProduct(handle, marketId, locale),
-    getProducts(marketId, locale),
-  ]);
+  const product = await getProduct(handle, marketId, locale);
   if (!product) notFound();
-  const copy = getCopy(locale);
+  const { description, descriptionHtml, ...purchaseProduct } = product;
   const homeLabel = uiText(locale, {
     zh: "首頁",
     en: "Home",
@@ -62,7 +118,7 @@ export async function ProductPage({
       : []),
     { name: product.title, path: `/products/${product.handle}` },
   ];
-  const structuredData = serializeIndexableStructuredData(
+  const structuredData = hasParameters ? null : serializeIndexableStructuredData(
     buildProductStructuredData({ product, locale, breadcrumbs }),
     { locale, path: `/products/${product.handle}` },
   );
@@ -100,22 +156,16 @@ export async function ProductPage({
         <span>/</span>
         <span>{product.title}</span>
       </nav>
-      <ProductPurchase product={product} locale={locale} />
-      {allProducts.some((item) => item.id !== product.id) ? (
-        <section className="section section--bordered">
-          <div className="section-heading">
-            <h2>{copy.labels.related}</h2>
-          </div>
-          <div className="product-grid product-grid--three">
-            {allProducts
-              .filter((item) => item.id !== product.id)
-              .slice(0, 3)
-              .map((item) => (
-                <ProductCard key={item.id} product={item} locale={locale} />
-              ))}
-          </div>
-        </section>
-      ) : null}
+      <ProductPurchase
+        product={purchaseProduct}
+        locale={locale}
+        description={
+          <ProductDescription description={description} descriptionHtml={descriptionHtml} />
+        }
+      />
+      <Suspense fallback={null}>
+        <RelatedProducts productId={product.id} locale={locale} />
+      </Suspense>
     </>
   );
 }

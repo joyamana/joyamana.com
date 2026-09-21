@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 import { checkoutDisabledNote } from "./buy-now";
 import {
   lowStockMessage,
-  ProductDescription,
   productShippingReturnsSummary,
 } from "./product-purchase";
+import { ProductDescription } from "./pages/product-page";
 
 describe("product policy copy", () => {
   it("summarizes the confirmed US shipping and return terms", () => {

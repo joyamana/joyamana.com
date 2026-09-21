@@ -2,7 +2,7 @@
 
 Status: Active  
 Owner: Project owner  
-Last updated: 2026-09-11
+Last updated: 2026-09-21
 
 本文件只保存有效决定与必要的替代关系。状态以索引为准：Accepted 为业务批准，
 Working 为可替换实现选择，Proposed 为未批准建议，Pending 必须等待决策。
@@ -61,12 +61,28 @@ Working 为可替换实现选择，Proposed 为未批准建议，Pending 必须�
 | D-047 | Website blocker boundary | Accepted | Q-001A/B、Q-002A/B/C 移出网站范围；Q-003A/F 已解决 |
 | D-048 | Checkout/payment readiness | Accepted | 下单支付完整支持；Payment test mode 流程测试通过 |
 | D-049 | US Traditional Chinese | Accepted | dev 完整接入 zh-Hant-US / 香港用语；允许后台英文回退，索引范围遵循 D-045 |
+| D-050 | Brand implementation refresh | Accepted | 按用户提供 Logo/色板落实浅紫与赭棕品牌系统，优化购物信息层级；保留既有 URL/导航/交易/索引边界 |
 
 Superseded 决策正文移至
 [`archive/superseded-decisions-2026-08.md`](archive/superseded-decisions-2026-08.md)；
 索引保留 ID、状态和替代关系，归档正文不作为当前实现依据。
 
 ## 架构与业务边界
+
+### D-050 — 品牌与购物体验优化（2026-09-21）
+
+用户在评估后授权全部优化。正式 Logo 从所提供 AI 原稿导出矢量路径，网页品牌色为
+`#D8D2F0` / `#7B2C06`；以暖白商品区和既有字体形成一致品牌体验，替代此前深梅紫视觉方向。
+首页、商品卡、购买区和服务页同步优化，短事实仅来自 Shopify；不为页面效果编写商品事实。
+
+保留 D-015/030/033/036/045/049 的 Blog、50/50 PDP、首页无 Blog/系列推荐、自适应目录、
+索引和语言规则。目录先用完整服务端列表配轻量筛选/排序，不新增分页索引迁移；
+首页/推荐改用有限结果查询。金额遵循 D-031，保留单一 USD 代码。
+
+理由：现有普通字标和深梅紫尚未反映正式资产，长商品正文与重复状态增加购买摩擦。
+替代方案是只换颜色或重建站点；本次复用现有组件与 Shopify 适配层，避免平行系统。
+迁移影响限于资产、样式、可选商品字段与展示层；URL、Cart、Checkout、内容事实来源和
+生产第三方平台不变。字段缺失保留真实正文，不虚构回填。部署与 Shopify 内容更新分别验收和回滚。
 
 ### D-001 — Brand + Content + Commerce
 

@@ -18,7 +18,9 @@ import {
 export async function AboutPage({
   handle,
   locale,
+  hasParameters = false,
 }: {
+  hasParameters?: boolean;
   handle?: string;
   locale: Locale;
 }) {
@@ -44,6 +46,7 @@ export async function AboutPage({
       locale={locale}
       page={page}
       tree={tree}
+      hasParameters={hasParameters}
     />
   );
 }
@@ -52,7 +55,9 @@ export function AboutContentPage({
   locale,
   page,
   tree,
+  hasParameters = false,
 }: {
+  hasParameters?: boolean;
   handle?: string;
   locale: Locale;
   page: StorefrontAboutPage;
@@ -78,7 +83,7 @@ export function AboutContentPage({
     ...(isRoot ? [] : [{ name: page.title, path }]),
   ];
   const structuredData =
-    !tree.root.usedDefaultLanguage && !page.usedDefaultLanguage
+    !hasParameters && !tree.root.usedDefaultLanguage && !page.usedDefaultLanguage
       ? serializeIndexableStructuredData(
           buildAboutStructuredData({
             name: page.title,
@@ -220,6 +225,14 @@ function AboutUnavailable({ locale }: { locale: Locale }) {
           })}
         </p>
       </header>
+      <div className="button-row">
+        <Link className="button button--primary" href={localePath(locale, "/contact")}>
+          {uiText(locale, { en: "Contact us", es: "Contáctanos", zh: "聯絡我們", fr: "Nous contacter" })}
+        </Link>
+        <Link className="button" href={localePath(locale, "/shop")}>
+          {uiText(locale, { en: "Shop all", es: "Ver todos los productos", zh: "選購全部商品", fr: "Voir tous les produits" })}
+        </Link>
+      </div>
     </section>
   );
 }

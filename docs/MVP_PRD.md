@@ -2,12 +2,13 @@
 
 Status: Active requirements — 按当前公开范围持续验收
 Owner: Product owner  
-Last updated: 2026-09-11
+Last updated: 2026-09-21
 Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
 
-当前实现已覆盖 Shopify Catalog/Cart、主要路由和部分内容/SEO adapter，但正式
-Product knowledge、exact/representative image 披露、内容到商品关系、Home Email opt-in、
-完整 Schema、Analytics/consent 与剩余设备/运营验收仍是缺口；webhook 按 D-046 后置。
+当前实现覆盖 Shopify Catalog/Cart、可选 Product/Variant knowledge、图片代表性、Article
+关联和主要路由；代码能力与公开状态统一见 [PROJECT_SPEC](PROJECT_SPEC.md)。真实商品字段、
+翻译、素材和外部配置集中见 [OPEN_QUESTIONS](OPEN_QUESTIONS.md)，不因 mapper 存在而视为已验收。
+Analytics/consent、部分 Schema 与设备/运营验收继续推进；webhook 按 D-046 后置。
 下单支付已通过业务方的 Payment test mode 验收；Playwright 按 D-043 暂缓。
 Product
 `custom.product_model` 已映射并用于可信低库存门禁；西语 document-level language 已修复。
@@ -50,15 +51,15 @@ URL 名称遵循已确认的 Joya Mana 信息架构与 D-007/D-036：
 | Route | 目的 | Index |
 |---|---|---|
 | `/` | 品牌价值、主分类、主商品、教育入口、信任 | Yes |
-| `/shop` | 当前 US Catalog 全部在售商品 | Yes |
+| `/shop` | 当前 US Catalog 全商品与可售筛选 | Yes |
 | `/category/{handle}` | Bracelet、Ring 等稳定商品类别 | Yes，非空时 |
 | `/collections` | 原创设计系列总览 | Yes，内容充足时 |
 | `/collections/{handle}` | 单一原创设计系列及其商品 | Yes，非空且内容完整时 |
 | `/products/{handle}` | 单一商品或同组变体购买页 | Yes |
-| `/crystals` | 晶体知识枢纽 | Yes |
-| `/crystals/{slug}` | 单一晶体实体权威页 | Yes |
-| `/blog` | Blog 文章枢纽；唯一栏目名称 | Yes，首发时有真实文章才开放 |
-| `/blog/{slug}` | 问题、比较、护理、礼赠等文章 | Yes |
+| `/crystals` | 晶体知识枢纽 | No，当前 Editorial 关闭 |
+| `/crystals/{slug}` | 单一晶体实体权威页 | No，当前 Editorial 关闭 |
+| `/blog` | Blog 文章枢纽；唯一栏目名称 | No，正式内容就绪后单独决定 |
+| `/blog/{slug}` | 问题、比较、护理、礼赠等文章 | No，当前 Editorial 关闭 |
 | `/about` | 品牌故事与真实承诺 | Yes |
 | `/about/{handle}` | 获批品牌子主题；只允许 root 直接引用的完整页面 | Yes，内容与语言审核后 |
 | `/contact` | 联系方式和客服预期 | Yes |
@@ -101,16 +102,16 @@ URL 名称遵循已确认的 Joya Mana 信息架构与 D-007/D-036：
 
 - 提供 Contact、Shipping、Returns、Privacy、Terms 等真实链接。
 - 展示法律实体、联系方式和社交链接时必须有真实数据。
-- Email opt-in 清楚说明订阅内容，不能与交易同意混淆。
+- 语言切换保留对应页；未来启用 Email opt-in 时须先完成 consent 与供应商验收。
 
 ### FR-003 Search
 
 - 若首发目录和内容规模不需要，MVP 可不提供站内搜索。
-- 启用时必须同时检索商品和内容，提供空状态，结果页 `noindex`。
+- 当前搜索 Shopify Product，提供空结果恢复入口，结果页 `noindex`。
 - 不因未来搜索需求先引入独立搜索服务。
 
-当前实现只检索 Shopify Product，且结果页永久 `noindex`。在发布为完整站内
-Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证意图、空状态与性能。
+只有正式内容规模证明需要时再评估 Blog/Crystal Guide/About 搜索；不以未做内容搜索
+否定已上线的 Product-only 范围。
 
 ### FR-004 状态与错误
 
@@ -128,7 +129,7 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 - 明确的主购买入口与 About 品牌内容入口。
 - 展示真实商品，不放不可购买占位卡；Blog 推荐和 Design Collection 不进入首页。
 - 提供来源、工艺、包装或服务信任信息，但仅限已确认事实。
-- 适量 Email opt-in；不得遮挡首屏或强制互动。
+- Email opt-in 按独立运营/consent 条件后置；当前不输出未接通表单。
 
 验收：
 
@@ -140,7 +141,7 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 
 必须：
 
-- Shop 提供全部在售商品；Category 提供稳定商品形态；Design Collection 提供原创
+- Shop 提供全部公开商品及在售筛选；Category 提供稳定商品形态；Design Collection 提供原创
   系列故事和对应商品。三者各有唯一 H1、说明、商品网格和可理解空状态。
 - 商品卡显示图片、名称、真实价格区间和可用状态。
 - 筛选只覆盖对真实目录有价值的属性。
@@ -152,7 +153,7 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 - Category 由 Product Category 驱动；Design Collection 只有显式
   `collection_kind=design_series` 时公开，不按标题或 tag 猜测。
 - 商品卡与 PDP 价格一致。
-- 分页或加载更多可被键盘与 crawler 访问。
+- 当前完整服务端列表可被键盘与 crawler 访问；若引入分页，先明确参数索引/canonical 规则。
 
 ### P-003 Product Detail
 
@@ -182,9 +183,12 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 - 售罄、不可售和可履约数量信息来自 Shopify。已知且不允许继续销售的
   `quantityAvailable` 与 contextual `quantityRule`/安全上限一起约束 PDP 数量；
   `currentlyNotInStock` 或数量为 `null` 时不猜测为 0，不用具体数量制造紧迫感。
-- UI、metadata 与 JSON-LD 的价格、币种、库存一致。当前 Product Offer availability
-  尚未纳入 UI 使用的最小可履约数量边界，因此该验收项仍未通过。
+- UI、metadata 与 JSON-LD 的价格、币种、库存一致。Product Offer 已采用最小可履约
+  数量门禁；真实数据一致性仍通过对应发布检查确认。
 - 图片有尺寸、响应式资源和有意义的替代文本。
+- Product/Variant 短事实按真实值展示；material + treatment + dimensions/fit 就绪才将
+  完整正文下移且保持展开。缺字段时保留购买前披露和页内选购入口，不做正文正则提取。
+- 推荐使用独立有限查询；失败不阻断主商品，缺关联时不拼凑虚假推荐。
 
 ### P-004 Cart
 
@@ -228,9 +232,10 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
   和可抓取链接。
 - 关联实体和商品必须经过人工选择。
 
-首发门槛：
+正式 Editorial 内容门槛：
 
-- 没有真实、原创、审核完成的内容时，不公开空 Blog 枢纽和薄文章。
+- 正式内容发布前完成真实、原创与人工审核；当前测试 Article 按 D-041 治理，Editorial
+  继续 noindex，不能将现有可访问状态称为正式内容已验收。
 
 ### P-007 Trust 与 Policy pages
 

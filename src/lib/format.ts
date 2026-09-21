@@ -12,14 +12,13 @@ export function formatPrice(
   }
 
   const fractionDigits = Number.isInteger(numericValue) ? 0 : 2;
-  const amount = new Intl.NumberFormat(localeRegistry[locale].formatLocale, {
+  return new Intl.NumberFormat(localeRegistry[locale].formatLocale, {
     style: "currency",
     currency,
+    currencyDisplay: "code",
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   }).format(numericValue);
-
-  return `${amount} ${currency}`;
 }
 
 export function formatMoney(money: Money, locale: SupportedLocale) {

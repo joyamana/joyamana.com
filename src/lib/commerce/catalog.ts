@@ -7,13 +7,15 @@ import {
 } from "@/config/catalog";
 import type { MarketId } from "@/config/markets";
 import type { Locale } from "@/lib/i18n/locales";
-import type { Collection, Product, ProductCollection } from "./types";
+import type { Collection, Product, ProductCollection, ProductSummary } from "./types";
 import {
   getShopifyCollection,
   getShopifyCollections,
   getShopifyCatalogNavigation,
   getShopifyProduct,
   getShopifyProducts,
+  getShopifyAvailableProducts,
+  getShopifyRelatedProducts,
   searchShopifyProducts,
   type ShopifyCatalogNavigationSnapshot,
 } from "./shopify-catalog";
@@ -75,6 +77,27 @@ export async function getProducts(
   assertEnabledUsLocale(locale);
 
   return getShopifyProducts(locale);
+}
+
+export async function getAvailableProducts(
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+  limit = 4,
+): Promise<ProductSummary[]> {
+  if (marketId === "ca") return [];
+  assertEnabledUsLocale(locale);
+  return getShopifyAvailableProducts(locale, limit);
+}
+
+export async function getRelatedProducts(
+  productId: string,
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+  limit = 3,
+): Promise<ProductSummary[]> {
+  if (marketId === "ca") return [];
+  assertEnabledUsLocale(locale);
+  return getShopifyRelatedProducts(productId, locale, limit);
 }
 
 export const getProduct = cache(

@@ -1,8 +1,8 @@
 # Commerce Specification
 
-Status: Working — Catalog/Cart 核心切片已实现，生产 Catalog 与 hardening 待完成
+Status: Active — Catalog/Cart 与可选商品知识已接入，真实数据与发布验收单独跟踪
 Owner: Commerce / Operations  
-Last updated: 2026-09-11
+Last updated: 2026-09-21
 Related: `MVP_PRD.md`, `TECH_SPEC.md`, `CUSTOMER_LIFECYCLE.md`
 
 Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
@@ -20,7 +20,8 @@ Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
 D-020 已接受同时支持 repeatable、natural-variation 和 one-of-a-kind 这组业务边界。
 当前代码读取 Product `custom.product_model`，并将 `standard`、`natural_variation`、
 `one_of_one` 映射为明确的消费者模型；字段缺失或值无效时 fail closed。正式商品仍需
-在 Shopify 逐件填充该字段。exact/representative image 披露尚未实现。具体 assortment、
+在 Shopify 逐件填充该字段。exact/representative image 字段与 PDP 披露已接入，真实值
+仍需按 [OPEN_QUESTIONS](OPEN_QUESTIONS.md) 逐商品验收。具体 assortment、
 七脉轮资料、SKU 和礼赠运营已移出网站开放问题，由 Shopify/业务运营流程管理；网站不
 复制内部审批清单、margin 或包装成本。每件商品附带专属 guidebook 已获业务方确认。
 当前 Headless Catalog 是网站运行时商品事实来源，但每件公开商品仍必须满足字段完整度、
@@ -76,11 +77,23 @@ crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明�
 - shipping/returns policy reference
 - related Guide/Article
 
-当前 Shopify mapper 已覆盖 Product/Variant、SEO、经过 allowlist 清理的格式化商品描述、
-媒体、Category、价格、可售性、库存数量、quantity rule 和 product model，但尚未读取 exact/representative image、
-materials、dimensions、care、origin/treatment、package contents 或 related content
-等 Product knowledge metafields。这些字段的 definition、填充、翻译和映射是正式
-商品发布阻塞，不能用本地文案补齐。
+当前 mapper 已覆盖核心商品/变体、SEO、清理后的格式化描述、媒体、Category、实时价格/库存、
+数量规则与商品模型。Product 与 Variant 可选读取 `summary`、`materials`、`dimensions`、
+`fit`、`treatment`、`care`、`package_contents`、`image_representation`；Product 另读取
+`related_content` Article references。精确 namespace/type/枚举见
+[Shopify setup](SHOPIFY_CATALOG_SETUP.md#33-product-knowledge)。缺失、空值和不支持类型不产生
+事实；Variant 的有效字段覆盖 Product 字段。`origin`、weight、craftsmanship 尚未单独映射，
+不能从商品名、正文或图片猜测。
+
+PDP 的已知短事实默认在 CTA 前显示。已知 Shopify taxonomy 为 bracelets 时，须有
+`material`、`treatment`、`dimensions` 和 `fit`；其他/未映射分类须有 `material`、`treatment`
+及至少一个 `dimensions`/`fit`，完整 Shopify 描述才下移至购买区后且保持展开；否则全文保留
+在购买前，并提供真实的“查看选购选项”页内链接。完整描述由 Server Component 渲染，
+不在客户端重新抽取事实。图片代表性只根据显式枚举输出；未知值不承诺“实物如图”。
+
+不从商品标题或正文猜测品类；分类缺失时无法保证手链尺寸门槛适用，须由运营补齐 taxonomy。
+代码接入不等于后台 definition、数据填充、翻译或商品事实验收完成。运营输入统一跟踪于
+[OPEN_QUESTIONS](OPEN_QUESTIONS.md)，不把可选字段缺失扩大为现有商品不可访问或交易门禁。
 
 当前 normalized entity 也尚未保留 vendor、product type/tags、Variant SKU 或
 inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，必须先明确用途并
@@ -113,6 +126,11 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
 - 空或薄 Category/Collection 不进入 sitemap；运营方决定隐藏、noindex 或补充。
 - 同一意图不能同时由多个不同 URL 竞争。
 
+Shop/Category/设计系列使用完整服务端商品列表和 GET 在售筛选/价格排序；clean 页保留
+全部商品可发现，筛选/排序参数沿用 noindex，不新增分页。首页使用有限可售商品查询，
+PDP 推荐使用 Shopify RELATED recommendations 的有限结果；只显示真实可售结果，失败不影响
+主商品，缺结果时不从全目录拼凑推荐。
+
 ## 5. Media
 
 - 独件商品必须使用该件实物的真实图片。
@@ -124,6 +142,8 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
 ## 6. Price 与 Promotion
 
 - 所有展示金额来自当前 US market Shopify response。
+- 共享 Money formatter 使用单一 `USD` code 和语言对应数字/空格格式，避免 `US$29 USD`。
+  不在各组件重复拼币种，也不通过浏览器浮点汇总替代 Shopify totals。
 - compare-at price 只有真实、合法且 Shopify 配置有效时展示。
 - 优惠码、自动折扣、Gift Card 与 member price 最终由 Shopify 验证。
 - 不实现虚假倒计时、虚假“仅剩 X 件”或默认勾选加购。
@@ -163,6 +183,10 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
 - Add、update quantity、remove lines。
 - 展示当前 line price 和 cart subtotal。
 - 显示 Shopify warnings/user errors。
+- 多件 line 的每件价格读取 `CartLineCost.amountPerQuantity`，行合计读取 `totalAmount`，
+  不用 merchandise price 或本地除法推算折后单价。`discountAllocations(lineLevelOnly: true)`
+  仅判定正数商品行折扣；有行折扣才说明上方合计已计入商品折扣，不将订单折扣当作商品折扣。
+  库存错误去重并提供刷新入口，正常可售状态不重复提示。
 - 恢复已有 Cart；无效/过期 Cart 安全重建。
 - Checkout 前请求最新 `checkoutUrl`。
 
@@ -256,9 +280,9 @@ Personalization 全套工具。
 - 代表性 repeatable/one-of-a-kind 商品模型已通过业务审核。
 - 每个首发 Product/Variant 具备必需字段和真实媒体。
 - Price、currency、availability、SKU 在 Shopify/UI/Cart/Schema 一致。
-- 当前 Product Offer availability 只使用 Product/Variant 的 `availableForSale`，而 UI
-  还会验证 `quantityAvailable >= quantityRule.minimum`；这个边界统一前不得把上一项
-  标记为通过。
+- Product Offer 与 UI 共用最小可履约数量判断；明确可售且允许继续销售的 Variant 输出
+  BackOrder，其他可售为 InStock，不满足最小数量为 OutOfStock。此映射不授权新增预售业务；
+  每次发布仍核对真实响应与 UI。
 - Guest Cart → Shopify Checkout 完成跨设备核心测试。
 - Shipping/Returns/Taxes 文案与 Checkout 配置一致。
 - 售罄、下架、价格变化、API 错误均有明确行为。

@@ -9,14 +9,18 @@ import {
   serializeIndexableStructuredData,
   type StructuredBreadcrumb,
 } from "@/lib/structured-data";
-import { ProductCard } from "@/components/product-card";
+import { ProductListing } from "@/components/product-listing";
+import { listProducts } from "@/lib/commerce/product-listing";
+import type { PageSearchParams } from "@/lib/seo";
 
 export async function CategoryPage({
   locale,
   handle,
+  searchParams = {},
 }: {
   locale: Locale;
   handle: string;
+  searchParams?: PageSearchParams;
 }) {
   const category = await getProductCategory(
     handle,
@@ -24,6 +28,7 @@ export async function CategoryPage({
     locale,
   );
   if (!category) notFound();
+  const products = listProducts(category.products, searchParams);
 
   const homeLabel = uiText(locale, {
     zh: "首頁",
@@ -42,12 +47,12 @@ export async function CategoryPage({
     { name: shopLabel, path: "/shop" },
     { name: category.title, path: `/category/${category.handle}` },
   ];
-  const structuredData = serializeIndexableStructuredData(
+  const structuredData = Object.keys(searchParams).length ? null : serializeIndexableStructuredData(
     buildCollectionStructuredData({
       name: category.title,
       description: category.description,
       path: `/category/${category.handle}`,
-      products: category.products,
+      products,
       locale,
       breadcrumbs,
     }),
@@ -89,13 +94,7 @@ export async function CategoryPage({
         <h1>{category.title}</h1>
         <p>{category.description}</p>
       </header>
-      <section className="section">
-        <div className="product-grid">
-          {category.products.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} />
-          ))}
-        </div>
-      </section>
+      <ProductListing products={products} locale={locale} path={`/category/${category.handle}`} searchParams={searchParams} />
     </>
   );
 }

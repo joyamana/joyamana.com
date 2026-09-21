@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Product } from "./commerce/types";
 import {
   buildAboutStructuredData,
+  buildBrandStructuredData,
   buildCollectionStructuredData,
   buildEditorialStructuredData,
   buildProductStructuredData,
@@ -78,7 +79,103 @@ const product: Product = {
   ],
 };
 
+describe("brand structured data", () => {
+  it("keeps one brand and website identity across localized Home and Contact pages", () => {
+    const home = buildBrandStructuredData({
+      locale: "en-US",
+      path: "/",
+      name: "Natural forms. Personal meaning.",
+      description: "Crystal jewelry and singular objects.",
+      type: "WebPage",
+    });
+    const contact = buildBrandStructuredData({
+      locale: "zh-Hant-US",
+      path: "/contact",
+      name: "有甚麼可以幫到你？",
+      description: "透過電郵聯絡我們。",
+      type: "ContactPage",
+    });
+    expect(home["@graph"].slice(0, 2)).toEqual(contact["@graph"].slice(0, 2));
+    expect(contact).toMatchObject({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "OnlineStore",
+          "@id": "http://localhost:3000/#organization",
+          name: "Joya Mana",
+          email: "info@joyamana.com",
+          logo: "http://localhost:3000/brand/joya-mana-lockup.svg",
+        },
+        {
+          "@type": "WebSite",
+          url: "http://localhost:3000/",
+          publisher: { "@id": "http://localhost:3000/#organization" },
+        },
+        {
+          "@type": "ContactPage",
+          url: "http://localhost:3000/zh-hant-us/contact",
+          name: "有甚麼可以幫到你？",
+          description: "透過電郵聯絡我們。",
+          inLanguage: "zh-Hant-US",
+          isPartOf: { "@id": "http://localhost:3000/#website" },
+          about: { "@id": "http://localhost:3000/#organization" },
+        },
+      ],
+    });
+    const organization = contact["@graph"][0];
+    for (const unconfirmed of ["legalName", "sameAs", "address", "telephone", "taxID", "foundingDate"]) {
+      expect(organization).not.toHaveProperty(unconfirmed);
+    }
+  });
+
+  it("omits an empty page description instead of publishing a placeholder", () => {
+    const data = buildBrandStructuredData({
+      locale: "es-US", path: "/", name: "Joya Mana", description: "  ", type: "WebPage",
+    });
+    expect(data["@graph"][2]).not.toHaveProperty("description");
+  });
+});
+
 describe("product structured data", () => {
+  it.each([
+    { label: "known zero inventory", quantity: 0, backorder: false, available: true, minimum: 1, expected: "OutOfStock" },
+    { label: "inventory below minimum", quantity: 1, backorder: false, available: true, minimum: 2, expected: "OutOfStock" },
+    { label: "unsupported minimum", quantity: 200, backorder: false, available: true, minimum: 100, expected: "OutOfStock" },
+    { label: "unknown quantity", quantity: null, backorder: false, available: true, minimum: 1, expected: "InStock" },
+    { label: "Shopify allows backorders", quantity: 0, backorder: true, available: true, minimum: 1, expected: "BackOrder" },
+    { label: "unavailable despite backorder flag", quantity: 0, backorder: true, available: false, minimum: 1, expected: "OutOfStock" },
+  ])("keeps the offer consistent with PDP for $label", ({ quantity, backorder, available, minimum, expected }) => {
+    const data = buildProductStructuredData({
+      product: {
+        ...product,
+        variants: [{
+          ...product.variants[0],
+          availableForSale: available,
+          quantityAvailable: quantity,
+          currentlyNotInStock: backorder,
+          quantityRule: { minimum, maximum: null, increment: 1 },
+        }],
+      },
+      locale: "en-US",
+      breadcrumbs: [],
+    });
+    expect(data["@graph"][0]).toMatchObject({
+      offers: [{ availability: `https://schema.org/${expected}` }],
+    });
+  });
+
+  it("blocks all offers when the product itself is unavailable", () => {
+    const data = buildProductStructuredData({
+      product: { ...product, availableForSale: false }, locale: "en-US", breadcrumbs: [],
+    });
+    expect(data["@graph"][0]).toMatchObject({
+      offers: [
+        { availability: "https://schema.org/OutOfStock" },
+        { availability: "https://schema.org/OutOfStock" },
+      ],
+    });
+  });
+
   it("uses normalized product offers, media, URLs, and availability", () => {
     const data = buildProductStructuredData({
       product,
@@ -354,6 +451,14 @@ describe("structured data serialization", () => {
       noindexModule.serializeIndexableStructuredData(
         { ok: true },
         { locale: "en-US", path: "/products/test" },
+      ),
+    ).toBeNull();
+    expect(
+      noindexModule.serializeIndexableStructuredData(
+        noindexModule.buildBrandStructuredData({
+          locale: "en-US", path: "/contact", name: "How can we help?", type: "ContactPage",
+        }),
+        { locale: "en-US", path: "/contact" },
       ),
     ).toBeNull();
 

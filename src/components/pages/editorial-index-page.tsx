@@ -239,9 +239,9 @@ function EditorialUnavailable({
       <h1>
         {uiText(locale, {
           zh: "目前沒有文章。",
-          en: "New stories are on the way.",
-          es: "Próximamente habrá nuevas historias.",
-          fr: "De nouvelles histoires arrivent bientôt.",
+          en: "No articles are available right now.",
+          es: "No hay artículos disponibles en este momento.",
+          fr: "Aucun article n’est disponible pour le moment.",
         })}
       </h1>
       <p>
@@ -252,6 +252,9 @@ function EditorialUnavailable({
           fr: "Revenez bientôt.",
         })}
       </p>
+      <Link className="button button--primary" href={localePath(locale, "/shop")}>
+        {uiText(locale, { en: "Shop all", es: "Ver todos los productos", zh: "選購全部商品", fr: "Voir tous les produits" })}
+      </Link>
     </section>
   );
 }

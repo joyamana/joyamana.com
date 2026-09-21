@@ -1045,3 +1045,70 @@ Owner: Engineering
   - Mitigation：索引总门禁与 Editorial 子门禁保持关闭；D-045 持续排除未正式发布内容。
 - Risk：把 Collection 基础门禁完成误写成完整系列体验完成。
   - Mitigation：文档分别列明 description/SEO、Metaobject/reference 和 story/lookbook 缺口。
+
+
+## 官网品牌与购买体验优化
+
+状态：Complete — 本轮代码实施与本地验收；外部输入和既有框架限制在当前规格继续跟进。
+负责人：Codex；最后更新：2026-09-21。
+
+### Objective
+
+执行已评估的优化方案，接入正式品牌资产、改善三语言购物体验，减少无用查询和重复文档。
+
+### Context
+
+基线 `dev` / `29e23ec`。用户已授权全部优化；细节见
+[评估方案](../WEBSITE_OPTIMIZATION_PLAN.md)。先遵循当前 Accepted 决策；本轮品牌应用见 D-050。
+
+### Scope
+
+品牌资产与样式、首页/卡片/目录、PDP/Bag、金额与语言切换、商品知识映射、有限推荐查询、
+内容阅读体验、无障碍/SEO/状态验证及文档收敛。内容事实仍由 Shopify 管理。
+
+### Decisions and assumptions
+
+沿用 US/USD、三语言、Blog、50/50 PDP、自适应系列导航、现有索引及 Checkout 边界。
+暂不新增分页索引、追踪平台、礼赠服务或生产依赖。当前仅有 Storefront 访问能力，
+不能以本地文案代替缺失的 Shopify 正式文章、翻译或商品事实；Q-003B/C/E 不扩大影响范围。
+
+### Milestones
+
+1. [x] 正式矢量资产与品牌系统。
+2. [x] Money、商品知识和有限商品/推荐查询。
+3. [x] 首页、列表、PDP/Bag 与三语言交互。
+4. [x] 相关文档同步与删减。
+5. [x] Node 24 lint/typecheck/test/build，HTML、浏览器及可执行的交易 smoke；限制已记录。
+
+### Detailed approach
+
+并行处理数据层、商品购买区和资产；主线整合全站 UI、列表及文档。
+保留已批准正文与缺失保护；优先扩展现有组件/adapter，不创建平行主题或业务系统。
+
+### Validation
+
+`pnpm preflight`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`；
+320/390/768/1440 px、三语言对应页、库存/错误/空状态、metadata/Schema/sitemap/Preview noindex。
+按 D-043 不恢复 Playwright；如使用浏览器 CDP 辅助检查，记录范围，不声称真机通过。
+代码与 Shopify 内容独立回滚；不触碰现有 secret 或输出 PII。
+
+### Progress log
+
+- 2026-09-21：用户授权实施；完成分工与当前官方 Next.js/Shopify 文档核对。
+- 品牌/首页/目录/PDP/Bag/知识字段与文档已落地；第一轮 250 tests、lint/typecheck/build 通过，继续最终差异回归。
+- Chrome CDP 已检查 320/390/768/1440 px 样本无横向溢出；本机图片优化受代理私有 DNS 干扰，视觉核验临时直读相同 CDN 原图，生产配置保持安全保护。
+
+### Risks
+
+真实素材、商品字段值、正式 Editorial 和人工译文审校仍需内容来源；当前凭据无 Admin 写权限。
+默认 shell 为 Node 26，检查显式使用已安装的 Node 24。
+
+### Outcome
+
+已落地品牌资产、首页/目录/PDP/Bag、商品知识/购物车金额来源、有限查询、参数Schema保护、
+三语言状态/恢复入口和CI，精简重复规格。Node24所有质量命令通过，39文件294测试；
+Chrome响应式/200%文字、真实加购/空袋、多变体与独立Buy now通过取样。未付款、未部署。
+404/noindex正确但无JavaScript首次HTML仍缺正文；图片优化受到本机私有DNS代理影响，
+仅视觉检查临时直读真实CDN。真机/Safari、生产图片、内容及译文输入继续跟踪。
+交付详情和验收证据见 [交付记录](../WEBSITE_OPTIMIZATION_PLAN.md)，业务依赖见
+[OPEN_QUESTIONS](../OPEN_QUESTIONS.md)。

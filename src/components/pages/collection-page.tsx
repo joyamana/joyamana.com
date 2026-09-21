@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { productCategoryDefinitionForHandle } from "@/config/catalog";
@@ -11,14 +12,18 @@ import {
   serializeIndexableStructuredData,
   type StructuredBreadcrumb,
 } from "@/lib/structured-data";
-import { ProductCard } from "@/components/product-card";
+import { ProductListing } from "@/components/product-listing";
+import { listProducts } from "@/lib/commerce/product-listing";
+import type { PageSearchParams } from "@/lib/seo";
 
 export async function CollectionPage({
   locale,
   handle,
+  searchParams = {},
 }: {
   locale: Locale;
   handle: string;
+  searchParams?: PageSearchParams;
 }) {
   if (productCategoryDefinitionForHandle(handle)) {
     permanentRedirect(localePath(locale, `/category/${handle}`));
@@ -30,6 +35,7 @@ export async function CollectionPage({
     locale,
   );
   if (!collection) notFound();
+  const products = listProducts(collection.products, searchParams);
   const homeLabel = uiText(locale, {
     zh: "首頁",
     en: "Home",
@@ -50,13 +56,13 @@ export async function CollectionPage({
       path: `/collections/${collection.handle}`,
     },
   ];
-  const structuredData = getCollectionSeoDescription(collection)
+  const structuredData = !Object.keys(searchParams).length && getCollectionSeoDescription(collection)
     ? serializeIndexableStructuredData(
         buildCollectionStructuredData({
           name: collection.title,
           description: collection.description,
           path: `/collections/${collection.handle}`,
-          products: collection.products,
+          products,
           locale,
           breadcrumbs,
         }),
@@ -100,25 +106,11 @@ export async function CollectionPage({
         </p>
         <h1>{collection.title}</h1>
         {collection.description ? <p>{collection.description}</p> : null}
+        {collection.image ? (
+          <Image className="collection-hero-image" src={collection.image.url} alt={collection.image.altText || collection.title} width={collection.image.width} height={collection.image.height} sizes="100vw" />
+        ) : null}
       </header>
-      <section className="section">
-        {collection.products.length ? (
-          <div className="product-grid">
-            {collection.products.map((product) => (
-              <ProductCard key={product.id} product={product} locale={locale} />
-            ))}
-          </div>
-        ) : (
-          <p>
-            {uiText(locale, {
-              zh: "此系列目前沒有已發佈的商品。",
-              en: "No published products are currently assigned to this collection.",
-              es: "Actualmente no hay productos publicados asignados a esta colección.",
-              fr: "Aucun produit publié n’est actuellement attribué à cette collection.",
-            })}
-          </p>
-        )}
-      </section>
+      <ProductListing products={products} locale={locale} path={`/collections/${collection.handle}`} searchParams={searchParams} />
     </>
   );
 }

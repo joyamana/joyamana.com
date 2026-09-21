@@ -10,7 +10,9 @@ import {
   type Product,
   type ProductCollection,
   type ProductImage,
+  type ProductFacts,
   type ProductQuantityRule,
+  type ProductSummary,
   type ProductVariant,
 } from "./types";
 
@@ -48,6 +50,31 @@ interface ShopifyMetafield {
   value: string;
 }
 
+interface ShopifyTypedMetafield extends ShopifyMetafield {
+  type: string;
+}
+
+interface ShopifyKnowledgeNode {
+  summary?: ShopifyTypedMetafield | null;
+  material?: ShopifyTypedMetafield | null;
+  dimensions?: ShopifyTypedMetafield | null;
+  fit?: ShopifyTypedMetafield | null;
+  treatment?: ShopifyTypedMetafield | null;
+  care?: ShopifyTypedMetafield | null;
+  packageContents?: ShopifyTypedMetafield | null;
+  imageRepresentation?: ShopifyTypedMetafield | null;
+}
+
+interface ShopifyRelatedArticle {
+  __typename: string;
+  id?: string;
+  title?: string;
+  handle?: string;
+  content?: string;
+  publishedAt?: string;
+  blog?: { handle: string };
+}
+
 interface ShopifyPageInfo {
   hasNextPage: boolean;
   endCursor: string | null;
@@ -64,7 +91,7 @@ interface ShopifyQuantityRule {
   increment: number;
 }
 
-interface ShopifyVariantNode {
+interface ShopifyVariantNode extends ShopifyKnowledgeNode {
   id: string;
   title: string;
   availableForSale: boolean;
@@ -77,7 +104,7 @@ interface ShopifyVariantNode {
   quantityRule: ShopifyQuantityRule;
 }
 
-export interface ShopifyProductNode {
+export interface ShopifyProductNode extends ShopifyKnowledgeNode {
   id: string;
   handle: string;
   title: string;
@@ -94,7 +121,25 @@ export interface ShopifyProductNode {
     maxVariantPrice: ShopifyMoneyV2;
   };
   variants: ShopifyConnection<ShopifyVariantNode>;
+  relatedContent?: {
+    type: string;
+    references: { nodes: ShopifyRelatedArticle[] } | null;
+  } | null;
 }
+
+type ShopifyProductSummaryNode = Pick<
+  ShopifyProductNode,
+  | "id"
+  | "handle"
+  | "title"
+  | "availableForSale"
+  | "priceRange"
+  | "featuredImage"
+  | "images"
+  | "summary"
+  | "material"
+  | "dimensions"
+> & { imageVariant?: { image: ShopifyImage | null } | null };
 
 interface ShopifyCollectionBase {
   id: string;
@@ -202,6 +247,40 @@ const moneyFields = `#graphql
   }
 `;
 
+const summaryKnowledgeFields = `#graphql
+  summary: metafield(namespace: "custom", key: "summary") { type value }
+  material: metafield(namespace: "custom", key: "materials") { type value }
+  dimensions: metafield(namespace: "custom", key: "dimensions") { type value }
+`;
+
+const knowledgeFields = `#graphql
+  ${summaryKnowledgeFields}
+  fit: metafield(namespace: "custom", key: "fit") { type value }
+  treatment: metafield(namespace: "custom", key: "treatment") { type value }
+  care: metafield(namespace: "custom", key: "care") { type value }
+  packageContents: metafield(namespace: "custom", key: "package_contents") { type value }
+  imageRepresentation: metafield(namespace: "custom", key: "image_representation") { type value }
+`;
+
+const productSummaryFields = `#graphql
+  fragment ProductSummaryFields on Product {
+    id
+    handle
+    title
+    availableForSale
+    featuredImage { ...CatalogImageFields }
+    imageVariant: selectedOrFirstAvailableVariant { image { ...CatalogImageFields } }
+    images(first: 1) { nodes { ...CatalogImageFields } }
+    priceRange {
+      minVariantPrice { ...CatalogMoneyFields }
+      maxVariantPrice { ...CatalogMoneyFields }
+    }
+    ${summaryKnowledgeFields}
+  }
+  ${moneyFields}
+  ${imageFields}
+`;
+
 const variantFields = `#graphql
   fragment CatalogVariantFields on ProductVariant {
     id
@@ -227,6 +306,7 @@ const variantFields = `#graphql
       maximum
       increment
     }
+    ${knowledgeFields}
   }
   ${moneyFields}
   ${imageFields}
@@ -240,6 +320,23 @@ const productFields = `#graphql
     description
     descriptionHtml
     availableForSale
+    ${knowledgeFields}
+    relatedContent: metafield(namespace: "custom", key: "related_content") {
+      type
+      references(first: 6) {
+        nodes {
+          __typename
+          ... on Article {
+            id
+            title
+            handle
+            content(truncateAt: 1)
+            publishedAt
+            blog { handle }
+          }
+        }
+      }
+    }
     productModel: metafield(namespace: "custom", key: "product_model") {
       value
     }
@@ -311,6 +408,26 @@ export const SHOPIFY_PRODUCT_QUERY = `#graphql
     }
   }
   ${productFields}
+`;
+
+export const SHOPIFY_AVAILABLE_PRODUCTS_QUERY = `#graphql
+  query AvailableProducts($country: CountryCode!, $language: LanguageCode!, $first: Int!)
+    @inContext(country: $country, language: $language) {
+    products(first: $first, query: "available_for_sale:true", sortKey: ID) {
+      nodes { ...ProductSummaryFields }
+    }
+  }
+  ${productSummaryFields}
+`;
+
+export const SHOPIFY_RELATED_PRODUCTS_QUERY = `#graphql
+  query RelatedProducts($country: CountryCode!, $language: LanguageCode!, $productId: ID!)
+    @inContext(country: $country, language: $language) {
+    productRecommendations(productId: $productId, intent: RELATED) {
+      ...ProductSummaryFields
+    }
+  }
+  ${productSummaryFields}
 `;
 
 export const SHOPIFY_PRODUCT_VARIANTS_QUERY = `#graphql
@@ -665,6 +782,84 @@ function mapInventory(
   };
 }
 
+function mapProductFacts(
+  node: ShopifyKnowledgeNode,
+  relatedContent?: ShopifyProductNode["relatedContent"],
+): ProductFacts | undefined {
+  const facts: ProductFacts = {};
+  const textFields = [
+    "summary",
+    "material",
+    "dimensions",
+    "fit",
+    "treatment",
+    "care",
+    "packageContents",
+  ] as const;
+
+  for (const key of textFields) {
+    const field = node[key];
+    if (
+      field?.type !== "single_line_text_field" &&
+      field?.type !== "multi_line_text_field"
+    ) continue;
+    const value = optionalText(field.value);
+    if (value) facts[key] = value;
+  }
+
+  if (node.imageRepresentation?.type === "single_line_text_field") {
+    const representation = optionalText(node.imageRepresentation.value);
+    if (representation === "exact_item") facts.imageRepresentation = "exact-item";
+    if (representation === "representative") facts.imageRepresentation = "representative";
+  }
+
+  if (relatedContent?.type === "list.article_reference") {
+    const seen = new Set<string>();
+    const articles = relatedContent.references?.nodes.flatMap((article) => {
+      const id = optionalText(article.id);
+      const title = optionalText(article.title);
+      const handle = optionalText(article.handle);
+      const blog = article.blog?.handle;
+      if (
+        article.__typename !== "Article" ||
+        !id || seen.has(id) || !title || !handle ||
+        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(handle) ||
+        !optionalText(article.content) ||
+        !article.publishedAt || !Number.isFinite(Date.parse(article.publishedAt)) ||
+        (blog !== "blog" && blog !== "crystals")
+      ) return [];
+      seen.add(id);
+      return [{ id, title, path: `/${blog}/${handle}` }];
+    }) ?? [];
+    if (articles.length) facts.relatedContent = articles;
+  }
+
+  return Object.keys(facts).length ? facts : undefined;
+}
+
+function mapShopifyProductSummary(node: ShopifyProductSummaryNode): ProductSummary {
+  const images = node.images.nodes.flatMap((image) => {
+    const mapped = mapImage(image, node.title);
+    return mapped ? [mapped] : [];
+  });
+  const facts = mapProductFacts(node);
+  return {
+    id: node.id,
+    handle: node.handle,
+    title: node.title,
+    availableForSale: node.availableForSale,
+    featuredImage:
+      mapImage(node.featuredImage, node.title) ?? images[0] ??
+      mapImage(node.imageVariant?.image, node.title),
+    images,
+    priceRange: {
+      minVariantPrice: mapMoney(node.priceRange.minVariantPrice, `product ${node.id} minimum price`),
+      maxVariantPrice: mapMoney(node.priceRange.maxVariantPrice, `product ${node.id} maximum price`),
+    },
+    ...(facts ? { facts } : {}),
+  };
+}
+
 export function mapShopifyProduct(node: ShopifyProductNode): Product {
   const images = node.images.nodes.flatMap((image) => {
     const mapped = mapImage(image, node.title);
@@ -693,6 +888,7 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
       isStrictlyHigherAmount(compareAtCandidate.amount, price.amount)
         ? compareAtCandidate
         : null;
+    const facts = mapProductFacts(variant);
 
     return {
       id: variant.id,
@@ -711,6 +907,7 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
         value,
       })),
       quantityRule: mapQuantityRule(variant.quantityRule, variant.id),
+      ...(facts ? { facts } : {}),
     };
   });
   const compareAtPrice =
@@ -719,6 +916,7 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
     )?.compareAtPrice ??
     variants.find((variant) => variant.compareAtPrice)?.compareAtPrice ??
     null;
+  const facts = mapProductFacts(node, node.relatedContent);
 
   return {
     id: node.id,
@@ -740,13 +938,14 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
       ),
     },
     compareAtPrice,
-    featuredImage,
+    featuredImage: featuredImage ?? variants.find((variant) => variant.image)?.image ?? null,
     images,
     variants,
     model: mapProductModel(node.productModel),
     category: node.category
       ? { id: node.category.id, name: node.category.name }
       : null,
+    ...(facts ? { facts } : {}),
   };
 }
 
@@ -783,6 +982,57 @@ function mapCollectionBase(node: ShopifyCollectionBase): Collection {
     image,
     kind: mapCollectionKind(node.collectionKind),
   };
+}
+
+function assertProductLimit(limit: number, maximum: number) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > maximum) {
+    throw new RangeError(`Product limit must be an integer from 1 to ${maximum}.`);
+  }
+}
+
+export async function getShopifyAvailableProducts(
+  locale: Locale,
+  limit = 4,
+): Promise<ProductSummary[]> {
+  assertProductLimit(limit, 12);
+  const data = await shopifyFetch<{
+    products: { nodes: ShopifyProductSummaryNode[] };
+  }>(
+    SHOPIFY_AVAILABLE_PRODUCTS_QUERY,
+    { ...shopifyContext(locale), first: limit },
+    { cache: "no-store" },
+  );
+  return data.products.nodes
+    .filter((product) => product.availableForSale)
+    .slice(0, limit)
+    .map(mapShopifyProductSummary);
+}
+
+export async function getShopifyRelatedProducts(
+  productId: string,
+  locale: Locale,
+  limit = 3,
+): Promise<ProductSummary[]> {
+  assertProductLimit(limit, 10);
+  if (!/^gid:\/\/shopify\/Product\/\d+$/.test(productId)) {
+    throw new ShopifyCatalogError("invalid-data", "A Shopify Product ID is required.");
+  }
+  const data = await shopifyFetch<{
+    productRecommendations: ShopifyProductSummaryNode[] | null;
+  }>(
+    SHOPIFY_RELATED_PRODUCTS_QUERY,
+    { ...shopifyContext(locale), productId },
+    { cache: "no-store" },
+  );
+  const seen = new Set([productId]);
+  return (data.productRecommendations ?? [])
+    .filter((product) => {
+      if (!product.availableForSale || seen.has(product.id)) return false;
+      seen.add(product.id);
+      return true;
+    })
+    .slice(0, limit)
+    .map(mapShopifyProductSummary);
 }
 
 export async function getShopifyProducts(
