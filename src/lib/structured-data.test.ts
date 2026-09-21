@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import type { Product } from "./commerce/types";
 import {
   buildAboutStructuredData,
@@ -8,6 +8,16 @@ import {
   buildProductStructuredData,
   serializeStructuredData,
 } from "./structured-data";
+
+// siteConfig captures these values when imported, before test hooks run.
+vi.hoisted(() => {
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000");
+  vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "false");
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
+});
 
 vi.mock("@/config/indexing", () => ({
   indexingPolicy: {
