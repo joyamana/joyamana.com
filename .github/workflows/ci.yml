@@ -21,7 +21,6 @@ jobs:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_PUBLIC_SITE_INDEXABLE: "false"
       SHOPIFY_CHECKOUT_ENABLED: "false"
-      CONTACT_FORM_ENABLED: "false"
     steps:
       - uses: actions/checkout@v7
         with:

@@ -22,6 +22,10 @@ function page(
     lastUpdated: "2026-08-31",
     seoTitle: title,
     seoDescription: `${title} description.`,
+    titleLocale: overrides.contentLocale ?? "en-US",
+    summaryLocale: overrides.contentLocale ?? "en-US",
+    navigationLocale: overrides.contentLocale ?? "en-US",
+    translationReady: !overrides.usedDefaultLanguage,
     contentLocale: "en-US",
     requestedLocale: "en-US",
     usedDefaultLanguage: false,
@@ -63,7 +67,7 @@ describe("About content page", () => {
 
     expect(html).not.toContain("about-tabs");
     expect(html.match(/<h1/g)).toHaveLength(1);
-    expect(html).toContain("<h1>About Joya Mana</h1>");
+    expect(html).toContain('<h1 lang="en-US">About Joya Mana</h1>');
   });
 
   it("does not expose the SEO description as a visible summary", () => {

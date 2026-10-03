@@ -103,14 +103,19 @@ function CrystalDirectory({
           </span>
           <div>
             <p className="eyebrow">
-              {entryCategory(entry, locale, "crystals")}
+              <span lang={entry.tags.length ? entry.tagsLocale : locale}>
+                {entryCategory(entry, locale, "crystals")}
+              </span>
             </p>
             <h2>
-              <Link href={localePath(locale, `/crystals/${entry.handle}`)}>
+              <Link
+                lang={entry.titleLocale}
+                href={localePath(locale, `/crystals/${entry.handle}`)}
+              >
                 {entry.title}
               </Link>
             </h2>
-            <p>{entry.excerpt}</p>
+            <p lang={entry.excerptLocale}>{entry.excerpt}</p>
           </div>
           <Link
             aria-label={`${uiText(locale, { zh: "閱讀", en: "Read", es: "Leer" })}: ${entry.title}`}
@@ -144,14 +149,20 @@ function BlogIndex({
             en: "Featured",
             es: "Destacado",
           })}{" "}
-          · {entryCategory(featured, locale, "blog")}
+          ·{" "}
+          <span lang={featured.tags.length ? featured.tagsLocale : locale}>
+            {entryCategory(featured, locale, "blog")}
+          </span>
         </p>
         <h2>
-          <Link href={localePath(locale, `/blog/${featured.handle}`)}>
+          <Link
+            lang={featured.titleLocale}
+            href={localePath(locale, `/blog/${featured.handle}`)}
+          >
             {featured.title}
           </Link>
         </h2>
-        <p>{featured.excerpt}</p>
+        <p lang={featured.excerptLocale}>{featured.excerpt}</p>
         <Link
           className="text-link"
           href={localePath(locale, `/blog/${featured.handle}`)}
@@ -167,14 +178,21 @@ function BlogIndex({
       <div className="blog-index__list">
         {rest.map((entry) => (
           <article className="blog-index__item" key={entry.handle}>
-            <p className="eyebrow">{entryCategory(entry, locale, "blog")}</p>
+            <p className="eyebrow">
+              <span lang={entry.tags.length ? entry.tagsLocale : locale}>
+                {entryCategory(entry, locale, "blog")}
+              </span>
+            </p>
             <div>
               <h3>
-                <Link href={localePath(locale, `/blog/${entry.handle}`)}>
+                <Link
+                  lang={entry.titleLocale}
+                  href={localePath(locale, `/blog/${entry.handle}`)}
+                >
                   {entry.title}
                 </Link>
               </h3>
-              <p>{entry.excerpt}</p>
+              <p lang={entry.excerptLocale}>{entry.excerpt}</p>
             </div>
             <Link
               aria-label={`${uiText(locale, { zh: "閱讀", en: "Read", es: "Leer" })}: ${entry.title}`}

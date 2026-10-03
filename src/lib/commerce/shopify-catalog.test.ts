@@ -5,16 +5,19 @@ const shopifyFetchMock = vi.hoisted(() => vi.fn());
 vi.mock("./shopify", () => ({ shopifyFetch: shopifyFetchMock }));
 
 import {
-  type ShopifyProductNode,
   getShopifyCatalogNavigation,
   getShopifyCollection,
   getShopifyCollections,
   getShopifyProduct,
   getShopifyProducts,
   hydrateShopifyBrowseProducts,
-  SHOPIFY_BROWSE_VARIANTS_QUERY,
-  mapShopifyProduct,
   searchShopifyProducts,
+  createCatalogReadBudget,
+} from "./shopify-catalog";
+import { mapShopifyProduct } from "./shopify-catalog-mappers";
+import {
+  type ShopifyProductNode,
+  SHOPIFY_BROWSE_VARIANTS_QUERY,
   SHOPIFY_COLLECTION_QUERY,
   SHOPIFY_COLLECTIONS_QUERY,
   SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
@@ -24,7 +27,7 @@ import {
   SHOPIFY_PRODUCTS_QUERY,
   SHOPIFY_SEARCH_QUERY,
   ShopifyCatalogError,
-} from "./shopify-catalog";
+} from "./shopify-catalog-contract";
 
 function connection<T>(
   nodes: T[],
@@ -36,6 +39,49 @@ function connection<T>(
     pageInfo: { hasNextPage, endCursor },
   };
 }
+
+describe("complete catalog request budget", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("shares the request limit between base pages and variant hydration", async () => {
+    const budget = createCatalogReadBudget();
+    shopifyFetchMock.mockResolvedValue({
+      products: connection([productFixture()]),
+    });
+    const products = await getShopifyProducts(
+      "en-US",
+      { cache: "no-store" },
+      budget,
+    );
+    for (let request = 1; request < 100; request++)
+      await budget.read("query", {});
+    await expect(
+      hydrateShopifyBrowseProducts(products, "en-US", budget),
+    ).rejects.toMatchObject({ kind: "invalid-data" });
+    expect(shopifyFetchMock).toHaveBeenCalledTimes(100);
+  });
+
+  it("uses the remaining total time for a request and stops at the deadline", async () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(0);
+    const budget = createCatalogReadBudget();
+    shopifyFetchMock.mockResolvedValue({});
+    now.mockReturnValue(18_500);
+    await budget.read("query", {});
+    expect(shopifyFetchMock).toHaveBeenLastCalledWith(
+      "query",
+      {},
+      expect.objectContaining({ timeoutMs: 1500 }),
+    );
+    now.mockReturnValue(20_000);
+    expect(() => budget.read("query", {})).toThrow(ShopifyCatalogError);
+    expect(shopifyFetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("reads a full initial variant page on the PDP while keeping summary queries small", () => {
+    expect(SHOPIFY_PRODUCT_QUERY).toContain("variants(first: 100,");
+    expect(SHOPIFY_PRODUCTS_QUERY).toContain("variants(first: 1,");
+  });
+});
 
 it("reads Traditional Chinese products without changing country, money or hiding fallback", async () => {
   shopifyFetchMock.mockResolvedValueOnce({
@@ -333,7 +379,7 @@ describe("Shopify catalog mapper and queries", () => {
       1,
       SHOPIFY_PRODUCTS_QUERY,
       { country: "US", language: "ES", first: 100, after: null },
-      { cache: "no-store" },
+      expect.objectContaining({ cache: "no-store" }),
     );
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       2,
@@ -344,7 +390,7 @@ describe("Shopify catalog mapper and queries", () => {
         first: 100,
         after: "products-page-1",
       },
-      { cache: "no-store" },
+      expect.objectContaining({ cache: "no-store" }),
     );
   });
 
@@ -391,7 +437,7 @@ describe("Shopify catalog mapper and queries", () => {
         first: 100,
         after: "variants-page-1",
       },
-      { cache: "no-store" },
+      expect.objectContaining({ cache: "no-store" }),
     );
   });
 
@@ -451,7 +497,7 @@ describe("Shopify catalog mapper and queries", () => {
       1,
       SHOPIFY_COLLECTIONS_QUERY,
       { country: "US", language: "EN", first: 100, after: null },
-      { cache: "no-store" },
+      expect.objectContaining({ cache: "no-store" }),
     );
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       2,
@@ -462,7 +508,7 @@ describe("Shopify catalog mapper and queries", () => {
         first: 100,
         after: "collections-page-1",
       },
-      { cache: "no-store" },
+      expect.objectContaining({ cache: "no-store" }),
     );
   });
 
@@ -527,13 +573,13 @@ describe("Shopify catalog mapper and queries", () => {
       1,
       SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
       { country: "US", language: "EN", first: 250, after: null },
-      fetchOptions,
+      expect.objectContaining(fetchOptions),
     );
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       2,
       SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
       { country: "US", language: "EN", first: 100, after: null },
-      fetchOptions,
+      expect.objectContaining(fetchOptions),
     );
   });
 
@@ -595,7 +641,7 @@ describe("Shopify catalog mapper and queries", () => {
         first: 100,
         after: "collection-products-page-1",
       },
-      { cache: "no-store" },
+      expect.objectContaining({ cache: "no-store" }),
     );
   });
 
@@ -660,7 +706,7 @@ describe("Shopify catalog mapper and queries", () => {
         first: 24,
         after: null,
       },
-      { cache: "no-store" },
+      expect.objectContaining({ cache: "no-store" }),
     );
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       2,
@@ -672,7 +718,7 @@ describe("Shopify catalog mapper and queries", () => {
         first: 24,
         after: "search-page-1",
       },
-      { cache: "no-store" },
+      expect.objectContaining({ cache: "no-store" }),
     );
   });
 

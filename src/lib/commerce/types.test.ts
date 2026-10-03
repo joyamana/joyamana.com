@@ -1,13 +1,27 @@
 import { describe, expect, it } from "vitest";
 import {
-  DEFAULT_PRODUCT_QUANTITY_RULE,
   getProductQuantityMaximum,
   isValidAvailableProductQuantity,
   isValidProductQuantity,
   isValidQuantityRule,
+  parseAvailableProductQuantity,
 } from "./types";
 
+const DEFAULT_PRODUCT_QUANTITY_RULE = {
+  minimum: 1,
+  maximum: null,
+  increment: 1,
+};
+
 describe("Shopify quantity rules", () => {
+  it("permits an empty editing draft while accepting only complete quantities for purchase", () => {
+    const rule = { minimum: 10, maximum: 30, increment: 5 };
+    for (const draft of ["", "1", "12", "15.5", "1e1", "-10", "35"]) {
+      expect(parseAvailableProductQuantity(draft, rule, 30, false)).toBeNull();
+    }
+    expect(parseAvailableProductQuantity("15", rule, 30, false)).toBe(15);
+    expect(parseAvailableProductQuantity("15", rule, 12, false)).toBeNull();
+  });
   it("accepts the default one-at-a-time quantity contract", () => {
     expect(isValidQuantityRule(DEFAULT_PRODUCT_QUANTITY_RULE)).toBe(true);
     expect(isValidProductQuantity(1, DEFAULT_PRODUCT_QUANTITY_RULE)).toBe(true);

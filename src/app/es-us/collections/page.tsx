@@ -1,5 +1,6 @@
 import { CollectionsPage } from "@/components/pages/collections-page";
-import { buildMetadata, type PageSearchParams } from "@/lib/seo";
+import type { PageSearchParams } from "@/lib/seo";
+import { buildCatalogHubMetadata } from "@/lib/commerce/catalog-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +9,7 @@ export async function generateMetadata({
 }: {
   searchParams: Promise<PageSearchParams>;
 }) {
-  return buildMetadata({
+  return buildCatalogHubMetadata({
     title: "Colecciones de diseño",
     description:
       "Explora las series de diseño originales de Joya Mana y sus historias.",

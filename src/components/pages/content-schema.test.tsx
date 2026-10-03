@@ -4,6 +4,13 @@ import type { EnabledLocale } from "@/config/locales";
 import type { StorefrontAboutPage } from "@/lib/content/shopify-about-pages";
 import { AboutContentPage } from "./about-page";
 import { EditorialDetailPage } from "./editorial-detail-page";
+import { ShopPage } from "./shop-page";
+
+vi.mock("@/lib/commerce/catalog", () => ({
+  getBrowseProducts: async () => [],
+  productCategoriesForProducts: () => [],
+}));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 vi.mock("@/config/site", () => ({
   siteConfig: { url: "https://www.joyamana.com", indexable: true },
@@ -22,6 +29,9 @@ vi.mock("@/lib/content/shopify-editorial", () => ({
       author: "Author",
       tags: [],
       image: null,
+      titleLocale: locale,
+      excerptLocale: locale,
+      tagsLocale: locale,
       contentLocale: locale,
       usedDefaultLanguage: false,
     }),
@@ -40,6 +50,10 @@ function aboutPage(locale: EnabledLocale, handle: string): StorefrontAboutPage {
     lastUpdated: "2026-08-30",
     seoTitle: "About",
     seoDescription: "Our approach.",
+    titleLocale: locale,
+    summaryLocale: locale,
+    navigationLocale: locale,
+    translationReady: true,
     contentLocale: locale,
     requestedLocale: locale,
     usedDefaultLanguage: false,
@@ -48,6 +62,11 @@ function aboutPage(locale: EnabledLocale, handle: string): StorefrontAboutPage {
 
 for (const locale of ["en-US", "es-US", "zh-Hant-US"] as const) {
   describe(`${locale} page Schema`, () => {
+    it("keeps an empty Shop readable without publishing an empty product list", async () => {
+      const html = renderToStaticMarkup(await ShopPage({ locale }));
+      expect(html).toContain("empty-state");
+      expect(html).not.toContain("application/ld+json");
+    });
     it.each([undefined, "our-approach"])(
       "keeps clean About Schema and omits it for parameters: %s",
       (handle) => {

@@ -68,11 +68,16 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
   }, [open]);
 
   return (
-    <div className="language-switch" ref={containerRef}>
+    <div
+      className="language-switch"
+      ref={containerRef}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
       <button
         aria-controls={panelId}
         aria-expanded={open}
-        aria-haspopup="true"
         aria-label={`${selectorLabel}: ${localeRegistry[locale].shortLabel}`}
         className="language-switch__trigger"
         type="button"

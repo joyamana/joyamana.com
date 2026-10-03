@@ -11,7 +11,10 @@ const shopifyCatalogMocks = vi.hoisted(() => ({
   searchShopifyProducts: vi.fn(),
 }));
 
-vi.mock("./shopify-catalog", () => shopifyCatalogMocks);
+vi.mock("./shopify-catalog", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./shopify-catalog")>()),
+  ...shopifyCatalogMocks,
+}));
 
 import {
   getCatalogNavigationData,
@@ -195,6 +198,8 @@ describe("Shopify catalog facade", () => {
 
     expect(shopifyCatalogMocks.getShopifyProducts).toHaveBeenCalledWith(
       "es-US",
+      { cache: "no-store" },
+      expect.objectContaining({ read: expect.any(Function) }),
     );
     expect(shopifyCatalogMocks.getShopifyProduct).toHaveBeenCalledWith(
       "crystal-bracelet",

@@ -23,6 +23,40 @@ afterEach(() => {
 });
 
 describe("Shopify policies", () => {
+  it("recognizes an English policy body even when the Spanish title is translated", async () => {
+    process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+    process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((_url: string, request: RequestInit) => {
+        const spanish =
+          JSON.parse(String(request.body)).variables.language === "ES";
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: {
+                shop: {
+                  refundPolicy: policy(
+                    "1",
+                    spanish ? "Devoluciones" : "Refund Policy",
+                    `<h1>${spanish ? "Devoluciones" : "Refund Policy"}</h1><p>${spanish ? "<strong>Return terms.</strong>" : "Return terms."}</p>`,
+                  ),
+                  privacyPolicy: null,
+                  shippingPolicy: null,
+                  termsOfService: null,
+                },
+              },
+            }),
+          ),
+        );
+      }),
+    );
+    expect(await getShopifyPolicy("returns", "es-US")).toMatchObject({
+      contentLocale: "en-US",
+      usedDefaultLanguage: true,
+    });
+    expect(await getPublishedShopifyPolicyPaths("es-US")).toEqual([]);
+  });
   it.each(["<h1>Shipping</h1>", "<p>&nbsp;</p>", "<script>alert(1)</script>"])(
     "does not publish an empty sanitized policy: %s",
     async (body) => {

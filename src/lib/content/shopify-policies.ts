@@ -5,7 +5,11 @@ import {
 import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
 import { shopifyFetch } from "@/lib/commerce/shopify";
-import { hasVisibleHtmlText, sanitizeShopifyHtml } from "./shopify-html";
+import {
+  hasVisibleHtmlText,
+  visibleHtmlText,
+  sanitizeShopifyHtml,
+} from "./shopify-html";
 
 export const shopifyPolicyKinds = [
   "shipping",
@@ -117,8 +121,8 @@ export async function getShopifyPolicies(
       const usedDefaultLanguage = Boolean(
         locale !== defaultLocale &&
         defaultPolicy &&
-        requestedPolicy.title === defaultPolicy.title &&
-        requestedPolicy.body === defaultPolicy.body,
+        visibleHtmlText(html) ===
+          visibleHtmlText(sanitizeShopifyPolicyHtml(defaultPolicy.body)),
       );
 
       return [

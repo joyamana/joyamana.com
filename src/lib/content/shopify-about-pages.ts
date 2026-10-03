@@ -54,6 +54,10 @@ interface ParsedAboutPage {
 
 export interface StorefrontAboutPage extends ParsedAboutPage {
   contentLocale: Locale;
+  titleLocale: Locale;
+  summaryLocale: Locale;
+  navigationLocale: Locale;
+  translationReady: boolean;
   requestedLocale: Locale;
   usedDefaultLanguage: boolean;
 }
@@ -139,7 +143,7 @@ function parseAboutPage(
   };
 }
 
-function usesDefaultLanguage(
+function translationIncomplete(
   requested: ParsedAboutPage,
   defaultPage: ParsedAboutPage | null,
   locale: Locale,
@@ -151,7 +155,7 @@ function usesDefaultLanguage(
   // summary, and SEO description must be independently translated before the
   // localized page is allowed into hreflang or the sitemap.
   return (
-    requested.richText === defaultPage.richText ||
+    requested.html === defaultPage.html ||
     requested.seoDescription === defaultPage.seoDescription ||
     Boolean(
       defaultPage.summary &&
@@ -166,16 +170,28 @@ function localizePage(
   locale: Locale,
   defaultLocale: Locale,
 ): StorefrontAboutPage {
-  const usedDefaultLanguage = usesDefaultLanguage(
-    requested,
-    defaultPage,
-    locale,
-    defaultLocale,
+  const fallback = locale !== defaultLocale && defaultPage !== null;
+  const usedDefaultLanguage = Boolean(
+    fallback && requested.html === defaultPage.html,
   );
+  const fieldLocale = (value: string, defaultValue: string | undefined) =>
+    fallback && value === defaultValue ? defaultLocale : locale;
 
   return {
     ...requested,
     contentLocale: usedDefaultLanguage ? defaultLocale : locale,
+    titleLocale: fieldLocale(requested.title, defaultPage?.title),
+    summaryLocale: fieldLocale(requested.summary, defaultPage?.summary),
+    navigationLocale: fieldLocale(
+      requested.navigationTitle,
+      defaultPage?.navigationTitle,
+    ),
+    translationReady: !translationIncomplete(
+      requested,
+      defaultPage,
+      locale,
+      defaultLocale,
+    ),
     requestedLocale: locale,
     usedDefaultLanguage,
   };
@@ -248,12 +264,12 @@ export function aboutPageForHandle(tree: StorefrontAboutTree, handle?: string) {
 
 export async function getPublishedShopifyAboutPaths(locale: Locale) {
   const tree = await getShopifyAboutTree(locale);
-  if (!tree || tree.root.usedDefaultLanguage) return [];
+  if (!tree || !tree.root.translationReady) return [];
 
   return [
     "/about",
     ...tree.children.flatMap((page) =>
-      page.usedDefaultLanguage ? [] : [`/about/${page.handle}`],
+      !page.translationReady ? [] : [`/about/${page.handle}`],
     ),
   ];
 }

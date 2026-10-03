@@ -357,6 +357,41 @@ describe("Checkout server actions", () => {
     });
   });
 
+  it("clears an expired Checkout Bag and its cookie without returning secrets", async () => {
+    process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
+    const store = cookieStore(oldCartId);
+    mocks.cookies.mockResolvedValue(store);
+    mocks.getCart.mockResolvedValue(null);
+
+    const result = await checkoutAction();
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "CART_EXPIRED" },
+      cart: { lines: [], totalQuantity: 0 },
+    });
+    expect(store.delete).toHaveBeenCalled();
+    expect(JSON.stringify(result)).not.toMatch(/old-secret|checkoutUrl/);
+  });
+
+  it("returns the empty upstream Bag when Checkout finds no remaining lines", async () => {
+    process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
+    mocks.cookies.mockResolvedValue(cookieStore(oldCartId));
+    mocks.getCart.mockResolvedValue(
+      makeCart({
+        totalQuantity: 0,
+        cost: { subtotalAmount: { amount: "0.0", currencyCode: "USD" } },
+        lines: { nodes: [], pageInfo: { hasNextPage: false, endCursor: null } },
+      }),
+    );
+
+    expect(await checkoutAction()).toMatchObject({
+      ok: false,
+      error: { code: "EMPTY_CART" },
+      cart: { lines: [], totalQuantity: 0 },
+    });
+  });
+
   it("accepts Shopify's localized Spanish Checkout path", async () => {
     process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
     mocks.cookies.mockResolvedValue(cookieStore(oldCartId));

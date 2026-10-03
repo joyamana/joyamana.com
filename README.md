@@ -25,7 +25,7 @@ pnpm test
 pnpm build
 ```
 
-`pnpm format` 修正代码排版；类型检查会先生成路由类型，build 会先运行环境预检。
+`pnpm format` 修正代码排版，文档按现有 Markdown 格式维护；类型检查会先生成路由类型，build 会先运行环境预检。
 GitHub [CI](.github/workflows/ci.yml) 对 PR、dev/main 提交运行上述检查，结果以 GitHub 为准。
 浏览器和 Checkout 的人工验收见 [发布手册](docs/LAUNCH_RUNBOOK.md)。
 
@@ -42,6 +42,6 @@ GitHub [CI](.github/workflows/ci.yml) 对 PR、dev/main 提交运行上述检查
 | [Shopify 维护](docs/SHOPIFY_CATALOG_SETUP.md) | 后台字段、商品分类和维护检查 |
 | [Roadmap](docs/ROADMAP.md) | 代码待办、后台输入和未决事项 |
 | [发布手册](docs/LAUNCH_RUNBOOK.md) | 发布检查、验证与回滚 |
-| [PLANS.md](PLANS.md) | 正在执行的计划与模板 |
+| [PLANS.md](PLANS.md) | 正在执行的计划 |
 
 同一规则只在对应文档详细说明；历史通过 Git 查询，不再维护归档或决策流水。

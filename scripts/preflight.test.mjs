@@ -23,7 +23,6 @@ describe("environment preflight", () => {
         NEXT_PUBLIC_SITE_INDEXABLE: "false",
         NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
         SHOPIFY_CHECKOUT_ENABLED: "false",
-        CONTACT_FORM_ENABLED: "false",
       }),
     ).toEqual([]);
   });
@@ -35,7 +34,6 @@ describe("environment preflight", () => {
       NEXT_PUBLIC_SITE_INDEXABLE: "false",
       NEXT_PUBLIC_SITE_URL: "https://joyamana.vercel.app",
       SHOPIFY_CHECKOUT_ENABLED: "false",
-      CONTACT_FORM_ENABLED: "false",
     });
 
     expect(errors).toContain(
@@ -46,7 +44,7 @@ describe("environment preflight", () => {
     );
   });
 
-  it("rejects indexable Preview and enabled integrations without their secrets", () => {
+  it("rejects indexable Preview and an invalid Checkout domain", () => {
     const errors = validateEnvironment({
       VERCEL: "1",
       VERCEL_ENV: "preview",
@@ -56,15 +54,11 @@ describe("environment preflight", () => {
       SHOPIFY_STOREFRONT_ACCESS_TOKEN: "private-token",
       SHOPIFY_CHECKOUT_ENABLED: "true",
       SHOPIFY_CHECKOUT_DOMAIN: "https://checkout.joyamana.com/path",
-      CONTACT_FORM_ENABLED: "true",
     });
 
     expect(errors).toContain("Vercel Preview deployments must remain noindex.");
     expect(errors).toContain(
       "SHOPIFY_CHECKOUT_DOMAIN must be a bare hostname or HTTPS origin.",
-    );
-    expect(errors).toContain(
-      "RESEND_API_KEY is required when CONTACT_FORM_ENABLED is true.",
     );
   });
 
@@ -86,7 +80,6 @@ describe("environment preflight", () => {
       NEXT_PUBLIC_SITE_INDEXABLE: "true",
       NEXT_PUBLIC_SITE_URL: "https://www.joyamana.com",
       SHOPIFY_CHECKOUT_ENABLED: "false",
-      CONTACT_FORM_ENABLED: "false",
     });
 
     expect(errors).toEqual([]);

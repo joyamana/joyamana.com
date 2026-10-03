@@ -481,6 +481,13 @@ h3 {
 }
 
 .mobile-menu {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
   position: fixed;
   z-index: 90;
   inset: 0;
@@ -1759,6 +1766,7 @@ h3 {
 
 .quantity-picker {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
@@ -1766,6 +1774,13 @@ h3 {
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.quantity-picker > .action-error {
+  flex-basis: 100%;
+  margin: 0;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .quantity-picker > div,
@@ -2159,30 +2174,6 @@ h3 {
   text-transform: uppercase;
 }
 
-.contact-form {
-  position: relative;
-  display: grid;
-  gap: 1.5rem;
-}
-
-.contact-form__row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.contact-form__field {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.contact-form label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 input,
 select,
 textarea {
@@ -2206,49 +2197,9 @@ textarea {
   border-color: var(--status-error);
 }
 
-.contact-form__error {
-  color: var(--status-error);
-  font-size: 0.78rem;
-}
-
-.contact-form__notice,
-.contact-form__status,
 .contact-email-fallback p {
   color: var(--muted);
   font-size: 0.82rem;
-}
-
-.contact-form__notice {
-  margin: -0.25rem 0 0;
-}
-
-.contact-form__notice a {
-  border-bottom: 1px solid currentColor;
-}
-
-.contact-form__status {
-  padding: 1rem;
-  margin: 0;
-  border: 1px solid var(--line);
-}
-
-.contact-form__status--success {
-  color: var(--ink);
-  background: var(--paper-deep);
-}
-
-.contact-form__status--error {
-  color: var(--status-error);
-}
-
-.contact-form__honeypot {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 .contact-email-fallback {
@@ -2656,10 +2607,6 @@ textarea {
   .manifesto,
   .form-page,
   .cart-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .contact-form__row {
     grid-template-columns: 1fr;
   }
 

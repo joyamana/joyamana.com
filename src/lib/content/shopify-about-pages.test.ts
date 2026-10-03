@@ -155,6 +155,29 @@ afterEach(() => {
 });
 
 describe("Shopify About pages", () => {
+  it("keeps a translated body in Spanish when only its SEO description falls back", async () => {
+    process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+    process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+    stubAbout((language) => {
+      const response = aboutResponse({
+        language,
+        translatedHandles: ["about"],
+        children: [],
+      });
+      const field = response.fields.find(
+        (item) => item.key === "seo_description",
+      );
+      if (field) field.value = "Description of About Joya Mana.";
+      return response;
+    });
+    expect((await getShopifyAboutTree("es-US"))?.root).toMatchObject({
+      usedDefaultLanguage: false,
+      contentLocale: "es-US",
+      titleLocale: "es-US",
+      translationReady: false,
+    });
+    expect(await getPublishedShopifyAboutPaths("es-US")).toEqual([]);
+  });
   it("queries the fixed About root and its ordered child references", () => {
     expect(SHOPIFY_ABOUT_TREE_QUERY).toContain(
       "@inContext(country: $country, language: $language)",

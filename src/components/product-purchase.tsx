@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   getProductQuantityMaximum,
-  isValidAvailableProductQuantity,
+  parseAvailableProductQuantity,
   isValidProductQuantity,
   isProductVariantPurchasable,
   type Product,
@@ -84,9 +84,10 @@ function ProductPurchaseOption({
       ? initialProductVariant(product)
       : product.variants.find((variant) => variant.id === initialVariantId);
   const selectionRequired = initialVariantId !== undefined && !initialVariant;
-  const [quantity, setQuantity] = useState(
-    initialVariant?.quantityRule.minimum ?? 1,
+  const [quantityDraft, setQuantityDraft] = useState(
+    String(initialVariant?.quantityRule.minimum ?? 1),
   );
+  const [quantityTouched, setQuantityTouched] = useState(false);
   const selected = initialVariant ?? product.variants[0];
   const copy = getCopy(locale);
 
@@ -122,6 +123,19 @@ function ProductPurchaseOption({
     selected.quantityAvailable,
     selected.currentlyNotInStock,
   );
+  const parsedQuantity = parseAvailableProductQuantity(
+    quantityDraft,
+    quantityRule,
+    selected.quantityAvailable,
+    selected.currentlyNotInStock,
+  );
+  const quantityValid = parsedQuantity !== null;
+  const quantity = parsedQuantity ?? quantityRule.minimum;
+  const quantityError = uiText(locale, {
+    zh: "請輸入符合要求的有效數量。",
+    en: "Enter a valid quantity within the available limits.",
+    es: "Introduce una cantidad válida dentro de los límites disponibles.",
+  });
   const inventorySupportsMinimum = maximumQuantity >= quantityRule.minimum;
   const purchasable = isProductVariantPurchasable(product, selected);
   const available = !selectionRequired && !pending && purchasable;
@@ -248,10 +262,12 @@ function ProductPurchaseOption({
                   quantity - quantityRule.increment < quantityRule.minimum
                 }
                 onClick={() =>
-                  setQuantity((current) =>
-                    Math.max(
-                      quantityRule.minimum,
-                      current - quantityRule.increment,
+                  setQuantityDraft(
+                    String(
+                      Math.max(
+                        quantityRule.minimum,
+                        quantity - quantityRule.increment,
+                      ),
                     ),
                   )
                 }
@@ -264,21 +280,16 @@ function ProductPurchaseOption({
                 min={quantityRule.minimum}
                 max={maximumQuantity}
                 step={quantityRule.increment}
-                onChange={(event) => {
-                  const next = Number(event.target.value);
-                  if (
-                    isValidAvailableProductQuantity(
-                      next,
-                      quantityRule,
-                      selected.quantityAvailable,
-                      selected.currentlyNotInStock,
-                    )
-                  ) {
-                    setQuantity(next);
-                  }
-                }}
+                aria-invalid={!quantityValid}
+                aria-describedby={
+                  quantityTouched && !quantityValid
+                    ? "product-quantity-error"
+                    : undefined
+                }
+                onChange={(event) => setQuantityDraft(event.target.value)}
+                onBlur={() => setQuantityTouched(true)}
                 type="number"
-                value={quantity}
+                value={quantityDraft}
               />
               <button
                 type="button"
@@ -289,14 +300,28 @@ function ProductPurchaseOption({
                 })}
                 disabled={quantity + quantityRule.increment > maximumQuantity}
                 onClick={() =>
-                  setQuantity((current) =>
-                    Math.min(maximumQuantity, current + quantityRule.increment),
+                  setQuantityDraft(
+                    String(
+                      Math.min(
+                        maximumQuantity,
+                        quantity + quantityRule.increment,
+                      ),
+                    ),
                   )
                 }
               >
                 +
               </button>
             </div>
+            {quantityTouched && !quantityValid ? (
+              <p
+                className="action-error"
+                id="product-quantity-error"
+                role="status"
+              >
+                {quantityError}
+              </p>
+            ) : null}
           </div>
         ) : !selectionRequired && !quantityRuleSupported ? (
           <p className="action-error" role="status">
@@ -312,10 +337,18 @@ function ProductPurchaseOption({
           <AddToCart
             variantId={selected.id}
             quantity={quantity}
-            available={available}
+            available={available && quantityValid}
             maximumQuantity={maximumQuantity}
             label={copy.labels.addToCart}
-            unavailableLabel={unavailableLabel}
+            unavailableLabel={
+              available && !quantityValid
+                ? uiText(locale, {
+                    zh: "請檢查數量",
+                    en: "Check quantity",
+                    es: "Revisa la cantidad",
+                  })
+                : unavailableLabel
+            }
             limitReachedLabel={uiText(locale, {
               zh: "購物袋內已達可購買數量上限",
               en: "Maximum quantity is already in your bag",
@@ -330,7 +363,7 @@ function ProductPurchaseOption({
           <BuyNow
             variantId={selected.id}
             quantity={quantity}
-            available={available}
+            available={available && quantityValid}
             locale={locale}
           />
         </div>
@@ -362,30 +395,6 @@ function ProductPurchaseOption({
                   .map((option) => `${option.name}: ${option.value}`)
                   .join(" · ")}
               </dd>
-            </div>
-          ) : null}
-          {product.facts?.material ? (
-            <div>
-              <dt>{copy.labels.details}</dt>
-              <dd>{product.facts.material}</dd>
-            </div>
-          ) : null}
-          {product.facts?.dimensions ? (
-            <div>
-              <dt>
-                {uiText(locale, {
-                  zh: "尺寸",
-                  en: "Dimensions",
-                  es: "Medidas",
-                })}
-              </dt>
-              <dd>{product.facts.dimensions}</dd>
-            </div>
-          ) : null}
-          {product.facts?.care ? (
-            <div>
-              <dt>{copy.labels.care}</dt>
-              <dd>{product.facts.care}</dd>
             </div>
           ) : null}
           <div>

@@ -98,6 +98,106 @@ afterEach(() => {
 });
 
 describe("Shopify editorial content", () => {
+  it.each([
+    "missing-blog",
+    "changed-blog",
+    "duplicate-id",
+    "duplicate-handle",
+    "repeated-cursor",
+    "missing-cursor",
+  ])(
+    "rejects incomplete pagination instead of publishing a partial index: %s",
+    async (failure) => {
+      process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+      process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+      let calls = 0;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockImplementation(() => {
+          calls++;
+          const second = calls > 1;
+          const article = articleNode({
+            handle: second ? "second" : "first",
+            language: "EN",
+            translated: true,
+          });
+          if (second && failure === "duplicate-id")
+            article.id = "gid://shopify/Article/first";
+          if (second && failure === "duplicate-handle")
+            article.handle = "first";
+          const blog =
+            second && failure === "missing-blog"
+              ? null
+              : {
+                  id:
+                    second && failure === "changed-blog"
+                      ? "gid://shopify/Blog/changed"
+                      : "gid://shopify/Blog/blog",
+                  handle: "blog",
+                  title: "Blog",
+                  seo: { title: null, description: null },
+                  articles: {
+                    nodes: [article],
+                    pageInfo: {
+                      hasNextPage: !second || failure === "repeated-cursor",
+                      endCursor:
+                        failure === "missing-cursor" ? null : "cursor-1",
+                    },
+                  },
+                };
+          return Promise.resolve(
+            new Response(JSON.stringify({ data: { blog } })),
+          );
+        }),
+      );
+      await expect(getShopifyEditorialIndex("blog", "en-US")).rejects.toThrow();
+      expect(calls).toBe(failure === "missing-cursor" ? 1 : 2);
+    },
+  );
+
+  it("marks fallback titles, excerpts and tags separately from a translated article body", async () => {
+    process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+    process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((_url: string, request: RequestInit) => {
+        const language = JSON.parse(String(request.body)).variables.language as
+          "EN" | "ES";
+        const article = articleNode({
+          handle: "first",
+          language,
+          translated: true,
+          excerpt: "English summary.",
+        });
+        article.title = "English title";
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: {
+                blog: {
+                  id: "gid://shopify/Blog/blog",
+                  handle: "blog",
+                  articleByHandle: article,
+                },
+              },
+            }),
+          ),
+        );
+      }),
+    );
+    expect(
+      await getShopifyEditorialArticle("blog", "first", "es-US"),
+    ).toMatchObject({
+      contentLocale: "es-US",
+      usedDefaultLanguage: false,
+      titleLocale: "en-US",
+      excerptLocale: "en-US",
+      tagsLocale: "en-US",
+    });
+    expect(
+      await getShopifyEditorialArticle("blog", "wrong-handle", "en-US"),
+    ).toBeNull();
+  });
   it("rejects content that becomes empty after sanitizing and validates image hosts", async () => {
     process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
     process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";

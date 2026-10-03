@@ -172,3 +172,22 @@ export type CartActionResult = { ok: true; cart: CartView } | CartActionFailure;
 /** The URL is returned only after an explicit Checkout or Buy-now action. */
 export type CheckoutActionResult =
   { ok: true; checkoutUrl: string } | CartActionFailure;
+
+/** An unavailable upstream Cart is different from an unavailable API. */
+export function cartForFailure(
+  result: CartActionFailure,
+): CartView | undefined {
+  if (result.cart) return result.cart;
+  if (
+    result.error.code === "CART_EXPIRED" ||
+    result.error.code === "CART_NOT_FOUND"
+  ) {
+    return {
+      lines: [],
+      totalQuantity: 0,
+      subtotal: { amount: "0.0", currencyCode: "USD" },
+      warnings: [],
+    };
+  }
+  return undefined;
+}

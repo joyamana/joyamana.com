@@ -203,7 +203,7 @@ export function SiteHeader({
     null,
   );
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const menuPanelRef = useRef<HTMLElement>(null);
+  const menuDialogRef = useRef<HTMLDialogElement>(null);
   const menuLabel = uiText(locale, {
     zh: "選單",
     en: "Menu",
@@ -244,7 +244,14 @@ export function SiteHeader({
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
-    window.requestAnimationFrame(() => menuButtonRef.current?.focus());
+    window.requestAnimationFrame(() => {
+      const trigger = menuButtonRef.current;
+      if (trigger?.getClientRects().length) trigger.focus();
+      else
+        document
+          .querySelector<HTMLAnchorElement>(".site-header .wordmark")
+          ?.focus();
+    });
   }, []);
 
   useEffect(() => {
@@ -252,39 +259,17 @@ export function SiteHeader({
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const panel = menuPanelRef.current;
-    const focusableSelector =
-      'summary, a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    panel?.querySelector<HTMLElement>(focusableSelector)?.focus();
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeMenu();
-        return;
-      }
-
-      if (event.key !== "Tab" || !panel) return;
-      const focusable = Array.from(
-        panel.querySelectorAll<HTMLElement>(focusableSelector),
-      );
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
+    const dialog = menuDialogRef.current;
+    dialog?.showModal();
+    const desktop = window.matchMedia("(min-width: 1051px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) closeMenu();
+    };
+    desktop.addEventListener("change", closeOnDesktop);
     return () => {
+      desktop.removeEventListener("change", closeOnDesktop);
+      dialog?.close();
       document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [closeMenu, menuOpen]);
 
@@ -310,11 +295,22 @@ export function SiteHeader({
         <Link
           className="wordmark"
           href={localePath(locale)}
-          aria-label={`${brand.name} home`}
+          aria-label={uiText(locale, {
+            zh: `${brand.name} 首頁`,
+            en: `${brand.name} home`,
+            es: `Inicio de ${brand.name}`,
+          })}
         >
           {brand.name}
         </Link>
-        <nav className="desktop-nav" aria-label="Primary navigation">
+        <nav
+          className="desktop-nav"
+          aria-label={uiText(locale, {
+            zh: "主要導覽",
+            en: "Primary navigation",
+            es: "Navegación principal",
+          })}
+        >
           <DesktopNavDropdown
             active={basePath === "/shop" || basePath.startsWith("/category/")}
             groupLabel={uiText(locale, {
@@ -412,11 +408,15 @@ export function SiteHeader({
           />
         ) : null}
       </header>
-      <div
-        aria-hidden={!menuOpen}
+      <dialog
+        aria-label={menuLabel}
         className="mobile-menu"
-        hidden={!menuOpen}
         id="mobile-site-menu"
+        ref={menuDialogRef}
+        onCancel={(event) => {
+          event.preventDefault();
+          closeMenu();
+        }}
       >
         <nav
           aria-label={uiText(locale, {
@@ -425,7 +425,6 @@ export function SiteHeader({
             es: "Navegación móvil",
           })}
           className="mobile-menu__panel"
-          ref={menuPanelRef}
         >
           <div className="mobile-menu__top">
             <span className="wordmark">{brand.name}</span>
@@ -510,7 +509,7 @@ export function SiteHeader({
             </div>
           </div>
         </nav>
-      </div>
+      </dialog>
     </>
   );
 }

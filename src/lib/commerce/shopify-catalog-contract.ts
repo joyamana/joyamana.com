@@ -223,7 +223,7 @@ const variantFields = `#graphql
   ${imageFields}
 `;
 
-const productFields = `#graphql
+const productFields = (variantPageSize = SUMMARY_VARIANT_PAGE_SIZE) => `#graphql
   fragment CatalogProductFields on Product {
     id
     handle
@@ -258,7 +258,7 @@ const productFields = `#graphql
         ...CatalogMoneyFields
       }
     }
-    variants(first: ${SUMMARY_VARIANT_PAGE_SIZE}, sortKey: POSITION, reverse: false) {
+    variants(first: ${variantPageSize}, sortKey: POSITION, reverse: false) {
       nodes {
         ...CatalogVariantFields
       }
@@ -288,7 +288,7 @@ export const SHOPIFY_PRODUCTS_QUERY = `#graphql
       }
     }
   }
-  ${productFields}
+  ${productFields()}
 `;
 
 export const SHOPIFY_PRODUCT_QUERY = `#graphql
@@ -301,7 +301,7 @@ export const SHOPIFY_PRODUCT_QUERY = `#graphql
       ...CatalogProductFields
     }
   }
-  ${productFields}
+  ${productFields(VARIANT_PAGE_SIZE)}
 `;
 
 export const SHOPIFY_PRODUCT_VARIANTS_QUERY = `#graphql
@@ -400,7 +400,7 @@ export const SHOPIFY_COLLECTION_QUERY = `#graphql
       }
     }
   }
-  ${productFields}
+  ${productFields()}
 `;
 
 export const SHOPIFY_SEARCH_QUERY = `#graphql
@@ -424,7 +424,7 @@ export const SHOPIFY_SEARCH_QUERY = `#graphql
       }
     }
   }
-  ${productFields}
+  ${productFields()}
 `;
 
 export const SHOPIFY_NAVIGATION_PRODUCTS_QUERY = `#graphql

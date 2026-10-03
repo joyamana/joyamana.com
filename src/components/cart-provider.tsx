@@ -33,6 +33,7 @@ import type {
 } from "@/lib/commerce/cart-types";
 import {
   cartErrorMessage,
+  cartForFailure,
   isBlockingInventoryWarning,
 } from "@/lib/commerce/cart-types";
 
@@ -78,15 +79,6 @@ function connectionFailureForLanguage(
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-function cartResultSucceeded(result: CartActionResult) {
-  return (
-    result.ok &&
-    !result.cart.warnings.some((warning) =>
-      isBlockingInventoryWarning(warning.code),
-    )
-  );
-}
-
 export function CartProvider({
   children,
   checkoutEnabled,
@@ -106,7 +98,6 @@ export function CartProvider({
   const [status, setStatus] = useState<CartStatus>("loading");
   const [error, setError] = useState<CartActionFailure["error"] | null>(null);
   const operationQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const requestVersionRef = useRef(0);
 
   const enqueueOperation = useCallback(
     <T,>(operation: () => Promise<T>): Promise<T> => {
@@ -139,8 +130,8 @@ export function CartProvider({
       }
 
       setError(result.error);
-      if (result.cart) setCart(result.cart);
-      if (result.error.code === "CART_EXPIRED") setCart(emptyCart);
+      const latest = cartForFailure(result);
+      if (latest) setCart(latest);
       return false;
     },
     [language],
@@ -149,21 +140,14 @@ export function CartProvider({
   const refresh = useCallback(
     () =>
       enqueueOperation(async () => {
-        const requestVersion = ++requestVersionRef.current;
         setStatus("loading");
         try {
           const result = await getCartAction(locale);
-          return requestVersion === requestVersionRef.current
-            ? applyResult(result)
-            : cartResultSucceeded(result);
+          return applyResult(result);
         } catch {
-          return requestVersion === requestVersionRef.current
-            ? applyResult(connectionFailure)
-            : false;
+          return applyResult(connectionFailure);
         } finally {
-          if (requestVersion === requestVersionRef.current) {
-            setStatus("ready");
-          }
+          setStatus("ready");
         }
       }),
     [applyResult, connectionFailure, enqueueOperation, locale],
@@ -173,19 +157,18 @@ export function CartProvider({
     let active = true;
     void enqueueOperation(async () => {
       if (!active) return;
-      const requestVersion = ++requestVersionRef.current;
       setStatus("loading");
       try {
         const result = await getCartAction(locale);
-        if (active && requestVersion === requestVersionRef.current) {
+        if (active) {
           applyResult(result);
         }
       } catch {
-        if (active && requestVersion === requestVersionRef.current) {
+        if (active) {
           applyResult(connectionFailure);
         }
       } finally {
-        if (active && requestVersion === requestVersionRef.current) {
+        if (active) {
           setStatus("ready");
         }
       }
@@ -198,7 +181,6 @@ export function CartProvider({
   const runCartMutation = useCallback(
     (action: () => Promise<CartActionResult>) =>
       enqueueOperation(async () => {
-        const requestVersion = ++requestVersionRef.current;
         setStatus("updating");
         try {
           const result = await action();
@@ -207,26 +189,19 @@ export function CartProvider({
             // while retaining the failure message and recovery controls.
             try {
               const latest = await getCartAction(locale);
-              if (requestVersion === requestVersionRef.current) {
-                if (latest.ok) setCart(latest.cart);
-                else if (latest.error.code === "CART_EXPIRED")
-                  setCart(emptyCart);
-              }
+              const latestCart = latest.ok
+                ? latest.cart
+                : cartForFailure(latest);
+              if (latestCart) setCart(latestCart);
             } catch {
               // Preserve the original mutation failure if refresh also fails.
             }
           }
-          return requestVersion === requestVersionRef.current
-            ? applyResult(result)
-            : cartResultSucceeded(result);
+          return applyResult(result);
         } catch {
-          return requestVersion === requestVersionRef.current
-            ? applyResult(connectionFailure)
-            : false;
+          return applyResult(connectionFailure);
         } finally {
-          if (requestVersion === requestVersionRef.current) {
-            setStatus("ready");
-          }
+          setStatus("ready");
         }
       }),
     [applyResult, connectionFailure, enqueueOperation, locale],
@@ -253,33 +228,23 @@ export function CartProvider({
   );
 
   const runCheckoutAction = useCallback(
-    (action: () => Promise<CheckoutActionResult>) =>
+    (action: () => Promise<CheckoutActionResult>, updateBag = true) =>
       enqueueOperation(async () => {
-        const requestVersion = ++requestVersionRef.current;
         setStatus("updating");
         try {
           const result = await action();
-          if (requestVersion === requestVersionRef.current) {
-            if (result.ok) {
-              setError(null);
-            } else {
-              setError(result.error);
-              if (result.cart) setCart(result.cart);
-            }
-          }
+          if (result.ok) setError(null);
+          else if (updateBag) applyResult(result);
+          else setError(result.error);
           return result;
         } catch {
-          if (requestVersion === requestVersionRef.current) {
-            setError(connectionFailure.error);
-          }
+          setError(connectionFailure.error);
           return connectionFailure;
         } finally {
-          if (requestVersion === requestVersionRef.current) {
-            setStatus("ready");
-          }
+          setStatus("ready");
         }
       }),
-    [connectionFailure, enqueueOperation],
+    [applyResult, connectionFailure, enqueueOperation],
   );
   const checkout = useCallback(
     () => runCheckoutAction(() => checkoutAction(locale)),
@@ -287,7 +252,7 @@ export function CartProvider({
   );
   const buyNow = useCallback(
     (variantId: string, quantity = 1) =>
-      runCheckoutAction(() => buyNowAction(variantId, quantity, locale)),
+      runCheckoutAction(() => buyNowAction(variantId, quantity, locale), false),
     [locale, runCheckoutAction],
   );
   const clearError = useCallback(() => setError(null), []);

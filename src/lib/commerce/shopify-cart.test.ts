@@ -253,7 +253,7 @@ describe("Shopify Cart Storefront operations", () => {
       code: "SHOPIFY_ERROR",
     });
   });
-  it("clears 500 lines in two batches without claiming success after a partial removal", async () => {
+  it("clears all 500 lines in two batches", async () => {
     const sample = makeCart().lines.nodes[0];
     const lines = Array.from({ length: 500 }, (_, index) => ({
       ...sample,

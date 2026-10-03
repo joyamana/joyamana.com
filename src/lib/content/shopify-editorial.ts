@@ -91,6 +91,9 @@ interface ParsedBlog {
 
 export interface StorefrontEditorialArticle extends ParsedArticle {
   contentLocale: Locale;
+  titleLocale: Locale;
+  excerptLocale: Locale;
+  tagsLocale: Locale;
   requestedLocale: Locale;
   usedDefaultLanguage: boolean;
 }
@@ -243,6 +246,9 @@ async function fetchBlog(kind: EditorialKind, locale: Locale) {
   const articles: ParsedArticle[] = [];
   let after: string | null = null;
   let blogNode: ShopifyBlogNode | null = null;
+  const seenCursors = new Set<string>();
+  const seenIds = new Set<string>();
+  const seenHandles = new Set<string>();
 
   for (let page = 0; page < 20; page += 1) {
     const data: ShopifyBlogPageData = await shopifyFetch<ShopifyBlogPageData>(
@@ -259,20 +265,43 @@ async function fetchBlog(kind: EditorialKind, locale: Locale) {
         tags: ["shopify-editorial", `shopify-blog-${blogHandle}`],
       },
     );
-    if (!data.blog) return null;
+    if (!data.blog) {
+      if (page === 0) return null;
+      throw new Error("Shopify editorial pagination is incomplete.");
+    }
+    if (
+      data.blog.handle !== blogHandle ||
+      !data.blog.id ||
+      (blogNode && data.blog.id !== blogNode.id)
+    ) {
+      throw new Error("Shopify changed the blog while reading its articles.");
+    }
     blogNode = data.blog;
     articles.push(
       ...data.blog.articles.nodes.flatMap((node) => {
+        if (
+          !node.id ||
+          !node.handle ||
+          seenIds.has(node.id) ||
+          seenHandles.has(node.handle)
+        ) {
+          throw new Error("Shopify returned duplicate or invalid articles.");
+        }
+        seenIds.add(node.id);
+        seenHandles.add(node.handle);
         const article = parseArticle(node);
         return article ? [article] : [];
       }),
     );
 
     const { hasNextPage, endCursor } = data.blog.articles.pageInfo;
+    if (typeof hasNextPage !== "boolean")
+      throw new Error("Shopify returned invalid article pagination.");
     if (!hasNextPage) break;
-    if (!endCursor || page === 19) {
+    if (!endCursor?.trim() || seenCursors.has(endCursor) || page === 19) {
       throw new Error("Shopify editorial pagination is incomplete.");
     }
+    seenCursors.add(endCursor);
     after = endCursor;
   }
 
@@ -306,6 +335,7 @@ async function fetchArticle(
     },
   );
   if (!data.blog || data.blog.handle !== blogHandle) return null;
+  if (data.blog.articleByHandle?.handle !== normalizedHandle) return null;
   return parseArticle(data.blog.articleByHandle);
 }
 
@@ -334,6 +364,19 @@ function localizeArticle(
   return {
     ...requested,
     contentLocale: usedDefaultLanguage ? defaultLocale : locale,
+    titleLocale:
+      locale !== defaultLocale && requested.title === defaultArticle?.title
+        ? defaultLocale
+        : locale,
+    excerptLocale:
+      locale !== defaultLocale && requested.excerpt === defaultArticle?.excerpt
+        ? defaultLocale
+        : locale,
+    tagsLocale:
+      locale !== defaultLocale &&
+      JSON.stringify(requested.tags) === JSON.stringify(defaultArticle?.tags)
+        ? defaultLocale
+        : locale,
     requestedLocale: locale,
     usedDefaultLanguage,
   };

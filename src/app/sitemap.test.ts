@@ -55,6 +55,20 @@ afterEach(() => {
 });
 
 describe("granular sitemap gates", () => {
+  it("excludes empty catalog hubs even when commerce indexing is approved", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
+    policy.indexingPolicy["en-US"].commerce = true;
+    mocks.getProducts.mockResolvedValue([]);
+    mocks.getDesignCollections.mockResolvedValue([]);
+    mocks.productCategoriesForProducts.mockReturnValue([]);
+    mocks.getPublishedShopifyAboutPaths.mockResolvedValue([]);
+    mocks.getPublishedShopifyContentPagePaths.mockResolvedValue([]);
+    const { default: sitemap } = await import("./sitemap");
+    const urls = (await sitemap()).map((entry) => entry.url);
+    expect(urls).not.toContain("https://www.joyamana.com/shop");
+    expect(urls).not.toContain("https://www.joyamana.com/collections");
+  });
   it("excludes collections that metadata keeps noindex for missing content", async () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");

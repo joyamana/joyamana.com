@@ -41,6 +41,8 @@ interface ParsedContentPage {
 
 export interface StorefrontContentPage extends ParsedContentPage {
   contentLocale: Locale;
+  titleLocale: Locale;
+  translationReady: boolean;
   requestedLocale: Locale;
   usedDefaultLanguage: boolean;
 }
@@ -112,16 +114,19 @@ export async function getShopifyContentPage(
   const defaultPage = defaultData
     ? parseContentPage(defaultData, handle)
     : requestedPage;
+  const fallback = locale !== defaultLocale && defaultPage !== null;
   const usedDefaultLanguage = Boolean(
-    locale !== defaultLocale &&
-    defaultPage &&
-    (requestedPage.title === defaultPage.title ||
-      requestedPage.richText === defaultPage.richText),
+    fallback && requestedPage.html === defaultPage.html,
+  );
+  const titleFallback = Boolean(
+    fallback && requestedPage.title === defaultPage.title,
   );
 
   return {
     ...requestedPage,
     contentLocale: usedDefaultLanguage ? defaultLocale : locale,
+    titleLocale: titleFallback ? defaultLocale : locale,
+    translationReady: !usedDefaultLanguage && !titleFallback,
     requestedLocale: locale,
     usedDefaultLanguage,
   };
@@ -135,6 +140,6 @@ export async function getPublishedShopifyContentPagePaths(locale: Locale) {
   );
 
   return pages.flatMap((page) =>
-    page && !page.usedDefaultLanguage ? [`/${page.handle}`] : [],
+    page && page.translationReady ? [`/${page.handle}`] : [],
   );
 }

@@ -1,5 +1,6 @@
 import { CollectionsPage } from "@/components/pages/collections-page";
-import { buildMetadata, type PageSearchParams } from "@/lib/seo";
+import type { PageSearchParams } from "@/lib/seo";
+import { buildCatalogHubMetadata } from "@/lib/commerce/catalog-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +9,7 @@ export async function generateMetadata({
 }: {
   searchParams: Promise<PageSearchParams>;
 }) {
-  return buildMetadata({
+  return buildCatalogHubMetadata({
     title: "原創設計系列",
     description: "探索 Joya Mana 的原創設計系列與背後故事。",
     locale: "zh-Hant-US",

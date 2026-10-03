@@ -18,17 +18,11 @@ export async function SearchPage({
   return (
     <section className="search-page">
       <p className="eyebrow">
-        {marketId === "ca"
-          ? uiText(locale, {
-              zh: "加拿大商品目錄 · CAD",
-              en: "Canada catalog · CAD",
-              es: "Canada catalog · CAD",
-            })
-          : uiText(locale, {
-              zh: "共用美國商品目錄",
-              en: "Shared US catalog",
-              es: "Catálogo compartido de EE. UU.",
-            })}
+        {uiText(locale, {
+          zh: "美國商品目錄",
+          en: "US catalog",
+          es: "Catálogo de EE. UU.",
+        })}
       </p>
       <h1>{uiText(locale, { zh: "搜尋", en: "Search", es: "Buscar" })}</h1>
       <form className="search-form" action={localePath(locale, "/search")}>

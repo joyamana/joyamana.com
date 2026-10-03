@@ -1,5 +1,6 @@
 import { isEnabledLocale } from "@/config/locales";
 import { cache } from "react";
+import type { ShopifyCatalogNavigationSnapshot } from "./shopify-catalog-contract";
 import {
   localizeProductCategory,
   productCategoryDefinitionForHandle,
@@ -9,6 +10,7 @@ import type { MarketId } from "@/config/markets";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Collection, Product, ProductCollection } from "./types";
 import {
+  createCatalogReadBudget,
   getShopifyCollection,
   getShopifyCollections,
   getShopifyCatalogNavigation,
@@ -16,7 +18,6 @@ import {
   getShopifyProducts,
   hydrateShopifyBrowseProducts,
   searchShopifyProducts,
-  type ShopifyCatalogNavigationSnapshot,
 } from "./shopify-catalog";
 
 export class CatalogConfigurationError extends Error {
@@ -67,16 +68,24 @@ function assertEnabledUsLocale(locale: Locale) {
   }
 }
 
-export async function getProducts(
+const getProductCatalogSnapshot = cache(
+  async (marketId: MarketId, locale: Locale) => {
+    const budget = createCatalogReadBudget();
+    if (marketId === "ca") return { products: [], budget };
+    assertEnabledUsLocale(locale);
+    return {
+      products: await getShopifyProducts(locale, { cache: "no-store" }, budget),
+      budget,
+    };
+  },
+);
+
+export const getProducts = cache(async function getProducts(
   marketId: MarketId = "us",
   locale: Locale = "en-US",
 ): Promise<Product[]> {
-  // Canada is typed planning context only. Do not access any provider for it.
-  if (marketId === "ca") return [];
-  assertEnabledUsLocale(locale);
-
-  return getShopifyProducts(locale);
-}
+  return (await getProductCatalogSnapshot(marketId, locale)).products;
+});
 
 export const getProduct = cache(async function getProduct(
   handle: string,
@@ -90,19 +99,31 @@ export const getProduct = cache(async function getProduct(
 });
 
 export const getBrowseProducts = cache(
-  async (marketId: MarketId, locale: Locale) =>
-    hydrateShopifyBrowseProducts(await getProducts(marketId, locale), locale),
+  async (marketId: MarketId, locale: Locale) => {
+    const { products, budget } = await getProductCatalogSnapshot(
+      marketId,
+      locale,
+    );
+    return hydrateShopifyBrowseProducts(products, locale, budget);
+  },
 );
 
 export const getBrowseCategory = cache(
   async (handle: string, marketId: MarketId, locale: Locale) => {
-    const category = await getProductCategory(handle, marketId, locale);
+    const definition = productCategoryDefinitionForHandle(handle);
+    if (!definition) return null;
+    const { products, budget } = await getProductCatalogSnapshot(
+      marketId,
+      locale,
+    );
+    const category = mapStorefrontCategory(definition, products, locale);
     return category
       ? {
           ...category,
           products: await hydrateShopifyBrowseProducts(
             category.products,
             locale,
+            budget,
           ),
         }
       : null;
@@ -111,20 +132,26 @@ export const getBrowseCategory = cache(
 
 export const getBrowseCollection = cache(
   async (handle: string, marketId: MarketId, locale: Locale) => {
-    const collection = await getDesignCollection(handle, marketId, locale);
+    const { collection: candidate, budget } = await getCollectionSnapshot(
+      handle,
+      marketId,
+      locale,
+    );
+    const collection = candidate?.kind === "design_series" ? candidate : null;
     return collection
       ? {
           ...collection,
           products: await hydrateShopifyBrowseProducts(
             collection.products,
             locale,
+            budget,
           ),
         }
       : null;
   },
 );
 
-export async function getCollections(
+export const getCollections = cache(async function getCollections(
   marketId: MarketId = "us",
   locale: Locale = "en-US",
 ): Promise<Collection[]> {
@@ -132,27 +159,36 @@ export async function getCollections(
   assertEnabledUsLocale(locale);
 
   return getShopifyCollections(locale);
-}
+});
+
+const getCollectionSnapshot = cache(
+  async (handle: string, marketId: MarketId, locale: Locale) => {
+    const budget = createCatalogReadBudget();
+    if (marketId === "ca") return { collection: null, budget };
+    assertEnabledUsLocale(locale);
+    return {
+      collection: await getShopifyCollection(handle, locale, budget),
+      budget,
+    };
+  },
+);
 
 export const getCollection = cache(async function getCollection(
   handle: string,
   marketId: MarketId = "us",
   locale: Locale = "en-US",
 ): Promise<ProductCollection | null> {
-  if (marketId === "ca") return null;
-  assertEnabledUsLocale(locale);
-
-  return getShopifyCollection(handle, locale);
+  return (await getCollectionSnapshot(handle, marketId, locale)).collection;
 });
 
-export async function getDesignCollections(
+export const getDesignCollections = cache(async function getDesignCollections(
   marketId: MarketId = "us",
   locale: Locale = "en-US",
 ) {
   return (await getCollections(marketId, locale)).filter(
     (collection) => collection.kind === "design_series",
   );
-}
+});
 
 const getCachedShopifyCatalogNavigation = cache(
   async (locale: Locale): Promise<CatalogNavigationData> => {

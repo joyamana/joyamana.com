@@ -224,10 +224,10 @@ export async function checkoutAction(
     const cart = await getShopifyCart(cartId, language);
     if (!cart) {
       store.delete(cartCookieName);
-      throw new ShopifyCartError("CART_EXPIRED");
+      return { ...failure("CART_EXPIRED", language), cart: emptyCartView() };
     }
     if (cart.totalQuantity < 1 || cart.lines.nodes.length === 0) {
-      throw new ShopifyCartError("EMPTY_CART");
+      return { ...failure("EMPTY_CART", language), cart: mapShopifyCart(cart) };
     }
     const view = mapShopifyCart(cart);
     const issue = view.lines.map(cartLineIssue).find(Boolean);

@@ -11,7 +11,6 @@ import {
 const booleanVariables = [
   "NEXT_PUBLIC_SITE_INDEXABLE",
   "SHOPIFY_CHECKOUT_ENABLED",
-  "CONTACT_FORM_ENABLED",
 ];
 
 function parseOrigin(value, variable, errors) {
@@ -57,7 +56,6 @@ export function validateEnvironment(env = process.env) {
   const isPreview = env.VERCEL_ENV === "preview";
   const indexable = env.NEXT_PUBLIC_SITE_INDEXABLE === "true";
   const checkoutEnabled = env.SHOPIFY_CHECKOUT_ENABLED === "true";
-  const contactEnabled = env.CONTACT_FORM_ENABLED === "true";
 
   for (const variable of booleanVariables) {
     const value = env[variable];
@@ -116,11 +114,6 @@ export function validateEnvironment(env = process.env) {
   if (checkoutEnabled && (!storeDomain || !storefrontToken)) {
     errors.push(
       "Shopify credentials are required when SHOPIFY_CHECKOUT_ENABLED is true.",
-    );
-  }
-  if (contactEnabled && !env.RESEND_API_KEY?.trim()) {
-    errors.push(
-      "RESEND_API_KEY is required when CONTACT_FORM_ENABLED is true.",
     );
   }
 

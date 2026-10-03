@@ -17,8 +17,8 @@ async function publishedAlternateLocales(handle?: string) {
         const page = tree ? aboutPageForHandle(tree, handle) : null;
         return tree &&
           page &&
-          !tree.root.usedDefaultLanguage &&
-          !page.usedDefaultLanguage
+          tree.root.translationReady &&
+          page.translationReady
           ? locale
           : null;
       } catch {
@@ -53,12 +53,7 @@ export async function buildAboutMetadata({
   try {
     const tree = await getShopifyAboutTree(locale);
     const page = tree ? aboutPageForHandle(tree, handle) : null;
-    if (
-      tree &&
-      page &&
-      !tree.root.usedDefaultLanguage &&
-      !page.usedDefaultLanguage
-    ) {
+    if (tree && page && tree.root.translationReady && page.translationReady) {
       return buildMetadata({
         title: page.seoTitle,
         description: page.seoDescription,

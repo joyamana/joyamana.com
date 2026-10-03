@@ -104,7 +104,7 @@ export class ShopifyCartError extends Error {
   readonly code: CartActionErrorCode;
 
   constructor(code: CartActionErrorCode, message?: string) {
-    super(message ?? safeCartErrorMessage(code));
+    super(message ?? cartErrorMessage(code));
     this.name = "ShopifyCartError";
     this.code = code;
   }
@@ -715,13 +715,6 @@ export function validateCheckoutUrl(
   return url.toString();
 }
 
-export function safeCartErrorMessage(
-  code: CartActionErrorCode,
-  language: ShopifyCartLanguage = "EN",
-) {
-  return cartErrorMessage(code, language);
-}
-
 export function toSafeCartFailure(
   error: unknown,
   language: ShopifyCartLanguage = "EN",
@@ -731,7 +724,7 @@ export function toSafeCartFailure(
     ok: false,
     error: {
       code,
-      message: safeCartErrorMessage(code, language),
+      message: cartErrorMessage(code, language),
     },
   };
 }

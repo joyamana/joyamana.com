@@ -51,18 +51,20 @@ export async function ShopPage({
     { name: homeLabel, path: "/" },
     { name: shopLabel, path: "/shop" },
   ];
-  const structuredData = serializeIndexableStructuredData(
-    buildCollectionStructuredData({
-      name: shopLabel,
-      description: pageDescription,
-      path: "/shop",
-      products: result.entries.map((entry) => entry.product),
-      entries: result.entries,
-      locale,
-      breadcrumbs,
-    }),
-    { locale, path: "/shop", searchParams },
-  );
+  const structuredData = products.length
+    ? serializeIndexableStructuredData(
+        buildCollectionStructuredData({
+          name: shopLabel,
+          description: pageDescription,
+          path: "/shop",
+          products: result.entries.map((entry) => entry.product),
+          entries: result.entries,
+          locale,
+          breadcrumbs,
+        }),
+        { locale, path: "/shop", searchParams },
+      )
+    : null;
 
   return (
     <>

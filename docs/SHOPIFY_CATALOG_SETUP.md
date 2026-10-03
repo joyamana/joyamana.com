@@ -1,7 +1,8 @@
 # Shopify 维护
 
-本文件说明运营人员在 Shopify 维护的字段和检查方法，不授权代码修改后台。
-商品和政策行为见交易规格，内容发布/索引规则见内容与索引规格，待完成资料见 Roadmap。
+本文件供运营人员维护 Shopify；后台写入须另外授权。商品规则见
+[交易规格](COMMERCE_SPEC.md)，内容规则见 [内容与索引](CONTENT_SEO_GEO_SPEC.md)，
+缺失资料见 [Roadmap](ROADMAP.md)。
 
 ## 发布与翻译
 
@@ -50,8 +51,7 @@ Product Type/tag 不作为类别来源。至少一件当前 Catalog 可见商品
 
 颜色定义已经确定为文本列表，不迁移为 Metaobject。多色款填写多个值，不填逗号拼接
 字符串；统一默认语言拼写，不把品牌色当商品属性，不以译文改变稳定身份。
-网页已接入读取、选项、筛选、图价与 PDP 初选，新增有效值自动读取，无需再绑定代码。
-字段 null 可能是未填或访问权限问题，需要分别检查，不保存长期的“全部未填”快照。
+新增有效颜色值由网页自动读取。字段 null 时分别检查是否填写和 Storefront 访问权限。
 
 逐款关联真实媒体，至少比较两个不同颜色/价格的 Variant。Storefront image 可能回退
 产品图，因此非空不是专图绑定证据。独件一物一图。Variant 顺序决定同条件下的优先款，
@@ -63,17 +63,12 @@ Product Type/tag 不作为类别来源。至少一件当前 Catalog 可见商品
 才进入公开系列列表和详情。允许枚举为 `design_series`、`category`、`merchandising`，
 缺失/其他值不作为设计系列公开。
 
-Collection 可维护 `custom.design_series` 的单个 Metaobject reference。
-Product 设置同一 reference，由 automated Collection 归集系列成员；每件商品当前一个
-主要系列，改为多值须有真实需求和批准。Category 的后台 Collection 不能标为 design_series。
+Collection 维护唯一 handle、description、image 和 SEO，公开 URL 为
+`/collections/{handle}`。描述缺失时仍可浏览，但详情不索引。不要把后台归类 Collection
+标成 design_series，也不为系列 Metaobject 另发一个相同主题的索引页。
 
-Design Series 可按后续故事需求设计名称、tagline、简介、rich-text story、hero/mobile
-hero、lookbook、真实发布日期和发布状态，字段建议不等于前端已接入。
-Collection 维护唯一 handle、description、image 和 SEO，公开 URL 仍 `/collections/{handle}`，
-不为 Metaobject 再发布第二个索引页。
-
-当前前端只读取 Collection 类型与网格，没有 reference/story/lookbook。完整系列发布前
-须同时完成字段、翻译、适配和展示；只创建 Metaobject 不算故事功能完成。
+`custom.design_series` reference、故事和 lookbook 属于后续待办，当前前端不读取；
+字段结构、真实内容、翻译和展示确定后再建设，见 Roadmap。
 
 ## About 与 Accessibility
 
@@ -108,4 +103,5 @@ Article 维护真实正文、摘要、作者、日期、媒体、SEO 与翻译�
 - 深链接、切款、刷新、返回/前进和语言切换一致；Bag/Buy now 使用所选 merchandise。
 - 系列真实非空、类型正确、正文/SEO 完整；检查导航 0/1–2/3+ 阈值。
 - About 引用、顺序、正文、日期和三语言内容正确；已识别回退页不进入对应 sitemap。
-- 核对 UI、metadata、canonical、Schema 与真实数据，按发布手册完成设备和 Checkout 验收。
+- 核对 UI、metadata、canonical、Schema 与真实数据，按
+  [发布手册](LAUNCH_RUNBOOK.md)完成设备和 Checkout 验收。

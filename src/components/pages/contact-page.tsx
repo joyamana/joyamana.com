@@ -1,14 +1,10 @@
 import Link from "next/link";
-import { ContactForm } from "@/components/contact-form";
 import { brand } from "@/config/brand";
-import { isContactFormEnabled } from "@/lib/contact-delivery.server";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 
 export function ContactPage({ locale }: { locale: Locale }) {
-  const formEnabled = isContactFormEnabled();
-
   return (
     <section className="form-page">
       <div className="contact-intro">
@@ -63,43 +59,32 @@ export function ContactPage({ locale }: { locale: Locale }) {
           </Link>
         </nav>
       </div>
-      {formEnabled ? (
-        <ContactForm locale={locale} />
-      ) : (
-        <div className="contact-email-fallback">
-          <p className="eyebrow">
-            {uiText(locale, {
-              zh: "電郵支援",
-              en: "Email support",
-              es: "Ayuda por correo",
-            })}
-          </p>
-          <h2>
-            {uiText(locale, {
-              zh: "直接傳送電郵給我們。",
-              en: "Write to us directly.",
-              es: "Escríbenos directamente.",
-            })}
-          </h2>
-          <p>
-            {uiText(locale, {
-              zh: "請透過電郵聯絡我們。電郵是目前的正式聯絡渠道。",
-              en: "The online form is not active yet. Email remains the official contact channel.",
-              es: "El formulario en línea aún no está activo. El correo sigue siendo el canal oficial de contacto.",
-            })}
-          </p>
-          <a
-            className="button button--primary"
-            href={`mailto:${brand.supportEmail}`}
-          >
-            {uiText(locale, {
-              zh: `電郵至 ${brand.supportEmail}`,
-              en: `Email ${brand.supportEmail}`,
-              es: `Escribir a ${brand.supportEmail}`,
-            })}
-          </a>
-        </div>
-      )}
+      <div className="contact-email-fallback">
+        <p className="eyebrow">
+          {uiText(locale, {
+            zh: "電郵支援",
+            en: "Email support",
+            es: "Ayuda por correo",
+          })}
+        </p>
+        <h2>
+          {uiText(locale, {
+            zh: "直接傳送電郵給我們。",
+            en: "Write to us directly.",
+            es: "Escríbenos directamente.",
+          })}
+        </h2>
+        <a
+          className="button button--primary"
+          href={`mailto:${brand.supportEmail}`}
+        >
+          {uiText(locale, {
+            zh: `電郵至 ${brand.supportEmail}`,
+            en: `Email ${brand.supportEmail}`,
+            es: `Escribir a ${brand.supportEmail}`,
+          })}
+        </a>
+      </div>
     </section>
   );
 }

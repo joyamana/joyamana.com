@@ -25,7 +25,7 @@ export async function AccessibilityPage({ locale }: { locale: Locale }) {
             es: "Declaración de accesibilidad",
           })}
         </p>
-        <h1 lang={page.contentLocale}>{page.title}</h1>
+        <h1 lang={page.titleLocale}>{page.title}</h1>
       </header>
 
       {page.usedDefaultLanguage ? (

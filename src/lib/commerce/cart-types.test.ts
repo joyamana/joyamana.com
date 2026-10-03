@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { cartLineCorrection, cartLineIssue } from "./cart-types";
+import {
+  cartForFailure,
+  cartLineCorrection,
+  cartLineIssue,
+} from "./cart-types";
 
 function line(overrides: Partial<Parameters<typeof cartLineIssue>[0]> = {}) {
   return {
@@ -13,6 +17,22 @@ function line(overrides: Partial<Parameters<typeof cartLineIssue>[0]> = {}) {
 }
 
 describe("saved Bag quantity recovery", () => {
+  it("drops stale lines for an expired or missing Cart but preserves them on a connection failure", () => {
+    for (const code of ["CART_EXPIRED", "CART_NOT_FOUND"] as const) {
+      expect(
+        cartForFailure({ ok: false, error: { code, message: "Try again." } }),
+      ).toMatchObject({
+        lines: [],
+        totalQuantity: 0,
+      });
+    }
+    expect(
+      cartForFailure({
+        ok: false,
+        error: { code: "SHOPIFY_ERROR", message: "Try again." },
+      }),
+    ).toBeUndefined();
+  });
   it("offers a direct adjustment after stock falls below the saved quantity", () => {
     expect(cartLineIssue(line())).toBe("INVALID_QUANTITY");
     expect(cartLineCorrection(line())).toBe(3);

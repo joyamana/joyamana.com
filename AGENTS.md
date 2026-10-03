@@ -44,7 +44,7 @@ Roadmap 中的候选和待确认项不是业务批准。缺失输入若会改变
 - 不虚构评论、库存紧迫性、折扣、专家、资质、产地、采购或环保承诺。
 - 传统或精神文化内容不得写成医疗事实；无可靠依据不得声称诊断、治疗、治愈、预防
   或健康安全功效。配送、退换、税费和隐私内容必须来自真实获批政策。
-- UI、metadata、JSON-LD 和未来 analytics 使用同一规范化实体；结构化数据须与可见内容一致。
+- UI、metadata、JSON-LD 和未来 analytics 使用同一份经过校验的数据；与可见内容一致。
 - 不做隐藏 AI 页面、crawler cloaking、薄页面或关键词替换页。索引范围与 URL 规则见
   CONTENT_SEO_GEO_SPEC；`llms.txt` 只作可选辅助。
 - 私密 Storefront token、Admin token、webhook secret 和客户 PII 只在服务端使用，
@@ -79,9 +79,8 @@ Roadmap 中的候选和待确认项不是业务批准。缺失输入若会改变
 
 Node 保持 24，精确依赖以 package.json/lockfile 为准。语言映射在 `src/config/locales.ts`，
 索引矩阵在 `src/config/indexing.ts`；Production canonical 为 `https://www.joyamana.com`。
-默认索引、Checkout、Contact form 开关关闭，各部署按批准范围核验；Preview 必须 noindex。
-缺译页面允许 Shopify 英文回退，不能因此复制本地正文。配置批准不等于译文验收。
+默认索引和 Checkout 开关关闭，各部署按批准范围核验；Contact 当前只用 Email。
+Preview 必须 noindex。缺译页面允许 Shopify 英文回退，不复制本地正文；配置批准不等于译文验收。
 
-Playwright 当前封存，记录人工浏览器与 Checkout 检查。内容和导航五分钟再验证，webhook
-后置，商业数据 no-store。命令：`pnpm dev`、`pnpm preflight`、`pnpm format:check`、
-`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`。实际运行前不得声称通过。
+检查命令见 README，缓存与请求规则见 TECH_SPEC，设备和 Checkout 验收见 LAUNCH_RUNBOOK。
+Playwright 当前封存；任何检查实际运行前不得声称通过。

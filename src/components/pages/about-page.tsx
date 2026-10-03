@@ -82,7 +82,7 @@ export function AboutContentPage({
     ...(isRoot ? [] : [{ name: page.title, path }]),
   ];
   const structuredData =
-    !tree.root.usedDefaultLanguage && !page.usedDefaultLanguage
+    tree.root.translationReady && page.translationReady
       ? serializeIndexableStructuredData(
           buildAboutStructuredData({
             name: page.title,
@@ -130,9 +130,11 @@ export function AboutContentPage({
         tree={tree}
       />
       <section className="about-content-body">
-        <header className="about-content-heading" lang={page.contentLocale}>
-          <h1>{page.title}</h1>
-          {page.summary ? <p>{page.summary}</p> : null}
+        <header className="about-content-heading">
+          <h1 lang={page.titleLocale}>{page.title}</h1>
+          {page.summary ? (
+            <p lang={page.summaryLocale}>{page.summary}</p>
+          ) : null}
         </header>
         {page.usedDefaultLanguage ? (
           <p className="policy-language-notice">
@@ -186,7 +188,7 @@ function AboutSectionNavigation({
           const isActive = itemHandle === activeHandle;
           return (
             <Link
-              lang={item.contentLocale}
+              lang={item.navigationLocale}
               aria-current={isActive ? "page" : undefined}
               href={localePath(
                 locale,

@@ -52,8 +52,8 @@ Design Series Metaobject 用于故事和视觉，不另建第二个可索引系�
 - 每个 Product 只显示一张卡片，按可购买优先、Shopify POSITION、ID 固定选款。
   `sort=price-asc|price-desc` 按该款十进制 USD 单价全局排序，平价稳定按来源/ID，
   切排序不能换款；不能用商品最低价替代展示款价格。
-- 图片、款式、价格、状态、链接和适用 Schema 共用选定 Variant。网页颜色读取、筛选、
-  图价和 PDP 初选已接通，后台新值在下一次 no-store 请求自动读取，无需再做网页绑定。
+- 图片、款式、价格、状态、链接和适用 Schema 共用选定 Variant。后台新值在下一次
+  no-store 请求读取。
 - 列表按 POSITION 完整分页，轻量批次/并发和读取预算由代码集中维护。
   cursor、重复 ID、归属或预算失败时显示错误，不能展示静默截断的结果。
 - 卡片使用 Variant image；Storefront 可能提供产品图后备，非空不证明专图已绑定，
@@ -70,7 +70,8 @@ Design Series Metaobject 用于故事和视觉，不另建第二个可索引系�
 
 列表、PDP 和 Offer 共用 Product/Variant 可售性及数量规则。PDP/Bag 的新提交须为正整数，
 满足 minimum/maximum/increment、站内每款 99 件上限，以及已知可用库存。
-上限须向下对齐步进，例如 increment=2 时最大可选 98。
+上限须向下对齐步进，例如 increment=2 时最大可选 98。数量框允许暂时清空或输入
+中间值；失焦显示错误，非法草稿禁用购买，不按旧数量提交。
 
 只有 `currentlyNotInStock=false` 且 `quantityAvailable` 为已知非负整数时，才使用保守库存
 上限。`currentlyNotInStock=true` 可能允许继续销售，库存 `null` 不等于 0；两者仍受
@@ -95,9 +96,9 @@ Bag 支持创建、读取、加购、修改数量、移除、恢复和清空。�
   直接调整到当前有效数量；无法满足 minimum 时提示移除或重选。
 - 新加购同时检查同款合并后不超过 99；服务端不能只依赖按钮限制。
 - mutation 失败或部分成功时刷新实际剩余内容并保留错误，不声称清空成功。
-  过期 Cart 的加购可安全建立新袋；不能因任意 API 故障静默丢失现有购物袋。
+  确认过期或不存在时清掉旧行；过期 Cart 的加购可建立新袋，网络故障保留现有袋。
 - Checkout 点击后重读最新 Cart，校验每行库存/规则/可售性并取得最新 URL。
-  失败时返回安全的最新 Bag 供修正，不让问题行直接进入结账。
+  失败时返回安全的最新 Bag 供修正；上游空袋同步清空旧显示，不让问题行进入结账。
 - Buy now 使用所选 Variant/数量/Market 的独立单商品 Cart，检查实际返回行和阻塞警告，
   不清空、改写或携带已有 Bag。
 - Checkout URL 是 Shopify 不透明地址，按获准 host/locale 校验，不手工改写。
@@ -118,10 +119,6 @@ Schema，不能在不同触点保留旧承诺。特殊地址、费率和税费�
 已确认。当前 Email-only，页面不承诺未批准的时段或 SLA。
 损坏、丢件、退货和订单修改按真实流程处理，不把支持请求视为营销订阅。
 
-现有关闭的 Contact Server Action + Resend 适配层仅为未来投递准备，不存留言、不创建
-Shopify Customer。启用前批准供应商的数据边界、保留期、成本、退出方式、发件域、
-生产限流与隐私说明；表单数据只用于本次服务请求。
-
 ## 交易身份、营销与评论
 
 Checkout Email/Account Email 用于订单或服务，不等于 Newsletter/SMS 营销同意。
@@ -133,13 +130,8 @@ Abandoned checkout、复购、cross-sell 和 review request 按获批同意与�
 不虚构评论、空星级或认证，不因评分低不当抑制真实负评。仅页面可见的真实评分进入 Schema。
 账户、复购与营销候选统一放 Roadmap，不预建会员系统。
 
-## 测量与验收
+## 验收
 
-Shopify Order 是订单与收入事实来源。未来事件仅在实际动作成功后发送，失败加购不能记
-为 `add_to_cart`，点击 Checkout 不能推断 `purchase`。商品/款式/currency/value 使用动作
-发生时的同一实体；purchase 每单一次，与 Shopify 测试订单、金额和商品对账。
-不向事件发送 PII 或完整 Cart ID；consent 与追踪边界见技术规格。
-
-发布时用真实商品检查模型/媒体/字段、UI/Bag/Schema 的价格库存一致、规则变化恢复、
-部分失败、售罄、独立 Buy now、游客 Checkout、订单确认、政策与客服。具体步骤和记录
-统一见发布手册，不把 mapper 测试当成跨设备或支付验收。
+用真实商品核对选款、金额、库存、数量变化、Bag 恢复、独立 Buy now 和游客结账，
+并检查政策、订单确认及客服。步骤见 [发布手册](LAUNCH_RUNBOOK.md)；事件和数据边界
+见 [技术规格](TECH_SPEC.md)，不能用单元测试推断支付已经验收。

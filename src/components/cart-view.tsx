@@ -92,8 +92,8 @@ export function CartView({ locale }: { locale: Locale }) {
           <p>
             {uiText(locale, {
               zh: "加入的商品會儲存於此瀏覽器的購物袋。",
-              en: "Items added here are saved for this browser session.",
-              es: "Los artículos añadidos aquí se guardan durante esta sesión del navegador.",
+              en: "Items added here are saved in this browser.",
+              es: "Los artículos añadidos aquí se guardan en este navegador.",
             })}
           </p>
         )}

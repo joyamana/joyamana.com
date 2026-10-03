@@ -40,23 +40,29 @@ import {
   type ShopifyCatalogNavigationSnapshot,
 } from "./shopify-catalog-contract";
 
-export { mapShopifyProduct } from "./shopify-catalog-mappers";
-export {
-  ShopifyCatalogError,
-  SHOPIFY_PRODUCTS_QUERY,
-  SHOPIFY_PRODUCT_QUERY,
-  SHOPIFY_PRODUCT_VARIANTS_QUERY,
-  SHOPIFY_BROWSE_VARIANTS_QUERY,
-  SHOPIFY_COLLECTIONS_QUERY,
-  SHOPIFY_COLLECTION_QUERY,
-  SHOPIFY_SEARCH_QUERY,
-  SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
-  SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
-} from "./shopify-catalog-contract";
-export type {
-  ShopifyProductNode,
-  ShopifyCatalogNavigationSnapshot,
-} from "./shopify-catalog-contract";
+export function createCatalogReadBudget() {
+  const deadline = Date.now() + 20_000;
+  let requests = 0;
+  return {
+    read<T>(
+      query: string,
+      variables: Record<string, unknown>,
+      options: ShopifyFetchOptions = { cache: "no-store" },
+    ) {
+      const remaining = deadline - Date.now();
+      if (++requests > 100 || remaining <= 0) {
+        throw new ShopifyCatalogError(
+          "invalid-data",
+          "The complete catalog could not be read within its request budget.",
+        );
+      }
+      return shopifyFetch<T>(query, variables, {
+        ...options,
+        timeoutMs: Math.min(options.timeoutMs ?? 10_000, remaining),
+      });
+    },
+  };
+}
 
 function shopifyContext(locale: Locale) {
   if (isEnabledLocale(locale)) return shopifyContextForLocale(locale);
@@ -129,10 +135,11 @@ async function collectConnectionNodes<T extends { id: string }>(
 export async function getShopifyProducts(
   locale: Locale,
   fetchOptions: ShopifyFetchOptions = { cache: "no-store" },
+  budget = createCatalogReadBudget(),
 ): Promise<Product[]> {
   const context = shopifyContext(locale);
   const loadPage = (after: string | null) =>
-    shopifyFetch<ShopifyProductsData>(
+    budget.read<ShopifyProductsData>(
       SHOPIFY_PRODUCTS_QUERY,
       { ...context, first: PRODUCT_PAGE_SIZE, after },
       fetchOptions,
@@ -149,12 +156,13 @@ export async function getShopifyProducts(
 export async function getShopifyProduct(
   handle: string,
   locale: Locale,
+  budget = createCatalogReadBudget(),
 ): Promise<Product | null> {
   const normalizedHandle = handle.trim();
   if (!normalizedHandle) return null;
 
   const context = shopifyContext(locale);
-  const data = await shopifyFetch<ShopifyProductData>(
+  const data = await budget.read<ShopifyProductData>(
     SHOPIFY_PRODUCT_QUERY,
     { ...context, handle: normalizedHandle },
     { cache: "no-store" },
@@ -165,7 +173,7 @@ export async function getShopifyProduct(
   const variants = await collectConnectionNodes(
     product.variants,
     async (after) => {
-      const nextPage = await shopifyFetch<ShopifyProductVariantsData>(
+      const nextPage = await budget.read<ShopifyProductVariantsData>(
         SHOPIFY_PRODUCT_VARIANTS_QUERY,
         {
           ...context,
@@ -195,23 +203,11 @@ export async function getShopifyProduct(
 export async function hydrateShopifyBrowseProducts(
   products: Product[],
   locale: Locale,
+  budget = createCatalogReadBudget(),
 ): Promise<Product[]> {
   if (!products.length) return products;
-  const started = Date.now();
-  let requests = 0;
-  const load = <T>(query: string, variables: Record<string, unknown>) => {
-    const remaining = 20_000 - (Date.now() - started);
-    if (++requests > 100 || remaining <= 0) {
-      throw new ShopifyCatalogError(
-        "invalid-data",
-        "The complete catalog could not be read within its request budget.",
-      );
-    }
-    return shopifyFetch<T>(query, variables, {
-      cache: "no-store",
-      timeoutMs: Math.min(10_000, remaining),
-    });
-  };
+  const load = <T>(query: string, variables: Record<string, unknown>) =>
+    budget.read<T>(query, variables);
   const batches: Product[][] = [];
   for (let index = 0; index < products.length; index += 8)
     batches.push(products.slice(index, index + 8));
@@ -326,10 +322,11 @@ export async function hydrateShopifyBrowseProducts(
 export async function getShopifyCollections(
   locale: Locale,
   fetchOptions: ShopifyFetchOptions = { cache: "no-store" },
+  budget = createCatalogReadBudget(),
 ): Promise<Collection[]> {
   const context = shopifyContext(locale);
   const loadPage = (after: string | null) =>
-    shopifyFetch<ShopifyCollectionsData>(
+    budget.read<ShopifyCollectionsData>(
       SHOPIFY_COLLECTIONS_QUERY,
       { ...context, first: COLLECTION_PAGE_SIZE, after },
       fetchOptions,
@@ -349,13 +346,14 @@ export async function getShopifyCollections(
 export async function getShopifyCollection(
   handle: string,
   locale: Locale,
+  budget = createCatalogReadBudget(),
 ): Promise<ProductCollection | null> {
   const normalizedHandle = handle.trim();
   if (!normalizedHandle) return null;
 
   const context = shopifyContext(locale);
   const loadPage = (after: string | null) =>
-    shopifyFetch<ShopifyCollectionData>(
+    budget.read<ShopifyCollectionData>(
       SHOPIFY_COLLECTION_QUERY,
       {
         ...context,
@@ -394,13 +392,14 @@ export async function getShopifyCollection(
 export async function searchShopifyProducts(
   query: string,
   locale: Locale,
+  budget = createCatalogReadBudget(),
 ): Promise<Product[]> {
   const normalizedQuery = query.trim().slice(0, 100);
   if (!normalizedQuery) return [];
 
   const context = shopifyContext(locale);
   const loadPage = (after: string | null) =>
-    shopifyFetch<ShopifySearchData>(
+    budget.read<ShopifySearchData>(
       SHOPIFY_SEARCH_QUERY,
       {
         ...context,
@@ -431,16 +430,17 @@ export async function searchShopifyProducts(
 export async function getShopifyCatalogNavigation(
   locale: Locale,
   fetchOptions: ShopifyFetchOptions,
+  budget = createCatalogReadBudget(),
 ): Promise<ShopifyCatalogNavigationSnapshot> {
   const context = shopifyContext(locale);
   const loadProductsPage = (after: string | null) =>
-    shopifyFetch<ShopifyNavigationProductsData>(
+    budget.read<ShopifyNavigationProductsData>(
       SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
       { ...context, first: NAVIGATION_PRODUCT_PAGE_SIZE, after },
       fetchOptions,
     );
   const loadCollectionsPage = (after: string | null) =>
-    shopifyFetch<ShopifyNavigationCollectionsData>(
+    budget.read<ShopifyNavigationCollectionsData>(
       SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
       { ...context, first: NAVIGATION_COLLECTION_PAGE_SIZE, after },
       fetchOptions,

@@ -66,6 +66,7 @@ describe("service page metadata", () => {
         seoTitle: locale === "es-US" ? "Accesibilidad" : "Accessibility",
         seoDescription: "Accessibility details.",
         usedDefaultLanguage: false,
+        translationReady: true,
       }),
     );
     const { buildContentPageMetadata } =

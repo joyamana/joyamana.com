@@ -31,7 +31,7 @@ export async function ProductPage({
   const marketId = marketIdForLocale(locale);
   const [product, allProducts] = await Promise.all([
     getProduct(handle, marketId, locale),
-    getProducts(marketId, locale),
+    getProducts(marketId, locale).catch(() => []),
   ]);
   if (!product) notFound();
   const initialVariant = initialProductVariant(product, searchParams);

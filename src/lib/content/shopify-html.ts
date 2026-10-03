@@ -59,16 +59,20 @@ export function safeShopifyImageSource(value: string) {
 }
 
 /** Inspect already-sanitized HTML with the parser, including decoded entities. */
-export function hasVisibleHtmlText(html: string) {
-  let visible = false;
+export function visibleHtmlText(html: string) {
+  let text = "";
   sanitizeHtml(`<div>${html}</div>`, {
     allowedTags: ["div"],
     exclusiveFilter: (frame) => {
-      if (frame.tag === "div" && frame.text.trim()) visible = true;
+      if (frame.tag === "div") text = frame.text;
       return false;
     },
   });
-  return visible;
+  return text.replace(/\s+/g, " ").trim();
+}
+
+export function hasVisibleHtmlText(html: string) {
+  return visibleHtmlText(html).length > 0;
 }
 
 /** One server-side HTML boundary for merchant-authored content. */

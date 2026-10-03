@@ -89,6 +89,32 @@ afterEach(() => {
 });
 
 describe("Shopify content pages", () => {
+  it("marks a translated body separately from its untranslated title", async () => {
+    process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+    process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((_url: string, request: RequestInit) => {
+        const language = JSON.parse(String(request.body)).variables.language as
+          "EN" | "ES";
+        const page = contentPage(language, true);
+        page.fields.find((field) => field.key === "title")!.value =
+          "Accessibility";
+        return Promise.resolve(
+          new Response(JSON.stringify({ data: { metaobject: page } })),
+        );
+      }),
+    );
+    expect(await getShopifyContentPage("accessibility", "es-US")).toMatchObject(
+      {
+        contentLocale: "es-US",
+        titleLocale: "en-US",
+        usedDefaultLanguage: false,
+        translationReady: false,
+      },
+    );
+    expect(await getPublishedShopifyContentPagePaths("es-US")).toEqual([]);
+  });
   it.each([
     "null",
     '{"type":"root","children":[null]}',

@@ -5,7 +5,8 @@
 品牌为 Joya Mana。Logo、wordmark、字体授权、正式颜色与真实商品摄影/视频已确认，
 实现只使用实际获批资产，不从文档推断未提供的文件或授权范围。
 品牌文案与客服配置见 [brand.ts](../src/config/brand.ts)，视觉值见
-[globals.css](../src/app/globals.css)，字体声明在三语言 layout。
+[globals.css](../src/app/globals.css)，拉丁字体声明在 [RootDocument](../src/components/root-document.tsx)，繁中字体在
+[繁中 layout](../src/app/zh-hant-us/layout.tsx)。
 
 现代、克制、温暖、关注自然纹理和日常佩戴是工作方向，不等于已批准的产品价值承诺。
 “Design-led”等工作定位以及参考品牌只用于讨论信息层级，不直接成为事实。
@@ -44,7 +45,8 @@ Footer 当前显示 US 和语言入口，不显示虚假的多地区/币种选�
 
 桌面下拉从 Header 下方展开，支持键盘、Escape、焦点离开、遮罩点击与克制 hover 关闭。
 手机 Header 为 Menu / 居中 wordmark / Search+Bag；全屏 Menu 的 Language 放底部，
-锁定背景滚动，管理焦点、Escape 与关闭后焦点返回，目录使用 accordion。
+使用原生 `<dialog>`：背景不可交互且锁定滚动，Tab 留在菜单内，Escape 关闭并返回
+打开按钮；切回桌面宽度时关闭并将焦点返回可见 Header 链接。目录使用 accordion。
 
 首页使用获批抽象矿物编辑背景 [home hero](../public/images/joya-mana-home-hero.webp)，
 它不对应在售实物，不能当成商品、产地或工艺照片。首页不放 Blog 推荐或系列条带。
@@ -57,7 +59,7 @@ About 在共享文字 tabs 后直接进入左对齐正文，不另建纯文字 H
 不能静默隐藏。只有明确且不重复的 summary 才作导语，不注入工作品牌故事。
 
 Footer Customer Care 提供 Contact、Shipping、Returns；Legal 提供 Privacy、Terms、
-Accessibility。客户界面使用 Joya Mana 的商品/购买语言，不展示 Headless、字段名或
+Accessibility。Contact 只显示 Email 联系方式。客户界面使用商品和购买语言，不展示 Headless、字段名或
 发布开关等实现细节；Privacy/Terms 为准确披露可保留必要供应商名称。
 
 ## 列表与购买交互
@@ -72,7 +74,8 @@ Shop/Category/系列共用紧凑 sticky 筛选条：可购买开关、颜色多�
 进入相关推荐前释放，不建立独立滚动区域。图库为主图与横向缩略图；手机单列且不 sticky。
 款式项左侧消费者名称、右侧当前市场价格，选择后同步图、主价、数量与动作。
 Add to bag 是实心主 CTA，Buy now 是下方 outline 次 CTA，不并排争夺注意力。
-价格、状态、真实政策摘要靠近购买操作；更新中/需选款/售罄各有准确说明。
+价格、状态、真实政策摘要靠近购买操作；更新中/需选款/售罄各有准确说明。数量框
+允许编辑中间值，失焦提示错误，数量有效后才能购买。
 
 不用供应商内部名、素材文件名或备注作消费者文案，不显示假评论、空星级、倒计时、
 虚构低库存或 guilt copy。营销弹窗不遮挡首次核心任务，容易关闭。

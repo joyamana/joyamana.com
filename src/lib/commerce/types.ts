@@ -30,12 +30,6 @@ export interface ProductQuantityRule {
   increment: number;
 }
 
-export const DEFAULT_PRODUCT_QUANTITY_RULE: ProductQuantityRule = {
-  minimum: 1,
-  maximum: null,
-  increment: 1,
-};
-
 export const SHOPIFY_MAX_QUANTITY = 2_147_483_647;
 export const STOREFRONT_MAX_QUANTITY = 99;
 
@@ -146,12 +140,6 @@ export function isProductVariantPurchasable(
   );
 }
 
-export interface ProductFacts {
-  material?: string;
-  dimensions?: string;
-  care?: string;
-}
-
 export interface ProductPriceRange {
   minVariantPrice: Money;
   maxVariantPrice: Money;
@@ -182,7 +170,6 @@ export interface Product {
   variants: ProductVariant[];
   category: ProductCategory | null;
   model?: ProductModel;
-  facts?: ProductFacts;
 }
 
 export interface Collection {
@@ -198,4 +185,23 @@ export interface Collection {
 
 export interface ProductCollection extends Collection {
   products: Product[];
+}
+
+/** Empty and partial input stays editable but cannot be submitted for purchase. */
+export function parseAvailableProductQuantity(
+  value: string,
+  rule: ProductQuantityRule,
+  quantityAvailable: number | null,
+  currentlyNotInStock: boolean,
+): number | null {
+  if (!/^\d+$/.test(value)) return null;
+  const quantity = Number(value);
+  return isValidAvailableProductQuantity(
+    quantity,
+    rule,
+    quantityAvailable,
+    currentlyNotInStock,
+  )
+    ? quantity
+    : null;
 }

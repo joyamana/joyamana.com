@@ -78,7 +78,7 @@ export async function buildContentPageMetadata({
 }): Promise<Metadata> {
   try {
     const page = await getShopifyContentPage(handle, locale);
-    if (page && !page.usedDefaultLanguage) {
+    if (page && page.translationReady) {
       return buildMetadata({
         title: page.seoTitle,
         description: page.seoDescription,
@@ -86,7 +86,7 @@ export async function buildContentPageMetadata({
         path: `/${handle}`,
         alternateLocales: await publishedLocales(async (candidate) => {
           const candidatePage = await getShopifyContentPage(handle, candidate);
-          return Boolean(candidatePage && !candidatePage.usedDefaultLanguage);
+          return Boolean(candidatePage && candidatePage.translationReady);
         }),
         searchParams,
       });

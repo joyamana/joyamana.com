@@ -82,7 +82,7 @@ export async function EditorialDetailPage({
           es: "Volver al índice",
         })}
       </Link>
-      <p className="eyebrow">
+      <p className="eyebrow" lang={entry.tags[0] ? entry.tagsLocale : locale}>
         {entry.tags[0] ||
           uiText(locale, {
             zh: kind === "blog" ? "文章" : "水晶指南",
@@ -90,7 +90,7 @@ export async function EditorialDetailPage({
             es: kind === "blog" ? "Artículo" : "Guía de cristales",
           })}
       </p>
-      <h1 lang={entry.contentLocale}>{entry.title}</h1>
+      <h1 lang={entry.titleLocale}>{entry.title}</h1>
       <div className="article-byline" lang={entry.contentLocale}>
         {entry.author ? <span>{entry.author}</span> : null}
         <time dateTime={entry.publishedAt} lang={locale}>

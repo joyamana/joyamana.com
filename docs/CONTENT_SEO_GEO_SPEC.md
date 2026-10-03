@@ -2,8 +2,8 @@
 
 ## 内容原则
 
-页面服务真实的阅读和购买任务。主要答案、事实、链接和适用结构化数据必须出现在
-初始 HTML 中，人、搜索引擎与 AI crawler 读取相同事实。不制造隐藏 AI 页面、关键词
+页面服务真实的阅读和购买任务。答案、事实、链接和适用结构化数据出现在
+初始 HTML 中，人、搜索引擎与 AI crawler 读取相同内容。不制造隐藏 AI 页面、关键词
 替换页、crawler cloaking 或批量薄文章。`llms.txt` 是可选入口，不能替代 HTML、内链、
 sitemap、Schema 和内容质量。
 
@@ -30,14 +30,14 @@ Blog 是唯一名称，不建立 Journal/Diario 别名。当前没有 `/category
 独立 Product Care 或账户入口；护理留在 PDP，声明留在相关内容/Terms，问题由客服处理。
 Shopify Pages 可用于未来获批页面，但当前没有公开路由从 Page 读取正文。
 
-正文只从 Shopify 读取，不恢复本地政策、About 或 mock catalog。缺失/不完整详情按
-契约 404；上游故障显示安全错误/重试，hub/政策等可显示暂不可用，不编造后备事实。
+正文只从 Shopify 读取，不恢复本地政策、About 或 mock catalog。缺少必需字段的详情页
+返回 404；上游故障显示错误或暂不可用，并提供重试，不编造后备内容。
 
 ## 可发布内容与翻译
 
-`content_page` 必须有 title、可见 rich-text body、有效 `last_updated` 日期、seo_title。
-`navigation_title` 缺失用 title，summary 明确填写且不重复时才展示，seo_description
-缺失从可见正文取有限长度纯文本摘要。不完整条目不参与 sitemap/Schema。
+`content_page` 的字段类型见 [Shopify 维护](SHOPIFY_CATALOG_SETUP.md#about-与-accessibility)。
+必需字段完整、日期有效、正文可见才公开。navigation title 缺失用 title；summary 明确
+且不重复才展示；SEO description 缺失取正文摘要。不完整条目不参与 sitemap/Schema。
 
 About 固定 root handle `about`。只有 root 有序 `child_pages` 直接引用的完整可见条目
 响应一级子 URL；重复、自引用、错误类型、不完整或未引用条目拒绝，不递归生成深层 URL。
@@ -47,13 +47,18 @@ root 是导航第一项，顺序随引用；无有效子页不显示 tabs，有�
 政策和 Article 经过 HTML 清洗后检查可见正文：空标签、单独政策标题、危险标签不构成
 完整内容；Article 日期有效，图片只用允许的 Shopify CDN 路径。
 Rich text 忽略非法节点和不支持结构，安全链接使用受控协议，外开链接附安全 rel。
-技术清洗边界见技术规格，不通过本地文案填补上游正文。
+文章分页遇到重复 ID/handle、缺失或重复 cursor、Blog 变更或中途缺页时显示错误，
+不发布部分目录。技术清洗边界见技术规格，不通过本地文案填补上游正文。
 
 语言版本是同一 US 市场的翻译，handle/身份/币种/库存与政策事实不变。
-缺译页面允许 Shopify 默认英语回退，可阅读但不等于译文已审核。已识别回退的 About、
-Accessibility、Policy 和 Article 不进入对应语言的索引、sitemap、hreflang 或 Schema；
-页面正文保留实际内容语言标记。商品/系列尚不能自动检测回退，发布时需人工逐页确认
-ES/繁中正文与 metadata，发现问题则修正内容或回退对应索引范围。
+缺译页面允许 Shopify 默认英语回退，可阅读但不等于译文已审核。正文是否回退与是否
+可以索引分别判断：正文、标题、摘要、导航文字和文章标签按各自实际语言标记；About
+的摘要或 SEO 未翻译，不会把已翻译正文标成英文，但仍不能索引。Accessibility 的正文
+和标题须翻译完整。政策按清洗后的可见正文比较，翻译标题或改变格式不能掩盖英文回退。
+
+已识别回退或不满足翻译条件的 About、Accessibility、Policy 和 Article 不进入对应语言
+索引、sitemap、hreflang 或 Schema。文本比较不能证明译文质量；商品/系列也尚无自动
+回退检测，发布时须人工确认 ES/繁中正文和 metadata，发现问题则修正或回退索引范围。
 
 ## 内容模型与维护
 
@@ -111,7 +116,9 @@ Preview 总开关关闭，Production origin 固定 `https://www.joyamana.com`。
 - 干净可索引页 self-canonical；排序、颜色、可购买、tracking、Variant 等参数页
   noindex，符合 origin/内容条件时 canonical 到同语言干净 URL，不输出 hreflang/Schema。
   About/Article 参数也使用同一检查，不能漏传参数而保留 Schema。
-- Search、Cart、账户/登录/回调、预览/内部页、空薄页、未上线市场与已识别回退页排除。
+- 空 Shop/Collections hub 显示空状态但 noindex，不输出商品 Schema 或进入 sitemap；
+  筛选后无结果仍是正常参数页，不改变干净目录是否就绪的判断。
+- Search、Cart、账户/登录/回调、预览/内部页、未上线市场与已识别回退页排除。
   需要抓取 noindex 的页面不同时被 robots 禁抓。
 - sitemap 只含 200、已发布、干净、可索引且当前市场可见的 URL。lastmod 只表示实质
   内容变化，不用构建时间制造更新；规模确有需要再拆 sitemap index。
@@ -122,7 +129,7 @@ Preview 总开关关闭，Production origin 固定 `https://www.joyamana.com`。
 
 ## JSON-LD
 
-JSON-LD 使用稳定 @id 与规范化实体，只有页面可见真实内容才输出。
+JSON-LD 使用稳定 @id 和页面同一份数据，只输出可见的真实内容。
 
 | 页面 | 适用 Schema | 当前实现 |
 |---|---|---|
@@ -145,6 +152,5 @@ ProductGroup/变体模型以实际 URL/选择方式与官方指南为准，不�
 正文或商品事实。搜索/用户访问与训练抓取分别决策，当前训练策略仍待确认。
 实施时核对供应商当前 User-Agent/验证方式并集中配置，WAF 不误伤获准访问。
 
-发布检查按 Runbook；持续按页面类型检查索引、canonical、soft 404、来源、下架商品和
-内链。AI 引用可用固定问题样本和 referral 作方向性观察，不将单次回答、crawler hit
-或 llms 请求当成排名和商业结果保证。内容质量和事实一致性优先于页数。
+发布和持续检查见 [发布手册](LAUNCH_RUNBOOK.md)。AI 引用可用固定问题和 referral
+观察趋势，单次回答或抓取次数不能证明排名与销售效果。

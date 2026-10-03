@@ -11,8 +11,7 @@ Canada 仅有未启用配置，其他市场也不提前公开。
 
 生产站点为 `https://www.joyamana.com`，apex 对应路径永久 308 至 www；托管结账使用
 `checkout.joyamana.com`。dev 对应 Vercel Preview，main 对应 Production。
-仓库已包含三语言、即时筛选和本地修复；某次推送是否部署、译文是否通过审校，必须从
-实际部署与验收确认，不能从分支名或代码存在推断。
+部署是否成功、译文是否通过审校，须以实际验收为准。
 
 ## 用户流程
 
@@ -33,7 +32,7 @@ Canada 仅有未启用配置，其他市场也不提前公开。
 |---|---|
 | 浏览 | 三语言首页、Shop、商品类别、设计系列、商品详情和商品搜索 |
 | 商品选择 | 同款颜色/可购买筛选、展示款价格排序、卡片与 PDP 精确选款、数量规则与图库 |
-| 购物 | Shopify Cart 创建/读取/修改/恢复、完整分页、独立 Buy now、结账前最新数量校验 |
+| 购物 | Shopify Cart 创建/读取/修改/恢复、完整分页、独立 Buy now、结账前校验和失败恢复 |
 | 内容 | Shopify About 一级子页、Accessibility、Policies、Blog 与 Crystal Guide |
 | 搜索可见性 | metadata、canonical、hreflang、robots、sitemap、适用页面 JSON-LD 与参数排除 |
 | 工程 | Node 24、固定依赖、预检、格式检查、lint、类型检查、Vitest 和 GitHub CI |
@@ -48,11 +47,10 @@ Canada 仅有未启用配置，其他市场也不提前公开。
   回退，每次发布需人工检查 ES/繁中正文和 metadata。
 - 真实禁止超卖事实尚未提供，准确低库存提示暂停；普通库存、数量和可购买判断仍正常。
 - 搜索只检索商品。Editorial 保持关闭索引，测试文章不能当成正式上线内容。
-- Contact 为 Email-only。已有关闭的表单适配层，尚未启用生产投递。
+- Contact 只提供 Email，不收集或投递表单留言。
 - Organization/Site Settings、Home/Contact/政策 Schema、Analytics、营销 consent 和
   Headless 隐私偏好流程尚未实现。Google verification 配置不等于账号已经验证。
-- 未知路径/停用市场有完整的无 JavaScript 404；动态缺失商品/内容页的初始错误正文
-  仍受 Next 限制，浏览器加载 JavaScript 后恢复。
+- 动态缺失商品/内容页的初始 404 正文仍受 Next 限制，详见技术规格。
 - 人工设备、辅助技术、译文、实际购物袋与 Checkout 验收须按每次发布范围执行。
   单元测试、HTTP 检查和本地浏览器检查不能替代真实支付验收。
 
