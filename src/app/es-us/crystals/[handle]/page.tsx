@@ -22,11 +22,14 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<PageSearchParams>;
 }) {
   return (
     <EditorialDetailPage
+      searchParams={await searchParams}
       locale="es-US"
       handle={(await params).handle}
       kind="crystals"

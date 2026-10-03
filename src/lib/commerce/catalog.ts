@@ -14,6 +14,7 @@ import {
   getShopifyCatalogNavigation,
   getShopifyProduct,
   getShopifyProducts,
+  hydrateShopifyBrowseProducts,
   searchShopifyProducts,
   type ShopifyCatalogNavigationSnapshot,
 } from "./shopify-catalog";
@@ -77,16 +78,49 @@ export async function getProducts(
   return getShopifyProducts(locale);
 }
 
-export const getProduct = cache(
-  async function getProduct(
-    handle: string,
-    marketId: MarketId = "us",
-    locale: Locale = "en-US",
-  ): Promise<Product | null> {
-    if (marketId === "ca") return null;
-    assertEnabledUsLocale(locale);
+export const getProduct = cache(async function getProduct(
+  handle: string,
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+): Promise<Product | null> {
+  if (marketId === "ca") return null;
+  assertEnabledUsLocale(locale);
 
-    return getShopifyProduct(handle, locale);
+  return getShopifyProduct(handle, locale);
+});
+
+export const getBrowseProducts = cache(
+  async (marketId: MarketId, locale: Locale) =>
+    hydrateShopifyBrowseProducts(await getProducts(marketId, locale), locale),
+);
+
+export const getBrowseCategory = cache(
+  async (handle: string, marketId: MarketId, locale: Locale) => {
+    const category = await getProductCategory(handle, marketId, locale);
+    return category
+      ? {
+          ...category,
+          products: await hydrateShopifyBrowseProducts(
+            category.products,
+            locale,
+          ),
+        }
+      : null;
+  },
+);
+
+export const getBrowseCollection = cache(
+  async (handle: string, marketId: MarketId, locale: Locale) => {
+    const collection = await getDesignCollection(handle, marketId, locale);
+    return collection
+      ? {
+          ...collection,
+          products: await hydrateShopifyBrowseProducts(
+            collection.products,
+            locale,
+          ),
+        }
+      : null;
   },
 );
 
@@ -100,18 +134,16 @@ export async function getCollections(
   return getShopifyCollections(locale);
 }
 
-export const getCollection = cache(
-  async function getCollection(
-    handle: string,
-    marketId: MarketId = "us",
-    locale: Locale = "en-US",
-  ): Promise<ProductCollection | null> {
-    if (marketId === "ca") return null;
-    assertEnabledUsLocale(locale);
+export const getCollection = cache(async function getCollection(
+  handle: string,
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+): Promise<ProductCollection | null> {
+  if (marketId === "ca") return null;
+  assertEnabledUsLocale(locale);
 
-    return getShopifyCollection(handle, locale);
-  },
-);
+  return getShopifyCollection(handle, locale);
+});
 
 export async function getDesignCollections(
   marketId: MarketId = "us",
@@ -150,16 +182,14 @@ export async function getCatalogNavigationData(
   return getCachedShopifyCatalogNavigation(locale);
 }
 
-export const getDesignCollection = cache(
-  async function getDesignCollection(
-    handle: string,
-    marketId: MarketId = "us",
-    locale: Locale = "en-US",
-  ): Promise<ProductCollection | null> {
-    const collection = await getCollection(handle, marketId, locale);
-    return collection?.kind === "design_series" ? collection : null;
-  },
-);
+export const getDesignCollection = cache(async function getDesignCollection(
+  handle: string,
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+): Promise<ProductCollection | null> {
+  const collection = await getCollection(handle, marketId, locale);
+  return collection?.kind === "design_series" ? collection : null;
+});
 
 function mapStorefrontCategory(
   definition: (typeof productCategoryDefinitions)[number],
@@ -185,22 +215,20 @@ export function productCategoriesForProducts(
   });
 }
 
-export const getProductCategory = cache(
-  async function getProductCategory(
-    handle: string,
-    marketId: MarketId = "us",
-    locale: Locale = "en-US",
-  ): Promise<StorefrontProductCategory | null> {
-    const definition = productCategoryDefinitionForHandle(handle);
-    if (!definition) return null;
+export const getProductCategory = cache(async function getProductCategory(
+  handle: string,
+  marketId: MarketId = "us",
+  locale: Locale = "en-US",
+): Promise<StorefrontProductCategory | null> {
+  const definition = productCategoryDefinitionForHandle(handle);
+  if (!definition) return null;
 
-    return mapStorefrontCategory(
-      definition,
-      await getProducts(marketId, locale),
-      locale,
-    );
-  },
-);
+  return mapStorefrontCategory(
+    definition,
+    await getProducts(marketId, locale),
+    locale,
+  );
+});
 
 export async function searchCatalog(
   query: string,

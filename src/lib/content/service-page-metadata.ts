@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { enabledLocales, type Locale } from "@/lib/i18n/locales";
+import { enabledLocales } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import {
   buildMetadata,
   buildNoIndexMetadata,
@@ -9,14 +10,9 @@ import {
   getShopifyContentPage,
   type ShopifyContentPageHandle,
 } from "./shopify-content-pages";
-import {
-  getShopifyPolicy,
-  type ShopifyPolicyKind,
-} from "./shopify-policies";
+import { getShopifyPolicy, type ShopifyPolicyKind } from "./shopify-policies";
 
-async function publishedLocales(
-  isReady: (locale: Locale) => Promise<boolean>,
-) {
+async function publishedLocales(isReady: (locale: Locale) => Promise<boolean>) {
   const locales = await Promise.all(
     enabledLocales.map(async (locale) => {
       try {
@@ -53,7 +49,9 @@ export async function buildPolicyPageMetadata({
         path: `/${kind}`,
         alternateLocales: await publishedLocales(async (candidate) => {
           const candidatePolicy = await getShopifyPolicy(kind, candidate);
-          return Boolean(candidatePolicy && !candidatePolicy.usedDefaultLanguage);
+          return Boolean(
+            candidatePolicy && !candidatePolicy.usedDefaultLanguage,
+          );
         }),
         searchParams,
       });

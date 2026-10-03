@@ -2,7 +2,7 @@
 
 Status: Active requirements — 按当前公开范围持续验收
 Owner: Product owner  
-Last updated: 2026-09-11
+Last updated: 2026-10-03
 Related: `PROJECT_SPEC.md`, `COMMERCE_SPEC.md`, `CONTENT_SEO_GEO_SPEC.md`
 
 当前实现已覆盖 Shopify Catalog/Cart、主要路由和部分内容/SEO adapter，但正式
@@ -10,7 +10,7 @@ Product knowledge、exact/representative image 披露、内容到商品关系、
 完整 Schema、Analytics/consent 与剩余设备/运营验收仍是缺口；webhook 按 D-046 后置。
 下单支付已通过业务方的 Payment test mode 验收；Playwright 按 D-043 暂缓。
 Product
-`custom.product_model` 已映射并用于可信低库存门禁；西语 document-level language 已修复。
+`custom.product_model` 已映射；缺少可靠禁止超卖事实时隐藏准确低库存提示；西语 document-level language 已修复。
 
 ## 1. 产品目标
 
@@ -50,7 +50,7 @@ URL 名称遵循已确认的 Joya Mana 信息架构与 D-007/D-036：
 | Route | 目的 | Index |
 |---|---|---|
 | `/` | 品牌价值、主分类、主商品、教育入口、信任 | Yes |
-| `/shop` | 当前 US Catalog 全部在售商品 | Yes |
+| `/shop` | 当前 US Catalog 已发布商品，支持可购买与颜色筛选 | Yes |
 | `/category/{handle}` | Bracelet、Ring 等稳定商品类别 | Yes，非空时 |
 | `/collections` | 原创设计系列总览 | Yes，内容充足时 |
 | `/collections/{handle}` | 单一原创设计系列及其商品 | Yes，非空且内容完整时 |
@@ -140,10 +140,17 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 
 必须：
 
-- Shop 提供全部在售商品；Category 提供稳定商品形态；Design Collection 提供原创
+- Shop 默认提供全部已发布商品（包括售罄）；Category 提供稳定商品形态；Design Collection 提供原创
   系列故事和对应商品。三者各有唯一 H1、说明、商品网格和可理解空状态。
-- 商品卡显示图片、名称、真实价格区间和可用状态。
-- 筛选只覆盖对真实目录有价值的属性。
+- 三类列表支持仅可购买、Variant `custom.colors` 颜色多选和价格升降序。
+  颜色组内 OR、跨条件 AND，必须由同一个 Variant 满足。
+- 所有条件选择立即生效，无 Apply；颜色/排序为轻量浮层，保留结果数、条件标签、
+  清除和进度反馈。连续选择不得丢失条件；刷新、历史与无 JS GET 链接均可恢复。
+  颜色网页绑定完整，不依赖先填值才实施，新增后台颜色自动形成选项。
+- 每件 Product 只展示一张卡片：满足条件 → 可购买优先 → Shopify Variant POSITION
+  → ID，展示该款图片、名称、USD 单价和状态；升降序按该展示款价格，不改变选款。
+  首页/相关推荐的商品价格区间模式保持独立。
+- 颜色选项及计数来自完整当前范围的 Shopify 数据；未填颜色不猜测，读取失败显示错误。
 - 参数筛选/排序不进入 sitemap，不生成重复索引页。
 
 验收：
@@ -151,7 +158,9 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 - Category/Collection 只包含当前 US catalog 可见商品。
 - Category 由 Product Category 驱动；Design Collection 只有显式
   `collection_kind=design_series` 时公开，不按标题或 tag 猜测。
-- 商品卡与 PDP 价格一致。
+- 商品卡图片和标题链接携带 `variant`；PDP 初始 HTML 精确选中，图、价、状态和
+  购物动作保持同款。多款命中和同价排序重复请求稳定。
+- 无匹配正常返回 200，保留已选条件与清除入口；移动端、键盘、提交中和语言切换可用。
 - 分页或加载更多可被键盘与 crawler 访问。
 
 ### P-003 Product Detail
@@ -174,16 +183,18 @@ Search 前，还需接入 Blog/Crystal Guide/About 等内容结果，并验证�
 验收：
 
 - 不选择有效变体时不能误加购。
-- Variant 选择项显示本地化款式名与当前 Market 价格；切换后主价格、结构化数据
-  和加入 Cart 的 merchandise 必须一致。
+- Variant 选择项显示本地化款式名与当前 Market 价格；有效 `variant` 参数服务端初选。
+  切款同步 URL、主图、价格、数量 minimum 和 merchandise；前进后退恢复对应款式。
+  有效售罄款保持选中并禁购；无效或外商品 ID 要求重新选择，不能误购另一款。
+  参数页不输出可索引 Schema；干净页 Offer 仍基于相同商品事实与可购买判断。
 - Buy now 使用独立单商品 Cart 进入 Shopify hosted checkout，不改变已有 Bag；
   当 `SHOPIFY_CHECKOUT_ENABLED=false` 或运营/政策验收未完成时必须禁用并
   解释原因。
 - 售罄、不可售和可履约数量信息来自 Shopify。已知且不允许继续销售的
   `quantityAvailable` 与 contextual `quantityRule`/安全上限一起约束 PDP 数量；
   `currentlyNotInStock` 或数量为 `null` 时不猜测为 0，不用具体数量制造紧迫感。
-- UI、metadata 与 JSON-LD 的价格、币种、库存一致。当前 Product Offer availability
-  尚未纳入 UI 使用的最小可履约数量边界，因此该验收项仍未通过。
+- UI、metadata 与适用的 JSON-LD 的价格、币种、库存一致。列表、PDP 和 Product Offer
+  availability 共用可购买判断，包含最小可履约数量、未知库存与继续销售边界。
 - 图片有尺寸、响应式资源和有意义的替代文本。
 
 ### P-004 Cart

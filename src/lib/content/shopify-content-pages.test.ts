@@ -41,7 +41,9 @@ function contentPage(language: "EN" | "ES", translated = false) {
       {
         key: "body",
         type: "rich_text_field",
-        value: richText(isSpanish ? "Contenido accesible." : "Accessible content."),
+        value: richText(
+          isSpanish ? "Contenido accesible." : "Accessible content.",
+        ),
       },
       { key: "last_updated", type: "date", value: "2026-08-30" },
       {
@@ -52,7 +54,9 @@ function contentPage(language: "EN" | "ES", translated = false) {
       {
         key: "seo_description",
         type: "multi_line_text_field",
-        value: isSpanish ? "Información de accesibilidad." : "Accessibility information.",
+        value: isSpanish
+          ? "Información de accesibilidad."
+          : "Accessibility information.",
       },
     ],
   };
@@ -85,6 +89,59 @@ afterEach(() => {
 });
 
 describe("Shopify content pages", () => {
+  it.each([
+    "null",
+    '{"type":"root","children":[null]}',
+    '{"type":"root","children":[]}',
+  ])(
+    "rejects empty or malformed visible content without throwing: %s",
+    async (body) => {
+      process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+      process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+      const node = contentPage("EN");
+      node.fields.find((field) => field.key === "body")!.value = body;
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockImplementation(() =>
+            Promise.resolve(
+              new Response(JSON.stringify({ data: { metaobject: node } })),
+            ),
+          ),
+      );
+      expect(renderShopifyRichText(body)).toBe("");
+      expect(await getShopifyContentPage("accessibility", "en-US")).toBeNull();
+      expect(await getPublishedShopifyContentPagePaths("en-US")).toEqual([]);
+    },
+  );
+  it("derives an SEO description from visible text and rejects impossible dates", async () => {
+    process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+    process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+    const node = contentPage("EN");
+    node.fields = node.fields.filter(
+      (field) => field.key !== "seo_description",
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() =>
+          Promise.resolve(
+            new Response(JSON.stringify({ data: { metaobject: node } })),
+          ),
+        ),
+    );
+    expect(await getShopifyContentPage("accessibility", "en-US")).toMatchObject(
+      {
+        html: "<p>Accessible content.</p>",
+        seoDescription: "Accessible content.",
+      },
+    );
+    node.fields.find((field) => field.key === "last_updated")!.value =
+      "2026-02-31";
+    expect(await getShopifyContentPage("accessibility", "en-US")).toBeNull();
+  });
   it("queries a content page by type and handle in market context", () => {
     expect(SHOPIFY_CONTENT_PAGE_QUERY).toContain(
       "@inContext(country: $country, language: $language)",
@@ -164,9 +221,9 @@ describe("Shopify content pages", () => {
       contentLocale: "en-US",
       usedDefaultLanguage: false,
     });
-    await expect(
-      getPublishedShopifyContentPagePaths("en-US"),
-    ).resolves.toEqual(["/accessibility"]);
+    await expect(getPublishedShopifyContentPagePaths("en-US")).resolves.toEqual(
+      ["/accessibility"],
+    );
   });
 
   it("keeps an untranslated Spanish fallback out of published paths", async () => {
@@ -181,9 +238,9 @@ describe("Shopify content pages", () => {
       requestedLocale: "es-US",
       usedDefaultLanguage: true,
     });
-    await expect(
-      getPublishedShopifyContentPagePaths("es-US"),
-    ).resolves.toEqual([]);
+    await expect(getPublishedShopifyContentPagePaths("es-US")).resolves.toEqual(
+      [],
+    );
   });
 
   it("publishes a complete Spanish translation", async () => {

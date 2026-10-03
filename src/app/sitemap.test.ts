@@ -78,7 +78,9 @@ describe("granular sitemap gates", () => {
     expect(urls).toContain("https://www.joyamana.com/collections");
     expect(urls).toContain("https://www.joyamana.com/collections/body-series");
     expect(urls).toContain("https://www.joyamana.com/collections/seo-series");
-    expect(urls).not.toContain("https://www.joyamana.com/collections/thin-series");
+    expect(urls).not.toContain(
+      "https://www.joyamana.com/collections/thin-series",
+    );
   });
 
   it("loads and publishes only the enabled locale and page group", async () => {

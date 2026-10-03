@@ -13,7 +13,9 @@ afterEach(() => {
 
 describe("LocaleShell", () => {
   it("keeps the page usable with base navigation when Shopify Header data fails", async () => {
-    getCatalogNavigationData.mockRejectedValue(new Error("Shopify unavailable"));
+    getCatalogNavigationData.mockRejectedValue(
+      new Error("Shopify unavailable"),
+    );
 
     const shell = await LocaleShell({
       locale: "en-US",

@@ -14,7 +14,7 @@ Last updated: 2026-09-11
 - SEO/GEO 指标必须与页面质量或商业结果关联。
 
 当前实施状态：仓库没有 GA4、Shopify Customer Events、consent UI 或自定义事件
-运行时；`NEXT_PUBLIC_GA4_ID` 只是未使用的预留环境变量。Google site
+运行时，不预留未使用的 GA4 环境变量。Google site
 verification metadata 已支持可选配置，但不等于 GSC 账户已验证。本文件下列
 事件、KPI 和验收项目是启用测量与非必要追踪前的要求。
 虽然 `https://www.joyamana.com` 已公开响应，当前访问尚没有这套 Analytics/consent

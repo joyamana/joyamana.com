@@ -1,7 +1,15 @@
-import { shopifyContextForLocale, defaultLocaleForMarket } from "@/lib/i18n/shopify-context";
+import {
+  shopifyContextForLocale,
+  defaultLocaleForMarket,
+} from "@/lib/i18n/shopify-context";
 import { shopifyFetch } from "@/lib/commerce/shopify";
 import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
+import {
+  hasVisibleHtmlText,
+  safeShopifyImageSource,
+  sanitizeShopifyHtml,
+} from "./shopify-html";
 
 export const editorialKinds = ["blog", "crystals"] as const;
 export type EditorialKind = (typeof editorialKinds)[number];
@@ -10,7 +18,6 @@ const shopifyBlogHandles: Record<EditorialKind, string> = {
   blog: "blog",
   crystals: "crystals",
 };
-
 
 interface ShopifyImageNode {
   url: string;
@@ -88,8 +95,7 @@ export interface StorefrontEditorialArticle extends ParsedArticle {
   usedDefaultLanguage: boolean;
 }
 
-export interface StorefrontEditorialIndex
-  extends Omit<ParsedBlog, "articles"> {
+export interface StorefrontEditorialIndex extends Omit<ParsedBlog, "articles"> {
   articles: StorefrontEditorialArticle[];
   requestedLocale: Locale;
   usedDefaultLanguage: boolean;
@@ -176,23 +182,29 @@ function parseArticle(node: ShopifyArticleNode | null | undefined) {
     return null;
   }
 
+  const contentHtml = sanitizeShopifyHtml(node.contentHtml, {
+    allowImages: true,
+  });
+  if (
+    !hasVisibleHtmlText(contentHtml) ||
+    !Number.isFinite(Date.parse(node.publishedAt))
+  )
+    return null;
+
   const excerpt =
     normalizedText(node.excerpt) || excerptFromContent(node.content);
   if (!excerpt) return null;
 
   const author = normalizedText(node.authorV2?.name);
   const image =
-    node.image?.url.startsWith("https://") &&
-    node.image.url.includes("cdn.shopify.com/")
-      ? node.image
-      : null;
+    node.image && safeShopifyImageSource(node.image.url) ? node.image : null;
 
   return {
     id: node.id,
     handle: node.handle,
     title: node.title.trim(),
     excerpt,
-    contentHtml: node.contentHtml.trim(),
+    contentHtml,
     publishedAt: node.publishedAt,
     image,
     seoTitle: normalizedText(node.seo.title) || node.title.trim(),
@@ -348,7 +360,8 @@ export async function getShopifyEditorialIndex(
   });
   const usedDefaultLanguage =
     locale !== defaultLocale &&
-    (!articles.length || articles.every((article) => article.usedDefaultLanguage));
+    (!articles.length ||
+      articles.every((article) => article.usedDefaultLanguage));
 
   return {
     id: requestedBlog.id,

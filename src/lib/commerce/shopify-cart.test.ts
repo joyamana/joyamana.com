@@ -36,6 +36,7 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
       subtotalAmount: { amount: "136.00", currencyCode: "USD" },
     },
     lines: {
+      pageInfo: { hasNextPage: false, endCursor: null },
       nodes: [
         {
           id: lineId,
@@ -74,10 +75,23 @@ function mutationPayload(cart = makeCart()) {
 }
 
 afterEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
 describe("Shopify Cart mapper and validation", () => {
+  it.each([5, 100])(
+    "preserves a saved quantity %i when current purchase rules no longer permit it",
+    (quantity) => {
+      const cart = makeCart({ totalQuantity: quantity });
+      cart.lines.nodes[0].quantity = quantity;
+      cart.lines.nodes[0].merchandise.quantityRule = {
+        minimum: 10,
+        maximum: 50,
+        increment: 5,
+      };
+      expect(mapShopifyCart(cart).lines[0].quantity).toBe(quantity);
+    },
+  );
   it("maps a browser-safe cart without exposing the Cart ID or Checkout URL", () => {
     const cart = makeCart();
     const view = mapShopifyCart(cart, [
@@ -105,8 +119,7 @@ describe("Shopify Cart mapper and validation", () => {
       warnings: [
         {
           code: "MERCHANDISE_NOT_ENOUGH_STOCK",
-          message:
-            "Your bag was updated. Review the items before checkout.",
+          message: "Your bag was updated. Review the items before checkout.",
         },
       ],
     });
@@ -159,9 +172,7 @@ describe("Shopify Cart mapper and validation", () => {
     expect(isShopifyCartLineId("gid://shopify/CartLine/a/b:c_1?x=y&z=1")).toBe(
       true,
     );
-    expect(isShopifyCartLineId("gid://shopify/ProductVariant/123")).toBe(
-      false,
-    );
+    expect(isShopifyCartLineId("gid://shopify/ProductVariant/123")).toBe(false);
     expect(isShopifyCartLineId("gid://shopify/CartLine/123\nInjected")).toBe(
       false,
     );
@@ -185,6 +196,97 @@ describe("Shopify Cart mapper and validation", () => {
 });
 
 describe("Shopify Cart Storefront operations", () => {
+  it("refuses an add that would merge into a quantity over the storefront limit", async () => {
+    const cart = makeCart({ totalQuantity: 99 });
+    cart.lines.nodes[0].quantity = 99;
+    mocks.shopifyFetch.mockResolvedValueOnce({ cart });
+    await expect(
+      addShopifyCartLineWithRecovery(cartId, { merchandiseId, quantity: 1 }),
+    ).rejects.toMatchObject({ code: "INVALID_QUANTITY" });
+    expect(mocks.shopifyFetch).toHaveBeenCalledTimes(1);
+  });
+  it.each([251, 500])(
+    "reads all %i Bag lines before exposing a complete view",
+    async (count) => {
+      const sample = makeCart().lines.nodes[0];
+      const lines = Array.from({ length: count }, (_, index) => ({
+        ...sample,
+        id: `${lineId}-${index}`,
+        quantity: 1,
+      }));
+      mocks.shopifyFetch
+        .mockResolvedValueOnce({
+          cart: makeCart({
+            totalQuantity: count,
+            lines: {
+              nodes: lines.slice(0, 250),
+              pageInfo: { hasNextPage: true, endCursor: "next" },
+            },
+          }),
+        })
+        .mockResolvedValueOnce({
+          cart: {
+            id: cartId,
+            totalQuantity: count,
+            lines: {
+              nodes: lines.slice(250),
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+          },
+        });
+      const cart = await getShopifyCart(cartId);
+      expect(mapShopifyCart(cart!).lines).toHaveLength(count);
+      expect(mocks.shopifyFetch.mock.calls[1][1]).toEqual({
+        id: cartId,
+        after: "next",
+        language: "EN",
+      });
+    },
+  );
+  it("rejects pagination that repeats a line or changes the Bag while reading", async () => {
+    const cart = makeCart({ totalQuantity: 4 });
+    cart.lines.pageInfo = { hasNextPage: true, endCursor: "next" };
+    mocks.shopifyFetch
+      .mockResolvedValueOnce({ cart })
+      .mockResolvedValueOnce({ cart });
+    await expect(getShopifyCart(cartId)).rejects.toMatchObject({
+      code: "SHOPIFY_ERROR",
+    });
+  });
+  it("clears 500 lines in two batches without claiming success after a partial removal", async () => {
+    const sample = makeCart().lines.nodes[0];
+    const lines = Array.from({ length: 500 }, (_, index) => ({
+      ...sample,
+      id: `${lineId}-${index}`,
+      quantity: 1,
+    }));
+    const paged = makeCart({
+      totalQuantity: 500,
+      lines: {
+        nodes: lines.slice(0, 250),
+        pageInfo: { hasNextPage: true, endCursor: "next" },
+      },
+    });
+    const remainder = makeCart({
+      totalQuantity: 250,
+      lines: {
+        nodes: lines.slice(250),
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    });
+    const empty = makeCart({
+      totalQuantity: 0,
+      lines: { nodes: [], pageInfo: { hasNextPage: false, endCursor: null } },
+    });
+    mocks.shopifyFetch
+      .mockResolvedValueOnce({ cart: paged })
+      .mockResolvedValueOnce({ cart: { ...paged, lines: remainder.lines } })
+      .mockResolvedValueOnce({ cartLinesRemove: mutationPayload(remainder) })
+      .mockResolvedValueOnce({ cartLinesRemove: mutationPayload(empty) });
+    expect((await clearShopifyCart(cartId)).cart.totalQuantity).toBe(0);
+    expect(mocks.shopifyFetch.mock.calls[2][1].lineIds).toHaveLength(250);
+    expect(mocks.shopifyFetch.mock.calls[3][1].lineIds).toHaveLength(250);
+  });
   it("reads the latest Cart without caching the query", async () => {
     mocks.shopifyFetch.mockResolvedValueOnce({ cart: makeCart() });
 
@@ -210,9 +312,7 @@ describe("Shopify Cart Storefront operations", () => {
     expect(mocks.shopifyFetch).toHaveBeenCalledTimes(1);
     const [query, variables, options] = mocks.shopifyFetch.mock.calls[0];
     expect(query).toContain("mutation JoyaManaCartCreate");
-    expect(query).toContain(
-      "@inContext(country: US, language: $language)",
-    );
+    expect(query).toContain("@inContext(country: US, language: $language)");
     expect(variables).toEqual({
       input: {
         buyerIdentity: { countryCode: "US" },
@@ -228,6 +328,7 @@ describe("Shopify Cart Storefront operations", () => {
       id: "gid://shopify/Cart/replacement?key=new-secret",
     });
     mocks.shopifyFetch
+      .mockResolvedValueOnce({ cart: makeCart() })
       .mockResolvedValueOnce({
         cartLinesAdd: {
           cart: null,
@@ -250,18 +351,18 @@ describe("Shopify Cart Storefront operations", () => {
       quantity: 1,
     });
 
-    expect(result.replacedCart).toBe(true);
     expect(result.cart.id).toBe(replacement.id);
-    expect(mocks.shopifyFetch).toHaveBeenCalledTimes(2);
-    expect(mocks.shopifyFetch.mock.calls[0][0]).toContain(
+    expect(mocks.shopifyFetch).toHaveBeenCalledTimes(3);
+    expect(mocks.shopifyFetch.mock.calls[1][0]).toContain(
       "mutation JoyaManaCartLinesAdd",
     );
-    expect(mocks.shopifyFetch.mock.calls[1][0]).toContain(
+    expect(mocks.shopifyFetch.mock.calls[2][0]).toContain(
       "mutation JoyaManaCartCreate",
     );
   });
 
   it("does not replace a Cart for merchandise or inventory errors", async () => {
+    mocks.shopifyFetch.mockResolvedValueOnce({ cart: makeCart() });
     mocks.shopifyFetch.mockResolvedValueOnce({
       cartLinesAdd: {
         cart: null,
@@ -282,7 +383,7 @@ describe("Shopify Cart Storefront operations", () => {
         quantity: 1,
       }),
     ).rejects.toMatchObject({ code: "UNAVAILABLE" });
-    expect(mocks.shopifyFetch).toHaveBeenCalledTimes(1);
+    expect(mocks.shopifyFetch).toHaveBeenCalledTimes(2);
   });
 
   it("fails an invalid update before making a Shopify request", async () => {
@@ -332,7 +433,7 @@ describe("Shopify Cart Storefront operations", () => {
     const cleared = makeCart({
       totalQuantity: 0,
       cost: { subtotalAmount: { amount: "0.0", currencyCode: "USD" } },
-      lines: { nodes: [] },
+      lines: { nodes: [], pageInfo: { hasNextPage: false, endCursor: null } },
     });
     mocks.shopifyFetch
       .mockResolvedValueOnce({ cart: makeCart() })
@@ -354,10 +455,62 @@ describe("Shopify Cart Storefront operations", () => {
   });
 });
 
+describe("Cart pagination failures", () => {
+  it.each([null, " "])(
+    "rejects a missing next-page cursor: %s",
+    async (endCursor) => {
+      const cart = makeCart();
+      cart.lines.pageInfo = { hasNextPage: true, endCursor };
+      mocks.shopifyFetch.mockResolvedValueOnce({ cart });
+      await expect(getShopifyCart(cartId)).rejects.toMatchObject({
+        code: "SHOPIFY_ERROR",
+      });
+      expect(mocks.shopifyFetch).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("does not report an empty Bag when the second removal batch fails", async () => {
+    const template = makeCart().lines.nodes[0];
+    const nodes = Array.from({ length: 251 }, (_, i) => ({
+      ...template,
+      id: `gid://shopify/CartLine/${i}`,
+      quantity: 1,
+    }));
+    const cart = makeCart({
+      totalQuantity: 251,
+      lines: {
+        nodes: nodes.slice(0, 250),
+        pageInfo: { hasNextPage: true, endCursor: "first" },
+      },
+    });
+    const remaining = makeCart({
+      totalQuantity: 1,
+      lines: {
+        nodes: nodes.slice(250),
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    });
+    mocks.shopifyFetch
+      .mockResolvedValueOnce({ cart })
+      .mockResolvedValueOnce({ cart: { ...cart, lines: remaining.lines } })
+      .mockResolvedValueOnce({ cartLinesRemove: mutationPayload(remaining) })
+      .mockRejectedValueOnce(new Error("Temporary upstream failure"));
+    await expect(clearShopifyCart(cartId)).rejects.toThrow(
+      "Temporary upstream failure",
+    );
+    expect(mocks.shopifyFetch.mock.calls[3][1].lineIds).toHaveLength(1);
+  });
+});
+
 describe("Shopify Checkout boundary", () => {
-  it.each(["/zh-tw/cart/c/token?key=secret", "/zh-tw/checkouts/token?key=secret"])("accepts the verified Traditional Chinese prefix: %s", (path) => {
+  it.each([
+    "/zh-tw/cart/c/token?key=secret",
+    "/zh-tw/checkouts/token?key=secret",
+  ])("accepts the verified Traditional Chinese prefix: %s", (path) => {
     const url = `https://checkout.joyamana.com${path}`;
-    expect(validateCheckoutUrl(url, {checkoutDomain: "checkout.joyamana.com"})).toBe(url);
+    expect(
+      validateCheckoutUrl(url, { checkoutDomain: "checkout.joyamana.com" }),
+    ).toBe(url);
   });
 
   it("accepts only explicitly configured checkout hosts", () => {
@@ -372,10 +525,9 @@ describe("Shopify Checkout boundary", () => {
     ).toBe("https://checkout.joyamana.com/cart/c/token?key=secret");
 
     expect(
-      validateCheckoutUrl(
-        "https://joya-mana.myshopify.com/checkouts/token",
-        { storeDomain: "joya-mana.myshopify.com" },
-      ),
+      validateCheckoutUrl("https://joya-mana.myshopify.com/checkouts/token", {
+        storeDomain: "joya-mana.myshopify.com",
+      }),
     ).toBe("https://joya-mana.myshopify.com/checkouts/token");
 
     expect(
@@ -383,9 +535,7 @@ describe("Shopify Checkout boundary", () => {
         "https://joya-mana.myshopify.com/es/cart/c/token?key=secret",
         { storeDomain: "joya-mana.myshopify.com" },
       ),
-    ).toBe(
-      "https://joya-mana.myshopify.com/es/cart/c/token?key=secret",
-    );
+    ).toBe("https://joya-mana.myshopify.com/es/cart/c/token?key=secret");
   });
 
   it.each([

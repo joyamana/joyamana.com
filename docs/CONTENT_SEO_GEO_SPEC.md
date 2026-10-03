@@ -2,7 +2,7 @@
 
 Status: Working — Shopify 内容/SEO 技术边界已实现，正式内容与 crawler policy 待批准
 Owner: Content / SEO  
-Last updated: 2026-09-11
+Last updated: 2026-10-02
 Supersedes: `docs/archive/` 中两份 SEO/GEO 架构总结的实施结论
 
 ## 1. 核心原则
@@ -128,7 +128,9 @@ fallback 西语页的 hreflang。
 所有 `content_page` 条目的必填基础字段为 `title`、`body`、`last_updated`、
 `seo_title`；`navigation_title`、`summary` 与 `seo_description` 为建议字段。前者缺失
 时回退 title；summary 只有明确填写时才显示，seo_description 缺失时从可见 rich text
-正文生成安全、有限长度的纯文本摘要。
+正文生成安全、有限长度的纯文本摘要。无可见正文或无效日期时不可发布。
+政策和 Article 在 HTML 清洗后检查正文；空标签、单独的政策标题或危险标签
+不构成完整内容。Article 图片只接受 Shopify CDN。
 About 使用下列受控关系：
 
 - 固定 root handle 为 `about`；它对应 `/about`。
@@ -337,6 +339,11 @@ Category   Design Collection
 
 - 干净、唯一、可索引页面使用 self-canonical。
 - UTM、排序和不独立索引的 Variant 参数 canonical 到干净页面。
+  D-050 的 `available`、重复 `color`、`sort` 和 `variant` 延续该规则，不生成颜色
+  落地页；符合部署/readiness 门禁的参数页 noindex、无 hreflang/可索引 Schema，
+  sitemap 只包含获准的干净路径。列表初始 HTML、卡片与适用 ItemList 共用选定
+  Variant 展示实体，不能让客户端筛选后仍保留未筛选 Schema。
+  About 和 Article 的参数也传入同一检查，正文保持可读，参数页不输出 Schema。
 - 每个分页页在可索引时 self-canonical，不全部指向第 1 页。
 - 真正具有独立价值的 market/translation 页面 self-canonical，不跨市场
   canonical 回美国页。

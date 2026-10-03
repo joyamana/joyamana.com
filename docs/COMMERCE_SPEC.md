@@ -2,7 +2,7 @@
 
 Status: Working — Catalog/Cart 核心切片已实现，生产 Catalog 与 hardening 待完成
 Owner: Commerce / Operations  
-Last updated: 2026-09-11
+Last updated: 2026-10-03
 Related: `MVP_PRD.md`, `TECH_SPEC.md`, `CUSTOMER_LIFECYCLE.md`
 
 Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
@@ -92,6 +92,43 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
 - GTIN/MPN 只在真实存在时提供，不为 Schema 或 feed 编造。
 - Product group/Variant ID 在 Shopify、Analytics 和 Schema mapper 中稳定。
 
+### Variant 颜色与列表展示（D-050）
+
+- `custom.colors` 为 Variant `list.single_line_text_field`，读取 `type/value`，按 JSON
+  字符串数组校验；trim、NFC 和大小写规范化去重，空/无效值不匹配颜色筛选。
+  默认语言原值是稳定匹配依据，已翻译字段按 Variant ID 补取默认语言键；显示词典
+  只负责界面翻译，未知值保留原标签，不从图、标题、tag 或 Product 颜色推断。
+- 颜色字段 → facet → 同 Variant 匹配 → 固定选款 → 图片/单价/深链接 → PDP 初选的
+  网页路径已完整实现。新值在下一次 no-store 请求自动读取，不需新增代码、手工绑定
+  颜色与网页图片或重新部署。后台媒体关联是商品事实，网页直接使用选中 Variant image。
+- 2026-10-03 起筛选和排序采用即时 GET 链接，移除 Apply；客户端乐观反馈与 Next 路由
+  同步，允许连续多选，清除保留排序。原生浮层和链接在无 JS 时仍可操作，URL/历史与
+  服务器返回结果一致；不在浏览器独立隐藏商品来假装完成筛选。
+- Shop/Category/设计系列详情完整读取当前范围内的 variants，初批与后续分页显式
+  `POSITION` 升序。轻量批次 8 个 Product、并发 3，Variant 补齐阶段上限 100 次请求、
+  20 秒；遵循已有 cursor/重复 ID/归属校验，失败或保护触发显示错误，不展示部分成功。
+  Category 先限制 taxonomy，系列沿用真实成员；首页、导航和 sitemap 保持轻量查询。
+- 默认含已发布售罄商品；`available=1` 只保留能满足 minimum 的可购买款式。
+  重复 `color` 组内 OR、与可购买跨组 AND，所有条件必须落在同一个 Variant。
+  每件商品按可购买优先、POSITION、ID 固定选一款，不按多个款式重复展示。
+- 卡片图片、款式名、价格、状态、链接与适用 Schema 来自同一展示实体；
+  `sort=price-asc|price-desc` 按展示款的十进制 USD 单价全局排序，平价沿用来源顺序
+  再按 Product ID。切排序不换款，不使用商品最低价或格式化价格排序。
+- 卡片和 PDP 使用 Shopify Variant image，应用层不再回退到产品图。Storefront API
+  本身可能回退到产品图，因此非空不证明已绑定款式图；运营须核对后台图片关系。
+- 深链接 `/products/{handle}?variant={numericID}` 服务端验证归属并精确选款。
+  无参数使用相同固定规则；有效售罄款保留并禁购；无效/已删除/外商品款式禁购并提示
+  重选。切款同步 URL、图价、minimum、购物动作，历史和跨语言保留允许的业务参数。
+- 列表/PDP/Variant 按钮/Offer 共用 Product + Variant `availableForSale` 与数量规则
+  判断。已知库存约束 minimum；`quantityAvailable=null` 不等于 0，允许继续销售仍尊重
+  Shopify 当前可售性，不另承诺发货时效。Cart/Checkout 再次读取并校验实时事实。
+- 参数页维持 noindex、干净 canonical（符合部署/readiness 门禁时）、无 hreflang/
+  可索引 Schema/参数 sitemap 条目。无结果为 200，未知范围仍 404，API 故障为重试状态。
+
+2026-10-02 只读检查为 46 Products / 93 Variants；所有 `custom.colors` 返回 null。
+业务方确认尚未填值、后续补齐。网页颜色实现已完成，独立颜色 fixture 用于验证完整
+链路；后台补齐只涉及真实数据与关联核验，不再留下网页绑定任务，不自动迁移字段。
+
 ## 4. Category 与 Collection
 
 - Shopify Standard Product Category 表达商品是什么；当前公开商品类别使用
@@ -152,6 +189,8 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
   不允许超卖、库存为已知整数、步进为 1，且剩余数量为 1–3 时显示准确的
   `Only X left`。`one_of_one`、字段缺失、库存未知、库存大于 3 或 backorder 均不显示；
   不在商品卡使用该提示，不使用红色警告、倒计时或虚构紧迫性。
+  当前 Storefront 未提供可靠的禁止超卖事实，因此本地代码暂停该提示；
+  不把 `currentlyNotInStock=false` 当作 inventory policy。后台数据确认后另行接入。
 - PDP Variant 选择器显示 Shopify 返回的 contextual variant price；内部供应商
   名称、素材名和文件名不得作为消费者文案或客户端商品字段。
 
@@ -164,7 +203,12 @@ inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，
 - 展示当前 line price 和 cart subtotal。
 - 显示 Shopify warnings/user errors。
 - 恢复已有 Cart；无效/过期 Cart 安全重建。
-- Checkout 前请求最新 `checkoutUrl`。
+- Checkout 前请求最新 `checkoutUrl`，同时校验每行的可售性、库存和数量规则。
+- 读取完整 Cart，最多 500 行；每页/每次批量变更最多 250 行，清空分批执行。
+  分页异常报错，不静默截断。变更失败后刷新实际购物袋，不把部分清空当作成功。
+- 已保存的数量即使不再符合新规则，也要保留可读行，允许调整为当前合法数量或移除。
+  不足最低数量时提示移除或重选款式。加购同时校验同款合并后的 99 件上限。
+- Bag 的商品标题/图片链接保留 Variant 与当前语言。
 
 当前代码已实现上述 Bag Cart 生命周期、HttpOnly cookie、过期 Cart 的 add
 recovery、独立 Buy now Cart 和服务端 Checkout URL 校验。它们已通过 mapper/
@@ -256,9 +300,8 @@ Personalization 全套工具。
 - 代表性 repeatable/one-of-a-kind 商品模型已通过业务审核。
 - 每个首发 Product/Variant 具备必需字段和真实媒体。
 - Price、currency、availability、SKU 在 Shopify/UI/Cart/Schema 一致。
-- 当前 Product Offer availability 只使用 Product/Variant 的 `availableForSale`，而 UI
-  还会验证 `quantityAvailable >= quantityRule.minimum`；这个边界统一前不得把上一项
-  标记为通过。
+- Product Offer availability、列表和 PDP 已共用可购买判断，覆盖 minimum、未知库存
+  和继续销售；发布时仍需核对真实价格/库存变化后的 Cart 与 hosted Checkout。
 - Guest Cart → Shopify Checkout 完成跨设备核心测试。
 - Shipping/Returns/Taxes 文案与 Checkout 配置一致。
 - 售罄、下架、价格变化、API 错误均有明确行为。

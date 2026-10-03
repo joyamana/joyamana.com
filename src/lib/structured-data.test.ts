@@ -43,7 +43,6 @@ const product: Product = {
     minVariantPrice: { amount: "35.00", currencyCode: "USD" },
     maxVariantPrice: { amount: "42.00", currencyCode: "USD" },
   },
-  compareAtPrice: null,
   category: {
     id: "gid://shopify/TaxonomyCategory/aa-6-3",
     name: "Bracelets",
@@ -79,6 +78,35 @@ const product: Product = {
 };
 
 describe("product structured data", () => {
+  it("uses the same minimum-quantity inventory rule as the purchase UI", () => {
+    const item = {
+      ...product,
+      variants: [
+        {
+          ...product.variants[0],
+          quantityRule: { minimum: 3, maximum: null, increment: 1 },
+        },
+      ],
+    };
+    const build = (value: Product) =>
+      buildProductStructuredData({
+        product: value,
+        locale: "en-US",
+        breadcrumbs: [],
+      });
+    expect(build(item)["@graph"][0]).toMatchObject({
+      offers: [{ availability: "https://schema.org/OutOfStock" }],
+    });
+    expect(
+      build({
+        ...item,
+        variants: [{ ...item.variants[0], currentlyNotInStock: true }],
+      })["@graph"][0],
+    ).toMatchObject({
+      offers: [{ availability: "https://schema.org/InStock" }],
+    });
+  });
+
   it("uses normalized product offers, media, URLs, and availability", () => {
     const data = buildProductStructuredData({
       product,

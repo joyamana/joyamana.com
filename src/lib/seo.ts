@@ -5,10 +5,7 @@ import { isIndexingEnabledFor, siteConfig } from "@/config/site";
 import { enabledLocales, localePath, type Locale } from "@/lib/i18n/locales";
 import type { Collection } from "@/lib/commerce/types";
 
-export type PageSearchParams = Record<
-  string,
-  string | string[] | undefined
->;
+export type PageSearchParams = Record<string, string | string[] | undefined>;
 
 /** Shared by collection metadata, sitemap eligibility, and structured data. */
 export function getCollectionSeoDescription(
@@ -69,11 +66,13 @@ export function buildMetadata({
   const localizedPath = localePath(locale, path);
   const canonical = new URL(localizedPath, siteConfig.url).toString();
   const normalizedTitle = withoutTrailingBrand(title);
-  const parameterized = Boolean(searchParams && Object.keys(searchParams).length);
+  const parameterized = Boolean(
+    searchParams && Object.keys(searchParams).length,
+  );
   const cleanPageIndexable = isIndexingEnabledFor(locale, path);
   const indexable = cleanPageIndexable && !parameterized;
-  const indexableAlternateLocales = alternateLocales.filter(
-    (alternateLocale) => isIndexingEnabledFor(alternateLocale, path),
+  const indexableAlternateLocales = alternateLocales.filter((alternateLocale) =>
+    isIndexingEnabledFor(alternateLocale, path),
   );
 
   return {

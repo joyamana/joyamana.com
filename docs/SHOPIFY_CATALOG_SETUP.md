@@ -2,8 +2,8 @@
 
 Status: Active implementation guide
 Owner: Commerce / Content operations
-Last updated: 2026-09-11
-Related: D-002、D-009、D-020、D-036；`COMMERCE_SPEC.md`
+Last updated: 2026-10-03
+Related: D-002、D-009、D-020、D-036、D-050；`COMMERCE_SPEC.md`
 
 本文件说明 D-036 所需的 Shopify Admin 配置。它不包含 credential，也不授权代码或
 自动化工具修改 Shopify；运营人员完成配置后，Storefront API 只读消费这些事实。
@@ -83,10 +83,10 @@ Storefront access: enabled
 ```
 
 每件正式商品必须明确选择一个值。不要根据标题、Tag、库存数量或图片推断商品模型。
-Storefront 对缺失和未知值 fail closed：不会显示低库存文案。PDP 仅对
-`standard` / `natural_variation` 中可售、非 oversell、购买增量为 1 且准确可用数量为
-1–3 的所选 Variant 显示 `Only X left`；`one_of_one` 永远排除。该字段目前只用于
-可信的库存披露，不替代后续仍需定义的 exact item / representative image disclosure。
+Storefront 映射该分类，但不根据缺失/未知值猜测商品模型，也不因此阻止正常购买。
+当前未接入可靠的禁止超卖事实，已暂停 `Only X left`。重新显示前必须先确认所选
+Variant 的库存政策和准确库存；不使用 `currentlyNotInStock=false` 推断禁止超卖。
+exact item / representative image 的具体披露仍需真实商品资料支持。
 
 ### 3.2 Design series
 
@@ -152,7 +152,32 @@ custom.design_series: Seven Chakra
 Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端仍使用
 `/category/*`。不要把 Bracelets Collection 标记为 `design_series`。
 
-## 6. 发布验收
+## 6. Variant 颜色与图片（D-050）
+
+后台已有定义，按业务方截图沿用，不迁移为 Metaobject：
+
+```text
+Owner: Variants
+Name: Colors
+Namespace and key: custom.colors
+Type: List of single line text (list.single_line_text_field)
+Storefront access: PUBLIC_READ / enabled
+```
+
+- 在每个真实 Variant 填一个或多个颜色标签；多色款可填多个值，不填写逗号拼接字符串。
+  使用稳定的默认语言词表、统一拼写；UI 规范化空白和大小写，不自行合并颜色别名。
+- 标签只描述该款的真实颜色，不把品牌调色板当成商品属性。前台为文字复选项，不猜 HEX。
+- 网页已完成字段读取、动态选项、即时筛选、固定选款、图价和 PDP 初选。后台新增颜色
+  在下一次请求自动出现，无需再绑定网页代码或部署；媒体关系仍在 Shopify 维护。
+- 颜色归属、库存和价格在 Shopify 维护。译文在后台/集中界面词典审校，不为语言复制商品。
+- 确认已填样本能由 Storefront API 读取 `type/value`；null 可能是未填或访问权限问题。
+  2026-10-02 检查全部 93 个 Variant 为 null，业务方确认尚未填、后续补齐。
+- 在商品媒体中逐款绑定真实图片，至少核对两个颜色不同的 Variant。API 的 `image`
+  自带产品图回退，字段非空不能代替后台关联检查；一物一图的独件保持既有要求。
+- 后台 Variant 顺序决定同条件下的展示优先级（可购买优先后按 POSITION）；调整顺序
+  会改变展示款，价格升降序不会改变已选展示款。
+
+## 7. 发布验收
 
 - Product 已发布到 Headless channel，Category 准确，价格/库存来自当前 US Catalog。
 - 每件正式 Product 已填充 `custom.product_model`；分别验证 `standard`、
@@ -163,6 +188,10 @@ Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端
 - Series Collection 非空、handle 稳定、`collection_kind=design_series`，并发布到
   Headless channel。
 - `/shop` 显示商品；对应 `/category/*` 显示相同商品；系列页只显示系列成员。
+- 为已填颜色样本核对多色 OR、颜色加可购买同 Variant AND、展示款价格升降序、
+  卡片图/标题深链接和 PDP 初选。售罄款不得因另一款可售而误显示可买。
+- 切款、刷新、前进后退和三语言切换后图价款式一致；Add to bag 与独立 Buy now
+  使用相同 merchandise，既有 Bag 不被 Buy now 改写。正式设备/Checkout smoke 单独记录。
 - Header 的 Shop 下拉只显示非空 Category；设计系列为 0 个时隐藏 Header 系列入口、
   1–2 个时直接显示、3 个及以上时合并为 Collections 下拉。不要用空 Collection 测试
   或触发该阈值。导航结构使用 5 分钟短缓存，Admin 发布变化可能不会即时出现在

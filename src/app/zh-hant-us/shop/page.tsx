@@ -10,14 +10,17 @@ export async function generateMetadata({
 }) {
   return buildMetadata({
     title: "選購",
-    description:
-      "探索 Joya Mana 目前供應的所有商品。",
+    description: "探索 Joya Mana 目前供應的所有商品。",
     locale: "zh-Hant-US",
     path: "/shop",
     searchParams: await searchParams,
   });
 }
 
-export default function Page() {
-  return <ShopPage locale="zh-Hant-US" />;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<PageSearchParams>;
+}) {
+  return <ShopPage locale="zh-Hant-US" searchParams={await searchParams} />;
 }

@@ -16,7 +16,8 @@ export async function generateMetadata({
   const category = await getProductCategory(handle, "us", "es-US");
   return buildMetadata({
     title: category?.title || "Categoría de productos",
-    description: category?.description || "Categoría de productos de Joya Mana.",
+    description:
+      category?.description || "Categoría de productos de Joya Mana.",
     locale: "es-US",
     path: `/category/${handle}`,
     searchParams: await searchParams,
@@ -25,8 +26,16 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<PageSearchParams>;
 }) {
-  return <CategoryPage locale="es-US" handle={(await params).handle} />;
+  return (
+    <CategoryPage
+      locale="es-US"
+      handle={(await params).handle}
+      searchParams={await searchParams}
+    />
+  );
 }

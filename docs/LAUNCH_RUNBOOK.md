@@ -47,7 +47,7 @@ Playwright 当前封存；发布仍需记录人工浏览器/Checkout 验收。
 ```text
 install: pnpm install --frozen-lockfile
 environment: pnpm preflight
-format/check: 待建立
+format/check: pnpm format:check
 lint: pnpm lint
 typecheck: pnpm typecheck
 unit/integration: pnpm test

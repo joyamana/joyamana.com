@@ -9,7 +9,11 @@ import {
   marketIdForLocale,
   stripLocalePrefix,
 } from "./locales";
-import { localeRegistry, isEnabledLocale, shopifyContextForLocale } from "@/config/locales";
+import {
+  localeRegistry,
+  isEnabledLocale,
+  shopifyContextForLocale,
+} from "@/config/locales";
 
 describe("locale routing", () => {
   it("keeps English at the root", () => {
@@ -52,12 +56,19 @@ describe("locale routing", () => {
     expect(localePath("zh-Hant-US")).toBe("/zh-hant-us");
     expect(localeForPath("/zh-hant-us-extra")).toBe("en-US");
     expect(stripLocalePrefix("/zh-hant-us-extra")).toBe("/zh-hant-us-extra");
-    expect(shopifyContextForLocale("zh-Hant-US")).toEqual({country: "US", language: "ZH_TW"});
+    expect(shopifyContextForLocale("zh-Hant-US")).toEqual({
+      country: "US",
+      language: "ZH_TW",
+    });
     expect(localeRegistry["zh-Hant-US"].formatLocale).toBe("zh-HK");
     expect(marketIdForLocale("zh-Hant-US")).toBe("us");
     expect(isEnabledLocale("zh-TW")).toBe(false);
     expect(isEnabledLocale("__proto__")).toBe(false);
     expect(isEnabledLocale("zh-Hant-US")).toBe(true);
-    expect(languageOptionsFor("zh-Hant-US").map(o=>o.shortLabel)).toEqual(["EN", "ES", "繁中"]);
+    expect(languageOptionsFor("zh-Hant-US").map((o) => o.shortLabel)).toEqual([
+      "EN",
+      "ES",
+      "繁中",
+    ]);
   });
 });

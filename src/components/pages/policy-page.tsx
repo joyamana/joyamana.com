@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import {
   getShopifyPolicy,
   type ShopifyPolicyKind,
@@ -10,25 +10,21 @@ const policyTitles = {
     zh: "送貨政策",
     en: "Shipping Policy",
     es: "Política de envíos",
-    fr: "Politique d’expédition",
   },
   returns: {
     zh: "退貨及退款",
     en: "Returns & Refunds",
     es: "Devoluciones y reembolsos",
-    fr: "Retours et remboursements",
   },
   privacy: {
     zh: "私隱政策",
     en: "Privacy Policy",
     es: "Política de privacidad",
-    fr: "Politique de confidentialité",
   },
   terms: {
     zh: "服務條款",
     en: "Terms of Service",
     es: "Términos del servicio",
-    fr: "Conditions d’utilisation",
   },
 } as const;
 
@@ -58,7 +54,6 @@ export async function PolicyPage({
             zh: "商店政策",
             en: "Store policy",
             es: "Política de la tienda",
-            fr: "Politique de la boutique",
           })}
         </p>
         <h1>{pageTitle}</h1>
@@ -66,7 +61,11 @@ export async function PolicyPage({
 
       {policy.usedDefaultLanguage ? (
         <p className="policy-language-notice">
-          {uiText(locale, { en: "This policy is currently available in English.", es: "Esta política está disponible actualmente en inglés.", fr: "Cette politique est actuellement disponible en anglais.", zh: "本政策目前以英文提供。" })}
+          {uiText(locale, {
+            en: "This policy is currently available in English.",
+            es: "Esta política está disponible actualmente en inglés.",
+            zh: "本政策目前以英文提供。",
+          })}
         </p>
       ) : null}
 
@@ -96,7 +95,6 @@ function PolicyUnavailable({
             zh: "商店政策",
             en: "Store policy",
             es: "Política de la tienda",
-            fr: "Politique de la boutique",
           })}
         </p>
         <h1>{title}</h1>
@@ -105,7 +103,6 @@ function PolicyUnavailable({
             zh: "此政策暫時未能載入，請稍後再試。",
             en: "This policy is temporarily unavailable. Please try again shortly.",
             es: "Esta política no está disponible temporalmente. Inténtalo de nuevo en unos minutos.",
-            fr: "Cette politique est temporairement indisponible. Veuillez réessayer sous peu.",
           })}
         </p>
       </header>

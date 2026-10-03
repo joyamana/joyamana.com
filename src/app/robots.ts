@@ -7,8 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: siteConfig.indexable
-      ? `${siteConfig.url}/sitemap.xml`
-      : undefined,
+    sitemap: siteConfig.indexable ? `${siteConfig.url}/sitemap.xml` : undefined,
   };
 }

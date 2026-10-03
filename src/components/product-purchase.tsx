@@ -1,118 +1,93 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
-  getLowStockCount,
   getProductQuantityMaximum,
   isValidAvailableProductQuantity,
   isValidProductQuantity,
+  isProductVariantPurchasable,
   type Product,
-  type ProductImage,
 } from "@/lib/commerce/types";
 import { formatMoney } from "@/lib/format";
 import { getCopy } from "@/lib/i18n/copy";
-import type { Locale } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import {
+  initialProductVariant,
+  variantPath,
+} from "@/lib/commerce/catalog-browse";
+import { catalogCopy } from "@/lib/i18n/catalog-copy";
+import { ProductDescription } from "./product-description";
+import { ProductGallery } from "./product-gallery";
 import { AddToCart } from "./add-to-cart";
 import { BuyNow } from "./buy-now";
-
-function uniqueImages(images: Array<ProductImage | null | undefined>) {
-  const seen = new Set<string>();
-  return images.filter((image): image is ProductImage => {
-    if (!image || seen.has(image.url)) return false;
-    seen.add(image.url);
-    return true;
-  });
-}
 
 export function productShippingReturnsSummary(locale: Locale) {
   return uiText(locale, {
     zh: "訂單一般於 1–3 個工作天內備妥。符合條件的退貨可於收貨後 15 天內申請。運費及預計送達時間會在結帳時顯示。",
     en: "Orders are typically prepared within 1–3 business days. Eligible returns may be requested within 15 days of delivery. Rates and delivery estimates are shown at checkout.",
     es: "Los pedidos suelen prepararse en un plazo de 1 a 3 días hábiles. Las devoluciones elegibles pueden solicitarse dentro de los 15 días posteriores a la entrega. Las tarifas y las fechas estimadas de entrega se muestran al pagar.",
-    fr: "Les modalités d’expédition et de retour seront confirmées avant l’ouverture du marché canadien.",
   });
 }
 
-export function lowStockMessage(locale: Locale, count: number) {
-  return uiText(locale, {
-    zh: `庫存不多 · 僅餘 ${count} 件`,
-    en: `Low stock · Only ${count} left`,
-    es:
-      count === 1
-        ? "Pocas unidades · Solo queda 1"
-        : `Pocas unidades · Solo quedan ${count}`,
-    fr:
-      count === 1
-        ? "Stock faible · Plus qu’un article"
-        : `Stock faible · Plus que ${count} articles`,
-  });
+interface ProductPurchaseProps {
+  product: Product;
+  locale: Locale;
+  initialVariantId?: string | null;
 }
 
-export function ProductDescription({
-  description,
-  descriptionHtml,
-}: {
-  description: string;
-  descriptionHtml: string;
-}) {
-  if (descriptionHtml) {
-    return (
-      <div
-        className="product-description"
-        dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-      />
-    );
-  }
+export function ProductPurchase(props: ProductPurchaseProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const returnFocusToVariant = useRef<string | null>(null);
+  const variantId =
+    props.initialVariantId === undefined
+      ? initialProductVariant(props.product)?.id
+      : props.initialVariantId;
+
+  useEffect(() => {
+    if (!variantId || returnFocusToVariant.current !== variantId) return;
+    containerRef.current
+      ?.querySelector<HTMLButtonElement>(
+        '.variant-picker [aria-pressed="true"]',
+      )
+      ?.focus({ preventScroll: true });
+    returnFocusToVariant.current = null;
+  }, [variantId, props.product]);
 
   return (
-    <div className="product-description">
-      {description
-        .split(/\n{2,}/)
-        .filter(Boolean)
-        .map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
-        ))}
+    <div ref={containerRef}>
+      <ProductPurchaseOption
+        key={variantId ?? "invalid"}
+        {...props}
+        onVariantSelect={(id) => {
+          returnFocusToVariant.current = id;
+        }}
+      />
     </div>
   );
 }
 
-export function ProductPurchase({
+function ProductPurchaseOption({
   product,
   locale,
-}: {
-  product: Product;
-  locale: Locale;
-}) {
+  initialVariantId,
+  onVariantSelect,
+}: ProductPurchaseProps & { onVariantSelect: (id: string) => void }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const browseCopy = catalogCopy(locale);
   const initialVariant =
-    product.variants.find((variant) => variant.availableForSale) ??
-    product.variants[0];
-  const [selectedId, setSelectedId] = useState(initialVariant?.id ?? "");
+    initialVariantId === undefined
+      ? initialProductVariant(product)
+      : product.variants.find((variant) => variant.id === initialVariantId);
+  const selectionRequired = initialVariantId !== undefined && !initialVariant;
   const [quantity, setQuantity] = useState(
     initialVariant?.quantityRule.minimum ?? 1,
   );
-  const selected =
-    product.variants.find((variant) => variant.id === selectedId) ??
-    product.variants[0];
-  const galleryImages = useMemo(
-    () =>
-      uniqueImages([
-        selected?.image,
-        ...product.images,
-        ...product.variants.map((variant) => variant.image),
-        product.featuredImage,
-      ]),
-    [product.featuredImage, product.images, product.variants, selected?.image],
-  );
-  const [selectedImageUrl, setSelectedImageUrl] = useState(
-    galleryImages[0]?.url ?? "",
-  );
-  const activeImage =
-    galleryImages.find((image) => image.url === selectedImageUrl) ??
-    galleryImages[0];
+  const selected = initialVariant ?? product.variants[0];
   const copy = getCopy(locale);
 
   if (!selected) {
@@ -124,14 +99,15 @@ export function ProductPurchase({
             zh: "此商品暫時未能購買。",
             en: "This product is not currently available for purchase.",
             es: "Este producto no está disponible para comprar en este momento.",
-            fr: "Ce produit n’est pas disponible à l’achat pour le moment.",
           })}
         </p>
       </section>
     );
   }
 
-  const meaningfulOptions = selected.selectedOptions.filter(
+  const meaningfulOptions = (
+    selectionRequired ? [] : selected.selectedOptions
+  ).filter(
     (option) =>
       option.name.toLowerCase() !== "title" ||
       option.value.toLowerCase() !== "default title",
@@ -146,100 +122,47 @@ export function ProductPurchase({
     selected.quantityAvailable,
     selected.currentlyNotInStock,
   );
-  const inventorySupportsMinimum =
-    maximumQuantity >= quantityRule.minimum;
-  const available =
-    product.availableForSale &&
-    selected.availableForSale &&
-    quantityRuleSupported &&
-    inventorySupportsMinimum;
-  const lowStockCount = available
-    ? getLowStockCount(product.model, selected)
-    : null;
-  const unavailableLabel = quantityRuleSupported
-    ? copy.labels.soldOut
-    : uiText(locale, {
-        zh: "暫未能網上購買",
-        en: "Unavailable online",
-        es: "No disponible en línea",
-        fr: "Indisponible en ligne",
-      });
+  const inventorySupportsMinimum = maximumQuantity >= quantityRule.minimum;
+  const purchasable = isProductVariantPurchasable(product, selected);
+  const available = !selectionRequired && !pending && purchasable;
+  const unavailableLabel = selectionRequired
+    ? browseCopy.choose
+    : pending
+      ? browseCopy.updatingOption
+      : quantityRuleSupported
+        ? copy.labels.soldOut
+        : uiText(locale, {
+            zh: "暫未能網上購買",
+            en: "Unavailable online",
+            es: "No disponible en línea",
+          });
 
   return (
     <section className="product-detail">
-      <div className="product-gallery">
-        <div className="product-gallery__sticky">
-          <div className="product-gallery__main">
-            {activeImage ? (
-              <Image
-                src={activeImage.url}
-                alt={activeImage.altText || product.title}
-                width={activeImage.width}
-                height={activeImage.height}
-                priority
-                sizes="(max-width: 760px) 100vw, 50vw"
-              />
-            ) : (
-              <div className="product-media-unavailable">
-                {uiText(locale, {
-                  zh: "暫無商品圖片",
-                  en: "Product image unavailable",
-                  es: "Imagen del producto no disponible",
-                  fr: "Image du produit indisponible",
-                })}
-              </div>
-            )}
-          </div>
-          {galleryImages.length > 1 ? (
-            <div
-              className="product-gallery__thumbs"
-              aria-label={uiText(locale, {
-                zh: "商品圖片",
-                en: "Product images",
-                es: "Imágenes del producto",
-                fr: "Images du produit",
-              })}
-            >
-              {galleryImages.map((image, index) => (
-                <button
-                  type="button"
-                  key={image.url}
-                  className={image.url === activeImage?.url ? "is-selected" : ""}
-                  onClick={() => setSelectedImageUrl(image.url)}
-                  aria-label={`${uiText(locale, {
-                    zh: "查看圖片",
-                    en: "View image",
-                    es: "Ver imagen",
-                    fr: "Voir l’image",
-                  })} ${index + 1}`}
-                  aria-pressed={image.url === activeImage?.url}
-                >
-                  <Image
-                    src={image.url}
-                    alt=""
-                    width={image.width}
-                    height={image.height}
-                    sizes="96px"
-                  />
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </div>
+      <ProductGallery
+        product={product}
+        locale={locale}
+        variant={selected}
+        initialImageUrl={
+          selectionRequired
+            ? product.featuredImage?.url
+            : initialVariant?.image?.url
+        }
+      />
       <div className="product-detail__info">
         <p className="eyebrow">
           {uiText(locale, {
             zh: "Joya Mana 系列",
             en: "Joya Mana collection",
             es: "Colección Joya Mana",
-            fr: "Collection Joya Mana",
           })}
         </p>
         <h1>{product.title}</h1>
         <p className="display-price">
-          {formatMoney(selected.price, locale)}
-          {selected.compareAtPrice ? (
+          {selectionRequired
+            ? browseCopy.choose
+            : formatMoney(selected.price, locale)}
+          {!selectionRequired && selected.compareAtPrice ? (
             <del>{formatMoney(selected.compareAtPrice, locale)}</del>
           ) : null}
         </p>
@@ -248,30 +171,51 @@ export function ProductPurchase({
           descriptionHtml={product.descriptionHtml}
         />
 
-        {product.variants.length > 1 ? (
+        {selectionRequired ? (
+          <p className="action-error" role="status">
+            {browseCopy.invalidVariant}
+          </p>
+        ) : null}
+        {pending ? <p role="status">{browseCopy.updating}</p> : null}
+
+        {product.variants.length > 1 || selectionRequired ? (
           <fieldset className="variant-picker">
             <legend>
               {uiText(locale, {
                 zh: "已選款式",
                 en: "Selected option",
                 es: "Opción seleccionada",
-                fr: "Option sélectionnée",
               })}
-              : <strong>{selected.title}</strong>
+              :{" "}
+              <strong>
+                {selectionRequired ? browseCopy.choose : selected.title}
+              </strong>
             </legend>
             <div className="variant-picker__grid">
               {product.variants.map((variant) => (
                 <button
                   type="button"
                   key={variant.id}
-                  className={variant.id === selected.id ? "is-selected" : ""}
-                  disabled={!variant.availableForSale}
+                  className={
+                    !selectionRequired && variant.id === selected.id
+                      ? "is-selected"
+                      : ""
+                  }
+                  disabled={
+                    pending || !isProductVariantPurchasable(product, variant)
+                  }
                   onClick={() => {
-                    setSelectedId(variant.id);
-                    setQuantity(variant.quantityRule.minimum);
-                    if (variant.image) setSelectedImageUrl(variant.image.url);
+                    onVariantSelect(variant.id);
+                    startTransition(() =>
+                      router.push(
+                        localePath(locale, variantPath(product, variant)),
+                        { scroll: false },
+                      ),
+                    );
                   }}
-                  aria-pressed={variant.id === selected.id}
+                  aria-pressed={
+                    !selectionRequired && variant.id === selected.id
+                  }
                 >
                   <span>{variant.title}</span>
                   <small>{formatMoney(variant.price, locale)}</small>
@@ -281,14 +225,15 @@ export function ProductPurchase({
           </fieldset>
         ) : null}
 
-        {quantityRuleSupported && inventorySupportsMinimum ? (
+        {!selectionRequired &&
+        quantityRuleSupported &&
+        inventorySupportsMinimum ? (
           <div className="quantity-picker">
             <span id="product-quantity-label">
               {uiText(locale, {
                 zh: "數量",
                 en: "Quantity",
                 es: "Cantidad",
-                fr: "Quantité",
               })}
             </span>
             <div>
@@ -298,7 +243,6 @@ export function ProductPurchase({
                   zh: "減少數量",
                   en: "Decrease quantity",
                   es: "Disminuir cantidad",
-                  fr: "Diminuer la quantité",
                 })}
                 disabled={
                   quantity - quantityRule.increment < quantityRule.minimum
@@ -342,15 +286,11 @@ export function ProductPurchase({
                   zh: "增加數量",
                   en: "Increase quantity",
                   es: "Aumentar cantidad",
-                  fr: "Augmenter la quantité",
                 })}
                 disabled={quantity + quantityRule.increment > maximumQuantity}
                 onClick={() =>
                   setQuantity((current) =>
-                    Math.min(
-                      maximumQuantity,
-                      current + quantityRule.increment,
-                    ),
+                    Math.min(maximumQuantity, current + quantityRule.increment),
                   )
                 }
               >
@@ -358,20 +298,13 @@ export function ProductPurchase({
               </button>
             </div>
           </div>
-        ) : !quantityRuleSupported ? (
+        ) : !selectionRequired && !quantityRuleSupported ? (
           <p className="action-error" role="status">
             {uiText(locale, {
               zh: "此數量暫時未能網上訂購。",
               en: "This quantity option is not available online.",
               es: "Esta opción de cantidad no está disponible en línea.",
-              fr: "Cette option de quantité n’est pas disponible en ligne.",
             })}
-          </p>
-        ) : null}
-
-        {lowStockCount !== null ? (
-          <p className="low-stock-note" aria-live="polite">
-            {lowStockMessage(locale, lowStockCount)}
           </p>
         ) : null}
 
@@ -387,13 +320,11 @@ export function ProductPurchase({
               zh: "購物袋內已達可購買數量上限",
               en: "Maximum quantity is already in your bag",
               es: "La cantidad máxima ya está en tu bolsa",
-              fr: "La quantité maximale est déjà dans votre panier",
             })}
             addedLabel={uiText(locale, {
               zh: "已加入",
               en: "Added",
               es: "Agregado",
-              fr: "Ajouté",
             })}
           />
           <BuyNow
@@ -411,7 +342,6 @@ export function ProductPurchase({
                 zh: "供應狀況",
                 en: "Availability",
                 es: "Disponibilidad",
-                fr: "Disponibilité",
               })}
             </dt>
             <dd>
@@ -420,7 +350,6 @@ export function ProductPurchase({
                     zh: "可於美國購買。",
                     en: "Available for purchase in the United States.",
                     es: "Disponible para comprar en Estados Unidos.",
-                    fr: "Disponible à l’achat aux États-Unis.",
                   })
                 : unavailableLabel}
             </dd>
@@ -448,7 +377,6 @@ export function ProductPurchase({
                   zh: "尺寸",
                   en: "Dimensions",
                   es: "Medidas",
-                  fr: "Dimensions",
                 })}
               </dt>
               <dd>{product.facts.dimensions}</dd>
@@ -466,13 +394,10 @@ export function ProductPurchase({
                 zh: "送貨及退貨",
                 en: "Shipping & returns",
                 es: "Envío y devoluciones",
-                fr: "Expédition et retours",
               })}
             </dt>
             <dd>
-              <p>
-                {productShippingReturnsSummary(locale)}
-              </p>
+              <p>{productShippingReturnsSummary(locale)}</p>
               <span className="fact-list__links">
                 <Link
                   className="fact-list__link"
@@ -488,7 +413,6 @@ export function ProductPurchase({
                     zh: "退貨及退款",
                     en: "Returns & refunds",
                     es: "Devoluciones y reembolsos",
-                    fr: "Retours et remboursements",
                   })}
                 </Link>
               </span>

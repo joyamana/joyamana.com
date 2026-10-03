@@ -1,32 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PRODUCT_QUANTITY_RULE,
-  LOW_STOCK_THRESHOLD,
-  getLowStockCount,
   getProductQuantityMaximum,
   isValidAvailableProductQuantity,
   isValidProductQuantity,
   isValidQuantityRule,
-  type ProductVariant,
 } from "./types";
-
-function variant(
-  overrides: Partial<ProductVariant> = {},
-): ProductVariant {
-  return {
-    id: "variant-1",
-    title: "Default",
-    availableForSale: true,
-    currentlyNotInStock: false,
-    quantityAvailable: 3,
-    price: { amount: "35.00", currencyCode: "USD" },
-    compareAtPrice: null,
-    image: null,
-    selectedOptions: [],
-    quantityRule: { minimum: 1, maximum: null, increment: 1 },
-    ...overrides,
-  };
-}
 
 describe("Shopify quantity rules", () => {
   it("accepts the default one-at-a-time quantity contract", () => {
@@ -52,9 +31,9 @@ describe("Shopify quantity rules", () => {
   });
 
   it("rejects incoherent upstream rules", () => {
-    expect(
-      isValidQuantityRule({ minimum: 2, maximum: 3, increment: 2 }),
-    ).toBe(false);
+    expect(isValidQuantityRule({ minimum: 2, maximum: 3, increment: 2 })).toBe(
+      false,
+    );
   });
 
   it("keeps valid Shopify rules inside the storefront safety cap", () => {
@@ -83,37 +62,19 @@ describe("Shopify quantity rules", () => {
     expect(getProductQuantityMaximum(rule, 0, true)).toBe(10);
   });
 
-  it("shows exact low stock only for explicitly classified repeatable models", () => {
-    expect(LOW_STOCK_THRESHOLD).toBe(3);
-    expect(getLowStockCount("standard", variant())).toBe(3);
-    expect(
-      getLowStockCount(
-        "natural-variation",
-        variant({ quantityAvailable: 1 }),
-      ),
-    ).toBe(1);
-    expect(
-      getLowStockCount("standard", variant({ quantityAvailable: 4 })),
-    ).toBeNull();
-  });
-
-  it("suppresses urgency for one-of-one, unknown, backorder, and unsupported inventory", () => {
-    expect(getLowStockCount("one-of-one", variant())).toBeNull();
-    expect(getLowStockCount(undefined, variant())).toBeNull();
-    expect(
-      getLowStockCount(
-        "standard",
-        variant({ currentlyNotInStock: true }),
-      ),
-    ).toBeNull();
-    expect(
-      getLowStockCount("standard", variant({ quantityAvailable: null })),
-    ).toBeNull();
-    expect(
-      getLowStockCount(
-        "standard",
-        variant({ quantityRule: { minimum: 2, maximum: null, increment: 2 } }),
-      ),
-    ).toBeNull();
-  });
+  it.each([
+    [200, false],
+    [null, false],
+    [0, true],
+  ] as const)(
+    "aligns the storefront cap to the purchase increment (%s, %s)",
+    (inventory, backorders) => {
+      const rule = { minimum: 2, maximum: null, increment: 2 };
+      const maximum = getProductQuantityMaximum(rule, inventory, backorders);
+      expect(maximum).toBe(98);
+      expect(
+        isValidAvailableProductQuantity(maximum, rule, inventory, backorders),
+      ).toBe(true);
+    },
+  );
 });

@@ -16,7 +16,12 @@ export type IndexLocale = import("./locales").EnabledLocale;
  * unapproved scopes false; policy changes require review and deploy.
  */
 export const indexingPolicy = {
-  "zh-Hant-US": { core: true, commerce: true, policies: true, editorial: false },
+  "zh-Hant-US": {
+    core: true,
+    commerce: true,
+    policies: true,
+    editorial: false,
+  },
   "en-US": {
     // Home, Contact, About, Accessibility
     core: true,

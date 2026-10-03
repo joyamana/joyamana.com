@@ -2,7 +2,7 @@
 
 Status: Active planning — Production 已公开，当前聚焦数据完整度、privacy/measurement 与 hardening
 Owner: Project owner  
-Last updated: 2026-09-11
+Last updated: 2026-10-03
 
 本文件只记录当前及未来优先级。已完成阶段与日期化实施记录见
 [`archive/roadmap-2026-08-to-09.md`](archive/roadmap-2026-08-to-09.md)。详细验收以
@@ -12,6 +12,10 @@ Last updated: 2026-09-11
 
 ## Priority 1 — Product and Commerce completeness
 
+- D-050 已完成本地配色、即时筛选浮层、Variant 排序与 PDP 联动；颜色网页链路完整，
+  后台新值自动生效，无需再补代码。按业务方安排补齐 Variant
+  `custom.colors` 文本列表，核验 Storefront 读取和跨颜色图片绑定；审校 EN/ES/香港
+  繁中控件与真实标签，完成正式设备/Checkout 与发布验收，不把代码通过视为后台数据齐备。
 - 为正式商品完整填充并映射 Product knowledge metafields：materials、dimensions/fit、
   care、origin/treatment、package contents 与 related content。
 - 为所有正式商品填充 `custom.product_model`，并实现 exact item / representative image
@@ -42,12 +46,11 @@ Last updated: 2026-09-11
 
 ## Priority 3 — Engineering and launch hardening
 
-- 建立 CI 与 format check，在固定 Node 24 环境运行 install、preflight、lint、typecheck、
-  tests 和 production build。
+- CI 与格式检查已在本地添加；提交后确认 GitHub 工作流结果，发布继续使用完整验收。
 - 完成关键设备/浏览器的 Accessibility、响应式、性能、链接、404、redirect、售罄与
   API 故障人工验收；达到 D-043 触发条件后再启用 Playwright。
-- 复核 Next 404 提示的客户端恢复：当前 HTTP 404/noindex 正确，但初始 HTML 是空壳，
-  提示仅在 RSC payload 中；浏览器可见性与禁用 JavaScript 的恢复入口尚待完善。
+- 未知路径/停用市场已提供不依赖 JavaScript 的 404。继续跟踪 Next 动态缺失商品/内容页的
+  初始错误正文问题；发布时复核客户端恢复，不使用未经验证的框架内部补丁。
 - 复核 CSP、安全响应头、日志/PII、第三方脚本和生产/Preview secret 隔离。
 - 完成监控告警、owner、保留策略、rollback target 和发布值守记录。
 - 按内容/运营变化持续复核索引矩阵、sitemap、hreflang、Schema 与 Checkout smoke。

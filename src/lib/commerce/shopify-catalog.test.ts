@@ -11,6 +11,8 @@ import {
   getShopifyCollections,
   getShopifyProduct,
   getShopifyProducts,
+  hydrateShopifyBrowseProducts,
+  SHOPIFY_BROWSE_VARIANTS_QUERY,
   mapShopifyProduct,
   searchShopifyProducts,
   SHOPIFY_COLLECTION_QUERY,
@@ -36,14 +38,16 @@ function connection<T>(
 }
 
 it("reads Traditional Chinese products without changing country, money or hiding fallback", async () => {
-  shopifyFetchMock.mockResolvedValueOnce({ products: connection([productFixture()]) });
+  shopifyFetchMock.mockResolvedValueOnce({
+    products: connection([productFixture()]),
+  });
   const products = await getShopifyProducts("zh-Hant-US");
   expect(products[0].title).toBe("Seven-Chakra Bracelet");
   expect(products[0].priceRange.minVariantPrice.currencyCode).toBe("USD");
   expect(shopifyFetchMock).toHaveBeenCalledWith(
     SHOPIFY_PRODUCTS_QUERY,
     expect.objectContaining({ country: "US", language: "ZH_TW" }),
-    expect.objectContaining({cache: "no-store"}),
+    expect.objectContaining({ cache: "no-store" }),
   );
 });
 
@@ -133,6 +137,102 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+describe("complete browsing variants", () => {
+  it("reads a light first batch and every subsequent variant page", async () => {
+    const fixture = productFixture();
+    const laterVariant = {
+      ...fixture.variants.nodes[0],
+      id: "gid://shopify/ProductVariant/12",
+      colors: { type: "list.single_line_text_field", value: '["Purple"]' },
+    };
+    shopifyFetchMock
+      .mockResolvedValueOnce({
+        nodes: [
+          {
+            id: fixture.id,
+            variants: connection(fixture.variants.nodes, true, "next"),
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        product: { id: fixture.id, variants: connection([laterVariant]) },
+      });
+    const [item] = await hydrateShopifyBrowseProducts(
+      [mapShopifyProduct(fixture)],
+      "en-US",
+    );
+    expect(item.variants).toHaveLength(2);
+    expect(item.variants[1]).toMatchObject({
+      colors: ["Purple"],
+      displayOrder: 1,
+    });
+    expect(SHOPIFY_BROWSE_VARIANTS_QUERY).not.toContain("descriptionHtml");
+    expect(shopifyFetchMock).toHaveBeenCalledWith(
+      SHOPIFY_BROWSE_VARIANTS_QUERY,
+      expect.objectContaining({ ids: [fixture.id], language: "EN" }),
+      expect.objectContaining({ cache: "no-store" }),
+    );
+  });
+
+  it("preserves localized option titles but uses default-language color identities", async () => {
+    const fixture = productFixture();
+    const local = {
+      ...fixture.variants.nodes[0],
+      title: "Amatista",
+      colors: { type: "list.single_line_text_field", value: '["Morado"]' },
+    };
+    const canonical = {
+      ...local,
+      title: "Amethyst",
+      colors: { type: "list.single_line_text_field", value: '["Purple"]' },
+    };
+    shopifyFetchMock
+      .mockResolvedValueOnce({
+        nodes: [{ id: fixture.id, variants: connection([local]) }],
+      })
+      .mockResolvedValueOnce({
+        nodes: [{ id: fixture.id, variants: connection([canonical]) }],
+      });
+    const [item] = await hydrateShopifyBrowseProducts(
+      [mapShopifyProduct(fixture)],
+      "es-US",
+    );
+    expect(item.variants[0]).toMatchObject({
+      title: "Amatista",
+      colors: ["Purple"],
+    });
+    expect(shopifyFetchMock.mock.calls.map((call) => call[1].language)).toEqual(
+      ["ES", "EN"],
+    );
+  });
+
+  it("fails closed if a product disappears or pagination repeats", async () => {
+    const fixture = productFixture();
+    shopifyFetchMock.mockResolvedValueOnce({ nodes: [null] });
+    await expect(
+      hydrateShopifyBrowseProducts([mapShopifyProduct(fixture)], "en-US"),
+    ).rejects.toThrow(ShopifyCatalogError);
+    shopifyFetchMock
+      .mockResolvedValueOnce({
+        nodes: [
+          {
+            id: fixture.id,
+            variants: connection(fixture.variants.nodes, true, "next"),
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        product: {
+          id: fixture.id,
+          variants: connection(fixture.variants.nodes),
+        },
+      });
+    await expect(
+      hydrateShopifyBrowseProducts([mapShopifyProduct(fixture)], "en-US"),
+    ).rejects.toThrow(ShopifyCatalogError);
+  });
+});
+
 describe("Shopify catalog mapper and queries", () => {
   it("keeps MoneyV2 strings, all product images, and variant selections", () => {
     const product = mapShopifyProduct(productFixture());
@@ -145,7 +245,6 @@ describe("Shopify catalog mapper and queries", () => {
         minVariantPrice: { amount: "68.50", currencyCode: "USD" },
         maxVariantPrice: { amount: "72.00", currencyCode: "USD" },
       },
-      compareAtPrice: { amount: "75.00", currencyCode: "USD" },
       model: "standard",
       category: {
         id: "gid://shopify/TaxonomyCategory/aa-6-3",
@@ -167,7 +266,7 @@ describe("Shopify catalog mapper and queries", () => {
       currentlyNotInStock: false,
       quantityAvailable: 1,
       selectedOptions: [{ name: "Main stone", value: "Obsidian" }],
-      image: { url: "https://cdn.shopify.com/featured.jpg" },
+      image: null,
       quantityRule: { minimum: 1, maximum: null, increment: 1 },
     });
     expect(product).not.toHaveProperty("facts");
@@ -205,7 +304,6 @@ describe("Shopify catalog mapper and queries", () => {
       const product = mapShopifyProduct(fixture);
 
       expect(product.variants[0].compareAtPrice).toBeNull();
-      expect(product.compareAtPrice).toBeNull();
     },
   );
 
@@ -281,7 +379,7 @@ describe("Shopify catalog mapper and queries", () => {
     });
     expect(SHOPIFY_PRODUCT_QUERY).toContain("pageInfo");
     expect(SHOPIFY_PRODUCT_VARIANTS_QUERY).toContain(
-      "variants(first: $first, after: $after)",
+      "variants(first: $first, after: $after, sortKey: POSITION, reverse: false)",
     );
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       2,
@@ -520,11 +618,7 @@ describe("Shopify catalog mapper and queries", () => {
         products: connection([productFixture()], true, "repeated-cursor"),
       })
       .mockResolvedValueOnce({
-        products: connection(
-          [secondProductFixture()],
-          true,
-          "repeated-cursor",
-        ),
+        products: connection([secondProductFixture()], true, "repeated-cursor"),
       });
 
     await expect(getShopifyProducts("en-US")).rejects.toMatchObject({

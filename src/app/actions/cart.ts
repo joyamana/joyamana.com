@@ -7,7 +7,10 @@ import type {
   CartActionResult,
   CheckoutActionResult,
 } from "@/lib/commerce/cart-types";
-import { isBlockingInventoryWarning } from "@/lib/commerce/cart-types";
+import {
+  cartLineIssue,
+  isBlockingInventoryWarning,
+} from "@/lib/commerce/cart-types";
 import {
   ShopifyCartError,
   addShopifyCartLineWithRecovery,
@@ -35,7 +38,9 @@ function isCheckoutEnabled() {
 }
 
 function safeLanguageForLocale(locale: string): ShopifyCartLanguage {
-  return isEnabledLocale(locale) ? localeRegistry[locale].shopify.language : "EN";
+  return isEnabledLocale(locale)
+    ? localeRegistry[locale].shopify.language
+    : "EN";
 }
 
 function failure(
@@ -224,8 +229,10 @@ export async function checkoutAction(
     if (cart.totalQuantity < 1 || cart.lines.nodes.length === 0) {
       throw new ShopifyCartError("EMPTY_CART");
     }
-    if (cart.lines.nodes.some((line) => !line.merchandise.availableForSale)) {
-      throw new ShopifyCartError("UNAVAILABLE");
+    const view = mapShopifyCart(cart);
+    const issue = view.lines.map(cartLineIssue).find(Boolean);
+    if (issue) {
+      return { ...failure(issue, language), cart: view };
     }
 
     return {
@@ -267,7 +274,8 @@ export async function buyNowAction(
       cart.lines.length !== 1 ||
       cart.totalQuantity !== quantity ||
       requestedLine?.quantity !== quantity ||
-      requestedLine?.availableForSale !== true
+      !requestedLine ||
+      cartLineIssue(requestedLine) !== null
     ) {
       throw new ShopifyCartError("UNAVAILABLE");
     }

@@ -1,5 +1,9 @@
 import { markets, type MarketId } from "@/config/markets";
-import { localeRegistry, type SupportedLocale } from "@/config/locales";
+import {
+  localeRegistry,
+  type SupportedLocale,
+  type EnabledLocale,
+} from "@/config/locales";
 
 export type Locale = SupportedLocale;
 export const locales = Object.keys(localeRegistry) as Locale[];
@@ -23,9 +27,10 @@ export function marketIdForLocale(locale: Locale): MarketId {
   return localeRegistry[locale].market;
 }
 
-export function isLocaleEnabled(locale: Locale) {
+export function isLocaleEnabled(locale: Locale): locale is EnabledLocale {
   return (
-    localeRegistry[locale].enabled && marketForLocale(locale).status !== "planned"
+    localeRegistry[locale].enabled &&
+    marketForLocale(locale).status !== "planned"
   );
 }
 
@@ -33,7 +38,9 @@ export const enabledLocales = locales.filter(isLocaleEnabled);
 
 export function languageOptionsFor(locale: Locale) {
   return enabledLocales
-    .filter((candidate) => marketIdForLocale(candidate) === marketIdForLocale(locale))
+    .filter(
+      (candidate) => marketIdForLocale(candidate) === marketIdForLocale(locale),
+    )
     .map((candidate) => ({
       locale: candidate,
       label: localeRegistry[candidate].label,
@@ -45,7 +52,9 @@ export function localeForPath(pathname: string): Locale {
   return (
     locales.find((locale) => {
       const prefix = localePrefixes[locale];
-      return prefix && (pathname === prefix || pathname.startsWith(`${prefix}/`));
+      return (
+        prefix && (pathname === prefix || pathname.startsWith(`${prefix}/`))
+      );
     }) ?? defaultLocale
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProductCategory } from "@/lib/commerce/catalog";
-import type { Locale } from "@/lib/i18n/locales";
+import { getBrowseCategory } from "@/lib/commerce/catalog";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import {
@@ -9,33 +9,42 @@ import {
   serializeIndexableStructuredData,
   type StructuredBreadcrumb,
 } from "@/lib/structured-data";
-import { ProductCard } from "@/components/product-card";
+import { CatalogFilters } from "@/components/catalog-filters";
+import { CatalogGrid } from "@/components/catalog-grid";
+import {
+  browseCatalog,
+  parseCatalogQuery,
+} from "@/lib/commerce/catalog-browse";
+import type { PageSearchParams } from "@/lib/seo";
 
 export async function CategoryPage({
   locale,
   handle,
+  searchParams = {},
 }: {
   locale: Locale;
   handle: string;
+  searchParams?: PageSearchParams;
 }) {
-  const category = await getProductCategory(
+  const category = await getBrowseCategory(
     handle,
     marketIdForLocale(locale),
     locale,
   );
   if (!category) notFound();
+  const query = parseCatalogQuery(searchParams);
+  const result = browseCatalog(category.products, query);
+  const browsePath = localePath(locale, `/category/${category.handle}`);
 
   const homeLabel = uiText(locale, {
     zh: "首頁",
     en: "Home",
     es: "Inicio",
-    fr: "Accueil",
   });
   const shopLabel = uiText(locale, {
     zh: "選購",
     en: "Shop",
     es: "Comprar",
-    fr: "Boutique",
   });
   const breadcrumbs: StructuredBreadcrumb[] = [
     { name: homeLabel, path: "/" },
@@ -47,11 +56,12 @@ export async function CategoryPage({
       name: category.title,
       description: category.description,
       path: `/category/${category.handle}`,
-      products: category.products,
+      products: result.entries.map((entry) => entry.product),
+      entries: result.entries,
       locale,
       breadcrumbs,
     }),
-    { locale, path: `/category/${category.handle}` },
+    { locale, path: `/category/${category.handle}`, searchParams },
   );
 
   return (
@@ -68,7 +78,6 @@ export async function CategoryPage({
           zh: "頁面路徑",
           en: "Breadcrumb",
           es: "Ruta de navegación",
-          fr: "Fil d’Ariane",
         })}
       >
         <Link href={localePath(locale, "/")}>{homeLabel}</Link>
@@ -77,24 +86,31 @@ export async function CategoryPage({
         <span>/</span>
         <span>{category.title}</span>
       </nav>
-      <header className="page-hero">
+      <header className="page-hero catalog-heading">
         <p className="eyebrow">
           {uiText(locale, {
             zh: "按類別選購",
             en: "Shop by category",
             es: "Comprar por categoría",
-            fr: "Acheter par catégorie",
           })}
         </p>
         <h1>{category.title}</h1>
         <p>{category.description}</p>
       </header>
-      <section className="section">
-        <div className="product-grid">
-          {category.products.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} />
-          ))}
-        </div>
+      <CatalogFilters
+        path={browsePath}
+        query={query}
+        colors={result.colors}
+        count={result.entries.length}
+        locale={locale}
+      />
+      <section className="section catalog-results">
+        <CatalogGrid
+          entries={result.entries}
+          locale={locale}
+          path={browsePath}
+          query={query}
+        />
       </section>
     </>
   );

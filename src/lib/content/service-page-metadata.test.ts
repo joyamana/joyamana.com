@@ -41,9 +41,7 @@ describe("service page metadata", () => {
         usedDefaultLanguage: locale === "es-US",
       }),
     );
-    const { buildPolicyPageMetadata } = await import(
-      "./service-page-metadata"
-    );
+    const { buildPolicyPageMetadata } = await import("./service-page-metadata");
 
     const metadata = await buildPolicyPageMetadata({
       title: "Privacy Policy",
@@ -70,9 +68,8 @@ describe("service page metadata", () => {
         usedDefaultLanguage: false,
       }),
     );
-    const { buildContentPageMetadata } = await import(
-      "./service-page-metadata"
-    );
+    const { buildContentPageMetadata } =
+      await import("./service-page-metadata");
 
     const metadata = await buildContentPageMetadata({
       title: "Accessibility",

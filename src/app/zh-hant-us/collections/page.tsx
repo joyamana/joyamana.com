@@ -10,8 +10,7 @@ export async function generateMetadata({
 }) {
   return buildMetadata({
     title: "原創設計系列",
-    description:
-      "探索 Joya Mana 的原創設計系列與背後故事。",
+    description: "探索 Joya Mana 的原創設計系列與背後故事。",
     locale: "zh-Hant-US",
     path: "/collections",
     searchParams: await searchParams,

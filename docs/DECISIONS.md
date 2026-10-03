@@ -2,7 +2,7 @@
 
 Status: Active  
 Owner: Project owner  
-Last updated: 2026-09-11
+Last updated: 2026-10-03
 
 本文件只保存有效决定与必要的替代关系。状态以索引为准：Accepted 为业务批准，
 Working 为可替换实现选择，Proposed 为未批准建议，Pending 必须等待决策。
@@ -61,6 +61,7 @@ Working 为可替换实现选择，Proposed 为未批准建议，Pending 必须�
 | D-047 | Website blocker boundary | Accepted | Q-001A/B、Q-002A/B/C 移出网站范围；Q-003A/F 已解决 |
 | D-048 | Checkout/payment readiness | Accepted | 下单支付完整支持；Payment test mode 流程测试通过 |
 | D-049 | US Traditional Chinese | Accepted | dev 完整接入 zh-Hant-US / 香港用语；允许后台英文回退，索引范围遵循 D-045 |
+| D-050 | Catalog filtering and variant links | Accepted | 同 Variant 筛选、固定选款、展示价排序；参数页 noindex，PDP 精确选款 |
 
 Superseded 决策正文移至
 [`archive/superseded-decisions-2026-08.md`](archive/superseded-decisions-2026-08.md)；
@@ -176,7 +177,9 @@ Shopify `custom.product_model` 支持 `standard`、`natural_variation`、`one_of
 
 PDP 只对明确的 standard/natural_variation，在所选 Variant 可售、精确库存为
 1–3、不允许超卖且数量步进为 1 时显示准确低库存。独件、未知模型、未知库存与
-oversell 排除；商品卡不显示低库存。具体数量契约见 [Commerce Spec](COMMERCE_SPEC.md)。
+oversell 排除；商品卡不显示低库存。当前 Storefront 无可靠的禁止超卖事实，
+准确低库存提示暂停，不能用 `currentlyNotInStock=false` 代替 inventory policy。
+具体数量契约见 [Commerce Spec](COMMERCE_SPEC.md)。
 
 ### D-021 — 政策发布门禁
 
@@ -394,6 +397,45 @@ Checkout 默认繁体不保证香港措辞，单独验收。
 运行映射见 `src/config/locales.ts` 和 [TECH_SPEC.md](TECH_SPEC.md)，后台维护步骤见
 [SHOPIFY_CATALOG_SETUP.md](SHOPIFY_CATALOG_SETUP.md)；执行与验证记录见 Archive。
 本条修订 D-006/007/029/045 的语言范围，不改变现有 EN/ES 索引批准。
+
+### D-050 — 商品筛选与 Variant 深链接
+
+Status: Accepted — 业务方于 2026-10-02 要求执行已交付修改方案；代码实施与生产发布分别验收
+Date: 2026-10-02
+Owner: Project owner / Engineering
+
+Shop、Category、Design Collection 商品列表使用 `available=1`、重复 `color={key}`、
+`sort=price-asc|price-desc`。默认保留当前 Headless 可见商品（含售罄）；颜色同组 OR，
+颜色与可购买等不同条件 AND，必须同一个 Variant 满足。可购买判断共用 PDP 的数量规则。
+多款命中时可购买优先，再按 Shopify POSITION，ID 兜底；每个 Product 一张卡片。
+卡片图、款式、价、状态和链接使用同一代表 Variant，价格排序按该款 USD 单价，
+切换升降序不改变选款。Variant `custom.colors` 沿用已确认的单行文本列表。
+
+2026-10-03 业务方补充：取消 Apply，选择即时生效，采用紧凑浮层和可移除标签。
+颜色网页读取、匹配、图价及 PDP 联动必须直接完成，后台新值自动接入，不等待填值
+才实施。原生 GET 链接保留无 JS 访问；这是局部 UI 调整，不改变上述商业与 URL 边界。
+
+PDP 使用 `?variant={numericVariantId}`，服务端验证归属并精确初始化；已售罄款保留
+选择并禁用购买，无效款要求重新选择。参数页面仍 noindex、不进 sitemap/hreflang/Schema，
+canonical 指向同语言干净路径。原有路由、US/USD、Cart 和 hosted Checkout 不迁移。
+
+原因：产品级颜色/可售性和最低价不能保证筛选出的款式与 PDP 一致。初期采用完整轻量
+Variant 数据与服务端计算，商业数据 no-store。替代方案是 Shopify 原生产品筛选/排序，
+但不能直接保证定制代表款式的联合条件及价格口径；独立搜索平台超出当前需要。
+影响：更新列表数据读取、卡片、PDP 参数状态、三语言控件和 Schema 门禁；无需旧 URL
+重定向或颜色字段迁移。目录读取超出预算时明确失败，不静默截断。回滚恢复代码与颜色
+tokens，既有 Shopify 商业事实不回写。Variant 图片绑定需后台核验，API 非空不等于专图。
+
+品牌视觉按用户附件采用米白 `#f4eadf`、浅紫 `#d8d2f0`、深棕 `#7b2c06`，
+花卉四色用于辅助背景和装饰；语义文字/错误颜色按可读性保留。此项替代 Design System
+此前 Working 的深梅紫/灰粉/古金方向，不改变字体与品牌事实。
+
+2026-10-03 业务方指出首页理念区大面积深棕刺眼，并要求复查整体配色，后续又认为
+雾紫底过亮。该区采用米白 82% 与深墨 18% 混合的暖灰米色（约 `#cec5bd`）和深色文字，
+说明/编号为深墨与米白混色，降低大面积底色亮度与饱和感。深棕集中于操作与细节。辅助文字加深，
+导航悬停不再淡化；属于现有附件配色的局部用途优化。业务方随后要求同时保留不可
+购买商品卡片的褪色效果与状态标签，图片使用 opacity 0.68 / saturate 0.55，PDP 原图
+不应用该效果。
 
 ## 新决策模板
 

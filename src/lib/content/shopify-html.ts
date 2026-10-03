@@ -1,4 +1,6 @@
-const allowedTags = new Set([
+import sanitizeHtml from "sanitize-html";
+
+const allowedTags = [
   "a",
   "blockquote",
   "br",
@@ -20,131 +22,121 @@ const allowedTags = new Set([
   "thead",
   "tr",
   "ul",
-]);
+];
 
-function decodeHtmlEntities(value: string) {
-  return value.replace(
-    /&(?:#(\d+)|#x([\da-f]+)|(amp|apos|gt|lt|nbsp|quot));/gi,
-    (
-      entity,
-      decimal: string | undefined,
-      hex: string | undefined,
-      named: string | undefined,
-    ) => {
-      if (decimal) return String.fromCodePoint(Number.parseInt(decimal, 10));
-      if (hex) return String.fromCodePoint(Number.parseInt(hex, 16));
-      const values: Record<string, string> = {
-        amp: "&",
-        apos: "'",
-        gt: ">",
-        lt: "<",
-        nbsp: "\u00a0",
-        quot: '"',
-      };
-      return values[named?.toLowerCase() ?? ""] ?? entity;
-    },
-  );
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function safeShopifyHref(value: string) {
-  const decoded = decodeHtmlEntities(value.trim());
-  if (decoded.startsWith("/") && !decoded.startsWith("//")) return decoded;
-
+export function safeContentHref(value: unknown) {
+  if (typeof value !== "string") return null;
+  const candidate = value.trim();
+  if (!candidate || /[\u0000-\u001f\u007f\\]/.test(candidate)) return null;
   try {
-    const url = new URL(decoded);
-    return url.protocol === "https:" || url.protocol === "mailto:"
-      ? decoded
+    const url = new URL(candidate, "https://content.invalid");
+    if (candidate.startsWith("/") || candidate.startsWith("#")) {
+      return url.origin === "https://content.invalid" ? candidate : null;
+    }
+    const absolute = new URL(candidate);
+    return absolute.protocol === "https:" || absolute.protocol === "mailto:"
+      ? candidate
       : null;
   } catch {
     return null;
   }
 }
 
-function isHttpsHref(value: string) {
+export function safeShopifyImageSource(value: string) {
   try {
-    return new URL(value).protocol === "https:";
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      url.hostname === "cdn.shopify.com" &&
+      !url.username &&
+      !url.password &&
+      !url.port &&
+      url.pathname.startsWith("/s/files/")
+    );
   } catch {
     return false;
   }
 }
 
-/**
- * Rebuild merchant-authored Shopify HTML from a small allowlist. Source
- * attributes are discarded except for safe link destinations.
- */
+/** Inspect already-sanitized HTML with the parser, including decoded entities. */
+export function hasVisibleHtmlText(html: string) {
+  let visible = false;
+  sanitizeHtml(`<div>${html}</div>`, {
+    allowedTags: ["div"],
+    exclusiveFilter: (frame) => {
+      if (frame.tag === "div" && frame.text.trim()) visible = true;
+      return false;
+    },
+  });
+  return visible;
+}
+
+/** One server-side HTML boundary for merchant-authored content. */
 export function sanitizeShopifyHtml(
   source: string,
-  { removeLeadingH1 = false }: { removeLeadingH1?: boolean } = {},
+  {
+    removeLeadingH1 = false,
+    allowImages = false,
+  }: { removeLeadingH1?: boolean; allowImages?: boolean } = {},
 ) {
   const normalizedSource = removeLeadingH1
     ? source.replace(/^\s*<h1\b[^>]*>[\s\S]*?<\/h1>\s*/i, "")
     : source;
-  const withoutRawContent = normalizedSource
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(
-      /<\s*(script|style|iframe|object|embed|svg|math|template|form)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi,
-      "",
-    );
-  const tagPattern = /<[^>]*>/g;
-  let output = "";
-  let offset = 0;
-
-  for (const match of withoutRawContent.matchAll(tagPattern)) {
-    const index = match.index ?? 0;
-    output += escapeHtml(
-      decodeHtmlEntities(withoutRawContent.slice(offset, index)),
-    );
-    offset = index + match[0].length;
-
-    const parsed = match[0].match(/^<\s*(\/?)\s*([a-z0-9]+)\b([^>]*)>$/i);
-    if (!parsed) continue;
-    const closing = parsed[1] === "/";
-    const sourceTag = parsed[2].toLowerCase();
-    const tag = sourceTag === "h1" ? "h2" : sourceTag;
-    if (!allowedTags.has(tag)) continue;
-
-    if (closing) {
-      if (tag !== "br" && tag !== "hr") output += `</${tag}>`;
-      continue;
-    }
-
-    if (tag === "a") {
-      const hrefMatch = parsed[3].match(
-        /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i,
-      );
-      const href = safeShopifyHref(
-        hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3] ?? "",
-      );
-      const targetMatch = parsed[3].match(
-        /\btarget\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i,
-      );
-      const target =
-        targetMatch?.[1] ?? targetMatch?.[2] ?? targetMatch?.[3] ?? "";
-      const opensNewTab = Boolean(
-        href && target === "_blank" && isHttpsHref(href),
-      );
-      output += href
-        ? `<a href="${escapeHtml(href)}"${
-            opensNewTab
-              ? ' target="_blank" rel="noopener noreferrer"'
-              : ""
-          }>`
-        : "<a>";
-      continue;
-    }
-
-    output += `<${tag}>`;
-  }
-
-  output += escapeHtml(decodeHtmlEntities(withoutRawContent.slice(offset)));
-  return output.trim();
+  return sanitizeHtml(normalizedSource, {
+    allowedTags: allowImages
+      ? [...allowedTags, "img", "figure", "figcaption"]
+      : allowedTags,
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+      img: ["src", "alt", "width", "height", "loading"],
+    },
+    allowedSchemes: ["https", "mailto"],
+    allowProtocolRelative: false,
+    nonTextTags: [
+      "script",
+      "style",
+      "iframe",
+      "object",
+      "embed",
+      "svg",
+      "math",
+      "template",
+      "form",
+    ],
+    transformTags: {
+      h1: "h2",
+      a: (_tag, attributes) => {
+        const href = safeContentHref(attributes.href);
+        const opensNewTab =
+          href?.startsWith("https:") && attributes.target === "_blank";
+        return {
+          tagName: "a",
+          attribs: href
+            ? {
+                href,
+                ...(opensNewTab
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {}),
+              }
+            : {},
+        };
+      },
+      img: (_tag, attributes) => ({
+        tagName: "img",
+        attribs: {
+          src: attributes.src ?? "",
+          alt: attributes.alt ?? "",
+          loading: "lazy",
+          ...(/^\d+$/.test(attributes.width ?? "")
+            ? { width: attributes.width }
+            : {}),
+          ...(/^\d+$/.test(attributes.height ?? "")
+            ? { height: attributes.height }
+            : {}),
+        },
+      }),
+    },
+    exclusiveFilter: (frame) =>
+      frame.tag === "img" && !safeShopifyImageSource(frame.attribs.src),
+  }).trim();
 }

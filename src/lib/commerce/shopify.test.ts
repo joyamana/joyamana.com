@@ -1,9 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  shopifyFetch,
-  shopifyMutation,
-  ShopifyRequestError,
-} from "./shopify";
+import { shopifyFetch, ShopifyRequestError } from "./shopify";
 
 const originalEnv = { ...process.env };
 
@@ -54,14 +50,22 @@ describe("Shopify Storefront API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await shopifyFetch("query { shop { name } }", {}, {
-      buyerIp: "203.0.113.9",
-      cache: "no-store",
-    });
-    await shopifyFetch("query { shop { name } }", {}, {
-      buyerIp: "not-an-ip",
-      cache: "no-store",
-    });
+    await shopifyFetch(
+      "query { shop { name } }",
+      {},
+      {
+        buyerIp: "203.0.113.9",
+        cache: "no-store",
+      },
+    );
+    await shopifyFetch(
+      "query { shop { name } }",
+      {},
+      {
+        buyerIp: "not-an-ip",
+        cache: "no-store",
+      },
+    );
 
     expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({
       "Shopify-Storefront-Buyer-IP": "203.0.113.9",
@@ -113,10 +117,12 @@ describe("Shopify Storefront API client", () => {
       vi.fn().mockResolvedValue(new Response(null, { status: 429 })),
     );
 
-    await expect(shopifyFetch("query { shop { name } }")).rejects.toMatchObject({
-      kind: "rate_limit",
-      status: 429,
-    });
+    await expect(shopifyFetch("query { shop { name } }")).rejects.toMatchObject(
+      {
+        kind: "rate_limit",
+        status: 429,
+      },
+    );
   });
 
   it("classifies an aborted Storefront request as a timeout", async () => {
@@ -124,12 +130,13 @@ describe("Shopify Storefront API client", () => {
     process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
     vi.stubGlobal(
       "fetch",
-      vi.fn((_url: string, request: RequestInit) =>
-        new Promise((_resolve, reject) => {
-          request.signal?.addEventListener("abort", () => {
-            reject(request.signal?.reason);
-          });
-        }),
+      vi.fn(
+        (_url: string, request: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            request.signal?.addEventListener("abort", () => {
+              reject(request.signal?.reason);
+            });
+          }),
       ),
     );
 
@@ -148,10 +155,12 @@ describe("Shopify Storefront API client", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(shopifyFetch("query { shop { name } }")).rejects.toMatchObject({
-      kind: "configuration",
-      message: "SHOPIFY_STORE_DOMAIN must be a bare myshopify.com hostname.",
-    });
+    await expect(shopifyFetch("query { shop { name } }")).rejects.toMatchObject(
+      {
+        kind: "configuration",
+        message: "SHOPIFY_STORE_DOMAIN must be a bare myshopify.com hostname.",
+      },
+    );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -162,11 +171,13 @@ describe("Shopify Storefront API client", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(shopifyFetch("query { shop { name } }")).rejects.toMatchObject({
-      kind: "configuration",
-      message:
-        "SHOPIFY_STOREFRONT_API_VERSION must be a dated quarterly API version.",
-    });
+    await expect(shopifyFetch("query { shop { name } }")).rejects.toMatchObject(
+      {
+        kind: "configuration",
+        message:
+          "SHOPIFY_STOREFRONT_API_VERSION must be a dated quarterly API version.",
+      },
+    );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -191,7 +202,9 @@ describe("Shopify Storefront API client", () => {
       ),
     );
 
-    const request = shopifyFetch("query { products(first: 1) { nodes { id } } }");
+    const request = shopifyFetch(
+      "query { products(first: 1) { nodes { id } } }",
+    );
     await expect(request).rejects.toMatchObject({
       kind: "graphql",
       message: "Shopify Storefront API returned GraphQL errors.",
@@ -214,12 +227,20 @@ describe("Shopify Storefront API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await shopifyFetch("query Catalog { shop { name } }", {}, {
-      cache: "force-cache",
-      revalidate: 60,
-      tags: ["shopify:catalog:us"],
-    });
-    await shopifyMutation("mutation CartCreate { cartCreate { cart { id } } }");
+    await shopifyFetch(
+      "query Catalog { shop { name } }",
+      {},
+      {
+        cache: "force-cache",
+        revalidate: 60,
+        tags: ["shopify:catalog:us"],
+      },
+    );
+    await shopifyFetch(
+      "mutation CartCreate { cartCreate { cart { id } } }",
+      {},
+      { cache: "no-store" },
+    );
 
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
       cache: "force-cache",
@@ -232,12 +253,17 @@ describe("Shopify Storefront API client", () => {
   it("classifies network failures without exposing the underlying exception", async () => {
     process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
     process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("socket secret")));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("socket secret")),
+    );
 
-    await expect(shopifyFetch("query { shop { name } }")).rejects.toMatchObject({
-      kind: "network",
-      message:
-        "Shopify Storefront API request failed before receiving a response.",
-    });
+    await expect(shopifyFetch("query { shop { name } }")).rejects.toMatchObject(
+      {
+        kind: "network",
+        message:
+          "Shopify Storefront API request failed before receiving a response.",
+      },
+    );
   });
 });

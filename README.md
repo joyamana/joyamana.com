@@ -22,6 +22,7 @@ Shopify 商品与正文没有本地数据 fallback；未配置时显示不可用
 pnpm install --frozen-lockfile
 pnpm dev
 pnpm preflight
+pnpm format:check
 pnpm lint
 pnpm typecheck
 pnpm test
@@ -30,7 +31,9 @@ pnpm build
 
 `typecheck` 先生成 Next 路由类型；`build` 自动运行环境 preflight。
 依赖版本与互相兼容的稳定版例外见 [Technical Spec](docs/TECH_SPEC.md)。
-Playwright 当前封存；CI 与 format check 尚未建立。
+Playwright 当前封存。`pnpm format` 统一代码排版，`pnpm format:check` 检查排版；
+GitHub CI 使用 Node 24，执行依赖安装、预检、格式、lint、类型、测试和生产构建，
+不使用生产凭证。工作流实际运行结果需提交后在 GitHub 确认。
 Vitest/build/HTTP 检查不替代人工浏览器与 Checkout 验收。
 
 ## 配置与发布

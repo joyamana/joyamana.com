@@ -1,9 +1,6 @@
 export type CurrencyCode = "USD" | "CAD";
 export type ProductModel = "standard" | "natural-variation" | "one-of-one";
-export type CollectionKind =
-  | "category"
-  | "design_series"
-  | "merchandising";
+export type CollectionKind = "category" | "design_series" | "merchandising";
 
 /**
  * Shopify MoneyV2 amounts remain decimal strings throughout the commerce
@@ -41,7 +38,6 @@ export const DEFAULT_PRODUCT_QUANTITY_RULE: ProductQuantityRule = {
 
 export const SHOPIFY_MAX_QUANTITY = 2_147_483_647;
 export const STOREFRONT_MAX_QUANTITY = 99;
-export const LOW_STOCK_THRESHOLD = 3;
 
 export function isValidQuantityRule(rule: ProductQuantityRule) {
   return (
@@ -85,10 +81,13 @@ export function getProductQuantityMaximum(
   quantityAvailable: number | null,
   currentlyNotInStock: boolean,
 ) {
-  const ruleMaximum = Math.min(
-    rule.maximum ?? STOREFRONT_MAX_QUANTITY,
-    STOREFRONT_MAX_QUANTITY,
-  );
+  const ruleMaximum =
+    Math.floor(
+      Math.min(
+        rule.maximum ?? STOREFRONT_MAX_QUANTITY,
+        STOREFRONT_MAX_QUANTITY,
+      ) / rule.increment,
+    ) * rule.increment;
 
   // Shopify uses this flag for backorders. A null inventory quantity also
   // represents inventory for which an exact storefront cap is unavailable.
@@ -110,11 +109,7 @@ export function isValidAvailableProductQuantity(
   return (
     isValidProductQuantity(quantity, rule) &&
     quantity <=
-      getProductQuantityMaximum(
-        rule,
-        quantityAvailable,
-        currentlyNotInStock,
-      )
+      getProductQuantityMaximum(rule, quantityAvailable, currentlyNotInStock)
   );
 }
 
@@ -129,32 +124,26 @@ export interface ProductVariant {
   image: ProductImage | null;
   selectedOptions: SelectedOption[];
   quantityRule: ProductQuantityRule;
+  /** Canonical default-language values from Variant custom.colors. */
+  colors?: string[];
+  /** Position in the complete Shopify POSITION-sorted connection. */
+  displayOrder?: number;
 }
 
-export function getLowStockCount(
-  model: ProductModel | undefined,
+export function isProductVariantPurchasable(
+  product: Pick<Product, "availableForSale">,
   variant: ProductVariant,
 ) {
-  if (model !== "standard" && model !== "natural-variation") return null;
-  if (
-    !variant.availableForSale ||
-    variant.currentlyNotInStock ||
-    variant.quantityAvailable === null ||
-    variant.quantityRule.increment !== 1 ||
-    !isValidAvailableProductQuantity(
+  return (
+    product.availableForSale &&
+    variant.availableForSale &&
+    isValidAvailableProductQuantity(
       variant.quantityRule.minimum,
       variant.quantityRule,
       variant.quantityAvailable,
       variant.currentlyNotInStock,
     )
-  ) {
-    return null;
-  }
-
-  return variant.quantityAvailable >= 1 &&
-    variant.quantityAvailable <= LOW_STOCK_THRESHOLD
-    ? variant.quantityAvailable
-    : null;
+  );
 }
 
 export interface ProductFacts {
@@ -188,7 +177,6 @@ export interface Product {
   seoDescription?: string;
   availableForSale: boolean;
   priceRange: ProductPriceRange;
-  compareAtPrice: Money | null;
   featuredImage: ProductImage | null;
   images: ProductImage[];
   variants: ProductVariant[];

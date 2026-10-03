@@ -30,8 +30,7 @@ export function AddToCart({
   const quantityInBag = cart.lines
     .filter((line) => line.merchandiseId === variantId)
     .reduce((total, line) => total + line.quantity, 0);
-  const canAdd =
-    available && quantityInBag + quantity <= maximumQuantity;
+  const canAdd = available && quantityInBag + quantity <= maximumQuantity;
 
   return (
     <div className="purchase-action">

@@ -6,9 +6,10 @@ import {
   type StorefrontAboutPage,
   type StorefrontAboutTree,
 } from "@/lib/content/shopify-about-pages";
-import type { Locale } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import type { PageSearchParams } from "@/lib/seo";
 import {
   buildAboutStructuredData,
   serializeIndexableStructuredData,
@@ -18,9 +19,11 @@ import {
 export async function AboutPage({
   handle,
   locale,
+  searchParams = {},
 }: {
   handle?: string;
   locale: Locale;
+  searchParams?: PageSearchParams;
 }) {
   let tree: StorefrontAboutTree | null;
   try {
@@ -44,6 +47,7 @@ export async function AboutPage({
       locale={locale}
       page={page}
       tree={tree}
+      searchParams={searchParams}
     />
   );
 }
@@ -52,11 +56,13 @@ export function AboutContentPage({
   locale,
   page,
   tree,
+  searchParams = {},
 }: {
   handle?: string;
   locale: Locale;
   page: StorefrontAboutPage;
   tree: StorefrontAboutTree;
+  searchParams?: PageSearchParams;
 }) {
   const isRoot = !handle;
   const path = isRoot ? "/about" : `/about/${page.handle}`;
@@ -64,13 +70,11 @@ export function AboutContentPage({
     zh: "首頁",
     en: "Home",
     es: "Inicio",
-    fr: "Accueil",
   });
   const aboutLabel = uiText(locale, {
     zh: "關於我們",
     en: "About",
     es: "Nosotros",
-    fr: "À propos",
   });
   const breadcrumbs: StructuredBreadcrumb[] = [
     { name: homeLabel, path: "/" },
@@ -88,7 +92,7 @@ export function AboutContentPage({
             breadcrumbs,
             isRoot,
           }),
-          { locale, path },
+          { locale, path, searchParams },
         )
       : null;
 
@@ -105,7 +109,6 @@ export function AboutContentPage({
           zh: "頁面路徑",
           en: "Breadcrumb",
           es: "Ruta de navegación",
-          fr: "Fil d’Ariane",
         })}
         className="breadcrumbs"
       >
@@ -137,7 +140,6 @@ export function AboutContentPage({
               zh: "本頁內容目前以英文提供。",
               en: "This page is currently available in English.",
               es: "Esta página está disponible actualmente en inglés.",
-              fr: "Cette page est actuellement disponible en anglais.",
             })}
           </p>
         ) : null}
@@ -161,7 +163,10 @@ function AboutSectionNavigation({
   tree: StorefrontAboutTree;
 }) {
   const children = tree.children.filter(
-    (page) => locale === "zh-Hant-US" || !page.usedDefaultLanguage || page.handle === activeHandle,
+    (page) =>
+      locale === "zh-Hant-US" ||
+      !page.usedDefaultLanguage ||
+      page.handle === activeHandle,
   );
   if (!children.length) return null;
 
@@ -172,7 +177,6 @@ function AboutSectionNavigation({
         zh: "關於 Joya Mana 的各個章節",
         en: "About Joya Mana sections",
         es: "Secciones sobre Joya Mana",
-        fr: "Sections à propos de Joya Mana",
       })}
       className="about-tabs"
     >
@@ -208,7 +212,6 @@ function AboutUnavailable({ locale }: { locale: Locale }) {
             zh: "關於 Joya Mana",
             en: "About Joya Mana",
             es: "Sobre Joya Mana",
-            fr: "À propos de Joya Mana",
           })}
         </h1>
         <p>
@@ -216,7 +219,6 @@ function AboutUnavailable({ locale }: { locale: Locale }) {
             zh: "品牌故事暫時未能載入，請稍後再試。",
             en: "Our story is temporarily unavailable. Please try again shortly.",
             es: "Nuestra historia no está disponible temporalmente. Inténtalo de nuevo en unos minutos.",
-            fr: "Notre histoire est temporairement indisponible. Veuillez réessayer sous peu.",
           })}
         </p>
       </header>

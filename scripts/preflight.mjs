@@ -1,37 +1,24 @@
 import { pathToFileURL } from "node:url";
 
-const productionSiteUrl = "https://www.joyamana.com";
+import {
+  productionSiteUrl,
+  isLocalHostname,
+  resolveSiteUrl,
+  shopifyStoreDomainPattern,
+  shopifyApiVersionPattern,
+  defaultShopifyApiVersion,
+} from "../src/config/environment.mjs";
 const booleanVariables = [
   "NEXT_PUBLIC_SITE_INDEXABLE",
   "SHOPIFY_CHECKOUT_ENABLED",
   "CONTACT_FORM_ENABLED",
 ];
 
-function isLocalHostname(hostname) {
-  return (
-    hostname === "localhost" ||
-    hostname.endsWith(".localhost") ||
-    hostname === "0.0.0.0" ||
-    hostname === "[::1]" ||
-    /^127(?:\.\d{1,3}){3}$/.test(hostname)
-  );
-}
-
 function parseOrigin(value, variable, errors) {
   if (!value?.trim()) return null;
 
   try {
-    const url = new URL(value.trim());
-    if (
-      (url.protocol !== "http:" && url.protocol !== "https:") ||
-      url.username ||
-      url.password ||
-      url.pathname !== "/" ||
-      url.search ||
-      url.hash
-    ) {
-      throw new Error();
-    }
+    const url = new URL(resolveSiteUrl(value, false));
     return url;
   } catch {
     errors.push(`${variable} must be an absolute HTTP(S) origin.`);
@@ -73,14 +60,16 @@ export function validateEnvironment(env = process.env) {
   const contactEnabled = env.CONTACT_FORM_ENABLED === "true";
 
   for (const variable of booleanVariables) {
-    const value = env[variable]?.trim();
+    const value = env[variable];
     if (value && value !== "true" && value !== "false") {
       errors.push(`${variable} must be either true or false.`);
     }
   }
 
-  if (isVercel && !env.NEXT_PUBLIC_SITE_URL?.trim()) {
-    errors.push("NEXT_PUBLIC_SITE_URL is required for Vercel deployments.");
+  if ((isVercel || indexable) && !env.NEXT_PUBLIC_SITE_URL?.trim()) {
+    errors.push(
+      "NEXT_PUBLIC_SITE_URL is required for Vercel or indexable deployments.",
+    );
   }
   const siteUrl = parseOrigin(
     env.NEXT_PUBLIC_SITE_URL,
@@ -111,31 +100,28 @@ export function validateEnvironment(env = process.env) {
       "SHOPIFY_STORE_DOMAIN and SHOPIFY_STOREFRONT_ACCESS_TOKEN are required for Vercel deployments.",
     );
   }
-  if (
-    storeDomain &&
-    !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(storeDomain)
-  ) {
+  if (storeDomain && !shopifyStoreDomainPattern.test(storeDomain)) {
     errors.push("SHOPIFY_STORE_DOMAIN must be a bare myshopify.com hostname.");
   }
-  const apiVersion = (env.SHOPIFY_STOREFRONT_API_VERSION || "2026-07").trim();
-  if (!/^\d{4}-(?:01|04|07|10)$/.test(apiVersion)) {
+  const apiVersion = (
+    env.SHOPIFY_STOREFRONT_API_VERSION || defaultShopifyApiVersion
+  ).trim();
+  if (!shopifyApiVersionPattern.test(apiVersion)) {
     errors.push(
       "SHOPIFY_STOREFRONT_API_VERSION must be a dated quarterly API version.",
     );
   }
 
-  parseHostname(
-    env.SHOPIFY_CHECKOUT_DOMAIN,
-    "SHOPIFY_CHECKOUT_DOMAIN",
-    errors,
-  );
+  parseHostname(env.SHOPIFY_CHECKOUT_DOMAIN, "SHOPIFY_CHECKOUT_DOMAIN", errors);
   if (checkoutEnabled && (!storeDomain || !storefrontToken)) {
     errors.push(
       "Shopify credentials are required when SHOPIFY_CHECKOUT_ENABLED is true.",
     );
   }
   if (contactEnabled && !env.RESEND_API_KEY?.trim()) {
-    errors.push("RESEND_API_KEY is required when CONTACT_FORM_ENABLED is true.");
+    errors.push(
+      "RESEND_API_KEY is required when CONTACT_FORM_ENABLED is true.",
+    );
   }
 
   return errors;

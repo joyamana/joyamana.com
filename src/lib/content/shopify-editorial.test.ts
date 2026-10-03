@@ -62,8 +62,7 @@ function stubEditorial({
         articleNode({
           handle,
           language,
-          translated:
-            language === "EN" || translatedHandles.includes(handle),
+          translated: language === "EN" || translatedHandles.includes(handle),
         });
       const blog = {
         id: `gid://shopify/Blog/${blogHandle}`,
@@ -99,11 +98,65 @@ afterEach(() => {
 });
 
 describe("Shopify editorial content", () => {
+  it("rejects content that becomes empty after sanitizing and validates image hosts", async () => {
+    process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+    process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+    const node = articleNode({
+      handle: "first-story",
+      language: "EN",
+      translated: true,
+    });
+    node.contentHtml =
+      '<h1>Title</h1><p onclick="bad()">Visible body &copy;</p><script>alert(1)</script>';
+    const fixture = {
+      ...node,
+      image: {
+        url: "https://example.com/cdn.shopify.com/image.jpg",
+        altText: "Image",
+        width: 1200,
+        height: 900,
+      },
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: {
+                blog: {
+                  id: "gid://shopify/Blog/1",
+                  handle: "blog",
+                  articleByHandle: fixture,
+                },
+              },
+            }),
+          ),
+        ),
+      ),
+    );
+    const entry = await getShopifyEditorialArticle(
+      "blog",
+      "first-story",
+      "en-US",
+    );
+    expect(entry?.contentHtml).toContain("<h2>Title</h2>");
+    expect(entry?.contentHtml).toContain("Visible body ©");
+    expect(entry?.contentHtml).not.toMatch(/onclick|script|alert/);
+    expect(entry?.image).toBeNull();
+    fixture.contentHtml = "<script>alert(1)</script>";
+    expect(
+      await getShopifyEditorialArticle("blog", "first-story", "en-US"),
+    ).toBeNull();
+  });
+
   it("queries Shopify Blog and Article resources in market context", () => {
     expect(SHOPIFY_EDITORIAL_INDEX_QUERY).toContain(
       "@inContext(country: $country, language: $language)",
     );
-    expect(SHOPIFY_EDITORIAL_INDEX_QUERY).toContain("blog(handle: $blogHandle)");
+    expect(SHOPIFY_EDITORIAL_INDEX_QUERY).toContain(
+      "blog(handle: $blogHandle)",
+    );
     expect(SHOPIFY_EDITORIAL_INDEX_QUERY).toContain(
       "articles(first: 50, after: $after",
     );
@@ -117,7 +170,9 @@ describe("Shopify editorial content", () => {
     process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
     stubEditorial();
 
-    await expect(getShopifyEditorialIndex("blog", "en-US")).resolves.toMatchObject({
+    await expect(
+      getShopifyEditorialIndex("blog", "en-US"),
+    ).resolves.toMatchObject({
       handle: "blog",
       articles: [
         {

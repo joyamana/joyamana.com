@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import type { Locale } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 
@@ -10,7 +10,6 @@ export function checkoutDisabledNote(locale: Locale) {
     zh: "「立即購買」暫時未能使用，你仍可將此商品加入購物袋。",
     en: "Buy now is temporarily unavailable. You can still add this item to your bag.",
     es: "Comprar ahora no está disponible temporalmente. Aún puedes añadir este artículo a tu bolsa.",
-    fr: "L’achat immédiat est temporairement indisponible. Vous pouvez toujours ajouter cet article à votre panier.",
   });
 }
 
@@ -54,7 +53,6 @@ export function BuyNow({
           zh: "立即購買",
           en: "Buy now",
           es: "Comprar ahora",
-          fr: "Acheter maintenant",
         })}
       </button>
       <p className="checkout-note" id={noteId}>
@@ -63,7 +61,6 @@ export function BuyNow({
               zh: "直接結帳購買此商品，不會改動購物袋。",
               en: "Starts checkout with this item without changing your bag.",
               es: "Inicia el pago con este artículo sin cambiar tu bolsa.",
-              fr: "Commence le paiement avec cet article sans modifier votre panier.",
             })
           : checkoutDisabledNote(locale)}
       </p>

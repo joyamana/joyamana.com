@@ -32,7 +32,11 @@ describe("Root document fonts", () => {
     ["en-US", EnglishLayout],
     ["es-US", SpanishUSLayout],
   ] as const)("keeps the existing Latin fonts on %s", (locale, Layout) => {
-    const html = renderToStaticMarkup(<Layout><main>Page</main></Layout>);
+    const html = renderToStaticMarkup(
+      <Layout>
+        <main>Page</main>
+      </Layout>,
+    );
     expect(html).toContain(`lang="${locale}"`);
     expect(html).toContain('class="newsreader-variable manrope-variable"');
     expect(html).not.toContain("noto-");
@@ -40,7 +44,9 @@ describe("Root document fonts", () => {
 
   it("adds both HK font variables without replacing the Latin fonts", () => {
     const html = renderToStaticMarkup(
-      <TraditionalChineseUSLayout><main>天然形態</main></TraditionalChineseUSLayout>,
+      <TraditionalChineseUSLayout>
+        <main>天然形態</main>
+      </TraditionalChineseUSLayout>,
     );
     expect(html).toContain('lang="zh-Hant-US"');
     expect(html).toContain(

@@ -1,3 +1,4 @@
+import { compareAmounts } from "@/lib/commerce/money";
 import type { Money } from "@/lib/commerce/types";
 import { localeRegistry, type SupportedLocale } from "@/config/locales";
 
@@ -32,7 +33,7 @@ export function formatPriceRange(
 ) {
   const { minVariantPrice, maxVariantPrice } = range;
   if (
-    minVariantPrice.amount === maxVariantPrice.amount &&
+    compareAmounts(minVariantPrice.amount, maxVariantPrice.amount) === 0 &&
     minVariantPrice.currencyCode === maxVariantPrice.currencyCode
   ) {
     return formatMoney(minVariantPrice, locale);

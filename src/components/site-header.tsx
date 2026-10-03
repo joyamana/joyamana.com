@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { brand } from "@/config/brand";
 import { getCopy } from "@/lib/i18n/copy";
-import type { Locale } from "@/lib/i18n/locales";
-import { localePath, stripLocalePrefix, languageOptionsFor } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
+import {
+  localePath,
+  stripLocalePrefix,
+  languageOptionsFor,
+} from "@/lib/i18n/locales";
 import {
   collectionNavigationFor,
   type CatalogNavigationLink,
@@ -19,6 +18,7 @@ import {
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 import { LanguageSwitch } from "./language-switch";
+import { commerceLanguageQueryFromSearch } from "@/lib/commerce/catalog-browse";
 
 function MenuIcon() {
   return (
@@ -140,13 +140,13 @@ function DesktopNavDropdown({
             <p className="eyebrow">{groupLabel}</p>
             <div className="nav-dropdown__links">
               {links.map((link) => (
-              <Link
-                href={link.href}
-                key={link.href}
-                onClick={() => onOpenChange(id, false)}
-              >
-                {link.label}
-              </Link>
+                <Link
+                  href={link.href}
+                  key={link.href}
+                  onClick={() => onOpenChange(id, false)}
+                >
+                  {link.label}
+                </Link>
               ))}
             </div>
           </div>
@@ -198,15 +198,16 @@ export function SiteHeader({
   const pathname = usePathname();
   const basePath = stripLocalePrefix(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openDesktopMenu, setOpenDesktopMenu] =
-    useState<DesktopMenuId | null>(null);
+  const [languageQuery, setLanguageQuery] = useState("");
+  const [openDesktopMenu, setOpenDesktopMenu] = useState<DesktopMenuId | null>(
+    null,
+  );
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLElement>(null);
   const menuLabel = uiText(locale, {
     zh: "選單",
     en: "Menu",
     es: "Menú",
-    fr: "Menu",
   });
   const shopLinks: CatalogNavigationLink[] = [
     {
@@ -215,7 +216,6 @@ export function SiteHeader({
         zh: "選購所有商品",
         en: "Shop all",
         es: "Ver todo",
-        fr: "Tout voir",
       }),
     },
     ...categoryLinks,
@@ -228,7 +228,6 @@ export function SiteHeader({
         zh: "查看全部",
         en: "View all",
         es: "Ver todas",
-        fr: "Tout voir",
       }),
     },
     ...collectionLinks,
@@ -297,7 +296,12 @@ export function SiteHeader({
           aria-expanded={menuOpen}
           aria-label={menuLabel}
           className="mobile-menu-trigger"
-          onClick={() => setMenuOpen(true)}
+          onClick={() => {
+            setLanguageQuery(
+              commerceLanguageQueryFromSearch(basePath, window.location.search),
+            );
+            setMenuOpen(true);
+          }}
           ref={menuButtonRef}
           type="button"
         >
@@ -317,7 +321,6 @@ export function SiteHeader({
               zh: "選購",
               en: "Shop",
               es: "Comprar",
-              fr: "Boutique",
             })}
             id="shop"
             label={copy.nav.shop}
@@ -343,7 +346,6 @@ export function SiteHeader({
                 zh: "系列",
                 en: "Collections",
                 es: "Colecciones",
-                fr: "Collections",
               })}
               id="collections"
               label={copy.nav.collections}
@@ -402,7 +404,6 @@ export function SiteHeader({
               zh: "關閉導覽選單",
               en: "Close navigation menu",
               es: "Cerrar el menú de navegación",
-              fr: "Fermer le menu de navigation",
             })}
             className="nav-dropdown-backdrop"
             onClick={() => setOpenDesktopMenu(null)}
@@ -422,7 +423,6 @@ export function SiteHeader({
             zh: "流動版導覽",
             en: "Mobile navigation",
             es: "Navegación móvil",
-            fr: "Navigation mobile",
           })}
           className="mobile-menu__panel"
           ref={menuPanelRef}
@@ -434,7 +434,6 @@ export function SiteHeader({
                 zh: "關閉選單",
                 en: "Close menu",
                 es: "Cerrar menú",
-                fr: "Fermer le menu",
               })}
               className="mobile-menu__close"
               onClick={() => closeMenu()}
@@ -492,14 +491,13 @@ export function SiteHeader({
                 zh: "語言",
                 en: "Language",
                 es: "Idioma",
-                fr: "Langue",
               })}
             </p>
             <div>
               {languageOptionsFor(locale).map((item) => (
                 <Link
                   aria-current={item.locale === locale ? "page" : undefined}
-                  href={localePath(item.locale, basePath)}
+                  href={`${localePath(item.locale, basePath)}${languageQuery ? `?${languageQuery}` : ""}`}
                   hrefLang={item.locale}
                   key={item.locale}
                   lang={item.locale}

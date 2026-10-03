@@ -1,4 +1,4 @@
-import type { Locale } from "./locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { localeRegistry } from "@/config/locales";
 
 export function uiText(

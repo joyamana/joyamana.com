@@ -35,10 +35,16 @@ describe("metadata titles", () => {
       getCollectionSeoDescription({ description: " ", seoDescription: " " }),
     ).toBeUndefined();
     expect(
-      getCollectionSeoDescription({ description: " Body ", seoDescription: " " }),
+      getCollectionSeoDescription({
+        description: " Body ",
+        seoDescription: " ",
+      }),
     ).toBe("Body");
     expect(
-      getCollectionSeoDescription({ description: "Body", seoDescription: " SEO " }),
+      getCollectionSeoDescription({
+        description: "Body",
+        seoDescription: " SEO ",
+      }),
     ).toBe("SEO");
   });
 
@@ -57,9 +63,7 @@ describe("metadata titles", () => {
   });
 
   it("removes repeated separator-delimited suffixes without erasing the brand", () => {
-    expect(withoutTrailingBrand("Piece — Joya Mana · Joya Mana")).toBe(
-      "Piece",
-    );
+    expect(withoutTrailingBrand("Piece — Joya Mana · Joya Mana")).toBe("Piece");
     expect(withoutTrailingBrand("Joya Mana")).toBe("Joya Mana");
     expect(withoutTrailingBrand("The Joya Mana story")).toBe(
       "The Joya Mana story",

@@ -12,8 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   return buildPolicyPageMetadata({
     title: "退貨及退款",
-    description:
-      "查看 Joya Mana 的退貨及退款政策。",
+    description: "查看 Joya Mana 的退貨及退款政策。",
     kind: "returns",
     locale: "zh-Hant-US",
     searchParams: await searchParams,

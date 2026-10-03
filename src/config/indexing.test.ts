@@ -3,14 +3,14 @@ import { indexGroups, indexingPolicy } from "./indexing";
 
 describe("version-controlled indexing policy", () => {
   it("enumerates every supported scope and records the approved release matrix", () => {
-    expect(indexGroups).toEqual([
-      "core",
-      "commerce",
-      "policies",
-      "editorial",
-    ]);
+    expect(indexGroups).toEqual(["core", "commerce", "policies", "editorial"]);
     expect(indexingPolicy).toEqual({
-      "zh-Hant-US": { core: true, commerce: true, policies: true, editorial: false },
+      "zh-Hant-US": {
+        core: true,
+        commerce: true,
+        policies: true,
+        editorial: false,
+      },
       "en-US": {
         core: true,
         commerce: true,

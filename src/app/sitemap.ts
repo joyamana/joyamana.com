@@ -46,7 +46,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         coreEnabled
           ? getPublishedShopifyContentPagePaths(locale)
           : Promise.resolve([]),
-        coreEnabled ? getPublishedShopifyAboutPaths(locale) : Promise.resolve([]),
+        coreEnabled
+          ? getPublishedShopifyAboutPaths(locale)
+          : Promise.resolve([]),
         editorialEnabled
           ? getPublishedShopifyEditorialPaths("blog", locale)
           : Promise.resolve([]),

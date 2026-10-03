@@ -6,11 +6,13 @@ import {
 } from "@/config/catalog";
 import { getProduct, getProducts } from "@/lib/commerce/catalog";
 import { getCopy } from "@/lib/i18n/copy";
-import type { Locale } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { ProductCard } from "@/components/product-card";
 import { ProductPurchase } from "@/components/product-purchase";
+import { initialProductVariant } from "@/lib/commerce/catalog-browse";
+import type { PageSearchParams } from "@/lib/seo";
 import {
   buildProductStructuredData,
   serializeIndexableStructuredData,
@@ -20,9 +22,11 @@ import {
 export async function ProductPage({
   locale,
   handle,
+  searchParams = {},
 }: {
   locale: Locale;
   handle: string;
+  searchParams?: PageSearchParams;
 }) {
   const marketId = marketIdForLocale(locale);
   const [product, allProducts] = await Promise.all([
@@ -30,18 +34,17 @@ export async function ProductPage({
     getProducts(marketId, locale),
   ]);
   if (!product) notFound();
+  const initialVariant = initialProductVariant(product, searchParams);
   const copy = getCopy(locale);
   const homeLabel = uiText(locale, {
     zh: "首頁",
     en: "Home",
     es: "Inicio",
-    fr: "Accueil",
   });
   const shopLabel = uiText(locale, {
     zh: "選購",
     en: "Shop",
     es: "Comprar",
-    fr: "Boutique",
   });
   const categoryDefinition = product.category
     ? productCategoryDefinitionForTaxonomyId(product.category.id)
@@ -64,7 +67,7 @@ export async function ProductPage({
   ];
   const structuredData = serializeIndexableStructuredData(
     buildProductStructuredData({ product, locale, breadcrumbs }),
-    { locale, path: `/products/${product.handle}` },
+    { locale, path: `/products/${product.handle}`, searchParams },
   );
 
   return (
@@ -81,7 +84,6 @@ export async function ProductPage({
           zh: "頁面路徑",
           en: "Breadcrumb",
           es: "Ruta de navegación",
-          fr: "Fil d’Ariane",
         })}
       >
         <Link href={localePath(locale, "/")}>{homeLabel}</Link>
@@ -90,9 +92,7 @@ export async function ProductPage({
         {category ? (
           <>
             <span>/</span>
-            <Link
-              href={localePath(locale, `/category/${category.handle}`)}
-            >
+            <Link href={localePath(locale, `/category/${category.handle}`)}>
               {category.title}
             </Link>
           </>
@@ -100,7 +100,12 @@ export async function ProductPage({
         <span>/</span>
         <span>{product.title}</span>
       </nav>
-      <ProductPurchase product={product} locale={locale} />
+      <ProductPurchase
+        key={product.id}
+        product={product}
+        locale={locale}
+        initialVariantId={initialVariant?.id ?? null}
+      />
       {allProducts.some((item) => item.id !== product.id) ? (
         <section className="section section--bordered">
           <div className="section-heading">

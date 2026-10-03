@@ -72,7 +72,8 @@ ESLint 9 已被上游标记停止支持；下一次维护优先复核该限制�
 验证以 Node 24 下的 frozen install、peer check、lint、typecheck、tests、build 为准。
 
 使用 Next global CSS + variables/tokens；无 UI kit、GraphQL codegen 或独立 CMS。
-CI、format/coverage gate 尚未建立；Vercel dev Preview 与 main Production 已建立。
+已添加 GitHub CI 与 Prettier 格式检查；coverage threshold 尚未设置。
+Vercel dev Preview 与 main Production 已建立。
 Playwright 按 D-043 暂缓，webhook 按 D-046 后置。
 Shopify API 版本以 .env.example/部署配置为准，至少每季度复核字段与支持窗口。
 
@@ -89,8 +90,9 @@ src/
 ├── components/                  # shared layout, interaction and pages
 ├── config/                      # brand, site, market and category allowlists
 └── lib/
-    ├── commerce/                # Shopify client, catalog, cart, normalized types
+    ├── commerce/                # Shopify client; catalog contract/mappers/readers; cart
     ├── content/                 # Policy/About/Content Page/Editorial adapters
+    ├── http/                    # complete unknown-path 404 responses
     ├── i18n/
     ├── navigation/
     ├── seo.ts
@@ -122,8 +124,8 @@ src/
 - 金额使用 Shopify `MoneyV2` 和集中 formatter，禁止浮点运算决定最终金额。
 - 所有 market-sensitive 查询使用同一 market context。
 - Product/Cart 同时映射 `availableForSale`、`quantityAvailable`、
-  `currentlyNotInStock` 和 contextual `quantityRule`。只对不允许继续销售且精确
-  数量已知的 Variant 在客户端收紧数量上限；Cart warning/error 仍是最终校验。
+  `currentlyNotInStock` 和 contextual `quantityRule`。已知库存且当前未缺货时，
+  前端使用保守数量上限；该标志不能证明禁止超卖，Shopify 仍作最终交易校验。
 
 ### Cart
 
@@ -245,9 +247,12 @@ Content/SEO 规格。
   sitemap/hreflang。
 - en-US/es-US/zh-Hant-US 各自拥有 root document layout，初始 HTML 的 lang 与 locale 一致；
   跨 root layout 语言切换是完整文档 navigation。
-  停用市场与未知路径由统一 catch-all 返回 noindex/404，不预建业务模板。
-  当前 notFound 响应未在初始 HTML 渲染提示正文，需在 Preview 验证客户端恢复；
-  不将正确的 404 状态码等同于完整的无 JavaScript 错误页体验。
+  三语言未知路径与停用市场由 catch-all Route Handler 返回完整 404 文档，
+  提供当前语言的首页/商店链接，设置 noindex 与 no-store。文案与页面错误边界共用。
+  缺失商品、Article、About child 等动态页面仍调用 Next `notFound()`；
+  Next 稳定版的初始正文缺失问题尚未解决，提示需 JavaScript 恢复。
+  分层布局和共同根布局实验都没有改善；保留三语言 document，不启用实验性 API。
+  参见 [上游问题 #97000](https://github.com/vercel/next.js/issues/97000)。
 - Product/Collection 目前无法从 Storefront response 自动识别 Spanish 是真实翻译
   还是 English fallback。en-US 与 es-US Commerce 均已获业务方批准开放；自动验证实现前，
   es-US Product/Collection 必须在每次发布时人工逐页检查，发现 fallback 时关闭对应
@@ -286,8 +291,7 @@ Content/SEO 规格。
   `SHOPIFY_STOREFRONT_API_VERSION`；当前 token 仅在服务端使用。
 - `SHOPIFY_CHECKOUT_ENABLED` 与可选 `SHOPIFY_CHECKOUT_DOMAIN`。
 - `CONTACT_FORM_ENABLED` 与 server-only `RESEND_API_KEY`。
-- `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`；`NEXT_PUBLIC_GA4_ID` 只是预留配置，
-  当前没有 GA4 运行时集成。
+- `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`；当前没有 GA4 运行时集成，不保留空的 GA4 环境变量。
 
 Shopify webhook secret、consent 和监控变量只在对应功能实现并批准后加入，
 不提前伪造已存在的配置。
@@ -311,7 +315,10 @@ Vercel 部署必须提供 canonical origin 与 Shopify credential；Production o
 - 当前已设置 `X-Content-Type-Options`、`Referrer-Policy`、`X-Frame-Options`
   和限制型 `Permissions-Policy`；CSP 与 HSTS 在确定 Production/Checkout/第三方域后
   于 Beta 前配置并验收。
-- 富文本使用受控组件渲染；不直接注入未消毒 HTML。
+- Shopify HTML 通过 `sanitize-html` 清洗；仅允许正文标签、安全链接和文章中的 Shopify CDN 图片。
+  该依赖仅在服务端解析正文，无外部服务、客户数据接收方或订阅费，退出时替换
+  `sanitizeShopifyHtml` 适配接口。Rich text 使用结构校验与受控渲染。
+- About/Accessibility、政策和文章以清洗后的可见正文判断能否发布；空内容不允许索引。
 - JSON-LD 使用安全序列化，防止 `</script>` 等注入。
 - Server Action/Route Handler 验证输入、Origin、方法和权限；对可滥用端点限流。
 - 若未来实施 Webhook，必须验证签名、防重复处理，并限制 payload。
@@ -337,7 +344,7 @@ Webhook 按 D-046 后置；未来实施时上述安全边界是启用条件。�
 - `pnpm test`（或至少相关 Vitest）
 - `pnpm build`（影响 build/runtime 时）
 
-当前无独立 format 脚本、coverage threshold 或 CI gate；在建立前不得声称已通过。
+使用 `pnpm format:check` 检查排版；`pnpm format` 自动修正。当前未设置 coverage threshold。
 
 ### Integration tests
 
@@ -378,7 +385,10 @@ Webhook 按 D-046 后置；未来实施时上述安全边界是启用条件。�
 
 ## 13. CI/CD 与发布
 
-当前 `dev` 已关联 Vercel Preview，`main` 关联 Production；尚无 CI workflow。
+当前 `dev` 已关联 Vercel Preview，`main` 关联 Production。
+`.github/workflows/ci.yml` 对 PR 和 main/dev 提交执行 Node 24 + 固定 pnpm 的
+frozen install、preflight、format、lint、typecheck、tests 和 build。它不读取生产凭证，
+不写 Shopify，也不部署；远端执行状态须以 GitHub 结果为准。
 提交前运行相关检查；Preview 必须 noindex，secret 与 Production 分离。
 同一已验收 commit 发布到 Production，按批准范围核验环境与功能门禁，不复用 Preview 值。
 回滚使用已验证 Vercel deployment，不回滚 Shopify 订单/库存数据。

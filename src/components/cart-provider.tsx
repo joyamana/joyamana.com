@@ -11,7 +11,11 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { localeForPath } from "@/lib/i18n/locales";
-import { isEnabledLocale, localeRegistry, type StorefrontLanguage } from "@/config/locales";
+import {
+  isEnabledLocale,
+  localeRegistry,
+  type StorefrontLanguage,
+} from "@/config/locales";
 import {
   addCartLineAction,
   buyNowAction,
@@ -116,27 +120,31 @@ export function CartProvider({
     [],
   );
 
-  const applyResult = useCallback((result: CartActionResult) => {
-    if (result.ok) {
-      setCart(result.cart);
-      const stockWarning = result.cart.warnings.find((warning) =>
-        isBlockingInventoryWarning(warning.code),
-      );
-      if (stockWarning) {
-        setError({
-          code: "UNAVAILABLE",
-          message: cartErrorMessage("UNAVAILABLE", language),
-        });
-        return false;
+  const applyResult = useCallback(
+    (result: CartActionResult) => {
+      if (result.ok) {
+        setCart(result.cart);
+        const stockWarning = result.cart.warnings.find((warning) =>
+          isBlockingInventoryWarning(warning.code),
+        );
+        if (stockWarning) {
+          setError({
+            code: "UNAVAILABLE",
+            message: cartErrorMessage("UNAVAILABLE", language),
+          });
+          return false;
+        }
+        setError(null);
+        return true;
       }
-      setError(null);
-      return true;
-    }
 
-    setError(result.error);
-    if (result.error.code === "CART_EXPIRED") setCart(emptyCart);
-    return false;
-  }, [language]);
+      setError(result.error);
+      if (result.cart) setCart(result.cart);
+      if (result.error.code === "CART_EXPIRED") setCart(emptyCart);
+      return false;
+    },
+    [language],
+  );
 
   const refresh = useCallback(
     () =>
@@ -194,6 +202,20 @@ export function CartProvider({
         setStatus("updating");
         try {
           const result = await action();
+          if (!result.ok && result.error.code !== "CART_EXPIRED") {
+            // A mutation may partially succeed upstream. Show the actual Bag
+            // while retaining the failure message and recovery controls.
+            try {
+              const latest = await getCartAction(locale);
+              if (requestVersion === requestVersionRef.current) {
+                if (latest.ok) setCart(latest.cart);
+                else if (latest.error.code === "CART_EXPIRED")
+                  setCart(emptyCart);
+              }
+            } catch {
+              // Preserve the original mutation failure if refresh also fails.
+            }
+          }
           return requestVersion === requestVersionRef.current
             ? applyResult(result)
             : cartResultSucceeded(result);
@@ -207,7 +229,7 @@ export function CartProvider({
           }
         }
       }),
-    [applyResult, connectionFailure, enqueueOperation],
+    [applyResult, connectionFailure, enqueueOperation, locale],
   );
 
   const addItem = useCallback(
@@ -242,6 +264,7 @@ export function CartProvider({
               setError(null);
             } else {
               setError(result.error);
+              if (result.cart) setCart(result.cart);
             }
           }
           return result;

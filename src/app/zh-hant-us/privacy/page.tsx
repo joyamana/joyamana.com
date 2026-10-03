@@ -12,8 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   return buildPolicyPageMetadata({
     title: "私隱政策",
-    description:
-      "了解 Joya Mana 如何收集、使用及分享個人資料。",
+    description: "了解 Joya Mana 如何收集、使用及分享個人資料。",
     kind: "privacy",
     locale: "zh-Hant-US",
     searchParams: await searchParams,

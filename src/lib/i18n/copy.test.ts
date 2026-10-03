@@ -4,7 +4,11 @@ import { uiText } from "./text";
 import { enabledLocales } from "./locales";
 
 function leafKeys(value: object, prefix = ""): string[] {
-  return Object.entries(value).flatMap(([key, item]) => typeof item === "string" ? [`${prefix}${key}`] : leafKeys(item, `${prefix}${key}.`));
+  return Object.entries(value).flatMap(([key, item]) =>
+    typeof item === "string"
+      ? [`${prefix}${key}`]
+      : leafKeys(item, `${prefix}${key}.`),
+  );
 }
 
 describe("UI translation completeness", () => {
@@ -16,7 +20,9 @@ describe("UI translation completeness", () => {
   });
 
   it("selects Hong Kong written Chinese without an implicit English fallback", () => {
-    expect(uiText("zh-Hant-US", {en: "Email", es: "Correo", fr: "Courriel", zh: "電郵"})).toBe("電郵");
+    expect(
+      uiText("zh-Hant-US", { en: "Email", es: "Correo", zh: "電郵" }),
+    ).toBe("電郵");
     expect(getCopy("zh-Hant-US").labels.addToCart).toBe("加入購物袋");
     expect(getCopy("zh-Hant-US").nav.blog).toBe("Blog");
   });

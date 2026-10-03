@@ -7,7 +7,13 @@
 
 ## Current status
 
-当前无 Active 执行计划。US 繁体中文 dev 代码接入已完成，记录见上述 Archive。
+当前无 Active 计划。[本地代码清理](docs/archive/local-code-cleanup-2026-10.md)已完成实施与验证，
+尚未部署。动态缺失页初始 404 正文问题继续跟踪上游；Shopify 后台变更与完整文档重组暂缓。
+[即时商品筛选与界面优化](docs/archive/catalog-filter-ui-2026-10.md)已完成本地实现与验证；
+按业务方 2026-10-03 要求移除 Apply、优化 UI，颜色网页代码完整绑定，尚未部署。
+[品牌配色与商品变体筛选](docs/archive/brand-colors-variant-filtering-2026-10.md)
+已完成本地实现及验证；业务方于 2026-10-02 授权执行，口径见 D-050，尚未部署。
+US 繁体中文 dev 代码接入已完成，记录见上述 Archive。
 后续内容/设备/Checkout 验收见 ROADMAP / OPEN_QUESTIONS；索引批准范围以 D-045 为准，
 Production 发布另行验收。
 

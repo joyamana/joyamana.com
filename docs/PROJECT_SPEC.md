@@ -2,7 +2,7 @@
 
 Status: Active — Production 已公开，数据完善与发布验收持续进行
 Owner: Business owner  
-Last updated: 2026-09-11
+Last updated: 2026-10-03
 
 ## 1. 项目定义
 
@@ -29,8 +29,18 @@ Last updated: 2026-09-11
 - Shopify-only：Product/Variant/Category/Design Collection、实时价格/可售性/数量、
   Bag/独立 Buy now，以及 Policy、About subtree、Accessibility、Blog/Guide。
   不完整或异常时 fail closed；界面结构和导航文案由代码维护。
-- PDP 支持格式化描述、quantity rule、准确低库存；Product knowledge metafields、
+- PDP 支持格式化描述、quantity rule 与选款状态；准确低库存提示因缺少禁止超卖事实暂时隐藏。Product knowledge metafields、
   exact/representative image 披露、内容关联仍待完善。
+- D-050 的附件配色及三语言 Shop/Category/设计系列可购买与 Variant 颜色筛选、展示款
+  价格升降序已在本地实现；卡片与 PDP 深链接、切款/历史/语言状态、图价和购物动作
+  使用同款，参数页关闭 Schema。尚未部署。颜色值尚未填（业务方后续补齐），真实颜色
+  与 Variant 图片绑定、译文/设备/发布验收见 `SHOPIFY_CATALOG_SETUP.md` / ROADMAP。
+- 2026-10-03 按业务方要求取消 Apply，改为即时开关、颜色/排序浮层与轻量标签，收紧
+  三类列表标题和网格间距；筛选在左、结果数在右，手机同步。颜色网页链路完整实现，
+  后台新值自动读取，不需再补代码。
+- 首页理念区按 2026-10-03 后续业务反馈改为较暗的暖灰米色底与深色文字；配色审查同步改善辅助
+  文字和导航悬停对比；按后续反馈保留不可购买卡片照片的褪色及状态标签，PDP 原图
+  不受影响。均为本地代码修改，尚未部署。
 - `Patron Saint` 已满足非空、Headless 可见和 design_series 门禁；
   description/SEO 与 Metaobject story/lookbook 尚未完成。
   系列详情的 metadata、sitemap 与 Schema 共用内容就绪判断，缺少有效描述时排除索引。
@@ -46,10 +56,14 @@ Last updated: 2026-09-11
   hreflang/readiness 与动态 sitemap。Commerce 西语 fallback 尚无自动检测，
   现按业务批准范围进行逐页人工发布验收。
 - Organization/Site Settings、Home/Contact/Policy Schema、consent/Analytics、
-  内容搜索、CI/format 与剩余设备/运营验收仍待完成。
+  内容搜索与剩余设备/运营验收仍待完成。CI 和格式检查已在本地配置，远端待提交验证。
 - 工程基线是 Node 24 + 相互兼容的稳定依赖。Header 使用独立轻量查询、故障降级和
   单层五分钟 fetch 再验证缓存；商业数据 no-store。
   错误页使用 Next `retry()` 重新获取服务端内容，类型检查先生成路由类型。
+- 本地已修复购物袋规则变化/库存减少后的恢复、完整分页、Checkout 数量预检、
+  正文实体解析、空内容发布判断、About/文章参数 Schema、PDP 加载/选款提示与 Variant 返回链接。
+  未知路径/停用市场可输出完整三语言 404；动态缺失商品等页面的初始错误正文仍受 Next 上游限制。
+  本轮未部署、未修改 Shopify 后台、未执行付款；验证记录见[本地代码清理](archive/local-code-cleanup-2026-10.md)。
 - 三个独立发布门禁为索引总开关、Checkout 与 Contact form；仓库缺省值均关闭，
   各部署按批准范围单独配置。Preview 总索引门禁必须关闭。
 

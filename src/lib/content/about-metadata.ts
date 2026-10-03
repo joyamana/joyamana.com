@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import { enabledLocales, type Locale } from "@/lib/i18n/locales";
+import { enabledLocales } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { uiText } from "@/lib/i18n/text";
 import {
   buildMetadata,
   buildNoIndexMetadata,
   type PageSearchParams,
 } from "@/lib/seo";
-import {
-  aboutPageForHandle,
-  getShopifyAboutTree,
-} from "./shopify-about-pages";
+import { aboutPageForHandle, getShopifyAboutTree } from "./shopify-about-pages";
 
 async function publishedAlternateLocales(handle?: string) {
   const locales = await Promise.all(
@@ -45,19 +43,22 @@ export async function buildAboutMetadata({
     zh: "關於 Joya Mana",
     en: "About Joya Mana",
     es: "Sobre Joya Mana",
-    fr: "À propos de Joya Mana",
   });
   const fallbackDescription = uiText(locale, {
     zh: "了解 Joya Mana 的理念與商品標準。",
     en: "Learn about Joya Mana's perspective and product standards.",
     es: "Conoce la perspectiva y los estándares de producto de Joya Mana.",
-    fr: "Découvrez la perspective et les normes produit de Joya Mana.",
   });
 
   try {
     const tree = await getShopifyAboutTree(locale);
     const page = tree ? aboutPageForHandle(tree, handle) : null;
-    if (tree && page && !tree.root.usedDefaultLanguage && !page.usedDefaultLanguage) {
+    if (
+      tree &&
+      page &&
+      !tree.root.usedDefaultLanguage &&
+      !page.usedDefaultLanguage
+    ) {
       return buildMetadata({
         title: page.seoTitle,
         description: page.seoDescription,

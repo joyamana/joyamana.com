@@ -1,4 +1,8 @@
 import type { CurrencyCode, ProductQuantityRule } from "./types";
+import {
+  getProductQuantityMaximum,
+  isValidAvailableProductQuantity,
+} from "./types";
 import type { StorefrontLanguage } from "@/config/locales";
 
 export interface CartMoney {
@@ -33,6 +37,46 @@ export interface CartLineView {
   quantityRule: ProductQuantityRule;
   unitPrice: CartMoney;
   totalPrice: CartMoney;
+}
+
+type CartLineQuantity = Pick<
+  CartLineView,
+  | "availableForSale"
+  | "quantity"
+  | "quantityRule"
+  | "quantityAvailable"
+  | "currentlyNotInStock"
+>;
+
+/** Existing lines remain readable even when stock or purchase rules change. */
+export function cartLineIssue(line: CartLineQuantity) {
+  if (!line.availableForSale) return "UNAVAILABLE" as const;
+  return isValidAvailableProductQuantity(
+    line.quantity,
+    line.quantityRule,
+    line.quantityAvailable,
+    line.currentlyNotInStock,
+  )
+    ? null
+    : ("INVALID_QUANTITY" as const);
+}
+
+export function cartLineCorrection(line: CartLineQuantity) {
+  if (!line.availableForSale) return null;
+  const maximum = getProductQuantityMaximum(
+    line.quantityRule,
+    line.quantityAvailable,
+    line.currentlyNotInStock,
+  );
+  if (maximum < line.quantityRule.minimum) return null;
+  return Math.min(
+    maximum,
+    Math.max(
+      line.quantityRule.minimum,
+      Math.floor(line.quantity / line.quantityRule.increment) *
+        line.quantityRule.increment,
+    ),
+  );
 }
 
 export interface CartWarningView {
@@ -82,7 +126,8 @@ const cartErrorMessages: Record<
     CART_EXPIRED: "Your bag expired. Add the item again to start a new bag.",
     CART_NOT_FOUND: "Your bag could not be found.",
     CHECKOUT_DISABLED: "Checkout is not available yet.",
-    CHECKOUT_URL_INVALID: "Checkout is temporarily unavailable. Please try again.",
+    CHECKOUT_URL_INVALID:
+      "Checkout is temporarily unavailable. Please try again.",
     EMPTY_CART: "Your bag is empty.",
     INVALID_INPUT: "The cart request was invalid.",
     INVALID_QUANTITY: "Choose a valid whole-number quantity.",
@@ -114,17 +159,16 @@ export function cartErrorMessage(
 
 export interface CartActionFailure {
   ok: false;
+  /** Latest safe state, when a request needs the customer to repair their Bag. */
+  cart?: CartView;
   error: {
     code: CartActionErrorCode;
     message: string;
   };
 }
 
-export type CartActionResult =
-  | { ok: true; cart: CartView }
-  | CartActionFailure;
+export type CartActionResult = { ok: true; cart: CartView } | CartActionFailure;
 
 /** The URL is returned only after an explicit Checkout or Buy-now action. */
 export type CheckoutActionResult =
-  | { ok: true; checkoutUrl: string }
-  | CartActionFailure;
+  { ok: true; checkoutUrl: string } | CartActionFailure;

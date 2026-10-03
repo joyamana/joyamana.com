@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { activeMarket, markets } from "@/config/markets";
+import { markets } from "@/config/markets";
 import type { Collection, Product, ProductCollection } from "./types";
 
 const shopifyCatalogMocks = vi.hoisted(() => ({
@@ -36,7 +36,6 @@ const product: Product = {
     minVariantPrice: { amount: "68.00", currencyCode: "USD" },
     maxVariantPrice: { amount: "68.00", currencyCode: "USD" },
   },
-  compareAtPrice: null,
   featuredImage: null,
   images: [],
   variants: [],
@@ -105,15 +104,14 @@ describe("Shopify catalog facade", () => {
       categories: [{ handle: "bracelets", title: "Pulseras" }],
       collections: [{ handle: "patron-saint", title: "Patron Saint" }],
     });
-    expect(shopifyCatalogMocks.getShopifyCatalogNavigation).toHaveBeenCalledWith(
-      "es-US",
-      {
-        buyerIp: null,
-        cache: "force-cache",
-        revalidate: 300,
-        tags: ["shopify-catalog-navigation"],
-      },
-    );
+    expect(
+      shopifyCatalogMocks.getShopifyCatalogNavigation,
+    ).toHaveBeenCalledWith("es-US", {
+      buyerIp: null,
+      cache: "force-cache",
+      revalidate: 300,
+      tags: ["shopify-catalog-navigation"],
+    });
   });
 
   it("exposes only Shopify collections marked as design series", async () => {
@@ -147,11 +145,11 @@ describe("Shopify catalog facade", () => {
   });
 
   it("uses one enabled US catalog for all three languages", () => {
-    expect(activeMarket.regions).toEqual(["US"]);
-    expect(activeMarket.defaultCurrency).toBe("USD");
-    expect(activeMarket.currencies).toEqual(["USD"]);
-    expect(activeMarket.locales).toEqual(["en-US", "es-US", "zh-Hant-US"]);
-    expect(activeMarket.catalog).toBe("us");
+    expect(markets.us.regions).toEqual(["US"]);
+    expect(markets.us.defaultCurrency).toBe("USD");
+    expect(markets.us.currencies).toEqual(["USD"]);
+    expect(markets.us.locales).toEqual(["en-US", "es-US", "zh-Hant-US"]);
+    expect(markets.us.catalog).toBe("us");
   });
 
   it("keeps planned Canada empty without consulting Shopify", async () => {
@@ -167,7 +165,9 @@ describe("Shopify catalog facade", () => {
 
     expect(markets.ca.status).toBe("planned");
     expect(shopifyCatalogMocks.getShopifyProducts).not.toHaveBeenCalled();
-    expect(shopifyCatalogMocks.getShopifyCatalogNavigation).not.toHaveBeenCalled();
+    expect(
+      shopifyCatalogMocks.getShopifyCatalogNavigation,
+    ).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyProduct).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyCollections).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyCollection).not.toHaveBeenCalled();
@@ -193,7 +193,9 @@ describe("Shopify catalog facade", () => {
       product,
     ]);
 
-    expect(shopifyCatalogMocks.getShopifyProducts).toHaveBeenCalledWith("es-US");
+    expect(shopifyCatalogMocks.getShopifyProducts).toHaveBeenCalledWith(
+      "es-US",
+    );
     expect(shopifyCatalogMocks.getShopifyProduct).toHaveBeenCalledWith(
       "crystal-bracelet",
       "en-US",

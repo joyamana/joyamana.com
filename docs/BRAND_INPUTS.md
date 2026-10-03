@@ -2,7 +2,7 @@
 
 Status: Active input record  
 Owner: Project owner  
-Last updated: 2026-09-11
+Last updated: 2026-10-02
 
 本文件把业务方回复分为 `Confirmed`、`Working` 和 `Pending`：
 
@@ -16,6 +16,9 @@ Last updated: 2026-09-11
 ### Confirmed
 
 - 品牌名称：Joya Mana。
+- 2026-10-02 附件确认的配色：Logo 浅紫 `#d8d2f0`、深棕 `#7b2c06`；花卉辅助色
+  `#ae9bc2`、`#e38c82`、`#f7c19d`、`#da6e51`、`#f4eadf`。业务方已授权执行，
+  用途和可读性组合见 `DESIGN_SYSTEM.md` 与 D-050。
 - 网站字体：英/西语 Newsreader + Manrope；繁中 Noto Serif HK（品牌/PDP 标题）+
   Noto Sans HK（正文、商品卡与操作界面）。拉丁字母与价格数字沿用原有字体。
 
@@ -58,6 +61,10 @@ Last updated: 2026-09-11
 - 天然独件通常不创建无意义 Variant。
 - Custom Crystal 不是 MVP 核心；实时 3D/复杂组合器后置。
 - Subscription 不进入 MVP，不安装 subscription app。
+- Variant `custom.colors` 后台截图已确认为单行文本列表
+  (`list.single_line_text_field`)，不是 Metaobject reference。Shop、Category 和设计
+  系列支持同 Variant 可购买/颜色筛选、展示款价格排序和 PDP 精确选款，见 D-050。
+  业务方确认颜色值尚未填充，后续在 Shopify 补齐；代码不生成商品颜色事实。
 - Gift Card、预售后置；礼品包装可在成本和运营确认后启用。
 - 每件商品随附一份 Joya Mana 专属 guidebook；这是已确认的 package contents，商品、
   About 与履约必须保持一致。

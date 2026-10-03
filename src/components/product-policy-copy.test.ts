@@ -1,12 +1,9 @@
+import { ProductDescription } from "./product-description";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { checkoutDisabledNote } from "./buy-now";
-import {
-  lowStockMessage,
-  ProductDescription,
-  productShippingReturnsSummary,
-} from "./product-purchase";
+import { productShippingReturnsSummary } from "./product-purchase";
 
 describe("product policy copy", () => {
   it("summarizes the confirmed US shipping and return terms", () => {
@@ -21,9 +18,7 @@ describe("product policy copy", () => {
   });
 
   it("keeps a disabled Buy-now explanation customer-facing", () => {
-    expect(checkoutDisabledNote("en-US")).toContain(
-      "temporarily unavailable",
-    );
+    expect(checkoutDisabledNote("en-US")).toContain("temporarily unavailable");
     expect(checkoutDisabledNote("es-US")).toContain(
       "no está disponible temporalmente",
     );
@@ -35,19 +30,13 @@ describe("product policy copy", () => {
     );
   });
 
-  it("localizes exact low-stock counts", () => {
-    expect(lowStockMessage("zh-Hant-US", 1)).toBe("庫存不多 · 僅餘 1 件");
-    expect(lowStockMessage("zh-Hant-US", 3)).toBe("庫存不多 · 僅餘 3 件");
-    expect(productShippingReturnsSummary("zh-Hant-US")).toContain("1–3 個工作天");
-    expect(productShippingReturnsSummary("zh-Hant-US")).toContain("15 天");
-    expect(checkoutDisabledNote("zh-Hant-US")).toContain("你仍可將此商品加入購物袋");
-    expect(lowStockMessage("en-US", 1)).toBe("Low stock · Only 1 left");
-    expect(lowStockMessage("en-US", 3)).toBe("Low stock · Only 3 left");
-    expect(lowStockMessage("es-US", 1)).toBe(
-      "Pocas unidades · Solo queda 1",
+  it("localizes the confirmed US terms and purchase fallback in Chinese", () => {
+    expect(productShippingReturnsSummary("zh-Hant-US")).toContain(
+      "1–3 個工作天",
     );
-    expect(lowStockMessage("es-US", 3)).toBe(
-      "Pocas unidades · Solo quedan 3",
+    expect(productShippingReturnsSummary("zh-Hant-US")).toContain("15 天");
+    expect(checkoutDisabledNote("zh-Hant-US")).toContain(
+      "你仍可將此商品加入購物袋",
     );
   });
 

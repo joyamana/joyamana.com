@@ -6,9 +6,10 @@ import {
   getShopifyEditorialArticle,
   type EditorialKind,
 } from "@/lib/content/shopify-editorial";
-import type { Locale } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import type { PageSearchParams } from "@/lib/seo";
 import {
   buildEditorialStructuredData,
   serializeIndexableStructuredData,
@@ -18,10 +19,12 @@ export async function EditorialDetailPage({
   locale,
   handle,
   kind,
+  searchParams = {},
 }: {
   locale: Locale;
   handle: string;
   kind: EditorialKind;
+  searchParams?: PageSearchParams;
 }) {
   const entry = await getShopifyEditorialArticle(kind, handle, locale);
   if (!entry) notFound();
@@ -33,7 +36,6 @@ export async function EditorialDetailPage({
           zh: "水晶指南",
           en: "Crystal guide",
           es: "Guía de cristales",
-          fr: "Guide des cristaux",
         });
   const path = `${basePath}/${entry.handle}`;
   const structuredData = entry.usedDefaultLanguage
@@ -50,7 +52,6 @@ export async function EditorialDetailPage({
                 zh: "首頁",
                 en: "Home",
                 es: "Inicio",
-                fr: "Accueil",
               }),
               path: "/",
             },
@@ -62,7 +63,7 @@ export async function EditorialDetailPage({
           publishedAt: entry.publishedAt,
           image: entry.image?.url,
         }),
-        { locale, path },
+        { locale, path, searchParams },
       );
 
   return (
@@ -74,7 +75,12 @@ export async function EditorialDetailPage({
         />
       ) : null}
       <Link className="back-link" href={localePath(locale, basePath)}>
-        ← {uiText(locale, { zh: "返回目錄", en: "Back to index", es: "Volver al índice", fr: "Retour à l’index" })}
+        ←{" "}
+        {uiText(locale, {
+          zh: "返回目錄",
+          en: "Back to index",
+          es: "Volver al índice",
+        })}
       </Link>
       <p className="eyebrow">
         {entry.tags[0] ||
@@ -82,7 +88,6 @@ export async function EditorialDetailPage({
             zh: kind === "blog" ? "文章" : "水晶指南",
             en: kind === "blog" ? "Article" : "Crystal guide",
             es: kind === "blog" ? "Artículo" : "Guía de cristales",
-            fr: kind === "blog" ? "Article" : "Guide des cristaux",
           })}
       </p>
       <h1 lang={entry.contentLocale}>{entry.title}</h1>
@@ -98,7 +103,6 @@ export async function EditorialDetailPage({
             zh: "本文目前以英文提供。",
             en: "This article is currently available in English.",
             es: "Este artículo está disponible actualmente en inglés.",
-            fr: "Cet article est actuellement disponible en anglais.",
           })}
         </p>
       ) : null}

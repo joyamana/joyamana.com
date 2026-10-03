@@ -10,12 +10,13 @@ import { shopifyFetch } from "./shopify";
 import type { StorefrontLanguage } from "@/config/locales";
 import {
   STOREFRONT_MAX_QUANTITY,
-  isValidProductQuantity,
+  SHOPIFY_MAX_QUANTITY,
   isValidQuantityRule,
   type ProductQuantityRule,
 } from "./types";
 
-const MAX_CART_LINES = 250;
+const CART_PAGE_SIZE = 250;
+const MAX_CART_LINES = 500;
 export type ShopifyCartLanguage = StorefrontLanguage;
 
 interface ShopifyMoney {
@@ -63,6 +64,7 @@ export interface ShopifyCart {
   };
   lines: {
     nodes: ShopifyCartLine[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
   };
 }
 
@@ -98,10 +100,6 @@ export interface ShopifyCartLineUpdateInput {
   quantity: number;
 }
 
-export interface ShopifyCartRecoveryResult extends ShopifyCartMutationResult {
-  replacedCart: boolean;
-}
-
 export class ShopifyCartError extends Error {
   readonly code: CartActionErrorCode;
 
@@ -112,6 +110,27 @@ export class ShopifyCartError extends Error {
   }
 }
 
+const cartLineFields = `#graphql
+id
+quantity
+cost {
+  totalAmount { amount currencyCode }
+}
+merchandise {
+  ... on ProductVariant {
+    id
+    title
+    availableForSale
+    currentlyNotInStock
+    quantityAvailable
+    price { amount currencyCode }
+    quantityRule { minimum maximum increment }
+    image { url altText width height }
+    product { handle title }
+  }
+}
+`;
+
 const cartFields = `#graphql
   fragment JoyaManaCartFields on Cart {
     id
@@ -120,27 +139,9 @@ const cartFields = `#graphql
     cost {
       subtotalAmount { amount currencyCode }
     }
-    lines(first: ${MAX_CART_LINES}) {
-      nodes {
-        id
-        quantity
-        cost {
-          totalAmount { amount currencyCode }
-        }
-        merchandise {
-          ... on ProductVariant {
-            id
-            title
-            availableForSale
-            currentlyNotInStock
-            quantityAvailable
-            price { amount currencyCode }
-            quantityRule { minimum maximum increment }
-            image { url altText width height }
-            product { handle title }
-          }
-        }
-      }
+    lines(first: ${CART_PAGE_SIZE}) {
+      pageInfo { hasNextPage endCursor }
+      nodes { ${cartLineFields} }
     }
   }
 `;
@@ -275,10 +276,7 @@ function assertLineInput(line: ShopifyCartLineInput) {
 }
 
 function normalizeMoney(money: ShopifyMoney): CartMoney {
-  if (
-    !/^\d+(?:\.\d+)?$/.test(money.amount) ||
-    money.currencyCode !== "USD"
-  ) {
+  if (!/^\d+(?:\.\d+)?$/.test(money.amount) || money.currencyCode !== "USD") {
     throw new ShopifyCartError("SHOPIFY_ERROR");
   }
 
@@ -331,7 +329,11 @@ function mapWarnings(warnings: ShopifyCartWarning[]): CartWarningView[] {
 
 function mapCartLine(line: ShopifyCartLine) {
   const quantityRule = normalizeQuantityRule(line.merchandise.quantityRule);
-  if (!isValidProductQuantity(line.quantity, quantityRule)) {
+  if (
+    !Number.isInteger(line.quantity) ||
+    line.quantity < 1 ||
+    line.quantity > SHOPIFY_MAX_QUANTITY
+  ) {
     throw new ShopifyCartError("SHOPIFY_ERROR");
   }
 
@@ -362,6 +364,13 @@ export function mapShopifyCart(
   cart: ShopifyCart,
   warnings: ShopifyCartWarning[] = [],
 ): CartView {
+  if (
+    cart.lines.pageInfo.hasNextPage ||
+    cart.lines.nodes.reduce((total, line) => total + line.quantity, 0) !==
+      cart.totalQuantity
+  ) {
+    throw new ShopifyCartError("SHOPIFY_ERROR");
+  }
   return {
     lines: cart.lines.nodes.map(mapCartLine),
     totalQuantity: cart.totalQuantity,
@@ -436,6 +445,78 @@ function unwrapMutation(
 
 const noStore = { cache: "no-store" } as const;
 
+const cartLinesPageQuery = `#graphql
+  query JoyaManaCartLinesPage($id: ID!, $after: String!, $language: LanguageCode!)
+    @inContext(country: US, language: $language) {
+    cart(id: $id) {
+      id
+      totalQuantity
+      lines(first: ${CART_PAGE_SIZE}, after: $after) {
+        pageInfo { hasNextPage endCursor }
+        nodes { ${cartLineFields} }
+      }
+    }
+  }
+`;
+
+async function completeCart(cart: ShopifyCart, language: ShopifyCartLanguage) {
+  const nodes = [...cart.lines.nodes];
+  const ids = new Set(nodes.map((line) => line.id));
+  const cursors = new Set<string>();
+  let pageInfo = cart.lines.pageInfo;
+  if (typeof pageInfo.hasNextPage !== "boolean")
+    throw new ShopifyCartError("SHOPIFY_ERROR");
+  while (pageInfo.hasNextPage) {
+    const after = pageInfo.endCursor;
+    if (
+      typeof after !== "string" ||
+      !after.trim() ||
+      cursors.has(after) ||
+      nodes.length >= MAX_CART_LINES
+    ) {
+      throw new ShopifyCartError("SHOPIFY_ERROR");
+    }
+    cursors.add(after);
+    const data = await shopifyFetch<{
+      cart: Pick<ShopifyCart, "id" | "totalQuantity" | "lines"> | null;
+    }>(cartLinesPageQuery, { id: cart.id, after, language }, noStore);
+    const page = data.cart;
+    if (
+      !page ||
+      page.id !== cart.id ||
+      page.totalQuantity !== cart.totalQuantity ||
+      !page.lines.nodes.length
+    ) {
+      throw new ShopifyCartError("SHOPIFY_ERROR");
+    }
+    for (const line of page.lines.nodes) {
+      if (ids.has(line.id)) throw new ShopifyCartError("SHOPIFY_ERROR");
+      ids.add(line.id);
+      nodes.push(line);
+    }
+    pageInfo = page.lines.pageInfo;
+    if (typeof pageInfo.hasNextPage !== "boolean")
+      throw new ShopifyCartError("SHOPIFY_ERROR");
+  }
+  if (
+    ids.size !== nodes.length ||
+    nodes.length > MAX_CART_LINES ||
+    nodes.reduce((total, line) => total + line.quantity, 0) !==
+      cart.totalQuantity
+  ) {
+    throw new ShopifyCartError("SHOPIFY_ERROR");
+  }
+  return { ...cart, lines: { nodes, pageInfo } };
+}
+
+async function completeMutation(
+  payload: ShopifyCartMutationPayload,
+  language: ShopifyCartLanguage,
+) {
+  const result = unwrapMutation(payload);
+  return { ...result, cart: await completeCart(result.cart, language) };
+}
+
 export async function getShopifyCart(
   cartId: string,
   language: ShopifyCartLanguage = "EN",
@@ -446,7 +527,7 @@ export async function getShopifyCart(
     { id: cartId, language },
     noStore,
   );
-  return data.cart;
+  return data.cart ? completeCart(data.cart, language) : null;
 }
 
 export async function createShopifyCart(
@@ -454,6 +535,8 @@ export async function createShopifyCart(
   language: ShopifyCartLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   lines.forEach(assertLineInput);
+  if (lines.length > CART_PAGE_SIZE)
+    throw new ShopifyCartError("INVALID_INPUT");
 
   const data = await shopifyFetch<{
     cartCreate: ShopifyCartMutationPayload;
@@ -469,7 +552,7 @@ export async function createShopifyCart(
     noStore,
   );
 
-  return unwrapMutation(data.cartCreate);
+  return completeMutation(data.cartCreate, language);
 }
 
 export async function addShopifyCartLines(
@@ -478,14 +561,15 @@ export async function addShopifyCartLines(
   language: ShopifyCartLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   assertCartId(cartId);
-  if (lines.length === 0) throw new ShopifyCartError("INVALID_INPUT");
+  if (lines.length === 0 || lines.length > CART_PAGE_SIZE)
+    throw new ShopifyCartError("INVALID_INPUT");
   lines.forEach(assertLineInput);
 
   const data = await shopifyFetch<{
     cartLinesAdd: ShopifyCartMutationPayload;
   }>(cartLinesAddMutation, { cartId, lines, language }, noStore);
 
-  return unwrapMutation(data.cartLinesAdd);
+  return completeMutation(data.cartLinesAdd, language);
 }
 
 export async function updateShopifyCartLines(
@@ -494,7 +578,8 @@ export async function updateShopifyCartLines(
   language: ShopifyCartLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   assertCartId(cartId);
-  if (lines.length === 0) throw new ShopifyCartError("INVALID_INPUT");
+  if (lines.length === 0 || lines.length > CART_PAGE_SIZE)
+    throw new ShopifyCartError("INVALID_INPUT");
   lines.forEach((line) => {
     assertLineId(line.id);
     assertValidCartQuantity(line.quantity);
@@ -504,7 +589,7 @@ export async function updateShopifyCartLines(
     cartLinesUpdate: ShopifyCartMutationPayload;
   }>(cartLinesUpdateMutation, { cartId, lines, language }, noStore);
 
-  return unwrapMutation(data.cartLinesUpdate);
+  return completeMutation(data.cartLinesUpdate, language);
 }
 
 export async function removeShopifyCartLines(
@@ -513,14 +598,15 @@ export async function removeShopifyCartLines(
   language: ShopifyCartLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   assertCartId(cartId);
-  if (lineIds.length === 0) throw new ShopifyCartError("INVALID_INPUT");
+  if (lineIds.length === 0 || lineIds.length > CART_PAGE_SIZE)
+    throw new ShopifyCartError("INVALID_INPUT");
   lineIds.forEach(assertLineId);
 
   const data = await shopifyFetch<{
     cartLinesRemove: ShopifyCartMutationPayload;
   }>(cartLinesRemoveMutation, { cartId, lineIds, language }, noStore);
 
-  return unwrapMutation(data.cartLinesRemove);
+  return completeMutation(data.cartLinesRemove, language);
 }
 
 export async function clearShopifyCart(
@@ -533,34 +619,43 @@ export async function clearShopifyCart(
   const lineIds = cart.lines.nodes.map((line) => line.id);
   if (lineIds.length === 0) return { cart, warnings: [] };
 
-  return removeShopifyCartLines(cartId, lineIds, language);
+  let result: ShopifyCartMutationResult = { cart, warnings: [] };
+  const warnings: ShopifyCartWarning[] = [];
+  for (let offset = 0; offset < lineIds.length; offset += CART_PAGE_SIZE) {
+    result = await removeShopifyCartLines(
+      result.cart.id,
+      lineIds.slice(offset, offset + CART_PAGE_SIZE),
+      language,
+    );
+    warnings.push(...result.warnings);
+  }
+  if (result.cart.lines.nodes.length)
+    throw new ShopifyCartError("SHOPIFY_ERROR");
+  return { cart: result.cart, warnings };
 }
 
 export async function addShopifyCartLineWithRecovery(
   cartId: string | null,
   line: ShopifyCartLineInput,
   language: ShopifyCartLanguage = "EN",
-): Promise<ShopifyCartRecoveryResult> {
+): Promise<ShopifyCartMutationResult> {
   assertLineInput(line);
 
   if (!cartId || !isShopifyCartId(cartId)) {
-    return {
-      ...(await createShopifyCart([line], language)),
-      replacedCart: true,
-    };
+    return createShopifyCart([line], language);
   }
 
   try {
-    return {
-      ...(await addShopifyCartLines(cartId, [line], language)),
-      replacedCart: false,
-    };
+    const cart = await getShopifyCart(cartId, language);
+    if (!cart) throw new ShopifyCartError("CART_EXPIRED");
+    const currentQuantity = cart.lines.nodes
+      .filter((saved) => saved.merchandise.id === line.merchandiseId)
+      .reduce((total, saved) => total + saved.quantity, 0);
+    assertValidCartQuantity(currentQuantity + line.quantity);
+    return await addShopifyCartLines(cartId, [line], language);
   } catch (error) {
     if (error instanceof ShopifyCartError && error.code === "CART_EXPIRED") {
-      return {
-        ...(await createShopifyCart([line], language)),
-        replacedCart: true,
-      };
+      return createShopifyCart([line], language);
     }
     throw error;
   }
@@ -602,9 +697,8 @@ export function validateCheckoutUrl(
     normalizeConfiguredHost(config.storeDomain),
   ].filter((host): host is string => Boolean(host));
   // Prefixes verified against Shopify EN, ES and ZH_TW cart responses.
-  const hasCheckoutPath = /^\/(?:(?:es|zh-tw)\/)?(?:cart\/c|checkouts)(?:\/|$)/.test(
-    url.pathname,
-  );
+  const hasCheckoutPath =
+    /^\/(?:(?:es|zh-tw)\/)?(?:cart\/c|checkouts)(?:\/|$)/.test(url.pathname);
 
   if (
     url.protocol !== "https:" ||
@@ -632,8 +726,7 @@ export function toSafeCartFailure(
   error: unknown,
   language: ShopifyCartLanguage = "EN",
 ): CartActionFailure {
-  const code =
-    error instanceof ShopifyCartError ? error.code : "SHOPIFY_ERROR";
+  const code = error instanceof ShopifyCartError ? error.code : "SHOPIFY_ERROR";
   return {
     ok: false,
     error: {

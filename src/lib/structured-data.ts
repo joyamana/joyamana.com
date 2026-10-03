@@ -1,5 +1,10 @@
 import { isIndexingEnabledFor, siteConfig } from "@/config/site";
-import type { Product } from "@/lib/commerce/types";
+import {
+  isProductVariantPurchasable,
+  type Product,
+} from "@/lib/commerce/types";
+import type { CatalogCard } from "@/lib/commerce/catalog-browse";
+import type { PageSearchParams } from "@/lib/seo";
 import { localePath, type Locale } from "@/lib/i18n/locales";
 
 export interface StructuredBreadcrumb {
@@ -18,6 +23,7 @@ interface CollectionStructuredDataInput {
   description?: string;
   path: string;
   products: Product[];
+  entries?: CatalogCard[];
   locale: Locale;
   breadcrumbs: StructuredBreadcrumb[];
 }
@@ -76,7 +82,10 @@ function productImages(product: Product) {
 
 function productCardImage(product: Product) {
   return (
-    product.featuredImage ?? product.images[0] ?? product.variants[0]?.image ?? null
+    product.featuredImage ??
+    product.images[0] ??
+    product.variants[0]?.image ??
+    null
   );
 }
 
@@ -104,10 +113,9 @@ function buildProductOffers(product: Product, pageUrl: string) {
     url: pageUrl,
     price: variant.price.amount,
     priceCurrency: variant.price.currencyCode,
-    availability:
-      product.availableForSale && variant.availableForSale
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
+    availability: isProductVariantPurchasable(product, variant)
+      ? "https://schema.org/InStock"
+      : "https://schema.org/OutOfStock",
   }));
 }
 
@@ -116,10 +124,7 @@ export function buildProductStructuredData({
   locale,
   breadcrumbs,
 }: ProductStructuredDataInput) {
-  const pageUrl = absoluteStorefrontUrl(
-    locale,
-    `/products/${product.handle}`,
-  );
+  const pageUrl = absoluteStorefrontUrl(locale, `/products/${product.handle}`);
   const images = productImages(product);
   const description = nonEmptyText(product.description);
 
@@ -145,6 +150,7 @@ export function buildCollectionStructuredData({
   description,
   path,
   products,
+  entries,
   locale,
   breadcrumbs,
 }: CollectionStructuredDataInput) {
@@ -171,18 +177,19 @@ export function buildCollectionStructuredData({
         name,
         numberOfItems: products.length,
         itemListElement: products.map((product, index) => {
+          const entry = entries?.[index];
           const productUrl = absoluteStorefrontUrl(
             locale,
-            `/products/${product.handle}`,
+            entry?.path ?? `/products/${product.handle}`,
           );
-          const image = productCardImage(product);
+          const image = entry ? entry.variant.image : productCardImage(product);
           return {
             "@type": "ListItem",
             position: index + 1,
             url: productUrl,
             item: {
               "@type": "Product",
-              "@id": `${productUrl}#product`,
+              "@id": `${absoluteStorefrontUrl(locale, `/products/${product.handle}`)}#product`,
               url: productUrl,
               name: product.title,
               ...(image ? { image: image.url } : {}),
@@ -268,9 +275,14 @@ export function serializeStructuredData(value: unknown) {
 /** Returns no markup unless the page's master, locale, and group gates are open. */
 export function serializeIndexableStructuredData(
   value: unknown,
-  { locale, path }: { locale: Locale; path: string },
+  {
+    locale,
+    path,
+    searchParams,
+  }: { locale: Locale; path: string; searchParams?: PageSearchParams },
 ) {
-  return isIndexingEnabledFor(locale, path)
+  return isIndexingEnabledFor(locale, path) &&
+    !Object.keys(searchParams ?? {}).length
     ? serializeStructuredData(value)
     : null;
 }

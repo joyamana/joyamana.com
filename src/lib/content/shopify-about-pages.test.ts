@@ -63,7 +63,9 @@ function pageNode({
       {
         key: "summary",
         type: "multi_line_text_field",
-        value: isSpanish ? `Resumen de ${label.es}.` : `Summary of ${label.en}.`,
+        value: isSpanish
+          ? `Resumen de ${label.es}.`
+          : `Summary of ${label.en}.`,
       },
       { key: "body", type: "rich_text_field", value: richText(body) },
       { key: "last_updated", type: "date", value: "2026-08-31" },
@@ -158,7 +160,7 @@ describe("Shopify About pages", () => {
       "@inContext(country: $country, language: $language)",
     );
     expect(SHOPIFY_ABOUT_TREE_QUERY).toContain(
-      'metaobject(handle: { type: $type, handle: $handle })',
+      "metaobject(handle: { type: $type, handle: $handle })",
     );
     expect(SHOPIFY_ABOUT_TREE_QUERY).toContain(
       'childPages: field(key: "child_pages")',
@@ -205,17 +207,13 @@ describe("Shopify About pages", () => {
     });
 
     const tree = await getShopifyAboutTree("en-US");
-    expect(tree?.children.map((page) => page.handle)).toEqual([
-      "our-approach",
-    ]);
+    expect(tree?.children.map((page) => page.handle)).toEqual(["our-approach"]);
   });
 
   it("does not render an empty or partially paginated relationship", async () => {
     process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
     process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
-    stubAbout((language) =>
-      aboutResponse({ language, hasNextPage: true }),
-    );
+    stubAbout((language) => aboutResponse({ language, hasNextPage: true }));
 
     await expect(getShopifyAboutTree("en-US")).resolves.toMatchObject({
       children: [],
@@ -265,14 +263,14 @@ describe("Shopify About pages", () => {
     stubAbout((language) =>
       aboutResponse({
         language,
-        translatedHandles:
-          language === "ES" ? ["about", "our-approach"] : [],
+        translatedHandles: language === "ES" ? ["about", "our-approach"] : [],
       }),
     );
 
-    await expect(
-      getPublishedShopifyAboutPaths("es-US"),
-    ).resolves.toEqual(["/about", "/about/our-approach"]);
+    await expect(getPublishedShopifyAboutPaths("es-US")).resolves.toEqual([
+      "/about",
+      "/about/our-approach",
+    ]);
     const tree = await getShopifyAboutTree("es-US");
     expect(tree?.root.usedDefaultLanguage).toBe(false);
     expect(tree?.children).toMatchObject([
@@ -299,9 +297,7 @@ describe("Shopify About pages", () => {
     );
 
     const tree = await getShopifyAboutTree("es-US");
-    expect(tree?.children.map((page) => page.handle)).toEqual([
-      "our-approach",
-    ]);
+    expect(tree?.children.map((page) => page.handle)).toEqual(["our-approach"]);
   });
 
   it("keeps an untranslated root and its children out of the sitemap", async () => {
@@ -309,9 +305,7 @@ describe("Shopify About pages", () => {
     process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
     stubAbout((language) => aboutResponse({ language }));
 
-    await expect(
-      getPublishedShopifyAboutPaths("es-US"),
-    ).resolves.toEqual([]);
+    await expect(getPublishedShopifyAboutPaths("es-US")).resolves.toEqual([]);
   });
 
   it("returns null when the About root is not Storefront-visible", async () => {

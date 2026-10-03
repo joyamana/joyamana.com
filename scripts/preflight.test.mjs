@@ -2,6 +2,21 @@ import { describe, expect, it } from "vitest";
 import { validateEnvironment } from "./preflight.mjs";
 
 describe("environment preflight", () => {
+  it("requires an origin whenever indexing is enabled, including outside Vercel", () => {
+    expect(
+      validateEnvironment({ NEXT_PUBLIC_SITE_INDEXABLE: "true" }),
+    ).toContain(
+      "NEXT_PUBLIC_SITE_URL is required for Vercel or indexable deployments.",
+    );
+  });
+  it.each([" true ", "false ", " "])(
+    "rejects ambiguous boolean values: %s",
+    (value) => {
+      expect(
+        validateEnvironment({ SHOPIFY_CHECKOUT_ENABLED: value }),
+      ).toContain("SHOPIFY_CHECKOUT_ENABLED must be either true or false.");
+    },
+  );
   it("accepts a safe local fail-closed configuration", () => {
     expect(
       validateEnvironment({

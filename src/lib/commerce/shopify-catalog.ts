@@ -1,485 +1,62 @@
 import { isEnabledLocale, shopifyContextForLocale } from "@/config/locales";
 import type { Locale } from "@/lib/i18n/locales";
-import { sanitizeShopifyHtml } from "@/lib/content/shopify-html";
 import { shopifyFetch, type ShopifyFetchOptions } from "./shopify";
+import type { Collection, Product, ProductCollection } from "./types";
 import {
-  isValidQuantityRule,
-  type Collection,
-  type CollectionKind,
-  type Money,
-  type Product,
-  type ProductCollection,
-  type ProductImage,
-  type ProductQuantityRule,
-  type ProductVariant,
-} from "./types";
+  optionalText,
+  mapShopifyProduct,
+  mapVariant,
+  mapCollectionBase,
+  mapCollectionKind,
+} from "./shopify-catalog-mappers";
+import {
+  PRODUCT_PAGE_SIZE,
+  COLLECTION_PAGE_SIZE,
+  VARIANT_PAGE_SIZE,
+  SEARCH_PAGE_SIZE,
+  NAVIGATION_PRODUCT_PAGE_SIZE,
+  NAVIGATION_COLLECTION_PAGE_SIZE,
+  SHOPIFY_PRODUCTS_QUERY,
+  SHOPIFY_PRODUCT_QUERY,
+  SHOPIFY_PRODUCT_VARIANTS_QUERY,
+  SHOPIFY_BROWSE_VARIANTS_QUERY,
+  SHOPIFY_COLLECTIONS_QUERY,
+  SHOPIFY_COLLECTION_QUERY,
+  SHOPIFY_SEARCH_QUERY,
+  SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
+  SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
+  ShopifyCatalogError,
+  type ShopifyConnection,
+  type ShopifyProductNode,
+  type ShopifyProductsData,
+  type ShopifyProductData,
+  type ShopifyProductVariantsData,
+  type ShopifyVariantNode,
+  type ShopifyCollectionsData,
+  type ShopifyCollectionData,
+  type ShopifySearchData,
+  type ShopifyNavigationProductsData,
+  type ShopifyNavigationCollectionsData,
+  type ShopifyCatalogNavigationSnapshot,
+} from "./shopify-catalog-contract";
 
-const PRODUCT_PAGE_SIZE = 100;
-const COLLECTION_PAGE_SIZE = 100;
-const SUMMARY_VARIANT_PAGE_SIZE = 1;
-const VARIANT_PAGE_SIZE = 100;
-const SEARCH_PAGE_SIZE = 24;
-const NAVIGATION_PRODUCT_PAGE_SIZE = 250;
-const NAVIGATION_COLLECTION_PAGE_SIZE = 100;
-
-interface ShopifyMoneyV2 {
-  amount: string;
-  currencyCode: string;
-}
-
-interface ShopifyImage {
-  url: string;
-  altText: string | null;
-  width: number;
-  height: number;
-}
-
-interface ShopifySeo {
-  title: string | null;
-  description: string | null;
-}
-
-interface ShopifyTaxonomyCategory {
-  id: string;
-  name: string;
-}
-
-interface ShopifyMetafield {
-  value: string;
-}
-
-interface ShopifyPageInfo {
-  hasNextPage: boolean;
-  endCursor: string | null;
-}
-
-interface ShopifyConnection<T> {
-  nodes: T[];
-  pageInfo: ShopifyPageInfo;
-}
-
-interface ShopifyQuantityRule {
-  minimum: number;
-  maximum: number | null;
-  increment: number;
-}
-
-interface ShopifyVariantNode {
-  id: string;
-  title: string;
-  availableForSale: boolean;
-  currentlyNotInStock: boolean;
-  quantityAvailable: number | null;
-  price: ShopifyMoneyV2;
-  compareAtPrice: ShopifyMoneyV2 | null;
-  image: ShopifyImage | null;
-  selectedOptions: Array<{ name: string; value: string }>;
-  quantityRule: ShopifyQuantityRule;
-}
-
-export interface ShopifyProductNode {
-  id: string;
-  handle: string;
-  title: string;
-  description: string;
-  descriptionHtml: string;
-  availableForSale: boolean;
-  productModel: ShopifyMetafield | null;
-  category: ShopifyTaxonomyCategory | null;
-  seo: ShopifySeo;
-  featuredImage: ShopifyImage | null;
-  images: { nodes: ShopifyImage[] };
-  priceRange: {
-    minVariantPrice: ShopifyMoneyV2;
-    maxVariantPrice: ShopifyMoneyV2;
-  };
-  variants: ShopifyConnection<ShopifyVariantNode>;
-}
-
-interface ShopifyCollectionBase {
-  id: string;
-  handle: string;
-  title: string;
-  description: string;
-  seo: ShopifySeo;
-  image: ShopifyImage | null;
-  collectionKind: ShopifyMetafield | null;
-}
-
-interface ShopifyCollectionSummaryNode extends ShopifyCollectionBase {
-  products: { nodes: Array<{ id: string }> };
-}
-
-interface ShopifyCollectionNode extends ShopifyCollectionBase {
-  products: ShopifyConnection<ShopifyProductNode>;
-}
-
-interface ShopifyProductsData {
-  products: ShopifyConnection<ShopifyProductNode>;
-}
-
-interface ShopifyProductData {
-  product: ShopifyProductNode | null;
-}
-
-interface ShopifyCollectionsData {
-  collections: ShopifyConnection<ShopifyCollectionSummaryNode>;
-}
-
-interface ShopifyCollectionData {
-  collection: ShopifyCollectionNode | null;
-}
-
-interface ShopifyProductVariantsData {
-  product: {
-    id: string;
-    variants: ShopifyConnection<ShopifyVariantNode>;
-  } | null;
-}
-
-interface ShopifySearchData {
-  search: ShopifyConnection<
-    | ({ __typename: "Product" } & ShopifyProductNode)
-    | { __typename: string; id: string }
-  >;
-}
-
-interface ShopifyNavigationProductNode {
-  id: string;
-  category: { id: string } | null;
-}
-
-interface ShopifyNavigationCollectionNode {
-  id: string;
-  handle: string;
-  title: string;
-  collectionKind: ShopifyMetafield | null;
-  products: { nodes: Array<{ id: string }> };
-}
-
-interface ShopifyNavigationProductsData {
-  products: ShopifyConnection<ShopifyNavigationProductNode>;
-}
-
-interface ShopifyNavigationCollectionsData {
-  collections: ShopifyConnection<ShopifyNavigationCollectionNode>;
-}
-
-export interface ShopifyCatalogNavigationSnapshot {
-  productCategoryIds: string[];
-  collections: Array<{
-    handle: string;
-    title: string;
-    kind: CollectionKind | undefined;
-  }>;
-}
-
-export type ShopifyCatalogErrorKind = "unsupported-locale" | "invalid-data";
-
-export class ShopifyCatalogError extends Error {
-  readonly kind: ShopifyCatalogErrorKind;
-
-  constructor(kind: ShopifyCatalogErrorKind, message: string) {
-    super(message);
-    this.name = "ShopifyCatalogError";
-    this.kind = kind;
-  }
-}
-
-const imageFields = `#graphql
-  fragment CatalogImageFields on Image {
-    url
-    altText
-    width
-    height
-  }
-`;
-
-const moneyFields = `#graphql
-  fragment CatalogMoneyFields on MoneyV2 {
-    amount
-    currencyCode
-  }
-`;
-
-const variantFields = `#graphql
-  fragment CatalogVariantFields on ProductVariant {
-    id
-    title
-    availableForSale
-    currentlyNotInStock
-    quantityAvailable
-    price {
-      ...CatalogMoneyFields
-    }
-    compareAtPrice {
-      ...CatalogMoneyFields
-    }
-    image {
-      ...CatalogImageFields
-    }
-    selectedOptions {
-      name
-      value
-    }
-    quantityRule {
-      minimum
-      maximum
-      increment
-    }
-  }
-  ${moneyFields}
-  ${imageFields}
-`;
-
-const productFields = `#graphql
-  fragment CatalogProductFields on Product {
-    id
-    handle
-    title
-    description
-    descriptionHtml
-    availableForSale
-    productModel: metafield(namespace: "custom", key: "product_model") {
-      value
-    }
-    category {
-      id
-      name
-    }
-    seo {
-      title
-      description
-    }
-    featuredImage {
-      ...CatalogImageFields
-    }
-    images(first: 10) {
-      nodes {
-        ...CatalogImageFields
-      }
-    }
-    priceRange {
-      minVariantPrice {
-        ...CatalogMoneyFields
-      }
-      maxVariantPrice {
-        ...CatalogMoneyFields
-      }
-    }
-    variants(first: ${SUMMARY_VARIANT_PAGE_SIZE}) {
-      nodes {
-        ...CatalogVariantFields
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${variantFields}
-`;
-
-export const SHOPIFY_PRODUCTS_QUERY = `#graphql
-  query CatalogProducts(
-    $country: CountryCode!
-    $language: LanguageCode!
-    $first: Int!
-    $after: String
-  ) @inContext(country: $country, language: $language) {
-    products(first: $first, after: $after) {
-      nodes {
-        ...CatalogProductFields
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${productFields}
-`;
-
-export const SHOPIFY_PRODUCT_QUERY = `#graphql
-  query CatalogProduct(
-    $country: CountryCode!
-    $language: LanguageCode!
-    $handle: String!
-  ) @inContext(country: $country, language: $language) {
-    product(handle: $handle) {
-      ...CatalogProductFields
-    }
-  }
-  ${productFields}
-`;
-
-export const SHOPIFY_PRODUCT_VARIANTS_QUERY = `#graphql
-  query CatalogProductVariants(
-    $country: CountryCode!
-    $language: LanguageCode!
-    $id: ID!
-    $first: Int!
-    $after: String!
-  ) @inContext(country: $country, language: $language) {
-    product(id: $id) {
-      id
-      variants(first: $first, after: $after) {
-        nodes {
-          ...CatalogVariantFields
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-      }
-    }
-  }
-  ${variantFields}
-`;
-
-export const SHOPIFY_COLLECTIONS_QUERY = `#graphql
-  query CatalogCollections(
-    $country: CountryCode!
-    $language: LanguageCode!
-    $first: Int!
-    $after: String
-  ) @inContext(country: $country, language: $language) {
-    collections(first: $first, after: $after) {
-      nodes {
-        id
-        handle
-        title
-        description
-        seo {
-          title
-          description
-        }
-        image {
-          ...CatalogImageFields
-        }
-        collectionKind: metafield(namespace: "custom", key: "collection_kind") {
-          value
-        }
-        products(first: 1) {
-          nodes {
-            id
-          }
-        }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${imageFields}
-`;
-
-export const SHOPIFY_COLLECTION_QUERY = `#graphql
-  query CatalogCollection(
-    $country: CountryCode!
-    $language: LanguageCode!
-    $handle: String!
-    $first: Int!
-    $after: String
-  ) @inContext(country: $country, language: $language) {
-    collection(handle: $handle) {
-      id
-      handle
-      title
-      description
-      seo {
-        title
-        description
-      }
-      image {
-        ...CatalogImageFields
-      }
-      collectionKind: metafield(namespace: "custom", key: "collection_kind") {
-        value
-      }
-      products(first: $first, after: $after) {
-        nodes {
-          ...CatalogProductFields
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-      }
-    }
-  }
-  ${productFields}
-`;
-
-export const SHOPIFY_SEARCH_QUERY = `#graphql
-  query CatalogSearch(
-    $country: CountryCode!
-    $language: LanguageCode!
-    $query: String!
-    $first: Int!
-    $after: String
-  ) @inContext(country: $country, language: $language) {
-    search(first: $first, after: $after, query: $query, types: [PRODUCT]) {
-      nodes {
-        __typename
-        ... on Product {
-          ...CatalogProductFields
-        }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${productFields}
-`;
-
-export const SHOPIFY_NAVIGATION_PRODUCTS_QUERY = `#graphql
-  query CatalogNavigationProducts(
-    $country: CountryCode!
-    $language: LanguageCode!
-    $first: Int!
-    $after: String
-  ) @inContext(country: $country, language: $language) {
-    products(first: $first, after: $after) {
-      nodes {
-        id
-        category { id }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-`;
-
-export const SHOPIFY_NAVIGATION_COLLECTIONS_QUERY = `#graphql
-  query CatalogNavigationCollections(
-    $country: CountryCode!
-    $language: LanguageCode!
-    $first: Int!
-    $after: String
-  ) @inContext(country: $country, language: $language) {
-    collections(first: $first, after: $after) {
-      nodes {
-        id
-        handle
-        title
-        collectionKind: metafield(namespace: "custom", key: "collection_kind") {
-          value
-        }
-        products(first: 1) { nodes { id } }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-`;
+export { mapShopifyProduct } from "./shopify-catalog-mappers";
+export {
+  ShopifyCatalogError,
+  SHOPIFY_PRODUCTS_QUERY,
+  SHOPIFY_PRODUCT_QUERY,
+  SHOPIFY_PRODUCT_VARIANTS_QUERY,
+  SHOPIFY_BROWSE_VARIANTS_QUERY,
+  SHOPIFY_COLLECTIONS_QUERY,
+  SHOPIFY_COLLECTION_QUERY,
+  SHOPIFY_SEARCH_QUERY,
+  SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
+  SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
+} from "./shopify-catalog-contract";
+export type {
+  ShopifyProductNode,
+  ShopifyCatalogNavigationSnapshot,
+} from "./shopify-catalog-contract";
 
 function shopifyContext(locale: Locale) {
   if (isEnabledLocale(locale)) return shopifyContextForLocale(locale);
@@ -488,11 +65,6 @@ function shopifyContext(locale: Locale) {
     "unsupported-locale",
     "This locale is not enabled for the Shopify catalog.",
   );
-}
-
-function optionalText(value: string | null | undefined) {
-  const normalized = value?.trim();
-  return normalized ? normalized : undefined;
 }
 
 async function collectConnectionNodes<T extends { id: string }>(
@@ -552,237 +124,6 @@ async function collectConnectionNodes<T extends { id: string }>(
     "invalid-data",
     `Shopify returned an invalid ${connectionName} page.`,
   );
-}
-
-function mapMoney(value: ShopifyMoneyV2, field: string): Money {
-  if (!/^\d+(?:\.\d+)?$/.test(value.amount)) {
-    throw new ShopifyCatalogError(
-      "invalid-data",
-      `Shopify returned an invalid amount for ${field}.`,
-    );
-  }
-
-  if (value.currencyCode !== "USD") {
-    throw new ShopifyCatalogError(
-      "invalid-data",
-      `Shopify returned a currency outside the US USD context for ${field}.`,
-    );
-  }
-
-  return {
-    amount: value.amount,
-    currencyCode: "USD",
-  };
-}
-
-function isStrictlyHigherAmount(compareAt: string, price: string) {
-  const [compareWholeRaw, compareFraction = ""] = compareAt.split(".");
-  const [priceWholeRaw, priceFraction = ""] = price.split(".");
-  const compareWhole = compareWholeRaw.replace(/^0+(?=\d)/, "");
-  const priceWhole = priceWholeRaw.replace(/^0+(?=\d)/, "");
-
-  if (compareWhole.length !== priceWhole.length) {
-    return compareWhole.length > priceWhole.length;
-  }
-  if (compareWhole !== priceWhole) return compareWhole > priceWhole;
-
-  const fractionLength = Math.max(
-    compareFraction.length,
-    priceFraction.length,
-  );
-  return (
-    compareFraction.padEnd(fractionLength, "0") >
-    priceFraction.padEnd(fractionLength, "0")
-  );
-}
-
-function mapImage(
-  image: ShopifyImage | null | undefined,
-  fallbackAlt: string,
-): ProductImage | null {
-  if (
-    !image ||
-    !image.url ||
-    !Number.isInteger(image.width) ||
-    !Number.isInteger(image.height) ||
-    image.width <= 0 ||
-    image.height <= 0
-  ) {
-    return null;
-  }
-
-  return {
-    url: image.url,
-    altText: optionalText(image.altText) ?? fallbackAlt,
-    width: image.width,
-    height: image.height,
-  };
-}
-
-function mapQuantityRule(
-  rule: ShopifyQuantityRule | null | undefined,
-  variantId: string,
-): ProductQuantityRule {
-  if (!rule) {
-    throw new ShopifyCatalogError(
-      "invalid-data",
-      `Shopify returned an invalid quantity rule for variant ${variantId}.`,
-    );
-  }
-
-  if (!isValidQuantityRule(rule)) {
-    throw new ShopifyCatalogError(
-      "invalid-data",
-      `Shopify returned an invalid quantity rule for variant ${variantId}.`,
-    );
-  }
-
-  return {
-    minimum: rule.minimum,
-    maximum: rule.maximum,
-    increment: rule.increment,
-  };
-}
-
-function mapInventory(
-  variant: ShopifyVariantNode,
-): Pick<ProductVariant, "currentlyNotInStock" | "quantityAvailable"> {
-  if (
-    typeof variant.currentlyNotInStock !== "boolean" ||
-    (variant.quantityAvailable !== null &&
-      (!Number.isInteger(variant.quantityAvailable) ||
-        variant.quantityAvailable < 0))
-  ) {
-    throw new ShopifyCatalogError(
-      "invalid-data",
-      `Shopify returned invalid inventory for variant ${variant.id}.`,
-    );
-  }
-
-  return {
-    currentlyNotInStock: variant.currentlyNotInStock,
-    quantityAvailable: variant.quantityAvailable,
-  };
-}
-
-export function mapShopifyProduct(node: ShopifyProductNode): Product {
-  const images = node.images.nodes.flatMap((image) => {
-    const mapped = mapImage(image, node.title);
-    return mapped ? [mapped] : [];
-  });
-  const featuredImage =
-    mapImage(node.featuredImage, node.title) ?? images[0] ?? null;
-
-  if (!node.variants.nodes.length) {
-    throw new ShopifyCatalogError(
-      "invalid-data",
-      "Shopify returned a product without a merchandise variant.",
-    );
-  }
-
-  const variants: ProductVariant[] = node.variants.nodes.map((variant) => {
-    const price = mapMoney(variant.price, `variant ${variant.id} price`);
-    const compareAtCandidate = variant.compareAtPrice
-      ? mapMoney(
-          variant.compareAtPrice,
-          `variant ${variant.id} compare-at price`,
-        )
-      : null;
-    const compareAtPrice =
-      compareAtCandidate?.currencyCode === price.currencyCode &&
-      isStrictlyHigherAmount(compareAtCandidate.amount, price.amount)
-        ? compareAtCandidate
-        : null;
-
-    return {
-      id: variant.id,
-      title: variant.title,
-      availableForSale: variant.availableForSale,
-      ...mapInventory(variant),
-      price,
-      compareAtPrice,
-      image:
-        mapImage(variant.image, `${node.title} — ${variant.title}`) ??
-        featuredImage ??
-        images[0] ??
-        null,
-      selectedOptions: variant.selectedOptions.map(({ name, value }) => ({
-        name,
-        value,
-      })),
-      quantityRule: mapQuantityRule(variant.quantityRule, variant.id),
-    };
-  });
-  const compareAtPrice =
-    variants.find(
-      (variant) => variant.availableForSale && variant.compareAtPrice,
-    )?.compareAtPrice ??
-    variants.find((variant) => variant.compareAtPrice)?.compareAtPrice ??
-    null;
-
-  return {
-    id: node.id,
-    handle: node.handle,
-    title: node.title,
-    description: node.description,
-    descriptionHtml: sanitizeShopifyHtml(node.descriptionHtml),
-    seoTitle: optionalText(node.seo.title),
-    seoDescription: optionalText(node.seo.description),
-    availableForSale: node.availableForSale,
-    priceRange: {
-      minVariantPrice: mapMoney(
-        node.priceRange.minVariantPrice,
-        `product ${node.id} minimum price`,
-      ),
-      maxVariantPrice: mapMoney(
-        node.priceRange.maxVariantPrice,
-        `product ${node.id} maximum price`,
-      ),
-    },
-    compareAtPrice,
-    featuredImage,
-    images,
-    variants,
-    model: mapProductModel(node.productModel),
-    category: node.category
-      ? { id: node.category.id, name: node.category.name }
-      : null,
-  };
-}
-
-function mapProductModel(
-  metafield: ShopifyMetafield | null | undefined,
-): Product["model"] {
-  const value = optionalText(metafield?.value);
-  if (value === "standard") return "standard";
-  if (value === "natural_variation") return "natural-variation";
-  if (value === "one_of_one") return "one-of-one";
-  return undefined;
-}
-
-function mapCollectionKind(
-  metafield: ShopifyMetafield | null | undefined,
-): CollectionKind | undefined {
-  const value = optionalText(metafield?.value);
-  return value === "category" ||
-    value === "design_series" ||
-    value === "merchandising"
-    ? value
-    : undefined;
-}
-
-function mapCollectionBase(node: ShopifyCollectionBase): Collection {
-  const image = mapImage(node.image, node.title);
-  return {
-    id: node.id,
-    handle: node.handle,
-    title: node.title,
-    description: node.description,
-    seoTitle: optionalText(node.seo.title),
-    seoDescription: optionalText(node.seo.description),
-    image,
-    kind: mapCollectionKind(node.collectionKind),
-  };
 }
 
 export async function getShopifyProducts(
@@ -849,6 +190,137 @@ export async function getShopifyProduct(
     ...product,
     variants: { ...product.variants, nodes: variants },
   });
+}
+
+export async function hydrateShopifyBrowseProducts(
+  products: Product[],
+  locale: Locale,
+): Promise<Product[]> {
+  if (!products.length) return products;
+  const started = Date.now();
+  let requests = 0;
+  const load = <T>(query: string, variables: Record<string, unknown>) => {
+    const remaining = 20_000 - (Date.now() - started);
+    if (++requests > 100 || remaining <= 0) {
+      throw new ShopifyCatalogError(
+        "invalid-data",
+        "The complete catalog could not be read within its request budget.",
+      );
+    }
+    return shopifyFetch<T>(query, variables, {
+      cache: "no-store",
+      timeoutMs: Math.min(10_000, remaining),
+    });
+  };
+  const batches: Product[][] = [];
+  for (let index = 0; index < products.length; index += 8)
+    batches.push(products.slice(index, index + 8));
+  const hydrated = new Map<string, Product>();
+  let nextBatch = 0;
+
+  async function readBatch(batch: Product[], languageLocale: Locale) {
+    const context = shopifyContext(languageLocale);
+    const data = await load<{
+      nodes: Array<{
+        id: string;
+        variants: ShopifyConnection<ShopifyVariantNode>;
+      } | null>;
+    }>(SHOPIFY_BROWSE_VARIANTS_QUERY, {
+      ...context,
+      ids: batch.map((product) => product.id),
+    });
+    const nodes = new Map(
+      data.nodes.flatMap((node) => (node ? [[node.id, node] as const] : [])),
+    );
+    if (
+      data.nodes.length !== batch.length ||
+      nodes.size !== batch.length ||
+      batch.some((product) => !nodes.has(product.id))
+    ) {
+      throw new ShopifyCatalogError(
+        "invalid-data",
+        "Shopify changed the catalog while its variants were being read.",
+      );
+    }
+    const results = new Map<string, ShopifyVariantNode[]>();
+    // Complete each connection before accepting any results. Three batch workers bound concurrency.
+    for (const product of batch) {
+      const variants = await collectConnectionNodes(
+        nodes.get(product.id)!.variants,
+        async (after) => {
+          const page = await load<ShopifyProductVariantsData>(
+            SHOPIFY_PRODUCT_VARIANTS_QUERY,
+            {
+              ...context,
+              id: product.id,
+              first: VARIANT_PAGE_SIZE,
+              after,
+            },
+          );
+          if (page.product?.id !== product.id) {
+            throw new ShopifyCatalogError(
+              "invalid-data",
+              "Shopify changed a product while its variants were being read.",
+            );
+          }
+          return page.product.variants;
+        },
+        "browse variants",
+      );
+      if (!variants.length)
+        throw new ShopifyCatalogError(
+          "invalid-data",
+          "Shopify returned a product without variants.",
+        );
+      results.set(product.id, variants);
+    }
+    return results;
+  }
+
+  async function worker() {
+    while (nextBatch < batches.length) {
+      const batch = batches[nextBatch++];
+      const localized = await readBatch(batch, locale);
+      // Translate labels independently; matching identities must remain in the default language.
+      const needsCanonicalColors =
+        locale !== "en-US" &&
+        [...localized.values()].some((variants) =>
+          variants.some((variant) => variant.colors),
+        );
+      const canonical = needsCanonicalColors
+        ? await readBatch(batch, "en-US")
+        : localized;
+      for (const product of batch) {
+        const variants = localized.get(product.id)!;
+        const canonicalVariants = new Map(
+          canonical.get(product.id)!.map((variant) => [variant.id, variant]),
+        );
+        if (
+          canonicalVariants.size !== variants.length ||
+          variants.some((variant) => !canonicalVariants.has(variant.id))
+        ) {
+          throw new ShopifyCatalogError(
+            "invalid-data",
+            "Shopify changed the variants between language reads.",
+          );
+        }
+        hydrated.set(product.id, {
+          ...product,
+          variants: variants.map((variant, index) =>
+            mapVariant(
+              { ...variant, colors: canonicalVariants.get(variant.id)!.colors },
+              product.title,
+              index,
+            ),
+          ),
+        });
+      }
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(3, batches.length) }, worker),
+  );
+  return products.map((product) => hydrated.get(product.id)!);
 }
 
 export async function getShopifyCollections(
@@ -1001,7 +473,8 @@ export async function getShopifyCatalogNavigation(
     collections: collections.flatMap((collection) => {
       const handle = optionalText(collection.handle);
       const title = optionalText(collection.title);
-      if (!handle || !title || collection.products.nodes.length === 0) return [];
+      if (!handle || !title || collection.products.nodes.length === 0)
+        return [];
       return [
         {
           handle,

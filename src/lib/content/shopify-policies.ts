@@ -1,8 +1,11 @@
-import { shopifyContextForLocale, defaultLocaleForMarket } from "@/lib/i18n/shopify-context";
+import {
+  shopifyContextForLocale,
+  defaultLocaleForMarket,
+} from "@/lib/i18n/shopify-context";
 import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
 import { shopifyFetch } from "@/lib/commerce/shopify";
-import { sanitizeShopifyHtml } from "./shopify-html";
+import { hasVisibleHtmlText, sanitizeShopifyHtml } from "./shopify-html";
 
 export const shopifyPolicyKinds = [
   "shipping",
@@ -40,7 +43,6 @@ export interface StorefrontPolicy {
   usedDefaultLanguage: boolean;
 }
 
-
 export const SHOPIFY_POLICIES_QUERY = `#graphql
   query ShopifyPolicies($country: CountryCode!, $language: LanguageCode!)
     @inContext(country: $country, language: $language) {
@@ -53,10 +55,7 @@ export const SHOPIFY_POLICIES_QUERY = `#graphql
   }
 `;
 
-function selectedPolicy(
-  data: ShopifyPoliciesData,
-  kind: ShopifyPolicyKind,
-) {
+function selectedPolicy(data: ShopifyPoliciesData, kind: ShopifyPolicyKind) {
   const policyByKind = {
     shipping: data.shop.shippingPolicy,
     returns: data.shop.refundPolicy,
@@ -69,16 +68,12 @@ function selectedPolicy(
 
 async function fetchPolicies(locale: Locale) {
   const context = shopifyContextForLocale(locale);
-  return shopifyFetch<ShopifyPoliciesData>(
-    SHOPIFY_POLICIES_QUERY,
-    context,
-    {
-      buyerIp: null,
-      cache: "force-cache",
-      revalidate: 300,
-      tags: ["shopify-policies"],
-    },
-  );
+  return shopifyFetch<ShopifyPoliciesData>(SHOPIFY_POLICIES_QUERY, context, {
+    buyerIp: null,
+    cache: "force-cache",
+    revalidate: 300,
+    tags: ["shopify-policies"],
+  });
 }
 
 function hasPublishedBody(policy: ShopifyPolicyNode | null) {
@@ -113,14 +108,17 @@ export async function getShopifyPolicies(
         return [kind, null];
       }
 
+      const html = sanitizeShopifyPolicyHtml(requestedPolicy.body);
+      if (!hasVisibleHtmlText(html)) return [kind, null];
+
       const defaultPolicy = defaultData
         ? selectedPolicy(defaultData, kind)
         : requestedPolicy;
       const usedDefaultLanguage = Boolean(
         locale !== defaultLocale &&
-          defaultPolicy &&
-          requestedPolicy.title === defaultPolicy.title &&
-          requestedPolicy.body === defaultPolicy.body,
+        defaultPolicy &&
+        requestedPolicy.title === defaultPolicy.title &&
+        requestedPolicy.body === defaultPolicy.body,
       );
 
       return [
@@ -130,7 +128,7 @@ export async function getShopifyPolicies(
           kind,
           title: requestedPolicy.title.trim(),
           url: requestedPolicy.url,
-          html: sanitizeShopifyPolicyHtml(requestedPolicy.body),
+          html,
           contentLocale: usedDefaultLanguage ? defaultLocale : locale,
           requestedLocale: locale,
           usedDefaultLanguage,

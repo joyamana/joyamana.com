@@ -25,7 +25,6 @@ function product(
       minVariantPrice: { amount: "35.00", currencyCode: "USD" },
       maxVariantPrice: { amount: "35.00", currencyCode: "USD" },
     },
-    compareAtPrice: null,
     featuredImage: null,
     images: [],
     variants: [],
@@ -40,7 +39,9 @@ beforeEach(() => {
 
 describe("Home page", () => {
   it("renders Chinese UI and links while retaining Shopify English product content", async () => {
-    mocks.getProducts.mockResolvedValue([product("english-piece", "English piece", true)]);
+    mocks.getProducts.mockResolvedValue([
+      product("english-piece", "English piece", true),
+    ]);
     const html = renderToStaticMarkup(await HomePage({ locale: "zh-Hant-US" }));
     expect(mocks.getProducts).toHaveBeenCalledWith("us", "zh-Hant-US");
     expect(html).toContain("天然形態，自有意義。");
@@ -64,12 +65,8 @@ describe("Home page", () => {
   });
 
   it("presents the About-aligned intention with a localized About link", async () => {
-    const english = renderToStaticMarkup(
-      await HomePage({ locale: "en-US" }),
-    );
-    const spanish = renderToStaticMarkup(
-      await HomePage({ locale: "es-US" }),
-    );
+    const english = renderToStaticMarkup(await HomePage({ locale: "en-US" }));
+    const spanish = renderToStaticMarkup(await HomePage({ locale: "es-US" }));
 
     expect(english).toContain("A crystal can be a way back to yourself.");
     expect(english).toContain('href="/about"');

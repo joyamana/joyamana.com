@@ -23,6 +23,35 @@ afterEach(() => {
 });
 
 describe("Shopify policies", () => {
+  it.each(["<h1>Shipping</h1>", "<p>&nbsp;</p>", "<script>alert(1)</script>"])(
+    "does not publish an empty sanitized policy: %s",
+    async (body) => {
+      process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
+      process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockImplementation(() =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                data: {
+                  shop: {
+                    refundPolicy: null,
+                    privacyPolicy: null,
+                    termsOfService: null,
+                    shippingPolicy: policy("3", "Shipping", body),
+                  },
+                },
+              }),
+            ),
+          ),
+        ),
+      );
+      expect(await getShopifyPolicy("shipping", "en-US")).toBeNull();
+      expect(await getPublishedShopifyPolicyPaths("en-US")).toEqual([]);
+    },
+  );
+
   it("queries all Shopify policy sources in the requested market context", () => {
     expect(SHOPIFY_POLICIES_QUERY).toContain(
       "@inContext(country: $country, language: $language)",
@@ -53,27 +82,35 @@ describe("Shopify policies", () => {
     process.env.SHOPIFY_STORE_DOMAIN = "joya-mana.myshopify.com";
     process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN = "private-test-token";
     const englishPolicies = {
-      refundPolicy: policy("1", "Refund Policy", "<h1>Refund Policy</h1>"),
-      privacyPolicy: policy("2", "Privacy Policy", "<h1>Privacy Policy</h1>"),
+      refundPolicy: policy(
+        "1",
+        "Refund Policy",
+        "<h1>Refund Policy</h1><p>Return terms.</p>",
+      ),
+      privacyPolicy: policy(
+        "2",
+        "Privacy Policy",
+        "<h1>Privacy Policy</h1><p>Privacy terms.</p>",
+      ),
       shippingPolicy: policy(
         "3",
         "Shipping Policy",
-        "<h1>Shipping Policy</h1>",
+        "<h1>Shipping Policy</h1><p>Shipping terms.</p>",
       ),
       termsOfService: policy(
         "4",
         "Terms of Service",
-        "<h1>Terms of Service</h1>",
+        "<h1>Terms of Service</h1><p>Store terms.</p>",
       ),
     };
     vi.stubGlobal(
       "fetch",
       vi.fn().mockImplementation(() =>
         Promise.resolve(
-          new Response(
-            JSON.stringify({ data: { shop: englishPolicies } }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          ),
+          new Response(JSON.stringify({ data: { shop: englishPolicies } }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
         ),
       ),
     );
@@ -86,9 +123,7 @@ describe("Shopify policies", () => {
       usedDefaultLanguage: true,
     });
     expect(fetch).toHaveBeenCalledTimes(2);
-    await expect(getPublishedShopifyPolicyPaths("es-US")).resolves.toEqual(
-      [],
-    );
+    await expect(getPublishedShopifyPolicyPaths("es-US")).resolves.toEqual([]);
   });
 
   it("publishes an actual Spanish translation without a fallback notice", async () => {
@@ -110,8 +145,8 @@ describe("Shopify policies", () => {
                     "1",
                     isSpanish ? "Política de devoluciones" : "Refund Policy",
                     isSpanish
-                      ? "<h1>Política de devoluciones</h1>"
-                      : "<h1>Refund Policy</h1>",
+                      ? "<h1>Política de devoluciones</h1><p>Condiciones de devolución.</p>"
+                      : "<h1>Refund Policy</h1><p>Return terms.</p>",
                   ),
                   privacyPolicy: null,
                   shippingPolicy: null,
@@ -137,37 +172,37 @@ describe("Shopify policies", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockImplementation(() =>
-        Promise.resolve(new Response(
-          JSON.stringify({
-            data: {
-              shop: {
-                refundPolicy: null,
-                privacyPolicy: null,
-                shippingPolicy: policy(
-                  "3",
-                  "Shipping Policy",
-                  "<h1>Shipping Policy</h1><p>Ships in 1–3 days.</p>",
-                ),
-                termsOfService: policy(
-                  "4",
-                  "Terms of Service",
-                  "<h1>Terms of Service</h1><p>Store terms.</p>",
-                ),
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: {
+                shop: {
+                  refundPolicy: null,
+                  privacyPolicy: null,
+                  shippingPolicy: policy(
+                    "3",
+                    "Shipping Policy",
+                    "<h1>Shipping Policy</h1><p>Ships in 1–3 days.</p>",
+                  ),
+                  termsOfService: policy(
+                    "4",
+                    "Terms of Service",
+                    "<h1>Terms of Service</h1><p>Store terms.</p>",
+                  ),
+                },
               },
-            },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        )),
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        ),
       ),
     );
 
-    await expect(getShopifyPolicy("shipping", "en-US")).resolves.toMatchObject(
-      {
-        kind: "shipping",
-        title: "Shipping Policy",
-        html: "<p>Ships in 1–3 days.</p>",
-      },
-    );
+    await expect(getShopifyPolicy("shipping", "en-US")).resolves.toMatchObject({
+      kind: "shipping",
+      title: "Shipping Policy",
+      html: "<p>Ships in 1–3 days.</p>",
+    });
     await expect(getShopifyPolicy("terms", "en-US")).resolves.toMatchObject({
       kind: "terms",
       title: "Terms of Service",

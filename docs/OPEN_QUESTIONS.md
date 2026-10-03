@@ -2,8 +2,8 @@
 
 Status: Active — 只记录当前未解决输入；按 `Blocks` 限定影响范围
 Owner: Project owner  
-Last updated: 2026-09-11
-Resolved input: `BRAND_INPUTS.md`、D-047、D-048
+Last updated: 2026-10-03
+Resolved input: `BRAND_INPUTS.md`、D-047、D-048、D-050
 
 本文件不保存已解决问题和历史审计快照。历史记录见
 [`archive/open-questions-history-2026-08-to-09.md`](archive/open-questions-history-2026-08-to-09.md)。
@@ -22,6 +22,10 @@ Resolved input: `BRAND_INPUTS.md`、D-047、D-048
 
 ## External setup and release dependencies
 
+- [ ] 按业务方安排补齐 Variant `custom.colors`（已确认单行文本列表），核验已填值
+  Storefront 可读与 Variant 图片绑定。当前 93 个 Variant 均未填；不阻塞无颜色浏览、
+  可购买筛选和排序。颜色网页绑定已完成并用隔离数据验证，后台新值自动生效；
+  真实颜色筛选/跨颜色图片验收待数据准备后完成（D-050），无需再补网页代码。
 - [ ] 完成 zh-Hant-US 商品、系列、About/Accessibility、Policies 等香港用语译文，及
   托管 Checkout/通知审校、人工设备验收。Shopify 语言已发布、dev 代码已接入；
   不阻塞允许英文回退的页面访问；Core/Commerce/Policies 的索引矩阵已按 D-045 获批，

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import type { Locale } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import {
   localePath,
   languageOptionsFor,
@@ -12,6 +12,7 @@ import {
 import { uiText } from "@/lib/i18n/text";
 
 import { localeRegistry } from "@/config/locales";
+import { commerceLanguageQueryFromSearch } from "@/lib/commerce/catalog-browse";
 
 function LanguageIcon() {
   return (
@@ -28,6 +29,7 @@ function LanguageIcon() {
 
 export function LanguageSwitch({ locale }: { locale: Locale }) {
   const [open, setOpen] = useState(false);
+  const [commerceQuery, setCommerceQuery] = useState("");
   const panelId = useId();
   const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +39,6 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
     zh: "選擇語言",
     en: "Choose language",
     es: "Elegir idioma",
-    fr: "Choisir la langue",
   });
 
   useEffect(() => {
@@ -75,7 +76,12 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
         aria-label={`${selectorLabel}: ${localeRegistry[locale].shortLabel}`}
         className="language-switch__trigger"
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          setCommerceQuery(
+            commerceLanguageQueryFromSearch(basePath, window.location.search),
+          );
+          setOpen((current) => !current);
+        }}
       >
         <LanguageIcon />
         <span>{localeRegistry[locale].shortLabel}</span>
@@ -90,14 +96,12 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
           className="language-switch__panel"
           id={panelId}
         >
-          <p className="language-switch__title">
-            {selectorLabel}
-          </p>
+          <p className="language-switch__title">{selectorLabel}</p>
           <div className="language-switch__options">
             {options.map((item) => (
               <Link
                 aria-current={item.locale === locale ? "page" : undefined}
-                href={localePath(item.locale, basePath)}
+                href={`${localePath(item.locale, basePath)}${commerceQuery ? `?${commerceQuery}` : ""}`}
                 hrefLang={item.locale}
                 key={item.locale}
                 lang={item.locale}

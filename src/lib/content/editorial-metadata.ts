@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { enabledLocales, type Locale } from "@/lib/i18n/locales";
+import { enabledLocales } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { uiText } from "@/lib/i18n/text";
 import {
   buildMetadata,
@@ -23,7 +24,6 @@ function fallbackTitle(kind: EditorialKind, locale: Locale) {
         zh: "水晶指南",
         en: "Crystal Guide",
         es: "Guía de cristales",
-        fr: "Guide des cristaux",
       });
 }
 
@@ -33,13 +33,11 @@ function fallbackDescription(kind: EditorialKind, locale: Locale) {
         zh: "關於水晶飾物、選購知識與個人意義的故事及實用指南。",
         en: "Stories and practical guidance about crystal objects, clear buying, and personal meaning.",
         es: "Historias y orientación práctica sobre cristales, compras claras y significado personal.",
-        fr: "Histoires et conseils pratiques sur les cristaux, l’achat éclairé et le sens personnel.",
       })
     : uiText(locale, {
         zh: "認識水晶的特質、保養方法與傳統文化寓意。",
         en: "A reference guide to crystal characteristics, care, and traditional associations.",
         es: "Una guía de referencia sobre las características, el cuidado y las asociaciones tradicionales de los cristales.",
-        fr: "Un guide de référence sur les caractéristiques, l’entretien et les associations traditionnelles des cristaux.",
       });
 }
 

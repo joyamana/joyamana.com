@@ -1,3 +1,8 @@
+import {
+  shopifyStoreDomainPattern,
+  shopifyApiVersionPattern,
+  defaultShopifyApiVersion,
+} from "@/config/environment.mjs";
 /**
  * Server-only Shopify Storefront API client.
  *
@@ -79,7 +84,7 @@ function getShopifyConfig() {
   const domain = process.env.SHOPIFY_STORE_DOMAIN?.trim().toLowerCase();
   const privateToken = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN?.trim();
   const version = (
-    process.env.SHOPIFY_STOREFRONT_API_VERSION || "2026-07"
+    process.env.SHOPIFY_STOREFRONT_API_VERSION || defaultShopifyApiVersion
   ).trim();
 
   if (!domain || !privateToken) {
@@ -89,14 +94,14 @@ function getShopifyConfig() {
     );
   }
 
-  if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(domain)) {
+  if (!shopifyStoreDomainPattern.test(domain)) {
     throw new ShopifyRequestError(
       "configuration",
       "SHOPIFY_STORE_DOMAIN must be a bare myshopify.com hostname.",
     );
   }
 
-  if (!/^\d{4}-(?:01|04|07|10)$/.test(version)) {
+  if (!shopifyApiVersionPattern.test(version)) {
     throw new ShopifyRequestError(
       "configuration",
       "SHOPIFY_STOREFRONT_API_VERSION must be a dated quarterly API version.",
@@ -213,11 +218,4 @@ export async function shopifyFetch<T>(
   }
 
   return payload.data;
-}
-
-export function shopifyMutation<T>(
-  mutation: string,
-  variables: Record<string, unknown> = {},
-) {
-  return shopifyFetch<T>(mutation, variables, { cache: "no-store" });
 }

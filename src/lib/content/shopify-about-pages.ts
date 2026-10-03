@@ -1,8 +1,11 @@
-import { shopifyContextForLocale, defaultLocaleForMarket } from "@/lib/i18n/shopify-context";
+import {
+  shopifyContextForLocale,
+  defaultLocaleForMarket,
+} from "@/lib/i18n/shopify-context";
 import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
 import { shopifyFetch } from "@/lib/commerce/shopify";
-import { renderShopifyRichText } from "./shopify-content-pages";
+import { contentFieldValue, parseContentPageFields } from "./content-page";
 
 export const shopifyAboutRootHandle = "about";
 
@@ -60,7 +63,6 @@ export interface StorefrontAboutTree {
   children: StorefrontAboutPage[];
 }
 
-
 export const SHOPIFY_ABOUT_TREE_QUERY = `#graphql
   query ShopifyAboutTree(
     $country: CountryCode!
@@ -110,45 +112,6 @@ async function fetchAboutTree(locale: Locale) {
   );
 }
 
-function fieldValue(
-  fields: Map<string, MetaobjectField>,
-  key: string,
-  type: string,
-) {
-  const field = fields.get(key);
-  return field?.type === type ? field.value?.trim() ?? "" : "";
-}
-
-function richTextExcerpt(source: string, maximumLength = 180) {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(source);
-  } catch {
-    return "";
-  }
-
-  function textNodes(value: unknown): string[] {
-    if (!value || typeof value !== "object") return [];
-    const node = value as { type?: unknown; value?: unknown; children?: unknown };
-    if (node.type === "text" && typeof node.value === "string") {
-      return [node.value];
-    }
-    return Array.isArray(node.children)
-      ? node.children.flatMap(textNodes)
-      : [];
-  }
-
-  const normalized = textNodes(parsed).join(" ").replace(/\s+/g, " ").trim();
-  if (normalized.length <= maximumLength) return normalized;
-
-  const candidate = normalized.slice(0, maximumLength + 1);
-  const lastWordBoundary = candidate.lastIndexOf(" ");
-  const truncated = candidate
-    .slice(0, lastWordBoundary >= maximumLength * 0.65 ? lastWordBoundary : maximumLength)
-    .trimEnd();
-  return `${truncated}…`;
-}
-
 function parseAboutPage(
   node: ContentPageNode | null | undefined,
   expectedHandle?: string,
@@ -163,46 +126,16 @@ function parseAboutPage(
   }
 
   const fields = new Map(node.fields.map((field) => [field.key, field]));
-  const title = fieldValue(fields, "title", "single_line_text_field");
-  const richText = fieldValue(fields, "body", "rich_text_field");
-  const lastUpdated = fieldValue(fields, "last_updated", "date");
-  const seoTitle = fieldValue(
-    fields,
-    "seo_title",
-    "single_line_text_field",
-  );
-  const seoDescription = fieldValue(
-    fields,
-    "seo_description",
-    "multi_line_text_field",
-  );
-  const html = renderShopifyRichText(richText);
-  const bodyExcerpt = richTextExcerpt(richText);
-
-  if (
-    !title ||
-    !richText ||
-    !html ||
-    !bodyExcerpt ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(lastUpdated) ||
-    !seoTitle
-  ) {
-    return null;
-  }
-
+  const content = parseContentPageFields(fields);
+  if (!content) return null;
   return {
     id: node.id,
     handle: node.handle,
-    title,
+    ...content,
     navigationTitle:
-      fieldValue(fields, "navigation_title", "single_line_text_field") ||
-      title,
-    summary: fieldValue(fields, "summary", "multi_line_text_field"),
-    richText,
-    html,
-    lastUpdated,
-    seoTitle,
-    seoDescription: seoDescription || bodyExcerpt,
+      contentFieldValue(fields, "navigation_title", "single_line_text_field") ||
+      content.title,
+    summary: contentFieldValue(fields, "summary", "multi_line_text_field"),
   };
 }
 
@@ -222,7 +155,7 @@ function usesDefaultLanguage(
     requested.seoDescription === defaultPage.seoDescription ||
     Boolean(
       defaultPage.summary &&
-        (!requested.summary || requested.summary === defaultPage.summary),
+      (!requested.summary || requested.summary === defaultPage.summary),
     )
   );
 }
@@ -290,10 +223,9 @@ export async function getShopifyAboutTree(
   if (locale !== defaultLocale && !defaultRoot) return null;
 
   const defaultChildren = new Map(
-    (
-      defaultData
-        ? referencedChildren(defaultData)
-        : referencedChildren(requestedData)
+    (defaultData
+      ? referencedChildren(defaultData)
+      : referencedChildren(requestedData)
     ).map((page) => [page.handle, page]),
   );
   const children = referencedChildren(requestedData).flatMap((page) => {
@@ -308,12 +240,9 @@ export async function getShopifyAboutTree(
   };
 }
 
-export function aboutPageForHandle(
-  tree: StorefrontAboutTree,
-  handle?: string,
-) {
+export function aboutPageForHandle(tree: StorefrontAboutTree, handle?: string) {
   return handle
-    ? tree.children.find((page) => page.handle === handle) ?? null
+    ? (tree.children.find((page) => page.handle === handle) ?? null)
     : tree.root;
 }
 

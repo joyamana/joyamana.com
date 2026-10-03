@@ -31,10 +31,22 @@ function page(
 
 describe("About content page", () => {
   it("keeps all Chinese child links and readable English fallback per D-049", () => {
-    const fallback = { requestedLocale: "zh-Hant-US", contentLocale: "en-US", usedDefaultLanguage: true } as const;
+    const fallback = {
+      requestedLocale: "zh-Hant-US",
+      contentLocale: "en-US",
+      usedDefaultLanguage: true,
+    } as const;
     const root = page("about", "About", fallback);
-    const tree = {root, children: [page("founder", "Founder", fallback), page("approach", "Approach", fallback)]};
-    const html = renderToStaticMarkup(<AboutContentPage locale="zh-Hant-US" page={root} tree={tree} />);
+    const tree = {
+      root,
+      children: [
+        page("founder", "Founder", fallback),
+        page("approach", "Approach", fallback),
+      ],
+    };
+    const html = renderToStaticMarkup(
+      <AboutContentPage locale="zh-Hant-US" page={root} tree={tree} />,
+    );
     expect(html).toContain('href="/zh-hant-us/about/founder"');
     expect(html).toContain('href="/zh-hant-us/about/approach"');
     expect(html).toContain("本頁內容目前以英文提供。");

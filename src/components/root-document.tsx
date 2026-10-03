@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Newsreader } from "next/font/google";
 import { brand } from "@/config/brand";
 import { siteConfig } from "@/config/site";
-import type { Locale } from "@/lib/i18n/locales";
+import type { EnabledLocale as Locale } from "@/config/locales";
 import { uiText } from "@/lib/i18n/text";
 import { CartProvider } from "./cart-provider";
 
@@ -56,10 +56,11 @@ export function RootDocument({
             zh: "跳至主要內容",
             en: "Skip to content",
             es: "Saltar al contenido",
-            fr: "Aller au contenu",
           })}
         </a>
-        <CartProvider checkoutEnabled={checkoutEnabled}>{children}</CartProvider>
+        <CartProvider checkoutEnabled={checkoutEnabled}>
+          {children}
+        </CartProvider>
       </body>
     </html>
   );

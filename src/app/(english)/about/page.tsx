@@ -16,6 +16,10 @@ export async function generateMetadata({
   });
 }
 
-export default function Page() {
-  return <AboutPage locale="en-US" />;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<PageSearchParams>;
+}) {
+  return <AboutPage searchParams={await searchParams} locale="en-US" />;
 }

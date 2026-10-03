@@ -12,8 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   return buildPolicyPageMetadata({
     title: "送貨政策",
-    description:
-      "查看 Joya Mana 美國訂單的送貨政策。",
+    description: "查看 Joya Mana 美國訂單的送貨政策。",
     kind: "shipping",
     locale: "zh-Hant-US",
     searchParams: await searchParams,

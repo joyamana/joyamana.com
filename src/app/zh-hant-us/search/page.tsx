@@ -11,5 +11,7 @@ export default async function Page({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  return <SearchPage locale="zh-Hant-US" query={(await searchParams).q || ""} />;
+  return (
+    <SearchPage locale="zh-Hant-US" query={(await searchParams).q || ""} />
+  );
 }
