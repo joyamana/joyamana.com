@@ -1,308 +1,145 @@
-# Commerce Specification
+# 商品与交易规格
 
-Status: Working — Catalog/Cart 核心切片已实现，生产 Catalog 与 hardening 待完成
-Owner: Commerce / Operations  
-Last updated: 2026-10-03
-Related: `MVP_PRD.md`, `TECH_SPEC.md`, `CUSTOMER_LIFECYCLE.md`
+Shopify 管理商品、价格、库存、折扣、Cart、订单、支付与 Checkout。前端负责帮助理解、
+选款和恢复错误，不复制最终定价、订单或支付系统。后台维护步骤见
+[Shopify 维护](SHOPIFY_CATALOG_SETUP.md)。
 
-Shopify Admin 配置步骤见 `SHOPIFY_CATALOG_SETUP.md`。
+## 商品模型与事实
 
-## 1. 原则
+| `custom.product_model` | 含义 | 图片与履约 |
+|---|---|---|
+| `standard` | 可重复履约的标准商品 | 使用真实代表图，说明合理天然差异 |
+| `natural_variation` | 天然差异较明显的标准商品 | 明确范围，必要时展示多件真实样本 |
+| `one_of_one` | 天然独件 | 一物一图、一物一库存，quantity=1 |
 
-- Shopify 是商品、价格、库存、折扣、Cart、Checkout、Order 的唯一事实来源。
-- 前端帮助理解和选择，不自行决定最终价格、税费、配送或可售性。
-- 游客购买优先；账户和 Loyalty 不得阻碍首次交易。
-- 天然水晶的个体差异必须诚实表达，图片代表性与实际交付物不能含糊。
-- 商品信息完整度优先于 SKU 数量。
+每件正式商品必须明确模型，不用库存、标题或图片推断。缺失/无效模型不输出猜测，
+也不因此禁止正常购买。天然独件不建立无意义 Variant；差异应独立为 Product 时不能
+强行合并。标准设计搭配独件也须说明收到具体实物还是同规格相似件。
+每件商品随附 Joya Mana 专属 guidebook，这是已确认的履约内容。
 
-## 2. Catalog 模型与当前状态
+Shopify 核心字段包括身份/handle、发布状态、title/description/SEO、真实媒体、Category、
+options/Variants/SKU、价格/compare-at/currency、可售性、库存和数量规则。
+SKU 唯一；GTIN/MPN 仅在真实存在时填写。当前实体不保留 vendor、Product Type/tags、
+Variant SKU 或 inventory policy；需要 feed/披露时明确用途再接入，不从名称猜测。
 
-D-020 已接受同时支持 repeatable、natural-variation 和 one-of-a-kind 这组业务边界。
-当前代码读取 Product `custom.product_model`，并将 `standard`、`natural_variation`、
-`one_of_one` 映射为明确的消费者模型；字段缺失或值无效时 fail closed。正式商品仍需
-在 Shopify 逐件填充该字段。exact/representative image 披露尚未实现。具体 assortment、
-七脉轮资料、SKU 和礼赠运营已移出网站开放问题，由 Shopify/业务运营流程管理；网站不
-复制内部审批清单、margin 或包装成本。每件商品附带专属 guidebook 已获业务方确认。
-当前 Headless Catalog 是网站运行时商品事实来源，但每件公开商品仍必须满足字段完整度、
-真实披露、可售性和发布验收要求。
+正式商品还需真实材料、尺寸/weight/fit、天然差异、可验证来源、处理/染色/涂层/合成披露、
+制作事实、exact/representative image、package contents、care/安全与相关内容。
+这些知识字段、图片代表性披露和内容关联尚未接入 mapper，不能用本地文案制造资料。
 
-### Repeatable product
+## 商品类别与设计系列
 
-同一 Product 下的商品可以重复履约，Variant 代表 size、metal、length、
-crystal 等真实选项。共享 PDP 可展示代表性图片，但必须说明天然差异。
+`/shop` 为全商品，`/category/{handle}` 表达 Shopify Standard Product Category，
+`/collections/{handle}` 表达原创设计系列。分类按 taxonomy ID allowlist，不按 tag、
+标题或 Product Type 推断。公开类别须非空；类别别名的重定向见内容与索引规格。
 
-### One-of-a-kind product
+系列须 Headless 可见、非空且 `custom.collection_kind=design_series`。
+Product `custom.design_series` reference 用于系列归集，Collection 管理 URL/SEO/成员，
+Design Series Metaobject 用于故事和视觉，不另建第二个可索引系列页。
+当前只读取 Collection 类型、描述、媒体和商品；reference/story/lookbook 尚未接入。
 
-每件实物有独立媒体、属性和 inventory quantity=1。售出后保持有用归档、
-推荐相近商品或按下架规则处理，不能继续接受加购。
+运营用 automated/merchandising Collection 可辅助后台归组，不自动成为公开系列或索引页。
+类别与系列须有各自唯一意图、标题和真实说明；存在但缺少有效描述的系列仍可浏览商品，
+详情 noindex，不输出 Schema 或进入 sitemap。
 
-### Hybrid
+## Variant 筛选、展示与深链接
 
-标准设计下使用天然独件。需要明确买家收到的是“图片中的具体实物”还是
-“同规格相似实物”；该决定影响图片、Product/Variant、库存和退换政策。
+- Variant `custom.colors` 为 `list.single_line_text_field`，校验 JSON 字符串数组，
+  trim/NFC/大小写规范化去重。空/无效值不匹配，颜色事实不从图、名称、tag 或品牌色推断。
+- 默认语言原值作为稳定键，翻译字段按 Variant ID 补取默认键；显示词典只负责界面翻译，
+  未知颜色保留原标签。不复制各语言商品或自行合并颜色别名。
+- Shop、Category、设计系列完整读取范围内 Variant：颜色组内 OR，与 `available=1`
+  跨组 AND，所有条件须在同一款命中。默认保留售罄商品，无结果返回 200。
+- 每个 Product 只显示一张卡片，按可购买优先、Shopify POSITION、ID 固定选款。
+  `sort=price-asc|price-desc` 按该款十进制 USD 单价全局排序，平价稳定按来源/ID，
+  切排序不能换款；不能用商品最低价替代展示款价格。
+- 图片、款式、价格、状态、链接和适用 Schema 共用选定 Variant。网页颜色读取、筛选、
+  图价和 PDP 初选已接通，后台新值在下一次 no-store 请求自动读取，无需再做网页绑定。
+- 列表按 POSITION 完整分页，轻量批次/并发和读取预算由代码集中维护。
+  cursor、重复 ID、归属或预算失败时显示错误，不能展示静默截断的结果。
+- 卡片使用 Variant image；Storefront 可能提供产品图后备，非空不证明专图已绑定，
+  后台需逐款核对。PDP 所选款无图时允许真实产品图库后备，仍不得制造商品图。
+- `/products/{handle}?variant={numericID}` 服务端验证归属并初始化同款。
+  无参数按相同固定规则选款；售罄款保留选择并禁购；失效/外商品 ID 要求重新选择。
+- 切款同步 URL、图价、minimum 和购买动作；返回/前进、刷新与三语言切换保留允许的业务参数。
+  更新中与需要选款不显示成售罄。参数索引行为统一见内容与索引规格。
 
-每个正式商品在发布前按其实际交付物选择 Product/Variant 层级；不为了复用模板
-把应当独立的天然独件强行并成 Variant。
+## 价格、数量与可购买状态
 
-## 3. Product 数据契约
+所有金额来自当前 Market 的 Shopify 返回；展示 currency code，真实 compare-at 才显示原价。
+优惠码、折扣、税费、运费和最终总价由 Shopify 校验；不得承诺尚未计算的总价或虚构优惠。
 
-### Shopify 核心字段
+列表、PDP 和 Offer 共用 Product/Variant 可售性及数量规则。PDP/Bag 的新提交须为正整数，
+满足 minimum/maximum/increment、站内每款 99 件上限，以及已知可用库存。
+上限须向下对齐步进，例如 increment=2 时最大可选 98。
 
-- GID、handle、status、published state
-- title、description、vendor/brand
-- product category/type、tags（仅后台组织，不自动建索引页）
-- media
-- options、variants
-- SKU
-- price、compare-at price、currency
-- availability、`quantityAvailable`、`currentlyNotInStock`、contextual
-  quantity rule、inventory policy
-- selling plan（MVP 不使用，除非另行批准）
-- SEO title/description（如采用）
+只有 `currentlyNotInStock=false` 且 `quantityAvailable` 为已知非负整数时，才使用保守库存
+上限。`currentlyNotInStock=true` 可能允许继续销售，库存 `null` 不等于 0；两者仍受
+Shopify 可售性、数量规则、mutation warning/user error 和最终 Checkout 校验。
+此标志不能证明 inventory policy，不用它声称禁止超卖或保证发货时效。
 
-### 必需的商品知识字段
+准确 `Only X left` 当前暂停。若恢复，只能用于明确的 standard/natural_variation、
+所选款可售、可靠禁止超卖、精确库存 1–3 且步进为 1 的 PDP。独件、未知模型/库存和
+超卖排除；商品卡不显示，不用红色警报、倒计时或虚假紧迫性。
 
-- 主要 crystal/mineral 引用
-- product form/type
-- materials 和 metal
-- dimensions、weight、size/fit
-- color 与天然差异说明
-- origin（只在可验证时）
-- treatments、dye、coating、synthetic/lab-grown 披露
-- craftsmanship/process（只在可验证时）
-- exact item vs representative image
-- package contents
-- care 与使用安全
-- shipping/returns policy reference
-- related Guide/Article
+暂时售罄通常保留 PDP 信息并禁止购买；永久下架按内容价值和等价替代处理，不批量跳首页。
+当前不启用预售、Subscription 或 Gift Card；新增运营模式须另行确认。
 
-当前 Shopify mapper 已覆盖 Product/Variant、SEO、经过 allowlist 清理的格式化商品描述、
-媒体、Category、价格、可售性、库存数量、quantity rule 和 product model，但尚未读取 exact/representative image、
-materials、dimensions、care、origin/treatment、package contents 或 related content
-等 Product knowledge metafields。这些字段的 definition、填充、翻译和映射是正式
-商品发布阻塞，不能用本地文案补齐。
+## Bag 与 Checkout
 
-当前 normalized entity 也尚未保留 vendor、product type/tags、Variant SKU 或
-inventory policy；若生产 feed、运营披露或 Schema 需要这些字段，必须先明确用途并
-从 Shopify 映射，不能从 handle/title 推断。
+Bag 支持创建、读取、加购、修改数量、移除、恢复和清空。行价格与小计来自 Shopify；
+税费与运费在 Checkout 确认。商品标题/图片链接保留 Variant 与当前语言。
 
-### 标识符
+- 读取最多 500 行，单页和单次 mutation input 最多 250，清空分批执行。
+  校验分页 cursor、重复行、Cart 一致性和总数量；不能把前 250 行当作全部。
+- 已存行只校验结构有效，不能因数量规则/库存变化令整袋不可读。显示行级问题并允许
+  直接调整到当前有效数量；无法满足 minimum 时提示移除或重选。
+- 新加购同时检查同款合并后不超过 99；服务端不能只依赖按钮限制。
+- mutation 失败或部分成功时刷新实际剩余内容并保留错误，不声称清空成功。
+  过期 Cart 的加购可安全建立新袋；不能因任意 API 故障静默丢失现有购物袋。
+- Checkout 点击后重读最新 Cart，校验每行库存/规则/可售性并取得最新 URL。
+  失败时返回安全的最新 Bag 供修正，不让问题行直接进入结账。
+- Buy now 使用所选 Variant/数量/Market 的独立单商品 Cart，检查实际返回行和阻塞警告，
+  不清空、改写或携带已有 Bag。
+- Checkout URL 是 Shopify 不透明地址，按获准 host/locale 校验，不手工改写。
+  cookie、secret 和 IP 边界见技术规格。
 
-- 每个可售 Variant 有唯一 SKU。
-- GTIN/MPN 只在真实存在时提供，不为 Schema 或 feed 编造。
-- Product group/Variant ID 在 Shopify、Analytics 和 Schema mapper 中稳定。
+支付、地址验证、折扣、税费、配送和订单创建归 Shopify。Next.js 不收集、代理或保存卡数据。
+订单确认、交易 Email 与 Order Status 使用 Shopify，游客可访问，不建第二份订单系统。
+开关关闭时购买/结账说明不可用，不模拟成功；业务支付批准与实际部署验收见项目说明。
 
-### Variant 颜色与列表展示（D-050）
+## 配送、退换与客服
 
-- `custom.colors` 为 Variant `list.single_line_text_field`，读取 `type/value`，按 JSON
-  字符串数组校验；trim、NFC 和大小写规范化去重，空/无效值不匹配颜色筛选。
-  默认语言原值是稳定匹配依据，已翻译字段按 Variant ID 补取默认语言键；显示词典
-  只负责界面翻译，未知值保留原标签，不从图、标题、tag 或 Product 颜色推断。
-- 颜色字段 → facet → 同 Variant 匹配 → 固定选款 → 图片/单价/深链接 → PDP 初选的
-  网页路径已完整实现。新值在下一次 no-store 请求自动读取，不需新增代码、手工绑定
-  颜色与网页图片或重新部署。后台媒体关联是商品事实，网页直接使用选中 Variant image。
-- 2026-10-03 起筛选和排序采用即时 GET 链接，移除 Apply；客户端乐观反馈与 Next 路由
-  同步，允许连续多选，清除保留排序。原生浮层和链接在无 JS 时仍可操作，URL/历史与
-  服务器返回结果一致；不在浏览器独立隐藏商品来假装完成筛选。
-- Shop/Category/设计系列详情完整读取当前范围内的 variants，初批与后续分页显式
-  `POSITION` 升序。轻量批次 8 个 Product、并发 3，Variant 补齐阶段上限 100 次请求、
-  20 秒；遵循已有 cursor/重复 ID/归属校验，失败或保护触发显示错误，不展示部分成功。
-  Category 先限制 taxonomy，系列沿用真实成员；首页、导航和 sitemap 保持轻量查询。
-- 默认含已发布售罄商品；`available=1` 只保留能满足 minimum 的可购买款式。
-  重复 `color` 组内 OR、与可购买跨组 AND，所有条件必须落在同一个 Variant。
-  每件商品按可购买优先、POSITION、ID 固定选一款，不按多个款式重复展示。
-- 卡片图片、款式名、价格、状态、链接与适用 Schema 来自同一展示实体；
-  `sort=price-asc|price-desc` 按展示款的十进制 USD 单价全局排序，平价沿用来源顺序
-  再按 Product ID。切排序不换款，不使用商品最低价或格式化价格排序。
-- 卡片和 PDP 使用 Shopify Variant image，应用层不再回退到产品图。Storefront API
-  本身可能回退到产品图，因此非空不证明已绑定款式图；运营须核对后台图片关系。
-- 深链接 `/products/{handle}?variant={numericID}` 服务端验证归属并精确选款。
-  无参数使用相同固定规则；有效售罄款保留并禁购；无效/已删除/外商品款式禁购并提示
-  重选。切款同步 URL、图价、minimum、购物动作，历史和跨语言保留允许的业务参数。
-- 列表/PDP/Variant 按钮/Offer 共用 Product + Variant `availableForSale` 与数量规则
-  判断。已知库存约束 minimum；`quantityAvailable=null` 不等于 0，允许继续销售仍尊重
-  Shopify 当前可售性，不另承诺发货时效。Cart/Checkout 再次读取并校验实时事实。
-- 参数页维持 noindex、干净 canonical（符合部署/readiness 门禁时）、无 hreflang/
-  可索引 Schema/参数 sitemap 条目。无结果为 200，未知范围仍 404，API 故障为重试状态。
+Shipping/Returns 的现行正文、履约模式、法律实体和审批责任已确认。订单通常在
+1–3 个工作日内处理，合格退货可在收货后 15 天内申请；运费承担、原始运费和退款时间
+按已发布 Shopify 正文执行。政策变更须同步 Shopify/Checkout、政策页、PDP 摘要和适用
+Schema，不能在不同触点保留旧承诺。特殊地址、费率和税费待决项见 Roadmap。
 
-2026-10-02 只读检查为 46 Products / 93 Variants；所有 `custom.colors` 返回 null。
-业务方确认尚未填值、后续补齐。网页颜色实现已完成，独立颜色 fixture 用于验证完整
-链路；后台补齐只涉及真实数据与关联核验，不再留下网页绑定任务，不自动迁移字段。
+客服、隐私与公开联系统一 `info@joyamana.com`；收信、负责人/备援、外发认证和回复流程
+已确认。当前 Email-only，页面不承诺未批准的时段或 SLA。
+损坏、丢件、退货和订单修改按真实流程处理，不把支持请求视为营销订阅。
 
-## 4. Category 与 Collection
+现有关闭的 Contact Server Action + Resend 适配层仅为未来投递准备，不存留言、不创建
+Shopify Customer。启用前批准供应商的数据边界、保留期、成本、退出方式、发件域、
+生产限流与隐私说明；表单数据只用于本次服务请求。
 
-- Shopify Standard Product Category 表达商品是什么；当前公开商品类别使用
-  `/category/{handle}`，只为至少有一个当前 US Catalog 可见商品的受支持类别开放。
-- `/collections/{handle}` 只表达具备独立名称、故事和视觉语言的原创设计系列；
-  Shopify Collection 必须有 `custom.collection_kind=design_series` 才能进入该路由。
-- 当前 `Patron Saint` 已满足非空、Headless 可见和 `design_series` 类型门禁；其
-  description/SEO 为空，Metaobject reference 与 story/lookbook 尚未接入，因此只完成
-  基础商品系列页，不代表完整系列叙事验收。
-- 商品类别可以在 Shopify 以 automated Collection 辅助后台归集，但不得同时以
-  `/collections/bracelets` 和 `/category/bracelets` 暴露两个公开列表 URL。
-- 设计系列成员由 Product 的结构化 `custom.design_series` Metaobject reference
-  驱动 automated Collection；不得用自由文本 tag 猜测系列。
-- Merchandising Collection（New Arrivals、Gifts 等）继续作为运营分组，只有在真实
-  购买意图、库存和独特说明充分时才另行批准公开入口。
-- Collection 可以辅助晶体类型或礼赠场景，但不能无节制组合。
-- tags、vendor、自动筛选结果不自动变成可索引 landing page。
-- 每个公开 Category/Collection 需要唯一 title、intro、策展逻辑和至少一个有效商品。
-- 空或薄 Category/Collection 不进入 sitemap；运营方决定隐藏、noindex 或补充。
-- 同一意图不能同时由多个不同 URL 竞争。
+## 交易身份、营销与评论
 
-## 5. Media
+Checkout Email/Account Email 用于订单或服务，不等于 Newsletter/SMS 营销同意。
+营销须分别明确选择，记录来源、时间、语言和版本，提供取消订阅与偏好更新；
+不预勾选、不用拒绝营销阻断购买、不把未订阅订单邮箱直接导入营销发送。
+Abandoned checkout、复购、cross-sell 和 review request 按获批同意与工具规则执行。
 
-- 独件商品必须使用该件实物的真实图片。
-- Repeatable product 说明颜色、纹理和形态可能存在天然差异。
-- 首图、细节、尺度、佩戴/场景、包装和必要披露各有明确用途。
-- 不用生成式图片伪装真实商品、来源、认证或客户使用结果。
-- 后台保存高质量源图；前端由 Shopify CDN/Next Image 输出响应式格式。
+当前没有 Reviews。未来启用须有真实来源、采集/审核、激励披露、删除/导出和评分规则；
+不虚构评论、空星级或认证，不因评分低不当抑制真实负评。仅页面可见的真实评分进入 Schema。
+账户、复购与营销候选统一放 Roadmap，不预建会员系统。
 
-## 6. Price 与 Promotion
+## 测量与验收
 
-- 所有展示金额来自当前 US market Shopify response。
-- compare-at price 只有真实、合法且 Shopify 配置有效时展示。
-- 优惠码、自动折扣、Gift Card 与 member price 最终由 Shopify 验证。
-- 不实现虚假倒计时、虚假“仅剩 X 件”或默认勾选加购。
-- 税费和配送未计算前使用准确限定语，不承诺未经确认的总价。
+Shopify Order 是订单与收入事实来源。未来事件仅在实际动作成功后发送，失败加购不能记
+为 `add_to_cart`，点击 Checkout 不能推断 `purchase`。商品/款式/currency/value 使用动作
+发生时的同一实体；purchase 每单一次，与 Shopify 测试订单、金额和商品对账。
+不向事件发送 PII 或完整 Cart ID；consent 与追踪边界见技术规格。
 
-## 7. Inventory 与商品生命周期
-
-| 状态 | PDP | Index | Cart |
-|---|---|---|---|
-| In stock | 正常购买 | Yes | Allowed |
-| Temporarily out of stock | 保留信息、明确售罄 | 通常 Yes | Blocked |
-| Preorder | 仅在政策/日期确认后 | Yes | Shopify validates |
-| Permanently discontinued | 有价值归档或迁移 | 按 SEO 规则 | Blocked |
-| Unpublished/invalid | 不公开 | No | Blocked |
-
-- 永久下架只有存在真正等价替代时才 301。
-- 不把所有失效商品跳转首页。
-- Cart 更新时重新处理库存和价格警告。
-- PDP 与 Bag 的可选数量以 Shopify contextual `quantityRule`、storefront 安全
-  上限 99 和可用的实际库存上限取交集。只有 `currentlyNotInStock=false`
-  且 `quantityAvailable` 为已知非负整数时，才把它用作硬上限。
-- `currentlyNotInStock=true` 表示 Shopify 可能允许继续销售；
-  `quantityAvailable=null` 表示没有可供前端确定的精确上限。两者都不得被误判为
-  库存 0，Cart warning/user error 和 Checkout 是并发变化的最终裁决。
-- PDP 只在 Product 明确标记为 `standard` 或 `natural_variation`、当前 Variant 可售、
-  不允许超卖、库存为已知整数、步进为 1，且剩余数量为 1–3 时显示准确的
-  `Only X left`。`one_of_one`、字段缺失、库存未知、库存大于 3 或 backorder 均不显示；
-  不在商品卡使用该提示，不使用红色警告、倒计时或虚构紧迫性。
-  当前 Storefront 未提供可靠的禁止超卖事实，因此本地代码暂停该提示；
-  不把 `currentlyNotInStock=false` 当作 inventory policy。后台数据确认后另行接入。
-- PDP Variant 选择器显示 Shopify 返回的 contextual variant price；内部供应商
-  名称、素材名和文件名不得作为消费者文案或客户端商品字段。
-
-## 8. Cart
-
-### 功能
-
-- Create/read cart。
-- Add、update quantity、remove lines。
-- 展示当前 line price 和 cart subtotal。
-- 显示 Shopify warnings/user errors。
-- 恢复已有 Cart；无效/过期 Cart 安全重建。
-- Checkout 前请求最新 `checkoutUrl`，同时校验每行的可售性、库存和数量规则。
-- 读取完整 Cart，最多 500 行；每页/每次批量变更最多 250 行，清空分批执行。
-  分页异常报错，不静默截断。变更失败后刷新实际购物袋，不把部分清空当作成功。
-- 已保存的数量即使不再符合新规则，也要保留可读行，允许调整为当前合法数量或移除。
-  不足最低数量时提示移除或重选款式。加购同时校验同款合并后的 99 件上限。
-- Bag 的商品标题/图片链接保留 Variant 与当前语言。
-
-当前代码已实现上述 Bag Cart 生命周期、HttpOnly cookie、过期 Cart 的 add
-recovery、独立 Buy now Cart 和服务端 Checkout URL 校验。它们已通过 mapper/
-Server Action 测试与历史 live contract smoke，但尚未完成自动化跨页/跨设备/支付
-E2E。Playwright 按 D-043 暂缓；在重新批准前以有记录的人工浏览器/Checkout smoke
-验收关键流程，且不得将其表述为自动化 E2E。
-
-### 错误处理
-
-- 变体售罄或不可售。
-- Requested quantity 超过库存。
-- Price/discount 发生变化。
-- API timeout、rate limit 或 partial error。
-- Cart 已过期。
-
-错误必须说明客户可采取的下一步；不得静默丢失 Cart 或用旧价格继续。
-
-## 9. Checkout、Payment 与 Order
-
-- Checkout 使用 Shopify hosted checkout。
-- PDP Buy now 使用独立单商品 Cart，带当前 Variant、数量与 Market buyer
-  identity，并请求最新 `checkoutUrl`；不得复用、清空或改写用户已有 Bag。
-- 当真实价格、库存、获批政策或 Shopify Checkout 运营配置任一未通过验收时，
-  未获批公开部署保持 `SHOPIFY_CHECKOUT_ENABLED=false`。受保护 local/Preview 可为
-  受控 E2E 临时启用，但不构成 production approval；门禁关闭时 Buy now 不模拟订单。
-- 支付方式、地址验证、税、配送、折扣和订单创建由 Shopify 管理。
-- Next.js 不收集、代理或存储支付卡数据。
-- Checkout 域名、品牌样式、政策链接和交易 Email 在 Shopify 中配置并验收。
-- 成功订单以 Shopify Order 为准；Analytics purchase 不能反向创建业务事实。
-- Order confirmation 与 Shopify Order Status 可被游客使用。
-
-D-048 已确认下单支付完整支持，Payment test mode 流程未发现问题。`SHOPIFY_CHECKOUT_ENABLED` 仍保留为部署级安全门禁，仓库默认
-关闭，各环境单独验收。test mode 结果不替代未来需要的 live provider/payout 对账记录。
-
-## 10. Shipping、Returns 与 Taxes
-
-公开承诺必须与获批运营事实一致。履约模式、handling 与 Shipping/Returns 正文已确认；
-特殊配送覆盖、实际运费/免邮及税费/进口责任继续按 Q-003B/C/E 跟踪。
-发布/修改时检查以下触点，不将已确认项重新列为 Pending：
-
-- fulfillment origin 与 handling time
-- service levels、cost、free-shipping threshold
-- domestic scope、PO box、Alaska/Hawaii/territory
-- damaged/lost package 流程
-- return/exchange window 与 exclusions
-- return shipping 和 refund time
-- sales tax 责任
-- international duties（MVP 原则上不承诺）
-
-确认后，Shopify 配置、Checkout、Policy page、PDP 摘要与 Schema 必须
-一致。任何变更需同步所有消费者触点。
-
-## 11. Email 与营销同意
-
-- 订单所需 Email 是交易身份，不等于营销订阅。
-- Newsletter、SMS 和其他营销分别获得明确同意并记录来源。
-- 不使用预勾选、模糊文案或因拒绝营销而阻断购买。
-- Abandoned checkout、post-purchase 和 review request 需按获批 consent 与
-  工具规则配置。
-- 取消订阅和偏好更新必须可用。
-
-## 12. Reviews 与 UGC
-
-- MVP 不展示占位 rating、虚构 review 或无法验证来源的 testimonial。
-- 供应商选型前定义采集、verified purchase、moderation、syndication、
-  deletion、export 和 Schema 规则。
-- Incentivized review 必须按适用要求清楚披露。
-- 负面真实评论不能因为评分低而被不当抑制。
-- 只有页面可见且符合平台规则的真实评分才进入 Product Schema。
-
-## 13. Apps 与第三方工具准入
-
-每个 Commerce App 必须回答：
-
-- 解决了哪个已量化问题？
-- Shopify/Next.js 原生能力为何不足？
-- 收集哪些客户和订单数据？
-- 对 Checkout、速度、SEO 和 Accessibility 有何影响？
-- 月度成本、迁移和数据导出路径是什么？
-- 失败或取消订阅时 storefront 如何降级？
-
-初期不同时引入 Reviews、Loyalty、Referral、Subscription、Tracking 和
-Personalization 全套工具。
-
-## 14. MVP 验收
-
-以下仍是发布退出条件，不因 Commerce adapter 的代码完成自动标记为已通过。
-
-- 代表性 repeatable/one-of-a-kind 商品模型已通过业务审核。
-- 每个首发 Product/Variant 具备必需字段和真实媒体。
-- Price、currency、availability、SKU 在 Shopify/UI/Cart/Schema 一致。
-- Product Offer availability、列表和 PDP 已共用可购买判断，覆盖 minimum、未知库存
-  和继续销售；发布时仍需核对真实价格/库存变化后的 Cart 与 hosted Checkout。
-- Guest Cart → Shopify Checkout 完成跨设备核心测试。
-- Shipping/Returns/Taxes 文案与 Checkout 配置一致。
-- 售罄、下架、价格变化、API 错误均有明确行为。
-- 没有虚构 rating、scarcity、origin、treatment 或 health claim。
+发布时用真实商品检查模型/媒体/字段、UI/Bag/Schema 的价格库存一致、规则变化恢复、
+部分失败、售罄、独立 Buy now、游客 Checkout、订单确认、政策与客服。具体步骤和记录
+统一见发布手册，不把 mapper 测试当成跨设备或支付验收。

@@ -1,81 +1,71 @@
-# Project Roadmap
+# Roadmap
 
-Status: Active planning — Production 已公开，当前聚焦数据完整度、privacy/measurement 与 hardening
-Owner: Project owner  
-Last updated: 2026-10-03
+只维护未完成工作和待确认输入。完成后更新所属规格并移除条目，不保存解决记录或日期流水。
+当前能力见 [项目说明](PROJECT_SPEC.md)，发布检查见 [发布手册](LAUNCH_RUNBOOK.md)。
 
-本文件只记录当前及未来优先级。已完成阶段与日期化实施记录见
-[`archive/roadmap-2026-08-to-09.md`](archive/roadmap-2026-08-to-09.md)。详细验收以
-`MVP_PRD.md` 和对应领域规格为准。
+## 优先完成：商品、内容与运营
 
-当前能力与发布范围统一见 [PROJECT_SPEC.md](PROJECT_SPEC.md)。
+| 工作 | 需要完成的内容 | 影响范围 |
+|---|---|---|
+| 颜色与图片 | Shopify 填真实 Variant `custom.colors`，检查权限、默认语言标签、款式图片、排序和三语言控件 | 真实颜色筛选与图片验收；网页链路已接入，无需再做绑定 |
+| 商品知识 | 建字段、填值、翻译并接入材料、尺寸/fit、care、可验证来源/处理、package contents、内容关联 | 商品透明度、PDP 与适用 Schema；不制造本地资料 |
+| 商品模型与披露 | 补全 `custom.product_model`，实现 exact item/representative image 披露 | 标准商品与独件的图片、履约说明；未知模型不阻止正常购买 |
+| 低库存提示 | 若要恢复准确提示，先提供可靠的 Shopify 禁止超卖事实并验证 | 仅准确库存文案；现有库存和购买判断继续使用 |
+| 设计系列 | 复核 Patron Saint 等正式 Collection 描述/SEO，建立 Design Series/reference 并接入 story/lookbook | 完整系列叙事和索引；类型门禁及商品网格已实现 |
+| 译文 | 补齐并人工审校 ES/香港繁中商品、内容、政策、Checkout 与通知 | 翻译质量及对应索引；允许英文回退的页面仍可访问 |
+| 正式 Editorial | 审核真实文章、作者、引用、声明与图片，替换或撤下测试内容 | Blog/Guide 索引；准备前保持关闭 |
+| 商品分类 | 每次发布商品核对 Shopify Standard Product Category | Category 归属与导航 |
 
-## Priority 1 — Product and Commerce completeness
+具体后台维护方法见 [Shopify 维护](SHOPIFY_CATALOG_SETUP.md)。
 
-- D-050 已完成本地配色、即时筛选浮层、Variant 排序与 PDP 联动；颜色网页链路完整，
-  后台新值自动生效，无需再补代码。按业务方安排补齐 Variant
-  `custom.colors` 文本列表，核验 Storefront 读取和跨颜色图片绑定；审校 EN/ES/香港
-  繁中控件与真实标签，完成正式设备/Checkout 与发布验收，不把代码通过视为后台数据齐备。
-- 为正式商品完整填充并映射 Product knowledge metafields：materials、dimensions/fit、
-  care、origin/treatment、package contents 与 related content。
-- 为所有正式商品填充 `custom.product_model`，并实现 exact item / representative image
-  disclosure。
-- 补全 `Patron Saint` description/SEO；完成 Design Series Metaobject、reference、
-  story/lookbook 和商品关联。
-- 复核 Shopify Standard Product Category、商品正文、媒体、SKU、价格、库存和售罄行为。
-- 解决 `OPEN_QUESTIONS.md` 中仍适用的特殊地址覆盖、配送费率/免邮与税费/进口责任；
-  不把这些范围扩大成全站 blocker。
-- 保持 Commerce 西语逐页人工验收，直到建立可靠的 default-language fallback 检测。
-- dev 已完整接入 `zh-Hant-US`，按 D-049 允许缺译页面正常访问。后续补齐 Shopify 香港
-  用语译文、人工审校、托管 Checkout/交易通知与 Preview 设备验收。繁中 Core/Commerce/
-  Policies 的矩阵已单独获批开启、Editorial 关闭；发布前复核内容与实际索引输出，建立
-  持续翻译 readiness 流程，不把配置批准视为译文已验收。
+## 未决运营输入
 
-## Priority 2 — Privacy, discovery and structured entities
+| 需要业务方决定 | 影响范围 |
+|---|---|
+| Alaska、Hawaii、Puerto Rico、PO Box、APO/FPO 是否支持 | 特殊配送地址 |
+| carrier、实际 Checkout 运费、免邮门槛 | 结账和配送费用 |
+| 销售税、关税与进口费用责任 | 结账、政策和相关说明 |
+| 搜索/用户触发抓取与模型训练抓取的分别处理 | robots/crawler 配置；代码默认不是批准 |
 
-- 建立 Organization/Site Settings 规范化实体，使用获批公开字段实现 Home
-  Organization/WebSite/WebPage 与 ContactPage；不得复制非公开主体记录。
-- 决定并实现 Headless `Your Privacy Choices`、consent 分类与 GPC 行为；上线任何
-  analytics/marketing script 前先完成数据边界。
-- 配置并验收 GA4、Google Search Console 和 Merchant Center；建立最小可解释基线。
-- 当前 Search 保持 Product-only/noindex；只有内容规模证明需要时才接入 About、Blog、
-  Crystal Guide，不提前引入独立搜索服务。
-- Blog/Crystal Guide 测试 Article 保持 Editorial noindex；有正式内容时再完成 claims、
-  author/source、SEO、图片和 EN/ES 审核。
-- D-016 的 Search/User crawler 与 training crawler 策略单独决策。
+已确认政策见[交易规格](COMMERCE_SPEC.md)，不重新列为待决。
+不得自行补写特殊地址、免邮或税费承诺；上表只影响对应能力。
 
-## Priority 3 — Engineering and launch hardening
+## 品牌实体、隐私与测量
 
-- CI 与格式检查已在本地添加；提交后确认 GitHub 工作流结果，发布继续使用完整验收。
-- 完成关键设备/浏览器的 Accessibility、响应式、性能、链接、404、redirect、售罄与
-  API 故障人工验收；达到 D-043 触发条件后再启用 Playwright。
-- 未知路径/停用市场已提供不依赖 JavaScript 的 404。继续跟踪 Next 动态缺失商品/内容页的
-  初始错误正文问题；发布时复核客户端恢复，不使用未经验证的框架内部补丁。
-- 复核 CSP、安全响应头、日志/PII、第三方脚本和生产/Preview secret 隔离。
-- 完成监控告警、owner、保留策略、rollback target 和发布值守记录。
-- 按内容/运营变化持续复核索引矩阵、sitemap、hreflang、Schema 与 Checkout smoke。
+- 从获批公开字段建立 Organization/Site Settings，接入 Home、Contact 与适用政策 Schema。
+- 先批准 consent 分类、Headless `Your Privacy Choices`、GPC、地区范围和 Checkout
+  跨域同意流程，再接入 Analytics/marketing。不能向浏览器暴露私密 Storefront token。
+- 按需配置并验收 GA4、Search Console、Merchant Center、Bing Webmaster；确认数据接收方、
+  事件、保留期、成本和退出方式。前端事件、Shopify 订单与测试购买须能对账。
+- 首页 Email opt-in 尚未实现；先定义订阅内容、同意和可退出路径，不遮挡首屏或阻断购买。
+  若启用 Email/CRM 或 Contact 表单，先定义事件、投递、发件域和滥用保护。
+  当前 Contact 继续 Email-only，Resend 不启用。
 
-## Post-launch optimization
+## 工程与验收
 
-只根据真实漏斗、客服、搜索和复购数据选择：
+- 核对每次 GitHub CI 与 Vercel 部署结果，以及对应环境开关；提交不等于部署验收。
+- 完成真实手机/桌面、键盘、辅助技术、200% zoom、性能、错误/空状态和 Checkout 检查。
+- 跟踪 Next 动态缺失商品/内容页初始 404 正文问题；保留客户端恢复，避免框架内部补丁
+  或未经批准的实验性 API。未知路径和停用市场已支持无 JavaScript 恢复。
+- 建立可靠的商品/系列翻译回退检测；实现前保留发布时人工逐页检查。
+- 复核 CSP/HSTS、安全头、第三方脚本、PII/secret 边界、Contact 生产限流和 token 轮换。
+- 配置错误告警、负责人、保留策略、发布值守与回滚目标，不重复接入同类监控平台。
+- 仅当用户任务和内容规模证明必要时扩展内容搜索；当前商品搜索继续 noindex。
 
-- 正式 Editorial 内容与商品/Guide 内链。
-- 真实 Reviews、Email lifecycle、Recently Viewed、Reorder。
-- Customer Account、Wishlist、Gift Card、Referral、Loyalty。
-- 经人工服务验证后的 Custom Crystal。
-- 目录规模证明需要时的高级搜索或推荐。
+## 后续候选
 
-## Future markets
+候选不等于已批准功能，只在真实数据支持后评估：
 
-Canada 和其他 Market 只有在 Catalog、Pricing、Currency、库存、支付、税务、配送、
-法律、客服和本地化内容全部就绪后才启用。一次只开放一个真实运营 Market，并单独验收
-URL、canonical、hreflang、sitemap、Cart 与 Analytics；不得复制薄内容或为 Currency
-生成 SEO URL。
+| 能力 | 进入条件 |
+|---|---|
+| Reviews | 真实订单、采集/审核、激励披露、删除导出与 Schema 规则明确 |
+| Customer Account | 客服或复购数据显示自助订单/地址需求；仍支持游客，优先 Shopify 账户能力 |
+| Wishlist/Recently Viewed/Reorder | 用户行为、目录和可重复 SKU 证明价值 |
+| Loyalty/Referral/Gift Card/礼品包装 | 利润、退款、奖励负债、滥用、成本和客服规则确认 |
+| Custom Crystal | 先由少量变体或人工咨询验证需求，再评估复杂配置器 |
+| CMS/独立搜索/webhook | 编辑、目录规模、高频变更或紧急失效需求出现可测瓶颈 |
+| 多市场 | Catalog、币种、库存、支付、税费、配送、法律、客服和翻译全部获批就绪 |
 
-## Current completion criteria
-
-- `MVP_PRD.md` 对当前公开 scope 的验收全部通过，或有书面接受的具体例外。
-- 商品、价格、库存、Cart 与 Checkout 在 Shopify、UI 和测试记录中一致。
-- 已开放索引页面输出准确 HTML、metadata、canonical、hreflang、Schema 和 sitemap。
-- Consent、PII、日志和第三方数据接收方与实际运行功能一致。
-- 每次发布有可复现检查、人工 smoke、负责人和 rollback target。
+当前不建设 Subscription、社区等级、签到、任务、勋章或批量关键词页面。
+新增系统或市场须先说明价值、边界、替代方案和迁移影响，更新所属规格；
+不因候选清单预建公开 URL、数据库、认证或生产依赖。

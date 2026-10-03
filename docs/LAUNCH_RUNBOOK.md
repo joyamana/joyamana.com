@@ -1,249 +1,104 @@
-# Launch Runbook
+# 发布与回滚
 
-Status: Active — Production 已公开并开放已审核索引/交易范围；剩余内容与运营项继续验收
-Owner: Engineering / Operations  
-Last updated: 2026-09-11
+每次发布按实际改动验收。当前能力见项目说明，未决项和影响范围见 Roadmap。
+dev 对应受保护 Vercel Preview，main 对应 Production；不把代码推送当成部署成功。
+历史从 Git、GitHub CI 与 Vercel 查询，不另外维护归档文件或重复测试流水。
 
-本文件用于已上线站点的持续发布与回滚。当前能力和批准范围见
-[PROJECT_SPEC.md](PROJECT_SPEC.md)，未解决输入按 OPEN_QUESTIONS 的 Blocks 限定影响。
-dev 对应受保护 Vercel Preview，main 对应 Production。
+## 发布前
 
-三个门禁独立：索引总开关 + indexing.ts 矩阵、Shopify Checkout、Contact form。
-Preview 始终 noindex；Production 保持已获批范围。Contact 当前 Email-only。
-内容/导航按 D-046 使用五分钟再验证窗口，更新后须检查实际响应。
-Playwright 当前封存；发布仍需记录人工浏览器/Checkout 验收。
+确认实际负责人、变更范围、部署/回滚目标和具体未决依赖。工程、商品运营、内容/品牌、
+客服和隐私的相关负责人只验收自己负责的范围，不把条件待办一律当成全站阻塞。
+相关政策与客户可见承诺须有批准，不借发布改变未经确认的配送、税费或支付配置。
 
-## 1. 发布角色
+索引、Checkout、Contact form 独立控制，各自有批准范围与回退方式。Preview 始终
+noindex，生产保留已获批范围，不因例行代码更新把全站开关全关。
+Contact 继续 Email-only；功能开启时才验收其供应商与数据处理流程。
 
-每次发布记录实际负责人；表格不代表已完成角色分配：
+## 代码与环境
 
-| Role | Owner | Responsibility |
-|---|---|---|
-| Launch lead | TBD | Go/no-go 与协调 |
-| Engineering | TBD | Build、deploy、rollback |
-| Shopify/Operations | TBD | Catalog、inventory、Checkout、orders |
-| Content/SEO | TBD | 内容、metadata、robots、sitemap |
-| Brand/Design | TBD | 视觉与文案批准 |
-| Customer support | TBD | 客户问题与升级 |
-| Legal/Privacy | TBD | Policy、claims、consent 审核 |
+按 [README 检查命令](../README.md#本地开发)运行 Node 24 下的 frozen install、预检、
+格式、lint、类型、相关测试与生产 build，核对 GitHub CI。纯文档改动检查规则迁移、
+旧引用、链接和代码一致性，不必重复应用构建。
 
-## 2. Go/no-go 前置条件
+- Preview/local/Production secret 分离，不提交或输出 token/PII。
+- Production site URL 精确为 `https://www.joyamana.com`，apex 对应路径 308 至 www。
+- Preview 索引总开关关闭；生产总开关、语言矩阵、单页内容条件和 Checkout/Contact
+  配置分别核对，不复用 Preview 值。
+- 环境或索引策略修改须部署并查看真实响应，Dashboard 保存本身不算生效。
 
-- `OPEN_QUESTIONS.md` 中剩余问题按各自 `Blocks` 验收，不扩大为全站 blocker。
-- MVP PRD 的发布验收没有未接受的 blocker。
-- Production Shopify Catalog、Markets、payment、shipping、tax 配置获批。
-- 域名、SSL、Checkout domain、Email sender 和 support inbox 可用。
-- Production secrets 与 Preview/local 分离。
-- `SHOPIFY_CHECKOUT_ENABLED`、`NEXT_PUBLIC_SITE_INDEXABLE`、仓库内索引矩阵，与
-  `CONTACT_FORM_ENABLED` 分别有明确 owner、验收记录和回退方式，不用一个
-  总开关同时放开。
-- 数据备份/导出责任与 Vercel rollback 方式明确。
-- Support 知道 Shipping、Returns、damaged/lost、order-change 流程。
+## 商品、交易与政策
 
-## 3. 代码质量检查
+使用受影响的真实商品和允许的测试环境：
 
-在 Node 24 下运行；依赖版本使用 package.json 与 frozen lockfile：
+- 核对 Product/Variant、SKU、Category、图片、材料/尺寸/来源/处理、模型与真实披露。
+- 筛选、排序、卡片、深链接、PDP 图价/选款、跨语言和返回/前进使用同一款。
+- 游客加购、重复操作、刷新恢复、数量修改/移除/清空、库存下降和规则变化可恢复。
+- 售罄、未知库存、API 超时/限流/部分失败有准确状态；不使用猜测的价格或库存。
+- Buy now 使用独立单商品 Cart，不改变 Bag；Checkout 获取最新 URL 并校验最新行。
+- 价格、币种、折扣、库存、小计和 Shopify 托管结账一致；政策链接、订单确认、
+  Order Status、交易邮件与实际运营一致。
+- Shipping/Returns/Taxes、PDP 摘要与结账配置同步，客服 Email 可用。
 
-```text
-install: pnpm install --frozen-lockfile
-environment: pnpm preflight
-format/check: pnpm format:check
-lint: pnpm lint
-typecheck: pnpm typecheck
-unit/integration: pnpm test
-browser/checkout: 有记录的人工 smoke（D-043；Playwright 暂缓）
-build: pnpm build
-```
+当前业务支付确认不替代本次变更的 Checkout 检查。付款测试使用 Shopify 支持的测试
+方式与已批准环境；真实扣款、退款和 payout 对账单独验收，不从测试模式推断完成。
+未经范围授权不为 smoke 创建生产订单。
 
-要求全部通过，或由 Launch lead 书面接受具体例外和风险。
+## 内容与索引
 
-## 4. Production 内容与 Commerce 检查
+- 正式页面使用获批品牌、商品、媒体、政策与作者/来源，正文在初始 HTML 可读。
+- 检查 H1、lang、title、description、OG、canonical、breadcrumbs 和真实链接。
+- sitemap 仅含 200、干净且可索引页面；Cart/Search/参数/预览/未上线市场永久排除。
+- 参数页 noindex，符合条件时指向 clean canonical，移除 hreflang 与 Schema。
+- 三语言 Core/Commerce/Policies 矩阵开启，Editorial 关闭；实际部署总开关与单页检查
+  仍生效，不能因矩阵开启把测试文章或回退内容加入索引。
+- ES/繁中商品和系列逐页人工检查翻译与等价关系；已检测回退的 About/政策/
+  Accessibility/Article 自身及其他语言 alternate 均排除。
+- Product/Offer/ItemList 等 JSON-LD 可解析且与可见图价/状态一致；Home/Contact/政策
+  Schema 尚未接入，不能在记录中预先勾选。OG image 等缺口按实际页面核对。
+- 未知路径和停用市场 404/noindex 且无 JavaScript 可恢复；动态缺失详情的初始正文
+  限制仍需记录，检查浏览器恢复，不声称全部 404 首屏已修复。
+- 正确的重定向/下架行为、robots 和静态资源访问；训练 crawler 策略仍待决。
+- 根据上线范围完成 Search Console、Bing、Merchant Center 所有权/索引/feed 检查。
 
-- 品牌名称、法律实体、联系方式、Logo、social links。
-- Product/Variant/SKU、价格、库存、媒体、材料、尺寸、处理/来源披露。
-- Shopify Standard Product Category 与 `/category/*` 归属。
-- `Patron Saint` 已确认 `collection_kind=design_series`、Headless 可见且非空；发布前补全
-  description/SEO，并按需要建立 Design Series Metaobject/reference、story/lookbook 和排序。
-- Shipping、Returns、Privacy、Terms、Accessibility 内容。
-- Shopify Checkout 品牌、policy links、payment、shipping、tax。
-- 测试 Guest Cart → Checkout → test order → confirmation → Order Status。
-- 售罄、超库存、折扣、损坏 Cart 和 API 失败。
-- Transaction Email 与 support reply。
-- `info@joyamana.com` inbox、负责人/备援、回复流程、外发认证和垃圾箱表现已确认；发布
-  smoke 仍需验证当次环境与实际收发链路。
-  若未来启用 Contact 表单，
-  另行批准 Resend 的数据边界/保留期/成本/退出路径，验证发件域与生产滥用控制。
+## 手机、键盘与性能
 
-## 5. SEO/GEO 检查
+检查真实手机/平板/桌面、200% zoom、键盘与必要辅助技术：无横向溢出、控件不遮挡，
+菜单锁定背景/焦点、Escape 和焦点返回正常；表单 label/错误、Cart 状态、图片 alt、
+对比度和 reduced motion 可用。发布目标为 WCAG 2.2 AA，不能拿局部检查声称全站认证。
 
-- Canonical production origin 固定为 `https://www.joyamana.com`；apex 对应 URL 308
-  至 `www`，canonical/hreflang/sitemap 不使用 apex、Preview 或 staging origin。
-- Preview 和内部页面 `noindex`。
-- 按上线前批准的 D-016 crawler policy 验证 `robots.txt`，不误封静态资源和获准
-  crawler；当前 D-016 仍是 Pending，不得把代码默认当成业务批准。
-- Sitemap 只包含 200、canonical、indexable、published URL。
-- Cart、Search、参数页和内部状态页永久 `noindex` 且不进入 sitemap；参数不得制造
-  canonical/indexable 变体。核对 clean canonical、noindex 与 hreflang 移除。
-- `NEXT_PUBLIC_SITE_URL` 必须是获批的非本地 HTTPS origin；缺失或不安全时索引
-  fail closed，不输出 Preview/staging canonical。
-- Title、description、OG image、H1、breadcrumbs；当前缺少 OG image，发布前补齐。
-- Product/Offer、Organization、WebSite/WebPage、ContactPage、Article 及适用 Policy
-  JSON-LD 与 UI 一致；当前 Home Organization/WebSite/WebPage、ContactPage 和 Policy
-  Schema 尚未实现，不能仅通过开启 index gate 获得。
-- 404/410/301、旧 slug、售罄和下架行为正确。
-- Search Console、Bing Webmaster、Merchant Center 验证。
-- 关键页面在禁用 JavaScript时仍有主要内容和链接。
-- 默认语言 fallback 的 Policy、About、Accessibility 和 Article 不进入对应 locale
-  的 sitemap/Schema，并且不被其他语言页面的 hreflang 引用。当前 fallback 页自身
-  noindex/sitemap/Schema 门禁以及 About/Article/Policy/Accessibility alternate
-  readiness 过滤均已实现。
-- `<html lang>` 在 en-US/es-US/zh-Hant-US 页面与 document locale 一致；停用市场及未知路径返回 404。
-- zh-Hant-US 按 D-049 允许英文回退，不隐藏页面；Core/Commerce/Policies 的矩阵已按
-  D-045 开启，Editorial 关闭，已知 fallback 单页保护仍在。发布时检查
-  三语言菜单、US Bag 跨语言恢复、新 Bag/Buy now、`/zh-tw/` Checkout、长标题和 CJK
-  字形；托管结帐和交易通知需独立人工验收，不复用 EN/ES 支付结论。
-- D-045 已批准三语言 Core/Commerce/Policies 的矩阵；Production 总开关与发布另行核验，
-  Preview 总开关关闭。Product/Collection 尚无逐页 ES/繁中 fallback 自动检测，因此每次
-  发布必须人工核对正文、metadata 和 hreflang；发现 fallback 时修复内容或回退对应 scope。
-  未知路径默认 noindex，矩阵开启不绕过单页 readiness，也不代表翻译已审校。
+真实用户/数据的移动 p75 目标：LCP ≤ 2.5s、INP ≤ 200ms、CLS ≤ 0.1。
+检查首屏图片/字体、布局跳动、bundle 和第三方脚本；不通过增加脚本堆叠替代测量。
+当前不启用 Playwright；Vitest、build、HTTP 或自动浏览器检查不替代人工设备/支付验收。
 
-## 6. Accessibility 与 Performance
+## 隐私与测量
 
-- Mobile/desktop/tablet 关键页面。
-- Keyboard、focus、screen reader smoke test、200% zoom。
-- Form error、Cart status、menu/dialog、reduced motion。
-- 真实图片与 Production 数据下的 CWV/Lighthouse。
-- 第三方脚本 inventory、consent 和 performance impact。
-- 无横向滚动、明显 CLS、阻塞首屏 popup。
+现有必要 Cart cookie 纳入清单；网络、URL、事件、日志、错误和快照不含 secret/PII。
+当前没有 Analytics/consent 运行时，不把未来项目勾选为已完成。
 
-## 7. Analytics 与 Privacy
+若本次获批启用非必要脚本或隐私功能，另外检查：
 
-- Consent accept/reject/preferences。
-- 未同意时不应运行的脚本确实不运行。
-- `view_item`、`add_to_cart`、`begin_checkout`、`purchase` 测试。
-- Purchase 不重复并与 Shopify 测试订单对账。
-- URL、events、logs 无 Email、地址、Cart ID、token 或支付信息。
-- Privacy/Cookie 文案与实际工具一致。
-- Headless storefront 接入 Shopify Customer Privacy API 时，浏览器使用独立最小权限
-  public token，不暴露 server-only private token；适用时有可验证的
-  `Your Privacy Choices` 入口和同根 Checkout consent 行为。
+- 供应商、目的、数据接收方、保留/删除、成本、退出与隐私正文一致。
+- 同意前后实际请求，接受/拒绝/修改偏好、GPC、地区范围和跨 Checkout 行为。
+- Customer Privacy 浏览器调用使用独立 public token，private token 不泄露。
+- 成功动作对应事件；purchase 不重复，与 Shopify 测试订单/金额/币种/商品对账。
+- Preview/内部/测试流量可过滤，拒绝营销不阻断购买。
 
-当前上述 Analytics/consent 与 Customer Privacy API 项均未完成，不得在发布记录中
-预先勾选。
+## 发布步骤
 
-未来获批实施 Headless Customer Privacy 时，代码范围为：
+1. 确认范围、负责人、代码检查、依赖和回滚目标。
+2. 推送 dev，检查受保护 Preview、对应部署环境及受影响页面/交易/设备。
+3. 将同一已验收提交合并或快进 main，按独立生产配置部署。
+4. 从外部核对 Production、apex/www、关键页面、索引与 Checkout；后台内容更新后
+   等待缓存周期并确认真实正文。
+5. 在当次 PR 或部署记录写明 commit、deployment、检查范围/结果、具体例外、
+   负责人和回滚目标。不用本地 build 代替发布验收，也不另建历史文档。
 
-- 建立独立的浏览器可用 Storefront public token 配置；不得复用或暴露当前 server-only
-  private token。
-- 在 client-only privacy provider 中加载 Shopify Customer Privacy / bundled banner
-  asset，以 `storefrontRootDomain=joyamana.com`、
-  `checkoutRootDomain=checkout.joyamana.com`、当前 US locale/country 初始化。
-- Footer 提供可重复打开偏好设置的入口；另提供清楚的 `Your Privacy Choices` opt-out
-  flow，只在用户明确操作后调用 `setTrackingConsent({ sale_of_data: false, ...headless })`，
-  显示成功/失败状态。不得自行读写 Shopify consent cookie。
-- Analytics/marketing/preferences 脚本分别调用对应 `*ProcessingAllowed()` 判断，并监听
-  `visitorConsentCollected`；API 未就绪或判断失败时，本项目自己的非必要脚本 fail closed。
-- CSP 允许 Shopify privacy asset，并允许浏览器向 Checkout domain 的 Storefront API
-  发起所需 POST；不扩大到任意第三方域名。
-- 覆盖首次访问、接受、拒绝、修改偏好、适用州 data-sale opt-out、GPC、EN/ES、跨
-  `www` → `checkout` 及无障碍键盘流程。
+## 发布后与回滚
 
-对应 Shopify Admin 配置范围为：
+发布后重点观察运行错误、Shopify/API/Checkout、价格库存、政策、域名与新设备问题。
+工具已启用时再检查事件对账、consent、索引和真实性能，不虚构未采集的数据。
 
-- `Settings > Customer privacy` 复核并发布 Privacy policy；确认 Shopify Network
-  Intelligence 与实际使用功能一致。
-- 配置 Cookie banner 的地区与 EN/ES 文案；是否在 US 全域展示由 Legal/Privacy 决定，
-  不由代码猜测。
-- 启用并复核 Data sharing opt-out page 的适用州、内容与 GPC 行为；Online Store 自动
-  菜单入口不会自动出现在 Headless Footer，因此仍需上述前端入口。
-- 在 `Settings > Domains` 复核 storefront/checkout 同属 `joyamana.com` 根域，并建立
-  独立 public Storefront token；记录 token rotation、owner 和撤销方式。
-- 列出 GA4、广告像素、Shopify pixels 及其他第三方接收方，确保后台地区配置、Privacy
-  正文和代码中的 consent 分类一致，再批准启用任何 analytics/marketing runtime。
-
-## 8. 发布步骤
-
-1. 确认变更范围、未决依赖、发布负责人、当前 Production deployment 与 rollback target。
-   发布窗口内避免同时修改相关 Shopify 内容/运营配置。
-2. 在 Node 24 下完成 frozen install、preflight、lint、typecheck、tests 和 build。
-   记录 commit、验证范围与具体例外。
-3. 推送 dev 并检查受保护 Preview。总索引门禁必须关闭；需要 Checkout smoke 时，
-   仅按该环境已获批的测试配置启用。Contact 继续关闭。
-4. 在 Preview 验证受影响页面、初始 HTML/metadata、EN/ES、移动端、404、Cart 与
-   Checkout 流程。Shopify 内容变更后等待缓存窗口，并确认实际正文已更新。
-   HTTP/合约测试不能替代人工交互和 Payment test mode 验收。
-5. 将同一已验收提交快进/合并到 main，使用 Production 独立环境配置部署。
-   例行代码发布保持已获批索引/Checkout 范围；只有存在具体风险时才临时关闭相应门禁，
-   不把首次上线的全关流程用于每次更新。
-6. 若本次扩大索引、启用 Contact 或更改支付/配送/税务配置，先完成各自审批与测试，
-   再单独发布并验证该变化。仓库矩阵或环境变量变化都需要新 deployment。
-   Payment test mode 验收不代表已经完成真实扣款、退款或 payout 对账。
-7. 从外部访问 Production，核对 www canonical、apex 308、受影响页面/Checkout、
-   robots/sitemap、hreflang/Schema、参数 noindex。关键失败时按下一节回滚。
-8. 记录 deployment、门禁范围、人工 smoke、例外、rollback target 与监控链接。
-   只在相关功能已启用时检查 Analytics/purchase 对账；不为无变更的功能伪造验收记录。
-
-首次上线的原始流程见 [历史记录](archive/maintenance-history-through-2026-09.md)。
-
-## 9. 监控窗口
-
-### 第一小时
-
-- 5xx、runtime error、Shopify API error。
-- Add to bag、Bag、Checkout redirect。
-- Price/inventory mismatch。
-- Domain、redirect、robots、sitemap。
-
-### 前 24 小时
-
-- Orders 与 payment/shipping failures。
-- Purchase analytics 对账。
-- Support contacts、broken links、device-specific issue。
-- CWV、third-party script 和 consent issue。
-
-### 第一周
-
-- Index/canonical/merchant diagnostics。
-- Funnel by device/channel。
-- Sold-out/catalog 和 policy 问题。
-- AI/Search crawler access（按获准策略）。
-
-## 10. Rollback
-
-### Code/UI regression
-
-- 回滚到上一个已验证 Vercel deployment。
-- 门禁通过环境变量恢复时同样需要新 deployment/redeploy，并验证实际响应，不把修改
-  dashboard 值本身当成回滚完成。
-- 不对 Shopify Order、Customer 或 Inventory 执行数据回滚。
-- 若 Schema/SEO 问题不影响交易，可评估快速 forward fix；仍需记录决定。
-
-### Commerce/config issue
-
-- 在 Shopify 中暂停受影响商品、市场、discount 或 shipping rule。
-- 若价格、支付、库存或 Checkout 可靠性受影响，优先停止相关购买路径。
-- 保留客户沟通与订单修复记录。
-
-### Content/policy issue
-
-- 撤下或 noindex 有风险内容。
-- 不用 robots.txt 代替删除/noindex。
-- 修正后记录发布时间与实质更新时间。
-
-每次 rollback/incident 记录：时间、影响、发现方式、决定人、操作、验证、客户
-补救和后续预防。
-
-## 11. Go-live 记录模板
-
-```md
-Version / commit:
-Deployment URL:
-Production domain:
-Go-live time:
-Launch lead:
-Checks completed:
-Accepted exceptions:
-Rollback target:
-Monitoring links:
-Incident contact:
-```
+代码故障回到上一个已验证 Vercel deployment；环境/索引回退同样部署并核对响应。
+不回滚 Shopify Order、Customer 或 Inventory。交易可靠性受影响时暂停对应购买路径；
+内容风险撤下/noindex，不以 robots 禁抓代替删除。记录影响、操作、验证和客户补救，
+长期修正写入规格或 Roadmap，完成后不保留重复流水。

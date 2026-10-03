@@ -1,153 +1,87 @@
 # AGENTS.md
 
-本文件是 Codex 的仓库级长期指令。保持简洁、准确；详细需求放在 `docs/`，
-不要把临时任务要求堆入本文件。
+本文件只保留仓库工作约束。具体需求和操作方法写入 `docs/`，不追加临时任务或历史流水。
 
 ## 项目使命
 
-建设一个面向美国市场的水晶 DTC 品牌独立站。优先级依次为：
-
-1. 品牌体验与信任
-2. 购买转化与交易可靠性
-3. SEO 与可发现性
-4. GEO / AI Search 可理解性
-5. 未来多市场扩展能力
-
-商业模式是 `Brand + Content + Commerce`，不依赖广告流量变现。
+建设面向美国市场的水晶 DTC 品牌站，依次优先：品牌体验与信任、购买转化与交易可靠性、
+SEO、AI Search 可理解性、未来市场扩展。收入来自品牌商品销售，不依赖广告变现。
 
 ## 开始任务前
 
-先阅读与任务相关的规范。复杂任务的默认顺序是：
+先读 `docs/PROJECT_SPEC.md`，再读对应领域规格；待办和未确认输入见 `docs/ROADMAP.md`。
+技术任务使用 TECH_SPEC，商品使用 COMMERCE_SPEC，内容与索引使用 CONTENT_SEO_GEO_SPEC，
+界面使用 DESIGN_SYSTEM；后台维护和发布分别使用 SHOPIFY_CATALOG_SETUP、LAUNCH_RUNBOOK。
 
-1. `docs/DECISIONS.md`
-2. `docs/BRAND_INPUTS.md`
-3. `docs/PROJECT_SPEC.md`
-4. `docs/MVP_PRD.md`
-5. 对应领域规格（商品任务使用 `docs/COMMERCE_SPEC.md`）
-6. `docs/ROADMAP.md`
-7. `docs/OPEN_QUESTIONS.md`
+规则优先级：用户当前指令、本文件的工作约束、PROJECT_SPEC、对应领域规格。
+Roadmap 中的候选和待确认项不是业务批准。缺失输入若会改变品牌、商品模型、运营政策、
+数据合规或系统边界，应说明影响并请求决策，不自行编造。
 
-`docs/archive/` 只用于历史追溯，不得作为当前实现依据。
+文档只维护当前规则、能力、操作和待办。完成计划与旧决定不归档，历史通过 Git 查询。
+同一规则只在所属文档详细说明，其他地方引用；品牌事实、业务批准和候选建议须明确区分。
 
-若文档冲突，优先级为：
+## 技术与市场边界
 
-1. 本文件的工作约束
-2. `docs/DECISIONS.md` 中状态为 `Accepted` 的较新决策
-3. `docs/PROJECT_SPEC.md`
-4. `docs/MVP_PRD.md`
-5. 领域规格与 Roadmap
-6. `Proposed` 决策和开放问题中的推荐默认值
+- Next.js App Router + TypeScript，Vercel 为首选部署平台。
+- Shopify 是商品、变体、价格、库存、折扣、购物袋、订单、支付和 Checkout 的事实来源。
+  使用 Headless channel + Storefront API，Checkout 跳转 Shopify 托管结账。
+- 不建独立业务后端、数据库或认证系统；允许必要的 Next.js Route Handlers、
+  Server Actions、缓存失效端点和服务端适配层。
+- Server Components 优先，只在真实交互需要时使用 Client Components。
+  索引页须在初始响应中提供完整 HTML，可使用静态生成、ISR 或动态服务端渲染。
+- 当前只启用 US / US Catalog / USD。en-US 为根路径，es-US 为 `/es-us/`，
+  zh-Hant-US 为 `/zh-hant-us/`，繁中采用香港惯用书面语。
+- CA / CAD / en-CA / fr-CA 只保留 typed planned 配置。对应路径返回 404，
+  不生成、不导航、不索引，启用前须重新批准。
+- Market、Language、URL、Currency 分离。同一市场的语言共享商业事实；跨市场须隔离
+  Catalog、价格、库存、购物袋、税费、配送和法律上下文。Currency 不进入 SEO URL。
+- `/` 保持 en-US，不建 Global Site、不强制 IP redirect。未来地区入口优先考虑
+  noindex `/choose-region`；迁移根路径或提前生成未来市场 URL 须先说明并获批。
 
-不要自行把 `Proposed` 或 `Pending` 当成已获业务批准。对会实质改变品牌、
-商品模型、运营政策、数据合规或系统边界的缺失输入，应说明影响并请求决策。
+## 客户、内容与数据
 
-## 当前已接受的技术边界
+- 游客必须能购买。交易 Email、账户身份与营销同意分开；账户是可选服务门户。
+- 不虚构评论、库存紧迫性、折扣、专家、资质、产地、采购或环保承诺。
+- 传统或精神文化内容不得写成医疗事实；无可靠依据不得声称诊断、治疗、治愈、预防
+  或健康安全功效。配送、退换、税费和隐私内容必须来自真实获批政策。
+- UI、metadata、JSON-LD 和未来 analytics 使用同一规范化实体；结构化数据须与可见内容一致。
+- 不做隐藏 AI 页面、crawler cloaking、薄页面或关键词替换页。索引范围与 URL 规则见
+  CONTENT_SEO_GEO_SPEC；`llms.txt` 只作可选辅助。
+- 私密 Storefront token、Admin token、webhook secret 和客户 PII 只在服务端使用，
+  不提交、打印或发送浏览器；正常购物袋状态不含 secret Cart ID 或 Checkout URL。
+- 新生产依赖或平台须说明业务价值、数据边界、成本和退出路径；不提前接入未来工具。
 
-- Next.js App Router + TypeScript。
-- Shopify 是商品、变体、价格、库存、折扣、购物车、订单、支付和 Checkout
-  的商业事实来源。
-- 通过 Shopify Headless channel 和 Storefront API 构建自定义 storefront。
-- Checkout 跳转至 Shopify 托管结账，不复制支付或订单系统。
-- Vercel 是首选部署平台。
-- Server Components 优先；仅在真实交互需要时使用 Client Components。
-- 索引页面必须在初始响应中提供完整、可理解的 HTML；可按页面需要使用
-  静态生成、ISR 或动态服务端渲染，不强制每次请求 SSR。
-- 不建设独立业务后端。允许在 Next.js 中使用必要的 Route Handlers、
-  Server Actions、缓存失效端点和安全的服务端适配层。
-- 当前只启用 US / US Catalog / USD：en-US 根路径、es-US `/es-us/`、
-  zh-Hant-US `/zh-hant-us/`（香港惯用书面语）。
-- CA / CA Catalog / CAD 只保留 typed planned 配置；`/en-ca/` 与 `/fr-ca/`
-  不生成、不导航并返回 404，直到业务方重新批准启用。
-- 同一 Market 内语言共享 Catalog、价格、库存和政策事实；跨 Market 必须隔离
-  Pricing、Availability、Cart、Tax、Shipping 和 Legal context。
-- Market、Language、URL、Currency 必须分离。Market 是商业运营单元，定义
-  Catalog、Pricing、Currency、Tax、Shipping、Legal 和可用语言。
-- Currency 不进入 SEO URL；内部保持 typed market context，但不提前生成
-  未来 Market URL。
-- `/` 保持 en-US，不建立 Global Site 或强制 IP redirect。未来如需地区入口，
-  优先增加 noindex `/choose-region`，不得未经 ADR 把 US 根路径迁至 `/en-us/`。
+## 工程与架构变更
 
-## 产品与客户约束
+选择最小、可读、可测试的实现，使用明确类型、集中配置和薄适配层，不预建未批准的系统。
+代码标识符使用英文，界面支持三种 US 语言且译文须人工审校；规划文档可用中文。
+保留用户已有的无关改动，不顺手扩大重构范围。
 
-- 不强制注册；MVP 必须支持游客完成购买。
-- Email 交易身份与 Email 营销同意必须分开处理。
-- Customer Account 是上线后可选的服务门户，不是购买入口。
-- 不得虚构评论、库存紧迫性、折扣、专家、资质、产地或采购承诺。
-- 水晶相关传统或精神文化内容不得写成已证实的医疗事实；禁止无可靠依据的
-  诊断、治疗、治愈、预防或安全功效承诺。
-- Shipping、Returns、Taxes、Privacy 等内容必须来自已确认的真实运营政策。
+以下变更实施前须说明原因、替代方案、迁移影响，并更新所属规格中的当前方案：
+更换框架、部署平台或事实来源；新增数据库、长期服务、自建认证或客户数据处理方；
+改变 URL、市场、索引、Checkout、订单、账户或营销同意边界；引入超出当前范围的大功能。
+不再另建决策日志。可逆、局部且不改变系统边界的选择无需额外决策文件。
 
-## SEO、GEO 与内容约束
+## 计划与完成
 
-- 不为 SEO 批量制造重复、薄弱或仅改关键词的页面。
-- 不创建隐藏 AI 页面，不做 crawler cloaking，不向机器人输出不同事实。
-- UI、metadata、JSON-LD 和 analytics 必须来自同一规范化实体。
-- 只输出与页面可见内容一致、对该页面类型适用的结构化数据。
-- 参数页、站内搜索、购物车、账户、预览和内部测试页不得进入 sitemap；
-  索引规则遵循 `docs/CONTENT_SEO_GEO_SPEC.md`。
-- 只为真实上线、内容完整、可运营的市场和语言生成 URL 与 hreflang。
-- `llms.txt` 是可选辅助，不能替代 HTML、内链、sitemap、Schema 和内容质量。
+跨领域或跨阶段任务使用 `PLANS.md`。只保留进行中的计划，完成后更新规格和 Roadmap，
+删除计划，不生成历史文档。
 
-## 工程原则
+完成前按实际改动检查：
 
-- 选择最小、可读、可测试的实现；避免预建尚未获批的抽象系统。
-- 商业关键数据只保存在其事实来源，不在多个系统复制价格、库存或政策。
-- Storefront API 私密 token、Admin API token、webhook secret 和客户 PII
-  只能在服务端使用，绝不提交、打印或发送到浏览器。
-- 新生产依赖、SaaS、CMS、Analytics、Review、Email 或 Search 工具必须说明
-  业务价值、数据边界、成本和退出路径。
-- 使用明确的类型、集中式配置和薄适配层；不要把国家、货币、canonical、
-  Schema 或 tracking 逻辑散落在组件中。
-- 代码标识符使用英文；UI 文案支持 en-US、es-US、zh-Hant-US，译文须人工审校；
-  项目规划文档可使用中文。
-- 保留用户已有的无关改动，不以顺手重构扩大任务范围。
+- 需求和验收满足；相关 lint、类型、测试与生产构建已运行，不能运行时说明原因。
+  纯文档修改检查规则迁移、断链和代码一致性，不为它重复构建应用。
+- 错误、加载、空状态、移动端和键盘行为；索引页面的初始 HTML、metadata、canonical、
+  Schema、链接、sitemap/noindex；交易数据与 Shopify 一致；consent、PII、日志和 secret 边界。
+- 文档、环境示例和命令与代码同步。交付说明改动、验证、剩余风险和业务待办。
 
-## 架构变更规则
+## 验证入口
 
-以下变更必须在实施前说明原因、替代方案、迁移影响，并更新
-`docs/DECISIONS.md`：
+Node 保持 24，精确依赖以 package.json/lockfile 为准。语言映射在 `src/config/locales.ts`，
+索引矩阵在 `src/config/indexing.ts`；Production canonical 为 `https://www.joyamana.com`。
+默认索引、Checkout、Contact form 开关关闭，各部署按批准范围核验；Preview 必须 noindex。
+缺译页面允许 Shopify 英文回退，不能因此复制本地正文。配置批准不等于译文验收。
 
-- 更换前端框架、部署平台、Commerce 或内容事实来源
-- 新增独立数据库、长期运行服务或自建认证
-- 改变公开 URL、locale/market 规则或索引策略
-- 引入新的生产级第三方平台或客户数据处理方
-- 改变 Checkout、商品、订单、账户或营销同意边界
-- 引入与 MVP 范围不一致的大型功能
-
-可逆、局部且不改变系统边界的实现选择无需创建 ADR，但仍需遵守现有规格。
-
-## 计划与完成定义
-
-跨多个领域、预计超过一个工作阶段或包含架构决策的任务使用 `PLANS.md`
-格式建立并持续更新执行计划。小型、明确的修改不需要额外计划文件。
-
-代码存在后，一项工作只有在以下条件满足时才算完成：
-
-- 需求和对应验收条件已满足。
-- 相关 lint、typecheck、unit/integration/e2e 与 production build 已运行；
-  无法运行的检查必须说明原因。
-- 关键错误、加载、空状态和移动端行为已检查。
-- 涉及索引页面时，已检查初始 HTML、metadata、canonical、Schema、链接和
-  sitemap/noindex 行为。
-- 涉及 Commerce 时，已检查价格、库存、购物车与 Checkout 数据一致性。
-- 涉及用户数据时，已检查 consent、PII、日志和 secret 边界。
-- 文档、决策记录、环境变量示例和运行命令与代码同步。
-- 最终交付说明变更、验证结果、剩余风险和需要业务方完成的事项。
-
-## 当前状态与验证入口
-
-当前能力、上线范围和缺口以 [PROJECT_SPEC.md](docs/PROJECT_SPEC.md) 为统一摘要；
-业务输入见 BRAND_INPUTS，工作优先级见 ROADMAP，未决输入见 OPEN_QUESTIONS。
-本文件不重复日期化部署与审批记录。
-
-- Node 保持 24；精确依赖以 package.json/lockfile 为准，使用相互兼容的稳定版本。
-- US 语言注册与 provider/format 映射见 src/config/locales.ts；索引矩阵见 src/config/indexing.ts。
-  Preview 必须 noindex；Production canonical 为 `https://www.joyamana.com`。
-- 按 D-049，dev 已接入繁中全部页面与 Commerce，缺译页面不隐藏，允许 Shopify
-  默认英文回退；不得因此复制本地正文。三语言索引范围按 D-045 开放 Core/Commerce/
-  Policies，Editorial 关闭；保留部署总开关和单页 readiness，不把配置批准视为译文验收。
-- Playwright 按 D-043 封存；记录人工浏览器/Checkout smoke 的范围与结果。
-- 内容/导航按 D-046 使用五分钟再验证缓存，webhook 后置；商业数据保持 no-store。
-- 代码缺省的索引、Checkout 和 Contact form 门禁关闭；各部署按批准范围单独核验。
-- 常用命令：`pnpm dev`、`pnpm preflight`、`pnpm lint`、`pnpm typecheck`、
-  `pnpm test`、`pnpm build`。不得在实际运行前声称检查已通过。
+Playwright 当前封存，记录人工浏览器与 Checkout 检查。内容和导航五分钟再验证，webhook
+后置，商业数据 no-store。命令：`pnpm dev`、`pnpm preflight`、`pnpm format:check`、
+`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`。实际运行前不得声称通过。

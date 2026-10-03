@@ -1,203 +1,111 @@
-# Shopify Catalog Classification Setup
+# Shopify 维护
 
-Status: Active implementation guide
-Owner: Commerce / Content operations
-Last updated: 2026-10-03
-Related: D-002、D-009、D-020、D-036、D-050；`COMMERCE_SPEC.md`
+本文件说明运营人员在 Shopify 维护的字段和检查方法，不授权代码修改后台。
+商品和政策行为见交易规格，内容发布/索引规则见内容与索引规格，待完成资料见 Roadmap。
 
-本文件说明 D-036 所需的 Shopify Admin 配置。它不包含 credential，也不授权代码或
-自动化工具修改 Shopify；运营人员完成配置后，Storefront API 只读消费这些事实。
+## 发布与翻译
 
-## US 繁体中文（D-049）
+使用现有 Shopify 店铺、US Market 与 Headless channel，不新建香港/台湾市场。
+商品、Collection、Content Page、Article 与需要的 Metaobject/字段须发布并允许 Storefront
+读取。Shopify Policies 保持真实已批准正文；业务事实、价格和库存不随翻译改变。
 
-- 使用现有店铺、US Market、Headless channel 与 token；不新建香港/台湾市场。
-- 站点 `zh-Hant-US` / `/zh-hant-us`；Storefront `ZH_TW`；后台翻译语言 `zh-TW`。
-  后台已发布 Chinese (Traditional)，无需再改网站路径或货币。
-- 商品 title/description/SEO/options/alt、Collection 和 content_page Metaobjects 的译文
-  在 Shopify 维护，使用香港书面语；Policies 也需提供经过审核的正式译文。
-  `handle`、SKU、ID、metafield 枚举、USD 与 US 政策事实不随翻译改变。
-- 缺译时前台按业务要求直接显示 Shopify 默认语言，不隐藏页面；后台补译后由现有
-  adapter 读取。内容与导航可能经历五分钟再验证窗口，商业查询保持 no-store。
-- 商品逐字段翻译检测尚未实现。繁中 Core/Commerce/Policies 的索引矩阵已获批开启，
-  Editorial 关闭；部署前仍须人工核对翻译并建立持续 readiness，不把配置批准、语言
-  已发布或页面返回 200 当成翻译验收。已检测到回退的内容页继续 noindex。
-- 托管 Checkout、订单状态和交易通知的可编辑内容另外审校；平台默认繁体不保证
-  香港措辞。已验证新繁中 Cart 与英文 Cart 的繁中读取返回 `/zh-tw/cart/c/…`，
-  但该合约检查不替代浏览器/支付验收。
+维护 EN/ES/香港繁中 title、description、SEO、options、alt 和正文。繁中后台语言为
+`zh-TW`，Storefront 为 `ZH_TW`，站点为 `zh-Hant-US`；不得因此改变 USD 或交易国家。
+缺译页面可回退默认英文，语言已发布或页面 200 不能证明翻译已审核。
+Checkout、Order Status 和通知另外审校，平台默认繁体不能代替香港措辞验收。
 
-## 1. 商品类别
+内容/导航更新可能经历五分钟再验证，商业读取不缓存。等待并核对实际响应，不把后台
+保存成功当作前台已更新；缓存失效细节见技术规格。
 
-在 Shopify Admin 的每个 Product 中设置最具体的 Shopify Standard Product Category。
-首批公开路由映射如下：
+## 商品类别
 
-| Shopify category | Storefront URL |
+Product 使用最具体的 Shopify Standard Product Category；公开映射由
+[catalog.ts](../src/config/catalog.ts) 的 taxonomy allowlist 管理。
+
+| 商品类别 | 公开路径 |
 |---|---|
-| Apparel & Accessories > Jewelry > Bracelets | `/category/bracelets` |
-| Apparel & Accessories > Jewelry > Rings | `/category/rings` |
-| Apparel & Accessories > Jewelry > Necklaces | `/category/necklaces` |
-| Apparel & Accessories > Jewelry > Earrings | `/category/earrings` |
-| Arts & Entertainment > Hobbies & Creative Arts > Collectibles > Rocks & Fossils > Gemstones | `/category/gemstones` |
+| Jewelry / Bracelets | `/category/bracelets` |
+| Jewelry / Rings | `/category/rings` |
+| Jewelry / Necklaces | `/category/necklaces` |
+| Jewelry / Earrings | `/category/earrings` |
+| Rocks & Fossils / Gemstones | `/category/gemstones` |
 
-发布商品前在 Admin 复核准确 taxonomy。Palm Stone、Sphere、Guardian Figure 等
-形态只有在实际分类匹配时才使用 Gemstones；Product Type 不作为公开 Category 来源。
+Palm Stone/Sphere/Guardian Figure 只在真实 taxonomy 匹配时归入 Gemstones。
+Product Type/tag 不作为类别来源。至少一件当前 Catalog 可见商品匹配时才出现类别入口。
 
-Category route 只在当前 Headless channel 至少有一个商品使用对应 taxonomy ID 时出现。
-代码不按标题、Tag 或 Product Type 推断归属。
+## 商品与 Variant 字段
 
-## 2. Design Series Metaobject
+在商品自定义数据中维护：
 
-在 `Content > Metaobjects`（或 `Settings > Custom data`）建立 `Design Series` definition。
-建议第一阶段字段：
-
-| Field | Suggested type | Purpose |
+| Owner | Key | 类型与允许值 |
 |---|---|---|
-| Name | Single line text | 系列规范名称 |
-| Tagline | Single line text | 系列短句 |
-| Short introduction | Multi-line text | 卡片和 PDP 摘要 |
-| Story | Rich text | 系列正文 |
-| Hero image | File reference | 桌面主视觉 |
-| Mobile hero image | File reference | 可选移动主视觉 |
-| Campaign images | List of file references | Lookbook / Editorial |
-| Launch date | Date | 真实发布日期 |
-| Published | True or false | 内容运营门禁 |
+| Product | `custom.product_model` | single line text：`standard`、`natural_variation`、`one_of_one` |
+| Product | `custom.design_series` | 一个 Design Series Metaobject reference |
+| Variant | `custom.colors` | `list.single_line_text_field`，一个或多个真实颜色 |
 
-需要前台读取的 definition/field 开启 Storefront access，并为 en-US 与 es-US 建立人工
-审核翻译。不要为同一 Metaobject 再开放第二个可索引 web page；公开系列 URL 保持
-`/collections/{handle}`。
+需要 storefront 读取的 definition/field 开启访问权限。不要根据标题、图片、tag 或库存
+填猜测商品模型；准确库存提示当前暂停，不把 `currentlyNotInStock` 当作禁止超卖证明。
+商品知识字段在明确含义与结构后维护真实材料、尺寸/fit、care、处理/来源、包装和内容
+关系；当前尚未完整映射，不用填写未经确认的 namespace 来假装接入。
 
-## 3. Product metafields
+颜色定义已经确定为文本列表，不迁移为 Metaobject。多色款填写多个值，不填逗号拼接
+字符串；统一默认语言拼写，不把品牌色当商品属性，不以译文改变稳定身份。
+网页已接入读取、选项、筛选、图价与 PDP 初选，新增有效值自动读取，无需再绑定代码。
+字段 null 可能是未填或访问权限问题，需要分别检查，不保存长期的“全部未填”快照。
 
-在 `Settings > Custom data > Products` 建立：
+逐款关联真实媒体，至少比较两个不同颜色/价格的 Variant。Storefront image 可能回退
+产品图，因此非空不是专图绑定证据。独件一物一图。Variant 顺序决定同条件下的优先款，
+价格排序不改变款式；不要为图片问题改写前台商品事实。
 
-### 3.1 Product model
+## 设计系列
 
-```text
-Name: Product model
-Namespace and key: custom.product_model
-Type: Single line text
-Preset choices:
-  standard
-  natural_variation
-  one_of_one
-Storefront access: enabled
-```
+只有 Collection 的 `custom.collection_kind=design_series`、Headless 可见且非空时，
+才进入公开系列列表和详情。允许枚举为 `design_series`、`category`、`merchandising`，
+缺失/其他值不作为设计系列公开。
 
-每件正式商品必须明确选择一个值。不要根据标题、Tag、库存数量或图片推断商品模型。
-Storefront 映射该分类，但不根据缺失/未知值猜测商品模型，也不因此阻止正常购买。
-当前未接入可靠的禁止超卖事实，已暂停 `Only X left`。重新显示前必须先确认所选
-Variant 的库存政策和准确库存；不使用 `currentlyNotInStock=false` 推断禁止超卖。
-exact item / representative image 的具体披露仍需真实商品资料支持。
+Collection 可维护 `custom.design_series` 的单个 Metaobject reference。
+Product 设置同一 reference，由 automated Collection 归集系列成员；每件商品当前一个
+主要系列，改为多值须有真实需求和批准。Category 的后台 Collection 不能标为 design_series。
 
-### 3.2 Design series
+Design Series 可按后续故事需求设计名称、tagline、简介、rich-text story、hero/mobile
+hero、lookbook、真实发布日期和发布状态，字段建议不等于前端已接入。
+Collection 维护唯一 handle、description、image 和 SEO，公开 URL 仍 `/collections/{handle}`，
+不为 Metaobject 再发布第二个索引页。
 
-```text
-Name: Design series
-Namespace and key: custom.design_series
-Type: Metaobject reference → Design Series
-Values: One value
-Storefront access: enabled
-```
+当前前端只读取 Collection 类型与网格，没有 reference/story/lookbook。完整系列发布前
+须同时完成字段、翻译、适配和展示；只创建 Metaobject 不算故事功能完成。
 
-第一阶段每件商品只有一个主要设计系列。若未来确有跨系列商品，再另行批准改为 list；
-不要先为假设需求增加多值关系。
+## About 与 Accessibility
 
-## 4. Collection metafields
+`content_page` definition 开启 Storefront 读取，基础字段按下表维护：
 
-在 `Settings > Custom data > Collections` 建立：
+| Key | 类型 | 要求 |
+|---|---|---|
+| `title` | single_line_text_field | 必填 |
+| `body` | rich_text_field | 必填，必须有可见正文 |
+| `last_updated` | date | 必填，真实有效日期 |
+| `seo_title` | single_line_text_field | 必填 |
+| `seo_description` | multi_line_text_field | 可选，缺失用正文摘要 |
+| `navigation_title` | single_line_text_field | 可选，缺失用 title |
+| `summary` | multi_line_text_field | 可选，明确且不重复才展示 |
+| `child_pages` | list.metaobject_reference → content_page | About root 的有序直接子页 |
 
-```text
-Name: Collection kind
-Namespace and key: custom.collection_kind
-Type: Single line text
-Preset choices:
-  design_series
-  category
-  merchandising
-Storefront access: enabled
-```
+About root handle 固定 `about`，Accessibility handle 固定 `accessibility`。
+About 只公开 root 直接引用的完整子页，不遍历所有 Metaobject 或生成深层路径。
+各语言共享 handle、引用关系与事实；正文/SEO 在 Shopify 翻译。
+已公开 handle 修改或移除须先确定 redirect/404/410，不批量跳首页。
 
-可再建立关联字段：
+## Blog 与 Guide
 
-```text
-Name: Design series
-Namespace and key: custom.design_series
-Type: Metaobject reference → Design Series
-Values: One value
-Storefront access: enabled
-```
+原生 Blog handle `blog` 用于 `/blog`，`crystals` 用于 `/crystals`。
+Article 维护真实正文、摘要、作者、日期、媒体、SEO 与翻译，必要扩展放 Article metafields，
+不重复保存同主题 Crystal Metaobject 正文。测试文章不作为正式内容，Editorial 暂不索引。
 
-当前 storefront 已读取 `custom.collection_kind` 并 fail closed：缺失、拼写不同或不是
-`design_series` 的 Collection 不会出现在 `/collections`，详情路由也返回 404。
-当前前端尚未读取 Collection/Product 上的 `custom.design_series` reference，也未
-渲染 Metaobject 中的 story/lookbook 字段。按 D-036 发布完整设计系列前，还需实现并
-验证该读取链路；不能只创建 Metaobject 就声称系列故事已接入。
+## 操作后检查
 
-当前系列状态与缺口统一见 [PROJECT_SPEC.md](PROJECT_SPEC.md)。
-
-## 5. 建立系列 Collection
-
-每个设计系列建立一个非空 Shopify automated Collection：
-
-```text
-Title: Seven Chakra
-Handle: seven-chakra
-Condition: Product metafield Design series is equal to Seven Chakra
-custom.collection_kind: design_series
-custom.design_series: Seven Chakra
-```
-
-补充唯一 description、image、SEO title/description，并发布到 Headless sales channel。
-商品只需设置 `custom.design_series`，满足条件后自动进入系列 Collection。
-
-Category 可以在 Admin 建 automated Collection 辅助运营，但公开前端仍使用
-`/category/*`。不要把 Bracelets Collection 标记为 `design_series`。
-
-## 6. Variant 颜色与图片（D-050）
-
-后台已有定义，按业务方截图沿用，不迁移为 Metaobject：
-
-```text
-Owner: Variants
-Name: Colors
-Namespace and key: custom.colors
-Type: List of single line text (list.single_line_text_field)
-Storefront access: PUBLIC_READ / enabled
-```
-
-- 在每个真实 Variant 填一个或多个颜色标签；多色款可填多个值，不填写逗号拼接字符串。
-  使用稳定的默认语言词表、统一拼写；UI 规范化空白和大小写，不自行合并颜色别名。
-- 标签只描述该款的真实颜色，不把品牌调色板当成商品属性。前台为文字复选项，不猜 HEX。
-- 网页已完成字段读取、动态选项、即时筛选、固定选款、图价和 PDP 初选。后台新增颜色
-  在下一次请求自动出现，无需再绑定网页代码或部署；媒体关系仍在 Shopify 维护。
-- 颜色归属、库存和价格在 Shopify 维护。译文在后台/集中界面词典审校，不为语言复制商品。
-- 确认已填样本能由 Storefront API 读取 `type/value`；null 可能是未填或访问权限问题。
-  2026-10-02 检查全部 93 个 Variant 为 null，业务方确认尚未填、后续补齐。
-- 在商品媒体中逐款绑定真实图片，至少核对两个颜色不同的 Variant。API 的 `image`
-  自带产品图回退，字段非空不能代替后台关联检查；一物一图的独件保持既有要求。
-- 后台 Variant 顺序决定同条件下的展示优先级（可购买优先后按 POSITION）；调整顺序
-  会改变展示款，价格升降序不会改变已选展示款。
-
-## 7. 发布验收
-
-- Product 已发布到 Headless channel，Category 准确，价格/库存来自当前 US Catalog。
-- 每件正式 Product 已填充 `custom.product_model`；分别验证 `standard`、
-  `natural_variation`、`one_of_one`、缺失值和 oversell Variant 的 PDP 行为。
-- Design Series Metaobject 与必要字段有已审核 EN/ES 内容。
-- Storefront 已实现并验证 `custom.design_series` reference 与必需故事/媒体字段读取；
-  在此前只能验证 Collection 类型门禁和商品网格。
-- Series Collection 非空、handle 稳定、`collection_kind=design_series`，并发布到
-  Headless channel。
-- `/shop` 显示商品；对应 `/category/*` 显示相同商品；系列页只显示系列成员。
-- 为已填颜色样本核对多色 OR、颜色加可购买同 Variant AND、展示款价格升降序、
-  卡片图/标题深链接和 PDP 初选。售罄款不得因另一款可售而误显示可买。
-- 切款、刷新、前进后退和三语言切换后图价款式一致；Add to bag 与独立 Buy now
-  使用相同 merchandise，既有 Bag 不被 Buy now 改写。正式设备/Checkout smoke 单独记录。
-- Header 的 Shop 下拉只显示非空 Category；设计系列为 0 个时隐藏 Header 系列入口、
-  1–2 个时直接显示、3 个及以上时合并为 Collections 下拉。不要用空 Collection 测试
-  或触发该阈值。导航结构使用 5 分钟短缓存，Admin 发布变化可能不会即时出现在
-  Header；验收时等待再验证并确认实际响应，当前没有手动缓存失效端点。
-- `/collections/bracelets` 永久跳转 `/category/bracelets`；未知或普通后台 Collection
-  不成为公开页面。
-- Category、Collection 与 Product 的 canonical、breadcrumbs、sitemap 和可见链接一致。
-- en-US/es-US Commerce scope 已获批准；es-US 商品与 Collection 仍需人工逐页确认非
-  fallback。索引总门禁与 Checkout gate 仍只在各自生产验收完成后开启。
+- 商品发布到 Headless，Category、Variant 价格/库存/数量规则、模型与真实媒体正确。
+- 已填颜色可由 API 读取，验证多色 OR、颜色+可购买同款 AND、展示价排序、卡片与 PDP 同款。
+- 深链接、切款、刷新、返回/前进和语言切换一致；Bag/Buy now 使用所选 merchandise。
+- 系列真实非空、类型正确、正文/SEO 完整；检查导航 0/1–2/3+ 阈值。
+- About 引用、顺序、正文、日期和三语言内容正确；已识别回退页不进入对应 sitemap。
+- 核对 UI、metadata、canonical、Schema 与真实数据，按发布手册完成设备和 Checkout 验收。

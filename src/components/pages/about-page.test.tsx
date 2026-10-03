@@ -30,7 +30,7 @@ function page(
 }
 
 describe("About content page", () => {
-  it("keeps all Chinese child links and readable English fallback per D-049", () => {
+  it("keeps all Chinese child links and readable English fallback", () => {
     const fallback = {
       requestedLocale: "zh-Hant-US",
       contentLocale: "en-US",
