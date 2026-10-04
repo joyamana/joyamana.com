@@ -6,6 +6,7 @@ import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { ProductCard } from "@/components/product-card";
+import { BrandLogo } from "@/components/brand-logo";
 
 export async function HomePage({ locale }: { locale: Locale }) {
   const copy = getCopy(locale);
@@ -88,7 +89,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
       </section>
 
       <section className="manifesto">
-        <div>
+        <div className="manifesto__copy">
           <p className="eyebrow">
             {uiText(locale, {
               zh: "我們的初衷",
@@ -103,8 +104,6 @@ export async function HomePage({ locale }: { locale: Locale }) {
               es: "Un cristal puede ser una forma de volver a ti.",
             })}
           </h2>
-        </div>
-        <div>
           <p>
             {uiText(locale, {
               zh: "我們不將水晶視為個人選擇或行動的替代品，而是富有意義的物件，讓人留意內心、梳理意念，覺察當下。",
@@ -152,6 +151,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
             })}{" "}
             →
           </Link>
+        </div>
+        <div className="manifesto__symbol" aria-hidden="true">
+          <BrandLogo variant="symbol" decorative />
         </div>
       </section>
     </>

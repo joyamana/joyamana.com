@@ -3,12 +3,15 @@ import { brand } from "@/config/brand";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath, languageOptionsFor } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import { BrandLogo } from "./brand-logo";
 
 export function SiteFooter({ locale }: { locale: Locale }) {
   return (
     <footer className="site-footer">
       <div className="footer-statement">
-        <p className="eyebrow">{brand.name}</p>
+        <Link className="footer-logo" href={localePath(locale)}>
+          <BrandLogo variant="lockup" tone="lavender" />
+        </Link>
         <p className="footer-tagline">
           {uiText(locale, {
             zh: "現代水晶飾物，清晰而真實地呈現。",

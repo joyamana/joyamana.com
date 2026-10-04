@@ -42,6 +42,8 @@
 
 ## 工程与验收
 
+- 按 [Shopify 品牌资产操作](SHOPIFY_CATALOG_SETUP.md#品牌资产与-checkout)上传已准备的 PNG，
+  配置并验收 Hosted Checkout、Order Status 与通知的正式字标；前台 SVG 不会自动同步后台。
 - 手机菜单、数量输入、横向缩略图和矮屏 sticky 须完成真实手机、读屏与 200% zoom 验收；Bag 和 Checkout
   在获批环境完成真实流程检查。自动浏览器与单元测试不能代替这些检查。
 - 修复 Next 动态缺失商品/内容页的初始 404 正文缺失；当前状态码/noindex 正确但正文需 JS，

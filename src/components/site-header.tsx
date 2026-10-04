@@ -18,6 +18,7 @@ import {
 import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 import { LanguageSwitch } from "./language-switch";
+import { BrandLogo } from "./brand-logo";
 import { commerceLanguageQueryFromSearch } from "@/lib/commerce/catalog-browse";
 
 function MenuIcon() {
@@ -301,7 +302,7 @@ export function SiteHeader({
             es: `Inicio de ${brand.name}`,
           })}
         >
-          {brand.name}
+          <BrandLogo decorative />
         </Link>
         <nav
           className="desktop-nav"
@@ -427,7 +428,9 @@ export function SiteHeader({
           className="mobile-menu__panel"
         >
           <div className="mobile-menu__top">
-            <span className="wordmark">{brand.name}</span>
+            <span className="wordmark">
+              <BrandLogo />
+            </span>
             <button
               aria-label={uiText(locale, {
                 zh: "關閉選單",

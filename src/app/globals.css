@@ -161,11 +161,18 @@ h3 {
 }
 
 .wordmark {
+  display: inline-flex;
+  width: clamp(160px, 13vw, 180px);
+  max-width: 100%;
+  min-height: 44px;
+  align-items: center;
   justify-self: start;
-  font-family: var(--font-display);
-  font-size: 1.55rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
+}
+
+.brand-logo {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .desktop-nav,
@@ -904,11 +911,25 @@ h3 {
 
 .manifesto {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(4rem, 10vw, 10rem);
-  padding: clamp(5rem, 12vw, 11rem) var(--page);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   color: var(--ink);
   background: var(--brand-surface);
+}
+
+.manifesto__copy {
+  padding: clamp(3rem, 6vw, 6rem) var(--page);
+}
+
+.manifesto__symbol {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+  padding: clamp(2.5rem, 6vw, 6rem);
+  background: var(--brand-soft);
+}
+
+.manifesto__symbol .brand-logo {
+  width: min(100%, 280px);
 }
 
 .manifesto .eyebrow,
@@ -918,23 +939,23 @@ h3 {
 
 .manifesto h2 {
   max-width: 700px;
-  margin-bottom: 0;
+  margin-bottom: 1.75rem;
 }
 
-.manifesto > div > p:not(.eyebrow) {
+.manifesto__copy > p:not(.eyebrow) {
   max-width: 570px;
   color: var(--brand-muted);
   font-size: 1.05rem;
 }
 
 .principle-list {
-  margin: 3rem 0 0;
+  margin: 2rem 0 0;
 }
 
 .principle-list div {
   display: grid;
   grid-template-columns: 3rem 1fr;
-  padding: 1.25rem 0;
+  padding: 0.9rem 0;
   border-top: 1px solid var(--line);
 }
 
@@ -2407,12 +2428,27 @@ input {
 }
 
 .site-footer {
+  --footer-pattern-height: clamp(40px, 4vw, 64px);
+  position: relative;
   display: grid;
-  grid-template-columns: 2fr repeat(3, 1fr);
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
   gap: 3rem;
-  padding: clamp(4rem, 8vw, 7rem) var(--page);
+  padding: calc(clamp(4rem, 8vw, 7rem) + var(--footer-pattern-height))
+    var(--page) clamp(4rem, 8vw, 7rem);
   color: rgba(255, 255, 255, 0.72);
   background: var(--inverse-surface);
+}
+
+.site-footer::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--footer-pattern-height);
+  background: var(--brand-soft) url("/brand/pattern-lavender.svg") repeat center;
+  background-size: 192px auto;
+  content: "";
+  pointer-events: none;
 }
 
 .site-footer > div:not(.footer-statement) {
@@ -2423,12 +2459,18 @@ input {
   font-size: 0.78rem;
 }
 
+.footer-logo {
+  display: block;
+  width: 180px;
+  max-width: 100%;
+  margin-bottom: 2rem;
+}
+
 .footer-statement > .footer-tagline {
-  max-width: 400px;
-  color: white;
-  font-family: var(--font-display);
-  font-size: clamp(1.75rem, 3vw, 3rem);
-  line-height: 1.04;
+  max-width: 320px;
+  margin-bottom: 0;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .footer-statement .footer-markets {
@@ -2447,7 +2489,7 @@ input {
 
 .footer-heading {
   margin-bottom: 0.75rem;
-  color: white;
+  color: var(--brand-soft);
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -2462,7 +2504,11 @@ input {
 
 @media (max-width: 1050px) {
   .site-header {
-    grid-template-columns: 96px 1fr 96px;
+    grid-template-columns: minmax(88px, 1fr) minmax(0, auto) minmax(88px, 1fr);
+  }
+
+  .wordmark {
+    width: 140px;
   }
 
   .desktop-nav {
@@ -2486,13 +2532,21 @@ input {
   }
 
   .header-actions {
-    gap: 0.35rem;
+    gap: 0;
   }
 
   .header-action--search,
   .header-action--bag {
+    position: relative;
+    width: 44px;
     min-width: 44px;
     justify-content: center;
+  }
+
+  .header-action__count {
+    position: absolute;
+    top: 1px;
+    right: 0;
   }
 
   .header-action--search .header-action__label,
@@ -2525,7 +2579,7 @@ input {
   }
 
   .site-footer {
-    grid-template-columns: 2fr repeat(2, 1fr);
+    grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -2594,6 +2648,15 @@ input {
     gap: 1rem;
   }
 
+  .manifesto__symbol {
+    min-height: 240px;
+    padding: 3rem var(--page);
+  }
+
+  .manifesto__symbol .brand-logo {
+    width: min(55%, 240px);
+  }
+
   .product-grid,
   .product-grid--three {
     grid-template-columns: 1fr;
@@ -2646,7 +2709,7 @@ input {
   }
 
   .site-footer {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .footer-statement {
@@ -2658,14 +2721,6 @@ input {
   .site-header {
     padding-right: 0.75rem;
     padding-left: 0.75rem;
-  }
-
-  .wordmark {
-    font-size: 1.2rem;
-  }
-
-  .header-actions {
-    gap: 0.2rem;
   }
 }
 

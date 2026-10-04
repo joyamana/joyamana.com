@@ -16,6 +16,26 @@ Policies 保持真实获批正文；翻译不改变业务事实、价格、库�
 
 更新后核对实际前台响应；内容/导航有五分钟再验证，商业读取不缓存，详见技术规格。
 
+## 品牌资产与 Checkout
+
+前台 Logo 资源与使用规则见 [设计规范](DESIGN_SYSTEM.md#品牌与视觉)。Next.js 资源不会
+自动同步 Shopify 的品牌、Hosted Checkout 或通知；后台需分别上传并检查实际显示。
+
+1. Settings → General → Brand assets → Manage：默认 Logo 使用
+   [lockup-rust.png](../public/brand/lockup-rust.png)，方形 Logo 使用
+   [symbol-square-rust.png](../public/brand/symbol-square-rust.png)。默认资产为透明 PNG、
+   2048px 宽；方形图为透明 PNG、1024×1024，符合后台最低尺寸要求。
+2. Settings → Checkout → Configurations → Edit → Settings → Logo：选择
+   [wordmark-rust.png](../public/brand/wordmark-rust.png)，调整 Width 与 Alignment，
+   保持字标原比例，分别预览桌面和手机。表单用浅底，按钮和强调色沿用设计规范的正式颜色，
+   不将纹样铺到表单或价格区域。
+3. 通知模板的 Logo 另行配置，核对订单确认、Order Status 和 Checkout；两种公开语言
+   共用品牌资产，译文仍按发布范围审校。保存后执行 [发布验收](LAUNCH_RUNBOOK.md#商品与交易)。
+
+官方入口与要求：[管理品牌资产](https://help.shopify.com/en/manual/promoting-marketing/managing-brand-assets)、
+[Checkout 样式](https://help.shopify.com/en/manual/checkout-settings/customize-checkout-configurations/checkout-style)。
+上传资源和前台代码完成不代表后台已保存或部署验收通过。
+
 ## 商品类别与字段
 
 Product 使用最具体的 Shopify Standard Product Category；公开 taxonomy allowlist 见

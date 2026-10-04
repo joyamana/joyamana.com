@@ -26,6 +26,23 @@ export const rootMetadata: Metadata = {
   },
   description:
     "Modern crystal jewelry and singular objects, selected for their form, symbolism, and natural character.",
+  icons: {
+    icon: [
+      {
+        url: "/brand/favicon.ico",
+        sizes: "16x16 32x32 48x48",
+        type: "image/x-icon",
+      },
+      { url: "/brand/icon.svg", type: "image/svg+xml", sizes: "any" },
+    ],
+    apple: [
+      {
+        url: "/brand/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
   robots: siteConfig.indexable
     ? { index: true, follow: true }
     : { index: false, follow: false, noarchive: true },
