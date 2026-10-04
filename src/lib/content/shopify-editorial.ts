@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   shopifyContextForLocale,
   defaultLocaleForMarket,
@@ -94,13 +95,12 @@ export interface StorefrontEditorialArticle extends ParsedArticle {
   titleLocale: Locale;
   excerptLocale: Locale;
   tagsLocale: Locale;
-  requestedLocale: Locale;
   usedDefaultLanguage: boolean;
 }
 
 export interface StorefrontEditorialIndex extends Omit<ParsedBlog, "articles"> {
+  descriptionLocale: Locale;
   articles: StorefrontEditorialArticle[];
-  requestedLocale: Locale;
   usedDefaultLanguage: boolean;
 }
 
@@ -377,67 +377,76 @@ function localizeArticle(
       JSON.stringify(requested.tags) === JSON.stringify(defaultArticle?.tags)
         ? defaultLocale
         : locale,
-    requestedLocale: locale,
     usedDefaultLanguage,
   };
 }
 
-export async function getShopifyEditorialIndex(
-  kind: EditorialKind,
-  locale: Locale,
-): Promise<StorefrontEditorialIndex | null> {
-  const defaultLocale = defaultLocaleForMarket[marketIdForLocale(locale)];
-  const [requestedBlog, defaultBlog] = await Promise.all([
-    fetchBlog(kind, locale),
-    locale === defaultLocale ? null : fetchBlog(kind, defaultLocale),
-  ]);
-  if (!requestedBlog) return null;
-  const canonicalBlog = defaultBlog ?? requestedBlog;
-  const defaultArticles = new Map(
-    canonicalBlog.articles.map((article) => [article.handle, article]),
-  );
-  const articles = requestedBlog.articles.flatMap((article) => {
-    const defaultArticle = defaultArticles.get(article.handle) ?? null;
-    if (locale !== defaultLocale && !defaultArticle) return [];
-    return [localizeArticle(article, defaultArticle, locale, defaultLocale)];
-  });
-  const usedDefaultLanguage =
-    locale !== defaultLocale &&
-    (!articles.length ||
-      articles.every((article) => article.usedDefaultLanguage));
+export const getShopifyEditorialIndex = cache(
+  async function getShopifyEditorialIndex(
+    kind: EditorialKind,
+    locale: Locale,
+  ): Promise<StorefrontEditorialIndex | null> {
+    const defaultLocale = defaultLocaleForMarket[marketIdForLocale(locale)];
+    const [requestedBlog, defaultBlog] = await Promise.all([
+      fetchBlog(kind, locale),
+      locale === defaultLocale ? null : fetchBlog(kind, defaultLocale),
+    ]);
+    if (!requestedBlog) return null;
+    const canonicalBlog = defaultBlog ?? requestedBlog;
+    const defaultArticles = new Map(
+      canonicalBlog.articles.map((article) => [article.handle, article]),
+    );
+    const articles = requestedBlog.articles.flatMap((article) => {
+      const defaultArticle = defaultArticles.get(article.handle) ?? null;
+      if (locale !== defaultLocale && !defaultArticle) return [];
+      return [localizeArticle(article, defaultArticle, locale, defaultLocale)];
+    });
+    const usedDefaultLanguage =
+      locale !== defaultLocale &&
+      (!articles.length ||
+        articles.every((article) => article.usedDefaultLanguage));
 
-  return {
-    id: requestedBlog.id,
-    handle: requestedBlog.handle,
-    title: requestedBlog.title,
-    seoTitle: requestedBlog.seoTitle,
-    seoDescription: requestedBlog.seoDescription,
-    articles,
-    requestedLocale: locale,
-    usedDefaultLanguage,
-  };
-}
+    return {
+      id: requestedBlog.id,
+      handle: requestedBlog.handle,
+      title: requestedBlog.title,
+      seoTitle: requestedBlog.seoTitle,
+      seoDescription: requestedBlog.seoDescription,
+      descriptionLocale:
+        locale !== defaultLocale &&
+        requestedBlog.seoDescription === canonicalBlog.seoDescription
+          ? defaultLocale
+          : locale,
+      articles,
+      usedDefaultLanguage,
+    };
+  },
+);
 
-export async function getShopifyEditorialArticle(
-  kind: EditorialKind,
-  handle: string,
-  locale: Locale,
-): Promise<StorefrontEditorialArticle | null> {
-  const defaultLocale = defaultLocaleForMarket[marketIdForLocale(locale)];
-  const [requestedArticle, defaultArticle] = await Promise.all([
-    fetchArticle(kind, handle, locale),
-    locale === defaultLocale ? null : fetchArticle(kind, handle, defaultLocale),
-  ]);
-  if (!requestedArticle) return null;
-  const canonicalArticle = defaultArticle ?? requestedArticle;
-  if (locale !== defaultLocale && !defaultArticle) return null;
-  return localizeArticle(
-    requestedArticle,
-    canonicalArticle,
-    locale,
-    defaultLocale,
-  );
-}
+export const getShopifyEditorialArticle = cache(
+  async function getShopifyEditorialArticle(
+    kind: EditorialKind,
+    handle: string,
+    locale: Locale,
+  ): Promise<StorefrontEditorialArticle | null> {
+    const defaultLocale = defaultLocaleForMarket[marketIdForLocale(locale)];
+    const [requestedArticle, defaultArticle] = await Promise.all([
+      fetchArticle(kind, handle, locale),
+      locale === defaultLocale
+        ? null
+        : fetchArticle(kind, handle, defaultLocale),
+    ]);
+    if (!requestedArticle) return null;
+    const canonicalArticle = defaultArticle ?? requestedArticle;
+    if (locale !== defaultLocale && !defaultArticle) return null;
+    return localizeArticle(
+      requestedArticle,
+      canonicalArticle,
+      locale,
+      defaultLocale,
+    );
+  },
+);
 
 export async function getPublishedShopifyEditorialPaths(
   kind: EditorialKind,

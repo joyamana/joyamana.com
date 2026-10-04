@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { Product } from "@/lib/commerce/types";
+import type { ProductSummary } from "@/lib/commerce/types";
 import { formatMoney, formatPriceRange } from "@/lib/format";
 import type { CatalogCard } from "@/lib/commerce/catalog-browse";
 import { getCopy } from "@/lib/i18n/copy";
@@ -8,22 +8,26 @@ import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 
-export function ProductCard({
-  product,
-  locale,
-  presentation,
-}: {
-  product: Product;
-  locale: Locale;
-  presentation?: CatalogCard;
-}) {
+type ProductCardProps = { locale: Locale } & (
+  | { product: ProductSummary; presentation?: never }
+  | { presentation: CatalogCard; product?: never }
+);
+
+export function ProductCard({ locale, ...input }: ProductCardProps) {
+  const presentation = input.presentation;
+  const product = presentation ? presentation.product : input.product!;
   const copy = getCopy(locale);
   const image = presentation
     ? presentation.variant.image
-    : (product.featuredImage ??
-      product.images[0] ??
-      product.variants[0]?.image);
-  const available = presentation?.available ?? product.availableForSale;
+    : product.featuredImage;
+  const unavailable = presentation
+    ? !presentation.available
+    : !product.availableForSale;
+  const state = unavailable
+    ? "unavailable"
+    : presentation
+      ? "available"
+      : "options";
   const href = localePath(
     locale,
     presentation?.path ?? `/products/${product.handle}`,
@@ -31,20 +35,22 @@ export function ProductCard({
   const variantTitle = presentation?.variant.title;
   const meaningfulTitle =
     variantTitle && variantTitle.toLowerCase() !== "default title";
-  const availabilityLabel = available
-    ? uiText(locale, {
-        zh: "可購買",
-        en: "Available",
-        es: "Disponible",
-      })
-    : copy.labels.soldOut;
+  const availabilityLabel = unavailable
+    ? copy.labels.soldOut
+    : presentation
+      ? uiText(locale, {
+          zh: "可購買",
+          en: "Available",
+          es: "Disponible",
+        })
+      : uiText(locale, {
+          zh: "查看款式",
+          en: "View options",
+          es: "Ver opciones",
+        });
 
   return (
-    <article
-      className={`product-card product-card--${
-        available ? "available" : "unavailable"
-      }`}
-    >
+    <article className={`product-card product-card--${state}`}>
       <Link
         className="product-card__visual"
         href={href}
@@ -68,7 +74,7 @@ export function ProductCard({
             })}
           </span>
         )}
-        {!available ? (
+        {unavailable ? (
           <span className="product-card__availability-badge" aria-hidden="true">
             {availabilityLabel}
           </span>
@@ -77,14 +83,14 @@ export function ProductCard({
       <div className="product-card__body">
         <div className="product-card__meta">
           <p
-            className={`product-card__availability product-card__availability--${
-              available ? "available" : "unavailable"
-            }`}
+            className={`product-card__availability product-card__availability--${state}`}
           >
-            <span
-              className="product-card__availability-dot"
-              aria-hidden="true"
-            />
+            {state !== "options" ? (
+              <span
+                className="product-card__availability-dot"
+                aria-hidden="true"
+              />
+            ) : null}
             {availabilityLabel}
           </p>
           <p className="product-card__price">

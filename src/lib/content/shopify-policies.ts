@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   shopifyContextForLocale,
   defaultLocaleForMarket,
@@ -43,7 +44,6 @@ export interface StorefrontPolicy {
   url: string;
   html: string;
   contentLocale: Locale;
-  requestedLocale: Locale;
   usedDefaultLanguage: boolean;
 }
 
@@ -96,7 +96,7 @@ export async function getShopifyPolicy(
   return (await getShopifyPolicies(locale))[kind];
 }
 
-export async function getShopifyPolicies(
+export const getShopifyPolicies = cache(async function getShopifyPolicies(
   locale: Locale,
 ): Promise<Record<ShopifyPolicyKind, StorefrontPolicy | null>> {
   const marketId = marketIdForLocale(locale);
@@ -134,13 +134,12 @@ export async function getShopifyPolicies(
           url: requestedPolicy.url,
           html,
           contentLocale: usedDefaultLanguage ? defaultLocale : locale,
-          requestedLocale: locale,
           usedDefaultLanguage,
         } satisfies StorefrontPolicy,
       ];
     }),
   ) as Record<ShopifyPolicyKind, StorefrontPolicy | null>;
-}
+});
 
 export async function getPublishedShopifyPolicyPaths(locale: Locale) {
   const policies = Object.values(await getShopifyPolicies(locale));

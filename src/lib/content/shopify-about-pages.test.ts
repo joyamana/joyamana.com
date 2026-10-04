@@ -52,7 +52,6 @@ function pageNode({
     id: `gid://shopify/Metaobject/${handle}`,
     type: "content_page",
     handle,
-    updatedAt: "2026-08-31T12:00:00Z",
     fields: [
       { key: "title", type: "single_line_text_field", value: title },
       {

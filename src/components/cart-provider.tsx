@@ -34,6 +34,7 @@ import type {
 import {
   cartErrorMessage,
   cartForFailure,
+  emptyCartView,
   isBlockingInventoryWarning,
 } from "@/lib/commerce/cart-types";
 
@@ -57,13 +58,6 @@ interface CartContextValue {
   ) => Promise<CheckoutActionResult>;
   clearError: () => void;
 }
-
-const emptyCart: CartView = {
-  lines: [],
-  totalQuantity: 0,
-  subtotal: { amount: "0.0", currencyCode: "USD" },
-  warnings: [],
-};
 
 function connectionFailureForLanguage(
   language: StorefrontLanguage,
@@ -94,7 +88,7 @@ export function CartProvider({
     () => connectionFailureForLanguage(language),
     [language],
   );
-  const [cart, setCart] = useState<CartView>(emptyCart);
+  const [cart, setCart] = useState<CartView>(emptyCartView);
   const [status, setStatus] = useState<CartStatus>("loading");
   const [error, setError] = useState<CartActionFailure["error"] | null>(null);
   const operationQueueRef = useRef<Promise<void>>(Promise.resolve());

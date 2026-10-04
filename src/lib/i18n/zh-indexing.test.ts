@@ -54,7 +54,6 @@ it("opens approved Chinese scopes, canonical, Schema and three-language alternat
   });
   expect(english.alternates?.languages).toEqual({
     "en-US": "https://www.joyamana.com/shop",
-    "es-US": "https://www.joyamana.com/es-us/shop",
     "zh-Hant-US": "https://www.joyamana.com/zh-hant-us/shop",
   });
 });
@@ -63,7 +62,7 @@ it("keeps Editorial, private and unknown pages closed for every enabled language
   const { buildMetadata } = await import("@/lib/seo");
   const { serializeIndexableStructuredData } =
     await import("@/lib/structured-data");
-  for (const locale of ["en-US", "es-US", "zh-Hant-US"] as const) {
+  for (const locale of ["en-US", "zh-Hant-US"] as const) {
     for (const path of [
       "/blog",
       "/blog/story",

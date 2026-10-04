@@ -26,9 +26,9 @@ describe("storefront product category configuration", () => {
       handle: "gemstones",
       title: "Gemstones",
     });
-    expect(localizeProductCategory(definition!, "es-US")).toMatchObject({
+    expect(localizeProductCategory(definition!, "zh-Hant-US")).toMatchObject({
       handle: "gemstones",
-      title: "Gemas",
+      title: "寶石",
     });
   });
 });

@@ -43,7 +43,9 @@ describe("locale routing", () => {
     expect(languageOptionsFor("en-CA")).toEqual([]);
     expect(isLocaleEnabled("en-CA")).toBe(false);
     expect(isLocaleEnabled("fr-CA")).toBe(false);
-    expect(enabledLocales).toEqual(["en-US", "es-US", "zh-Hant-US"]);
+    expect(enabledLocales).toEqual(["en-US", "zh-Hant-US"]);
+    expect(isEnabledLocale("es-US")).toBe(false);
+    expect(isLocaleEnabled("es-US")).toBe(false);
   });
 
   it("keeps BCP 47 identity distinct from paths and provider/format codes", () => {
@@ -67,7 +69,6 @@ describe("locale routing", () => {
     expect(isEnabledLocale("zh-Hant-US")).toBe(true);
     expect(languageOptionsFor("zh-Hant-US").map((o) => o.shortLabel)).toEqual([
       "EN",
-      "ES",
       "繁中",
     ]);
   });

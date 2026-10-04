@@ -24,23 +24,22 @@ vi.mock("./locale-shell", () => ({
 }));
 
 import EnglishLayout from "@/app/(english)/layout";
-import SpanishUSLayout from "@/app/es-us/layout";
 import TraditionalChineseUSLayout from "@/app/zh-hant-us/layout";
 
 describe("Root document fonts", () => {
-  it.each([
-    ["en-US", EnglishLayout],
-    ["es-US", SpanishUSLayout],
-  ] as const)("keeps the existing Latin fonts on %s", (locale, Layout) => {
-    const html = renderToStaticMarkup(
-      <Layout>
-        <main>Page</main>
-      </Layout>,
-    );
-    expect(html).toContain(`lang="${locale}"`);
-    expect(html).toContain('class="newsreader-variable manrope-variable"');
-    expect(html).not.toContain("noto-");
-  });
+  it.each([["en-US", EnglishLayout]] as const)(
+    "keeps the existing Latin fonts on %s",
+    (locale, Layout) => {
+      const html = renderToStaticMarkup(
+        <Layout>
+          <main>Page</main>
+        </Layout>,
+      );
+      expect(html).toContain(`lang="${locale}"`);
+      expect(html).toContain('class="newsreader-variable manrope-variable"');
+      expect(html).not.toContain("noto-");
+    },
+  );
 
   it("adds both HK font variables without replacing the Latin fonts", () => {
     const html = renderToStaticMarkup(

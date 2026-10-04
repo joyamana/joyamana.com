@@ -15,15 +15,10 @@
   --floral-terracotta: #da6e51;
   --brand-surface: color-mix(in srgb, var(--paper) 82%, var(--ink));
   --brand-muted: color-mix(in srgb, var(--ink) 85%, var(--paper));
-  --accent: var(--floral-lavender);
-  --accent-metal: var(--floral-terracotta);
   --media-surface: color-mix(in srgb, var(--floral-peach) 14%, var(--paper));
   --inverse-surface: #321708;
   --hero-overlay: 33, 20, 12;
   --status-error: #8f2f28;
-  --warning-text: #674c1e;
-  --warning-border: #8f6d32;
-  --warning-surface: #efe2c7;
   --status-available: #4f614e;
   --status-unavailable: #754340;
   --line: rgba(123, 44, 6, 0.18);
@@ -73,8 +68,7 @@ a {
 }
 
 button,
-input,
-textarea {
+input {
   font: inherit;
 }
 
@@ -1577,7 +1571,11 @@ h3 {
 
 .product-gallery__thumbs {
   display: grid;
-  grid-template-columns: repeat(5, minmax(52px, 112px));
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(52px, 8vw, 112px);
+  overflow-x: auto;
+  padding: 6px;
+  flex-shrink: 0;
   gap: 0.7rem;
   margin-top: 0.9rem;
 }
@@ -1592,6 +1590,10 @@ h3 {
 
 .product-gallery__thumbs button.is-selected {
   border-color: var(--ink);
+}
+
+.product-gallery__thumbs button:focus-visible {
+  outline-offset: -3px;
 }
 
 .product-gallery__thumbs img {
@@ -1636,10 +1638,6 @@ h3 {
     width: auto;
     max-width: 100%;
     max-height: calc(100vh - 14rem);
-  }
-
-  .product-gallery__thumbs {
-    flex: 0 0 auto;
   }
 }
 
@@ -1786,7 +1784,7 @@ h3 {
 .quantity-picker > div,
 .cart-quantity {
   display: inline-grid;
-  grid-template-columns: repeat(3, 42px);
+  grid-template-columns: repeat(3, 44px);
   align-items: center;
   border: 1px solid var(--line);
 }
@@ -1796,8 +1794,8 @@ h3 {
 .cart-quantity button,
 .cart-quantity span {
   display: grid;
-  min-width: 42px;
-  min-height: 42px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   place-items: center;
   border: 0;
@@ -2127,18 +2125,18 @@ h3 {
   text-underline-offset: 0.18em;
 }
 
-.form-page {
+.contact-page {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(3rem, 10vw, 10rem);
   padding: clamp(5rem, 10vw, 9rem) var(--page);
 }
 
-.form-page h1 {
+.contact-page h1 {
   font-size: clamp(2.75rem, 4vw, 4.5rem);
 }
 
-.form-page > div p:last-child {
+.contact-page > div p:last-child {
   max-width: 500px;
   color: var(--muted);
 }
@@ -2151,7 +2149,7 @@ h3 {
   display: inline-block;
   margin: 0.5rem 0 1.5rem;
   border-bottom: 1px solid currentColor;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: clamp(1.35rem, 2.2vw, 2rem);
 }
 
@@ -2167,16 +2165,14 @@ h3 {
 }
 
 .contact-links a {
-  border-bottom: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-input,
-select,
-textarea {
+input {
   width: 100%;
   padding: 0.9rem;
   border: 1px solid var(--line);
@@ -2185,35 +2181,27 @@ textarea {
   background: rgba(255, 255, 255, 0.35);
 }
 
-select {
-  min-height: 48px;
-}
-
-textarea {
-  resize: vertical;
-}
-
 [aria-invalid="true"] {
   border-color: var(--status-error);
 }
 
-.contact-email-fallback p {
+.contact-support p {
   color: var(--muted);
   font-size: 0.82rem;
 }
 
-.contact-email-fallback {
+.contact-support {
   align-self: start;
   padding: clamp(2rem, 5vw, 4rem);
   border: 1px solid var(--line);
   background: var(--paper-deep);
 }
 
-.contact-email-fallback h2 {
+.contact-support h2 {
   font-size: clamp(1.8rem, 3vw, 2.8rem);
 }
 
-.contact-email-fallback .button {
+.contact-support .button {
   margin-top: 1rem;
 }
 
@@ -2236,7 +2224,7 @@ textarea {
 .policy-rich-text h3,
 .policy-rich-text h4 {
   margin: 2.75rem 0 1rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.12;
@@ -2569,14 +2557,6 @@ textarea {
     min-height: 68px;
   }
 
-  .language-switch__panel {
-    position: fixed;
-    top: 7.6rem;
-    right: var(--page);
-    left: var(--page);
-    width: auto;
-  }
-
   .hero {
     min-height: 680px;
     align-items: flex-end;
@@ -2605,7 +2585,7 @@ textarea {
 
   .section-heading,
   .manifesto,
-  .form-page,
+  .contact-page,
   .cart-layout {
     grid-template-columns: 1fr;
   }
@@ -2652,8 +2632,7 @@ textarea {
   }
 
   .product-gallery__thumbs {
-    padding: 0 var(--page);
-    overflow-x: auto;
+    padding: 6px var(--page);
   }
 
   .product-detail__info {
@@ -2687,12 +2666,6 @@ textarea {
 
   .header-actions {
     gap: 0.2rem;
-  }
-
-  .language-switch__trigger {
-    gap: 0.3rem;
-    padding-right: 0.45rem;
-    padding-left: 0.45rem;
   }
 }
 

@@ -6,7 +6,7 @@ import { uiText } from "@/lib/i18n/text";
 
 export function ContactPage({ locale }: { locale: Locale }) {
   return (
-    <section className="form-page">
+    <section className="contact-page">
       <div className="contact-intro">
         <p className="eyebrow">
           {uiText(locale, {
@@ -59,7 +59,7 @@ export function ContactPage({ locale }: { locale: Locale }) {
           </Link>
         </nav>
       </div>
-      <div className="contact-email-fallback">
+      <div className="contact-support">
         <p className="eyebrow">
           {uiText(locale, {
             zh: "電郵支援",

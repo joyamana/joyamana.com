@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { enabledLocales } from "@/lib/i18n/locales";
+import { publishedAlternateLocales } from "./metadata-locales";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { uiText } from "@/lib/i18n/text";
 import {
@@ -8,27 +8,6 @@ import {
   type PageSearchParams,
 } from "@/lib/seo";
 import { aboutPageForHandle, getShopifyAboutTree } from "./shopify-about-pages";
-
-async function publishedAlternateLocales(handle?: string) {
-  const locales = await Promise.all(
-    enabledLocales.map(async (locale) => {
-      try {
-        const tree = await getShopifyAboutTree(locale);
-        const page = tree ? aboutPageForHandle(tree, handle) : null;
-        return tree &&
-          page &&
-          tree.root.translationReady &&
-          page.translationReady
-          ? locale
-          : null;
-      } catch {
-        return null;
-      }
-    }),
-  );
-
-  return locales.filter((locale): locale is Locale => locale !== null);
-}
 
 export async function buildAboutMetadata({
   handle,
@@ -59,7 +38,21 @@ export async function buildAboutMetadata({
         description: page.seoDescription,
         locale,
         path: handle ? `/about/${page.handle}` : "/about",
-        alternateLocales: await publishedAlternateLocales(handle),
+        alternateLocales: await publishedAlternateLocales(
+          locale,
+          handle ? `/about/${page.handle}` : "/about",
+          searchParams,
+          async (candidate) => {
+            const candidateTree = await getShopifyAboutTree(candidate);
+            const candidatePage = candidateTree
+              ? aboutPageForHandle(candidateTree, handle)
+              : null;
+            return Boolean(
+              candidateTree?.root.translationReady &&
+              candidatePage?.translationReady,
+            );
+          },
+        ),
         searchParams,
       });
     }

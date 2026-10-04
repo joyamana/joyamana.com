@@ -152,7 +152,6 @@ describe("Shopify policies", () => {
     const result = await getShopifyPolicy("returns", "es-US");
 
     expect(result).toMatchObject({
-      requestedLocale: "es-US",
       contentLocale: "en-US",
       usedDefaultLanguage: true,
     });

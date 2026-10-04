@@ -11,22 +11,12 @@ describe("product policy copy", () => {
       "1–3 business days",
     );
     expect(productShippingReturnsSummary("en-US")).toContain("15 days");
-    expect(productShippingReturnsSummary("es-US")).toContain(
-      "1 a 3 días hábiles",
-    );
-    expect(productShippingReturnsSummary("es-US")).toContain("15 días");
   });
 
   it("keeps a disabled Buy-now explanation customer-facing", () => {
     expect(checkoutDisabledNote("en-US")).toContain("temporarily unavailable");
-    expect(checkoutDisabledNote("es-US")).toContain(
-      "no está disponible temporalmente",
-    );
     expect(checkoutDisabledNote("en-US")).not.toMatch(
       /code|integration|approval|shopify/i,
-    );
-    expect(checkoutDisabledNote("es-US")).not.toMatch(
-      /código|integración|aprobación|shopify/i,
     );
   });
 

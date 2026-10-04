@@ -8,7 +8,12 @@ import {
 } from "@/config/catalog";
 import type { MarketId } from "@/config/markets";
 import type { Locale } from "@/lib/i18n/locales";
-import type { Collection, Product, ProductCollection } from "./types";
+import type {
+  Collection,
+  Product,
+  ProductSummary,
+  ProductCollection,
+} from "./types";
 import {
   createCatalogReadBudget,
   getShopifyCollection,
@@ -34,7 +39,7 @@ export interface StorefrontProductCategory {
   taxonomyId: string;
   title: string;
   description: string;
-  products: Product[];
+  products: ProductSummary[];
 }
 
 export interface CatalogNavigationData {
@@ -83,7 +88,7 @@ const getProductCatalogSnapshot = cache(
 export const getProducts = cache(async function getProducts(
   marketId: MarketId = "us",
   locale: Locale = "en-US",
-): Promise<Product[]> {
+): Promise<ProductSummary[]> {
   return (await getProductCatalogSnapshot(marketId, locale)).products;
 });
 
@@ -229,7 +234,7 @@ export const getDesignCollection = cache(async function getDesignCollection(
 
 function mapStorefrontCategory(
   definition: (typeof productCategoryDefinitions)[number],
-  products: Product[],
+  products: ProductSummary[],
   locale: Locale,
 ): StorefrontProductCategory | null {
   const categoryProducts = products.filter(
@@ -242,7 +247,7 @@ function mapStorefrontCategory(
 }
 
 export function productCategoriesForProducts(
-  products: Product[],
+  products: ProductSummary[],
   locale: Locale,
 ): StorefrontProductCategory[] {
   return productCategoryDefinitions.flatMap((definition) => {
@@ -270,7 +275,7 @@ export async function searchCatalog(
   query: string,
   marketId: MarketId = "us",
   locale: Locale = "en-US",
-): Promise<Product[]> {
+): Promise<ProductSummary[]> {
   if (marketId === "ca") return [];
   assertEnabledUsLocale(locale);
   if (!query.trim()) return [];

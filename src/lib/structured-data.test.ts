@@ -396,4 +396,16 @@ describe("structured data serialization", () => {
       ),
     ).toBe('{"ok":true}');
   });
+  it("never serializes a paused Spanish page even with its old indexing entry open", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
+    const { serializeIndexableStructuredData } =
+      await import("./structured-data");
+    expect(
+      serializeIndexableStructuredData(
+        { ok: true },
+        { locale: "es-US", path: "/products/test" },
+      ),
+    ).toBeNull();
+  });
 });

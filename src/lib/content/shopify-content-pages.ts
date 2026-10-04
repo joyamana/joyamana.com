@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   shopifyContextForLocale,
   defaultLocaleForMarket,
@@ -23,7 +24,6 @@ interface ContentPageData {
     id: string;
     type: string;
     handle: string;
-    updatedAt: string;
     fields: MetaobjectField[];
   } | null;
 }
@@ -32,7 +32,6 @@ interface ParsedContentPage {
   id: string;
   handle: ShopifyContentPageHandle;
   title: string;
-  richText: string;
   html: string;
   lastUpdated: string;
   seoTitle: string;
@@ -43,7 +42,6 @@ export interface StorefrontContentPage extends ParsedContentPage {
   contentLocale: Locale;
   titleLocale: Locale;
   translationReady: boolean;
-  requestedLocale: Locale;
   usedDefaultLanguage: boolean;
 }
 
@@ -58,7 +56,6 @@ export const SHOPIFY_CONTENT_PAGE_QUERY = `#graphql
       id
       type
       handle
-      updatedAt
       fields { key type value }
     }
   }
@@ -98,7 +95,7 @@ function parseContentPage(
   return content ? { id: node.id, handle: expectedHandle, ...content } : null;
 }
 
-export async function getShopifyContentPage(
+export const getShopifyContentPage = cache(async function getShopifyContentPage(
   handle: ShopifyContentPageHandle,
   locale: Locale,
 ): Promise<StorefrontContentPage | null> {
@@ -127,10 +124,9 @@ export async function getShopifyContentPage(
     contentLocale: usedDefaultLanguage ? defaultLocale : locale,
     titleLocale: titleFallback ? defaultLocale : locale,
     translationReady: !usedDefaultLanguage && !titleFallback,
-    requestedLocale: locale,
     usedDefaultLanguage,
   };
-}
+});
 
 export async function getPublishedShopifyContentPagePaths(locale: Locale) {
   const pages = await Promise.all(

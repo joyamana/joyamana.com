@@ -33,6 +33,19 @@ export interface ProductQuantityRule {
 export const SHOPIFY_MAX_QUANTITY = 2_147_483_647;
 export const STOREFRONT_MAX_QUANTITY = 99;
 
+export function isValidInventory(variant: {
+  currentlyNotInStock: boolean;
+  quantityAvailable: number | null;
+}) {
+  return (
+    typeof variant.currentlyNotInStock === "boolean" &&
+    (variant.quantityAvailable === null ||
+      (Number.isInteger(variant.quantityAvailable) &&
+        variant.quantityAvailable >= -2_147_483_648 &&
+        variant.quantityAvailable <= SHOPIFY_MAX_QUANTITY))
+  );
+}
+
 export function isValidQuantityRule(rule: ProductQuantityRule) {
   return (
     Number.isInteger(rule.minimum) &&
@@ -150,25 +163,31 @@ export interface ProductCategory {
   name: string;
 }
 
+export interface ProductSummary {
+  id: string;
+  handle: string;
+  title: string;
+  availableForSale: boolean;
+  priceRange: ProductPriceRange;
+  featuredImage: ProductImage | null;
+  category: ProductCategory | null;
+}
+
+export interface CatalogProduct extends ProductSummary {
+  variants: ProductVariant[];
+}
+
 /**
  * A locale-specific, storefront-safe product entity. Shopify queries return a
  * single requested language, so commerce strings are deliberately not stored
  * as a map of every locale.
  */
-export interface Product {
-  id: string;
-  handle: string;
-  title: string;
+export interface Product extends CatalogProduct {
   description: string;
   descriptionHtml: string;
   seoTitle?: string;
   seoDescription?: string;
-  availableForSale: boolean;
-  priceRange: ProductPriceRange;
-  featuredImage: ProductImage | null;
   images: ProductImage[];
-  variants: ProductVariant[];
-  category: ProductCategory | null;
   model?: ProductModel;
 }
 
@@ -183,8 +202,10 @@ export interface Collection {
   kind?: CollectionKind;
 }
 
-export interface ProductCollection extends Collection {
-  products: Product[];
+export interface ProductCollection<
+  T extends ProductSummary = ProductSummary,
+> extends Collection {
+  products: T[];
 }
 
 /** Empty and partial input stays editable but cannot be submitted for purchase. */

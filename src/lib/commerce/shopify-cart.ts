@@ -12,6 +12,7 @@ import {
   STOREFRONT_MAX_QUANTITY,
   SHOPIFY_MAX_QUANTITY,
   isValidQuantityRule,
+  isValidInventory,
   type ProductQuantityRule,
 } from "./types";
 
@@ -38,7 +39,6 @@ interface ShopifyProductVariant {
   currentlyNotInStock: boolean;
   quantityAvailable: number | null;
   image: ShopifyImage | null;
-  price: ShopifyMoney;
   quantityRule: ProductQuantityRule;
   product: {
     handle: string;
@@ -123,7 +123,6 @@ merchandise {
     availableForSale
     currentlyNotInStock
     quantityAvailable
-    price { amount currencyCode }
     quantityRule { minimum maximum increment }
     image { url altText width height }
     product { handle title }
@@ -294,12 +293,7 @@ function normalizeQuantityRule(rule: ProductQuantityRule) {
 }
 
 function normalizeInventory(variant: ShopifyProductVariant) {
-  if (
-    typeof variant.currentlyNotInStock !== "boolean" ||
-    (variant.quantityAvailable !== null &&
-      (!Number.isInteger(variant.quantityAvailable) ||
-        variant.quantityAvailable < 0))
-  ) {
+  if (!isValidInventory(variant)) {
     throw new ShopifyCartError("SHOPIFY_ERROR");
   }
 
@@ -355,7 +349,6 @@ function mapCartLine(line: ShopifyCartLine) {
     ...normalizeInventory(line.merchandise),
     quantity: line.quantity,
     quantityRule,
-    unitPrice: normalizeMoney(line.merchandise.price),
     totalPrice: normalizeMoney(line.cost.totalAmount),
   };
 }
@@ -376,15 +369,6 @@ export function mapShopifyCart(
     totalQuantity: cart.totalQuantity,
     subtotal: normalizeMoney(cart.cost.subtotalAmount),
     warnings: mapWarnings(warnings),
-  };
-}
-
-export function emptyCartView(): CartView {
-  return {
-    lines: [],
-    totalQuantity: 0,
-    subtotal: { amount: "0.0", currencyCode: "USD" },
-    warnings: [],
   };
 }
 

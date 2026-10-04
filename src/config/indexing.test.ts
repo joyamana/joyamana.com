@@ -17,12 +17,6 @@ describe("version-controlled indexing policy", () => {
         policies: true,
         editorial: false,
       },
-      "es-US": {
-        core: true,
-        commerce: true,
-        policies: true,
-        editorial: false,
-      },
     });
   });
 });

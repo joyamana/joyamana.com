@@ -45,7 +45,6 @@ function aboutPage(locale: EnabledLocale, handle: string): StorefrontAboutPage {
     title: "About Joya Mana",
     navigationTitle: "About",
     summary: "Our approach.",
-    richText: "{}",
     html: "<p>Our approach.</p>",
     lastUpdated: "2026-08-30",
     seoTitle: "About",
@@ -55,12 +54,11 @@ function aboutPage(locale: EnabledLocale, handle: string): StorefrontAboutPage {
     navigationLocale: locale,
     translationReady: true,
     contentLocale: locale,
-    requestedLocale: locale,
     usedDefaultLanguage: false,
   };
 }
 
-for (const locale of ["en-US", "es-US", "zh-Hant-US"] as const) {
+for (const locale of ["en-US", "zh-Hant-US"] as const) {
   describe(`${locale} page Schema`, () => {
     it("keeps an empty Shop readable without publishing an empty product list", async () => {
       const html = renderToStaticMarkup(await ShopPage({ locale }));

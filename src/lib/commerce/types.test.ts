@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getProductQuantityMaximum,
+  isValidInventory,
   isValidAvailableProductQuantity,
   isValidProductQuantity,
   isValidQuantityRule,
@@ -89,6 +90,40 @@ describe("Shopify quantity rules", () => {
       expect(
         isValidAvailableProductQuantity(maximum, rule, inventory, backorders),
       ).toBe(true);
+    },
+  );
+});
+
+describe("Shopify inventory validation", () => {
+  it.each([-2147483648, -1, 0, 1, 2147483647, null])(
+    "retains a valid signed inventory value: %s",
+    (quantityAvailable) => {
+      expect(
+        isValidInventory({ currentlyNotInStock: true, quantityAvailable }),
+      ).toBe(true);
+    },
+  );
+  it.each([-2147483649, 2147483648, 0.5, Number.NaN, Infinity])(
+    "rejects an invalid inventory value: %s",
+    (quantityAvailable) => {
+      expect(
+        isValidInventory({ currentlyNotInStock: false, quantityAvailable }),
+      ).toBe(false);
+    },
+  );
+  it.each([-1, 0, null, 2])(
+    "applies continue-selling without losing quantity rules: %s",
+    (inventory) => {
+      const rule = { minimum: 2, maximum: 10, increment: 2 };
+      expect(isValidAvailableProductQuantity(2, rule, inventory, true)).toBe(
+        true,
+      );
+      expect(isValidAvailableProductQuantity(3, rule, inventory, true)).toBe(
+        false,
+      );
+      expect(isValidAvailableProductQuantity(2, rule, inventory, false)).toBe(
+        inventory === null || inventory === 2,
+      );
     },
   );
 });

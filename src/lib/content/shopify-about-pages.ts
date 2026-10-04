@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   shopifyContextForLocale,
   defaultLocaleForMarket,
@@ -19,7 +20,6 @@ interface ContentPageNode {
   id: string;
   type: string;
   handle: string;
-  updatedAt: string;
   fields: MetaobjectField[];
 }
 
@@ -45,7 +45,6 @@ interface ParsedAboutPage {
   title: string;
   navigationTitle: string;
   summary: string;
-  richText: string;
   html: string;
   lastUpdated: string;
   seoTitle: string;
@@ -58,7 +57,6 @@ export interface StorefrontAboutPage extends ParsedAboutPage {
   summaryLocale: Locale;
   navigationLocale: Locale;
   translationReady: boolean;
-  requestedLocale: Locale;
   usedDefaultLanguage: boolean;
 }
 
@@ -94,7 +92,6 @@ export const SHOPIFY_ABOUT_TREE_QUERY = `#graphql
     id
     type
     handle
-    updatedAt
     fields { key type value }
   }
 `;
@@ -192,7 +189,6 @@ function localizePage(
       locale,
       defaultLocale,
     ),
-    requestedLocale: locale,
     usedDefaultLanguage,
   };
 }
@@ -219,7 +215,7 @@ function referencedChildren(data: AboutTreeData) {
   });
 }
 
-export async function getShopifyAboutTree(
+export const getShopifyAboutTree = cache(async function getShopifyAboutTree(
   locale: Locale,
 ): Promise<StorefrontAboutTree | null> {
   const defaultLocale = defaultLocaleForMarket[marketIdForLocale(locale)];
@@ -254,7 +250,7 @@ export async function getShopifyAboutTree(
     root: localizePage(requestedRoot, defaultRoot, locale, defaultLocale),
     children,
   };
-}
+});
 
 export function aboutPageForHandle(tree: StorefrontAboutTree, handle?: string) {
   return handle

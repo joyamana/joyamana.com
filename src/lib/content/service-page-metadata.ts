@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { enabledLocales } from "@/lib/i18n/locales";
+import { publishedAlternateLocales } from "./metadata-locales";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import {
   buildMetadata,
@@ -11,20 +11,6 @@ import {
   type ShopifyContentPageHandle,
 } from "./shopify-content-pages";
 import { getShopifyPolicy, type ShopifyPolicyKind } from "./shopify-policies";
-
-async function publishedLocales(isReady: (locale: Locale) => Promise<boolean>) {
-  const locales = await Promise.all(
-    enabledLocales.map(async (locale) => {
-      try {
-        return (await isReady(locale)) ? locale : null;
-      } catch {
-        return null;
-      }
-    }),
-  );
-
-  return locales.filter((locale): locale is Locale => locale !== null);
-}
 
 export async function buildPolicyPageMetadata({
   description,
@@ -47,12 +33,17 @@ export async function buildPolicyPageMetadata({
         description,
         locale,
         path: `/${kind}`,
-        alternateLocales: await publishedLocales(async (candidate) => {
-          const candidatePolicy = await getShopifyPolicy(kind, candidate);
-          return Boolean(
-            candidatePolicy && !candidatePolicy.usedDefaultLanguage,
-          );
-        }),
+        alternateLocales: await publishedAlternateLocales(
+          locale,
+          `/${kind}`,
+          searchParams,
+          async (candidate) => {
+            const candidatePolicy = await getShopifyPolicy(kind, candidate);
+            return Boolean(
+              candidatePolicy && !candidatePolicy.usedDefaultLanguage,
+            );
+          },
+        ),
         searchParams,
       });
     }
@@ -84,10 +75,18 @@ export async function buildContentPageMetadata({
         description: page.seoDescription,
         locale,
         path: `/${handle}`,
-        alternateLocales: await publishedLocales(async (candidate) => {
-          const candidatePage = await getShopifyContentPage(handle, candidate);
-          return Boolean(candidatePage && candidatePage.translationReady);
-        }),
+        alternateLocales: await publishedAlternateLocales(
+          locale,
+          `/${handle}`,
+          searchParams,
+          async (candidate) => {
+            const candidatePage = await getShopifyContentPage(
+              handle,
+              candidate,
+            );
+            return Boolean(candidatePage && candidatePage.translationReady);
+          },
+        ),
         searchParams,
       });
     }

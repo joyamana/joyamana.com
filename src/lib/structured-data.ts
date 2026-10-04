@@ -2,6 +2,7 @@ import { isIndexingEnabledFor, siteConfig } from "@/config/site";
 import {
   isProductVariantPurchasable,
   type Product,
+  type ProductSummary,
 } from "@/lib/commerce/types";
 import type { CatalogCard } from "@/lib/commerce/catalog-browse";
 import type { PageSearchParams } from "@/lib/seo";
@@ -22,7 +23,7 @@ interface CollectionStructuredDataInput {
   name: string;
   description?: string;
   path: string;
-  products: Product[];
+  products: ProductSummary[];
   entries?: CatalogCard[];
   locale: Locale;
   breadcrumbs: StructuredBreadcrumb[];
@@ -78,15 +79,6 @@ function productImages(product: Product) {
     seen.add(image.url);
     return [image.url];
   });
-}
-
-function productCardImage(product: Product) {
-  return (
-    product.featuredImage ??
-    product.images[0] ??
-    product.variants[0]?.image ??
-    null
-  );
 }
 
 function buildBreadcrumbList(
@@ -182,7 +174,7 @@ export function buildCollectionStructuredData({
             locale,
             entry?.path ?? `/products/${product.handle}`,
           );
-          const image = entry ? entry.variant.image : productCardImage(product);
+          const image = entry ? entry.variant.image : product.featuredImage;
           return {
             "@type": "ListItem",
             position: index + 1,

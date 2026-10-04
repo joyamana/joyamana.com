@@ -18,6 +18,8 @@ import { mapShopifyProduct } from "./shopify-catalog-mappers";
 import {
   type ShopifyProductNode,
   SHOPIFY_BROWSE_VARIANTS_QUERY,
+  SHOPIFY_BROWSE_COLORS_QUERY,
+  SHOPIFY_VARIANT_COLORS_QUERY,
   SHOPIFY_COLLECTION_QUERY,
   SHOPIFY_COLLECTIONS_QUERY,
   SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
@@ -79,7 +81,17 @@ describe("complete catalog request budget", () => {
 
   it("reads a full initial variant page on the PDP while keeping summary queries small", () => {
     expect(SHOPIFY_PRODUCT_QUERY).toContain("variants(first: 100,");
-    expect(SHOPIFY_PRODUCTS_QUERY).toContain("variants(first: 1,");
+    expect(SHOPIFY_PRODUCTS_QUERY).not.toContain("variants(");
+    for (const query of [
+      SHOPIFY_PRODUCTS_QUERY,
+      SHOPIFY_SEARCH_QUERY,
+      SHOPIFY_COLLECTION_QUERY,
+    ]) {
+      expect(query).not.toMatch(
+        /descriptionHtml|quantityRule|quantityAvailable|productModel|images\(/,
+      );
+      expect(query).toContain("priceRange");
+    }
   });
 });
 
@@ -224,12 +236,11 @@ describe("complete browsing variants", () => {
     const fixture = productFixture();
     const local = {
       ...fixture.variants.nodes[0],
-      title: "Amatista",
-      colors: { type: "list.single_line_text_field", value: '["Morado"]' },
+      title: "紫水晶",
+      colors: { type: "list.single_line_text_field", value: '["紫色"]' },
     };
     const canonical = {
-      ...local,
-      title: "Amethyst",
+      id: local.id,
       colors: { type: "list.single_line_text_field", value: '["Purple"]' },
     };
     shopifyFetchMock
@@ -241,15 +252,71 @@ describe("complete browsing variants", () => {
       });
     const [item] = await hydrateShopifyBrowseProducts(
       [mapShopifyProduct(fixture)],
-      "es-US",
+      "zh-Hant-US",
     );
     expect(item.variants[0]).toMatchObject({
-      title: "Amatista",
+      title: "紫水晶",
       colors: ["Purple"],
     });
     expect(shopifyFetchMock.mock.calls.map((call) => call[1].language)).toEqual(
-      ["ES", "EN"],
+      ["ZH_TW", "EN"],
     );
+  });
+
+  it("completes default-language color pages without rereading prices or inventory", async () => {
+    const fixture = productFixture();
+    const first = {
+      ...fixture.variants.nodes[0],
+      colors: { type: "list.single_line_text_field", value: '["Purple"]' },
+    };
+    const second = { ...first, id: "gid://shopify/ProductVariant/2" };
+    shopifyFetchMock
+      .mockResolvedValueOnce({
+        nodes: [{ id: fixture.id, variants: connection([first, second]) }],
+      })
+      .mockResolvedValueOnce({
+        nodes: [
+          {
+            id: fixture.id,
+            variants: connection(
+              [{ id: first.id, colors: first.colors }],
+              true,
+              "colors-page-1",
+            ),
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        product: {
+          id: fixture.id,
+          variants: connection([{ id: second.id, colors: second.colors }]),
+        },
+      });
+    const [item] = await hydrateShopifyBrowseProducts(
+      [mapShopifyProduct(fixture)],
+      "zh-Hant-US",
+    );
+    expect(item.variants.map((variant) => variant.id)).toEqual([
+      first.id,
+      second.id,
+    ]);
+    expect(shopifyFetchMock).toHaveBeenNthCalledWith(
+      2,
+      SHOPIFY_BROWSE_COLORS_QUERY,
+      expect.objectContaining({ language: "EN" }),
+      expect.any(Object),
+    );
+    expect(shopifyFetchMock).toHaveBeenNthCalledWith(
+      3,
+      SHOPIFY_VARIANT_COLORS_QUERY,
+      expect.objectContaining({ language: "EN", after: "colors-page-1" }),
+      expect.any(Object),
+    );
+    for (const query of [
+      SHOPIFY_BROWSE_COLORS_QUERY,
+      SHOPIFY_VARIANT_COLORS_QUERY,
+    ])
+      expect(query).not.toMatch(/price|quantity|image|selectedOptions/);
   });
 
   it("fails closed if a product disappears or pagination repeats", async () => {
@@ -353,7 +420,7 @@ describe("Shopify catalog mapper and queries", () => {
     },
   );
 
-  it("paginates all products with US Spanish context and no runtime caching", async () => {
+  it("paginates all products with US Chinese context and no runtime caching", async () => {
     shopifyFetchMock
       .mockResolvedValueOnce({
         products: connection([productFixture()], true, "products-page-1"),
@@ -362,23 +429,21 @@ describe("Shopify catalog mapper and queries", () => {
         products: connection([secondProductFixture()]),
       });
 
-    await expect(getShopifyProducts("es-US")).resolves.toHaveLength(2);
+    await expect(getShopifyProducts("zh-Hant-US")).resolves.toHaveLength(2);
 
     expect(SHOPIFY_PRODUCTS_QUERY).toContain(
       "@inContext(country: $country, language: $language)",
     );
-    expect(SHOPIFY_PRODUCTS_QUERY).toContain("images(first: 10)");
+    expect(SHOPIFY_PRODUCTS_QUERY).not.toContain("images(first: 10)");
     expect(SHOPIFY_PRODUCTS_QUERY).toContain("pageInfo");
-    expect(SHOPIFY_PRODUCTS_QUERY).toContain("quantityRule");
-    expect(SHOPIFY_PRODUCTS_QUERY).toContain("quantityAvailable");
-    expect(SHOPIFY_PRODUCTS_QUERY).toContain("descriptionHtml");
-    expect(SHOPIFY_PRODUCTS_QUERY).toContain(
-      'productModel: metafield(namespace: "custom", key: "product_model")',
-    );
+    expect(SHOPIFY_PRODUCTS_QUERY).not.toContain("quantityRule");
+    expect(SHOPIFY_PRODUCTS_QUERY).not.toContain("quantityAvailable");
+    expect(SHOPIFY_PRODUCTS_QUERY).not.toContain("descriptionHtml");
+    expect(SHOPIFY_PRODUCTS_QUERY).not.toContain("productModel:");
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       1,
       SHOPIFY_PRODUCTS_QUERY,
-      { country: "US", language: "ES", first: 100, after: null },
+      { country: "US", language: "ZH_TW", first: 100, after: null },
       expect.objectContaining({ cache: "no-store" }),
     );
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
@@ -386,7 +451,7 @@ describe("Shopify catalog mapper and queries", () => {
       SHOPIFY_PRODUCTS_QUERY,
       {
         country: "US",
-        language: "ES",
+        language: "ZH_TW",
         first: 100,
         after: "products-page-1",
       },
@@ -624,7 +689,7 @@ describe("Shopify catalog mapper and queries", () => {
         },
       });
 
-    const result = await getShopifyCollection("bracelets", "es-US");
+    const result = await getShopifyCollection("bracelets", "zh-Hant-US");
 
     expect(result?.products).toHaveLength(2);
     expect(result?.kind).toBe("category");
@@ -636,7 +701,7 @@ describe("Shopify catalog mapper and queries", () => {
       SHOPIFY_COLLECTION_QUERY,
       {
         country: "US",
-        language: "ES",
+        language: "ZH_TW",
         handle: "bracelets",
         first: 100,
         after: "collection-products-page-1",
@@ -776,5 +841,17 @@ describe("Shopify catalog mapper and queries", () => {
         kind: "invalid-data",
       }),
     );
+  });
+});
+
+describe("negative Shopify inventory", () => {
+  it("accepts sellable backorders without inventing stock", () => {
+    const fixture = productFixture();
+    fixture.variants.nodes[0].quantityAvailable = -1;
+    fixture.variants.nodes[0].currentlyNotInStock = true;
+    expect(mapShopifyProduct(fixture).variants[0]).toMatchObject({
+      quantityAvailable: -1,
+      currentlyNotInStock: true,
+    });
   });
 });

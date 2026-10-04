@@ -1,3 +1,5 @@
+import { markets } from "./markets";
+
 /** Language identity, display conventions, and provider codes are separate. */
 export const localeRegistry = {
   "en-US": {
@@ -14,7 +16,7 @@ export const localeRegistry = {
   "es-US": {
     prefix: "/es-us",
     market: "us",
-    enabled: true,
+    enabled: false,
     label: "Español",
     shortLabel: "ES",
     textKey: "es",
@@ -58,6 +60,12 @@ export const localeRegistry = {
 } as const;
 
 export type SupportedLocale = keyof typeof localeRegistry;
+/** Existing dictionaries are retained independently of public route availability. */
+export type TranslatedLocale = "en-US" | "es-US" | "zh-Hant-US";
+export type TranslationKey =
+  (typeof localeRegistry)[TranslatedLocale]["textKey"];
+export type TranslatedStorefrontLanguage =
+  (typeof localeRegistry)[TranslatedLocale]["shopify"]["language"];
 export type EnabledLocale = {
   [L in SupportedLocale]: (typeof localeRegistry)[L]["enabled"] extends true
     ? L
@@ -71,7 +79,11 @@ export function isSupportedLocale(value: string): value is SupportedLocale {
 }
 
 export function isEnabledLocale(value: string): value is EnabledLocale {
-  return isSupportedLocale(value) && localeRegistry[value].enabled;
+  return (
+    isSupportedLocale(value) &&
+    localeRegistry[value].enabled &&
+    markets[localeRegistry[value].market].status === "active"
+  );
 }
 
 export function shopifyContextForLocale(locale: SupportedLocale) {

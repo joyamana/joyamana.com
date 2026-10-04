@@ -1,15 +1,11 @@
+import { brand } from "@/config/brand";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { getShopifyContentPage } from "@/lib/content/shopify-content-pages";
 import { uiText } from "@/lib/i18n/text";
 import { formatDate } from "@/lib/format";
 
 export async function AccessibilityPage({ locale }: { locale: Locale }) {
-  let page;
-  try {
-    page = await getShopifyContentPage("accessibility", locale);
-  } catch {
-    return <AccessibilityUnavailable locale={locale} />;
-  }
+  const page = await getShopifyContentPage("accessibility", locale);
 
   if (!page || !page.html) return <AccessibilityUnavailable locale={locale} />;
 
@@ -75,9 +71,9 @@ function AccessibilityUnavailable({ locale }: { locale: Locale }) {
         </h1>
         <p className="trust-page__lede">
           {uiText(locale, {
-            zh: "此聲明暫時未能載入。請稍後再試，或電郵至 info@joyamana.com 尋求協助。",
-            en: "This statement is temporarily unavailable. Please try again shortly or contact info@joyamana.com for assistance.",
-            es: "Esta declaración no está disponible temporalmente. Inténtalo de nuevo en unos minutos o contacta con info@joyamana.com para obtener ayuda.",
+            zh: `此聲明暫時未能載入。請稍後再試，或電郵至 ${brand.supportEmail} 尋求協助。`,
+            en: `This statement is temporarily unavailable. Please try again shortly or contact ${brand.supportEmail} for assistance.`,
+            es: `Esta declaración no está disponible temporalmente. Inténtalo de nuevo en unos minutos o contacta con ${brand.supportEmail} para obtener ayuda.`,
           })}
         </p>
       </header>

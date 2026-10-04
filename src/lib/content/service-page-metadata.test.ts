@@ -17,7 +17,7 @@ vi.mock("@/config/indexing", () => ({
       policies: true,
       editorial: true,
     },
-    "es-US": {
+    "zh-Hant-US": {
       core: true,
       commerce: true,
       policies: true,
@@ -33,12 +33,12 @@ afterEach(() => {
 });
 
 describe("service page metadata", () => {
-  it("omits an untranslated Spanish Policy from English hreflang", async () => {
+  it("omits an untranslated Chinese Policy from English hreflang", async () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
     policyMocks.getShopifyPolicy.mockImplementation(
       async (_kind: string, locale: string) => ({
-        usedDefaultLanguage: locale === "es-US",
+        usedDefaultLanguage: locale === "zh-Hant-US",
       }),
     );
     const { buildPolicyPageMetadata } = await import("./service-page-metadata");
@@ -63,7 +63,7 @@ describe("service page metadata", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
     contentMocks.getShopifyContentPage.mockImplementation(
       async (_handle: string, locale: string) => ({
-        seoTitle: locale === "es-US" ? "Accesibilidad" : "Accessibility",
+        seoTitle: locale === "zh-Hant-US" ? "無障礙使用" : "Accessibility",
         seoDescription: "Accessibility details.",
         usedDefaultLanguage: false,
         translationReady: true,
@@ -83,8 +83,31 @@ describe("service page metadata", () => {
       canonical: "https://www.joyamana.com/accessibility",
       languages: {
         "en-US": "https://www.joyamana.com/accessibility",
-        "es-US": "https://www.joyamana.com/es-us/accessibility",
+        "zh-Hant-US": "https://www.joyamana.com/zh-hant-us/accessibility",
       },
     });
   });
+  it.each([false, true])(
+    "reads only the current Policy when hreflang is disabled or parameterized (%s)",
+    async (indexable) => {
+      vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", String(indexable));
+      vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
+      policyMocks.getShopifyPolicy.mockResolvedValue({
+        usedDefaultLanguage: false,
+      });
+      const { buildPolicyPageMetadata } =
+        await import("./service-page-metadata");
+      await buildPolicyPageMetadata({
+        title: "Privacy",
+        description: "Privacy policy",
+        kind: "privacy",
+        locale: "en-US",
+        searchParams: indexable ? { utm_source: "email" } : undefined,
+      });
+      expect(policyMocks.getShopifyPolicy).toHaveBeenCalledExactlyOnceWith(
+        "privacy",
+        "en-US",
+      );
+    },
+  );
 });

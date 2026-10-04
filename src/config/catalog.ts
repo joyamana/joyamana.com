@@ -1,11 +1,11 @@
-import { isEnabledLocale, type EnabledLocale } from "./locales";
+import { isEnabledLocale, type TranslatedLocale } from "./locales";
 import type { Locale } from "@/lib/i18n/locales";
 
 export interface ProductCategoryDefinition {
   handle: string;
   taxonomyId: string;
-  title: Record<EnabledLocale, string>;
-  description: Record<EnabledLocale, string>;
+  title: Record<TranslatedLocale, string>;
+  description: Record<TranslatedLocale, string>;
 }
 
 /**

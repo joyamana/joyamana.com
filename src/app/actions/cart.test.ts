@@ -68,7 +68,6 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
             quantityAvailable: 1,
             image: null,
             quantityRule: { minimum: 1, maximum: null, increment: 1 },
-            price: { amount: "68.00", currencyCode: "USD" },
             product: {
               handle: "aquamarine-bracelet-9-mm",
               title: "Aquamarine Bracelet",
@@ -104,6 +103,33 @@ afterEach(() => {
   process.env = { ...originalEnv };
   vi.resetAllMocks();
 });
+
+it.each([false, true])(
+  "rejects every paused Spanish action without reading cookies or writing Shopify (Checkout %s)",
+  async (checkoutEnabled) => {
+    process.env.SHOPIFY_CHECKOUT_ENABLED = String(checkoutEnabled);
+    const store = cookieStore(oldCartId);
+    mocks.cookies.mockResolvedValue(store);
+    const results = await Promise.all([
+      getCartAction("es-US"),
+      addCartLineAction(merchandiseId, 1, "es-US"),
+      updateCartLineAction(lineId, 1, "es-US"),
+      removeCartLineAction(lineId, "es-US"),
+      clearCartAction("es-US"),
+      checkoutAction("es-US"),
+      buyNowAction(merchandiseId, 1, "es-US"),
+    ]);
+    for (const result of results)
+      expect(result).toMatchObject({
+        ok: false,
+        error: { code: "INVALID_INPUT" },
+      });
+    for (const mock of Object.values(mocks))
+      expect(mock).not.toHaveBeenCalled();
+    expect(store.delete).not.toHaveBeenCalled();
+    expect(store.set).not.toHaveBeenCalled();
+  },
+);
 
 describe("Bag server actions", () => {
   it("uses ZH_TW for all Bag actions without changing the US cookie identity", async () => {
@@ -284,12 +310,14 @@ describe("Bag server actions", () => {
     expect(mocks.createCart).not.toHaveBeenCalled();
   });
 
-  it("requests localized Cart merchandise for the US Spanish route", async () => {
+  it("requests localized Cart merchandise for the US Chinese route", async () => {
     mocks.cookies.mockResolvedValue(cookieStore(oldCartId));
     mocks.getCart.mockResolvedValue(makeCart({ id: oldCartId }));
 
-    await expect(getCartAction("es-US")).resolves.toMatchObject({ ok: true });
-    expect(mocks.getCart).toHaveBeenCalledWith(oldCartId, "ES");
+    await expect(getCartAction("zh-Hant-US")).resolves.toMatchObject({
+      ok: true,
+    });
+    expect(mocks.getCart).toHaveBeenCalledWith(oldCartId, "ZH_TW");
   });
 
   it("rejects locales outside the enabled US storefront", async () => {
@@ -319,6 +347,31 @@ describe("Checkout server actions", () => {
     });
     expect(JSON.stringify(result)).not.toMatch(/checkout-secret|new-secret/);
   });
+  it.each([false, true])(
+    "keeps a negative-inventory Bag readable and respects continue-selling at Checkout (%s)",
+    async (backorder) => {
+      process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
+      mocks.cookies.mockResolvedValue(cookieStore(oldCartId));
+      const cart = makeCart();
+      cart.lines.nodes[0].merchandise.quantityAvailable = -1;
+      cart.lines.nodes[0].merchandise.currentlyNotInStock = backorder;
+      mocks.getCart.mockResolvedValue(cart);
+      const result = await checkoutAction();
+      if (backorder)
+        expect(result).toEqual({ ok: true, checkoutUrl: cart.checkoutUrl });
+      else {
+        expect(result).toMatchObject({
+          ok: false,
+          error: { code: "INVALID_QUANTITY" },
+          cart: { lines: [{ quantityAvailable: -1 }] },
+        });
+        expect(JSON.stringify(result)).not.toMatch(
+          /checkout-secret|new-secret/,
+        );
+      }
+    },
+  );
+
   it("keeps Checkout closed by default without reading the Bag cookie", async () => {
     const result = await checkoutAction();
 
@@ -330,14 +383,14 @@ describe("Checkout server actions", () => {
     expect(mocks.getCart).not.toHaveBeenCalled();
   });
 
-  it("returns a localized safe Checkout error on the Spanish route", async () => {
-    const result = await checkoutAction("es-US");
+  it("returns a localized safe Checkout error on the Chinese route", async () => {
+    const result = await checkoutAction("zh-Hant-US");
 
     expect(result).toEqual({
       ok: false,
       error: {
         code: "CHECKOUT_DISABLED",
-        message: "El pago aún no está disponible.",
+        message: "結帳服務暫時未能使用。",
       },
     });
   });
@@ -392,24 +445,24 @@ describe("Checkout server actions", () => {
     });
   });
 
-  it("accepts Shopify's localized Spanish Checkout path", async () => {
+  it("accepts Shopify's localized Chinese Checkout path", async () => {
     process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
     mocks.cookies.mockResolvedValue(cookieStore(oldCartId));
     mocks.getCart.mockResolvedValue(
       makeCart({
         id: oldCartId,
         checkoutUrl:
-          "https://joya-mana.myshopify.com/es/cart/c/checkout-token?key=checkout-secret",
+          "https://joya-mana.myshopify.com/zh-tw/cart/c/checkout-token?key=checkout-secret",
       }),
     );
 
-    const result = await checkoutAction("es-US");
+    const result = await checkoutAction("zh-Hant-US");
 
-    expect(mocks.getCart).toHaveBeenCalledWith(oldCartId, "ES");
+    expect(mocks.getCart).toHaveBeenCalledWith(oldCartId, "ZH_TW");
     expect(result).toEqual({
       ok: true,
       checkoutUrl:
-        "https://joya-mana.myshopify.com/es/cart/c/checkout-token?key=checkout-secret",
+        "https://joya-mana.myshopify.com/zh-tw/cart/c/checkout-token?key=checkout-secret",
     });
   });
 

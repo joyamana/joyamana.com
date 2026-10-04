@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { enabledLocales } from "@/lib/i18n/locales";
+import { publishedAlternateLocales } from "./metadata-locales";
 import type { EnabledLocale as Locale } from "@/config/locales";
-import { uiText } from "@/lib/i18n/text";
+import { editorialCopy } from "@/lib/i18n/editorial-copy";
 import {
   buildMetadata,
   buildNoIndexMetadata,
@@ -17,61 +17,6 @@ function basePath(kind: EditorialKind) {
   return kind === "blog" ? "/blog" : "/crystals";
 }
 
-function fallbackTitle(kind: EditorialKind, locale: Locale) {
-  return kind === "blog"
-    ? "Blog"
-    : uiText(locale, {
-        zh: "水晶指南",
-        en: "Crystal Guide",
-        es: "Guía de cristales",
-      });
-}
-
-function fallbackDescription(kind: EditorialKind, locale: Locale) {
-  return kind === "blog"
-    ? uiText(locale, {
-        zh: "關於水晶飾物、選購知識與個人意義的故事及實用指南。",
-        en: "Stories and practical guidance about crystal objects, clear buying, and personal meaning.",
-        es: "Historias y orientación práctica sobre cristales, compras claras y significado personal.",
-      })
-    : uiText(locale, {
-        zh: "認識水晶的特質、保養方法與傳統文化寓意。",
-        en: "A reference guide to crystal characteristics, care, and traditional associations.",
-        es: "Una guía de referencia sobre las características, el cuidado y las asociaciones tradicionales de los cristales.",
-      });
-}
-
-async function publishedIndexLocales(kind: EditorialKind) {
-  const locales = await Promise.all(
-    enabledLocales.map(async (locale) => {
-      try {
-        const index = await getShopifyEditorialIndex(kind, locale);
-        return index &&
-          index.articles.some((article) => !article.usedDefaultLanguage)
-          ? locale
-          : null;
-      } catch {
-        return null;
-      }
-    }),
-  );
-  return locales.filter((locale): locale is Locale => locale !== null);
-}
-
-async function publishedArticleLocales(kind: EditorialKind, handle: string) {
-  const locales = await Promise.all(
-    enabledLocales.map(async (locale) => {
-      try {
-        const article = await getShopifyEditorialArticle(kind, handle, locale);
-        return article && !article.usedDefaultLanguage ? locale : null;
-      } catch {
-        return null;
-      }
-    }),
-  );
-  return locales.filter((locale): locale is Locale => locale !== null);
-}
-
 export async function buildEditorialIndexMetadata({
   kind,
   locale,
@@ -81,8 +26,7 @@ export async function buildEditorialIndexMetadata({
   locale: Locale;
   searchParams?: PageSearchParams;
 }): Promise<Metadata> {
-  const title = fallbackTitle(kind, locale);
-  const description = fallbackDescription(kind, locale);
+  const { title, description } = editorialCopy(kind, locale);
   try {
     const index = await getShopifyEditorialIndex(kind, locale);
     if (
@@ -94,7 +38,22 @@ export async function buildEditorialIndexMetadata({
         description: index.seoDescription || description,
         locale,
         path: basePath(kind),
-        alternateLocales: await publishedIndexLocales(kind),
+        alternateLocales: await publishedAlternateLocales(
+          locale,
+          basePath(kind),
+          searchParams,
+          async (candidate) => {
+            const candidateIndex = await getShopifyEditorialIndex(
+              kind,
+              candidate,
+            );
+            return Boolean(
+              candidateIndex?.articles.some(
+                (entry) => !entry.usedDefaultLanguage,
+              ),
+            );
+          },
+        ),
         searchParams,
       });
     }
@@ -115,8 +74,7 @@ export async function buildEditorialArticleMetadata({
   locale: Locale;
   searchParams?: PageSearchParams;
 }): Promise<Metadata> {
-  const title = fallbackTitle(kind, locale);
-  const description = fallbackDescription(kind, locale);
+  const { title, description } = editorialCopy(kind, locale);
   try {
     const article = await getShopifyEditorialArticle(kind, handle, locale);
     if (article && !article.usedDefaultLanguage) {
@@ -125,7 +83,21 @@ export async function buildEditorialArticleMetadata({
         description: article.seoDescription,
         locale,
         path: `${basePath(kind)}/${article.handle}`,
-        alternateLocales: await publishedArticleLocales(kind, handle),
+        alternateLocales: await publishedAlternateLocales(
+          locale,
+          `${basePath(kind)}/${article.handle}`,
+          searchParams,
+          async (candidate) => {
+            const candidateArticle = await getShopifyEditorialArticle(
+              kind,
+              handle,
+              candidate,
+            );
+            return Boolean(
+              candidateArticle && !candidateArticle.usedDefaultLanguage,
+            );
+          },
+        ),
         searchParams,
       });
     }

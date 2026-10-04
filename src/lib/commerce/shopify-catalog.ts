@@ -1,10 +1,17 @@
 import { isEnabledLocale, shopifyContextForLocale } from "@/config/locales";
 import type { Locale } from "@/lib/i18n/locales";
 import { shopifyFetch, type ShopifyFetchOptions } from "./shopify";
-import type { Collection, Product, ProductCollection } from "./types";
+import type {
+  Collection,
+  Product,
+  ProductSummary,
+  CatalogProduct,
+  ProductCollection,
+} from "./types";
 import {
   optionalText,
   mapShopifyProduct,
+  mapShopifyProductSummary,
   mapVariant,
   mapCollectionBase,
   mapCollectionKind,
@@ -20,6 +27,8 @@ import {
   SHOPIFY_PRODUCT_QUERY,
   SHOPIFY_PRODUCT_VARIANTS_QUERY,
   SHOPIFY_BROWSE_VARIANTS_QUERY,
+  SHOPIFY_BROWSE_COLORS_QUERY,
+  SHOPIFY_VARIANT_COLORS_QUERY,
   SHOPIFY_COLLECTIONS_QUERY,
   SHOPIFY_COLLECTION_QUERY,
   SHOPIFY_SEARCH_QUERY,
@@ -27,7 +36,8 @@ import {
   SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
   ShopifyCatalogError,
   type ShopifyConnection,
-  type ShopifyProductNode,
+  type ShopifyProductSummaryNode,
+  type ShopifyVariantColorsNode,
   type ShopifyProductsData,
   type ShopifyProductData,
   type ShopifyProductVariantsData,
@@ -136,7 +146,7 @@ export async function getShopifyProducts(
   locale: Locale,
   fetchOptions: ShopifyFetchOptions = { cache: "no-store" },
   budget = createCatalogReadBudget(),
-): Promise<Product[]> {
+): Promise<ProductSummary[]> {
   const context = shopifyContext(locale);
   const loadPage = (after: string | null) =>
     budget.read<ShopifyProductsData>(
@@ -150,7 +160,7 @@ export async function getShopifyProducts(
     async (after) => (await loadPage(after)).products,
     "products",
   );
-  return nodes.map(mapShopifyProduct);
+  return nodes.map(mapShopifyProductSummary);
 }
 
 export async function getShopifyProduct(
@@ -201,30 +211,37 @@ export async function getShopifyProduct(
 }
 
 export async function hydrateShopifyBrowseProducts(
-  products: Product[],
+  products: ProductSummary[],
   locale: Locale,
   budget = createCatalogReadBudget(),
-): Promise<Product[]> {
-  if (!products.length) return products;
+): Promise<CatalogProduct[]> {
+  if (!products.length) return [];
   const load = <T>(query: string, variables: Record<string, unknown>) =>
     budget.read<T>(query, variables);
-  const batches: Product[][] = [];
+  const batches: ProductSummary[][] = [];
   for (let index = 0; index < products.length; index += 8)
     batches.push(products.slice(index, index + 8));
-  const hydrated = new Map<string, Product>();
+  const hydrated = new Map<string, CatalogProduct>();
   let nextBatch = 0;
 
-  async function readBatch(batch: Product[], languageLocale: Locale) {
+  async function readBatch<T extends ShopifyVariantColorsNode>(
+    batch: ProductSummary[],
+    languageLocale: Locale,
+    colorsOnly: boolean,
+  ) {
     const context = shopifyContext(languageLocale);
     const data = await load<{
       nodes: Array<{
         id: string;
-        variants: ShopifyConnection<ShopifyVariantNode>;
+        variants: ShopifyConnection<T>;
       } | null>;
-    }>(SHOPIFY_BROWSE_VARIANTS_QUERY, {
-      ...context,
-      ids: batch.map((product) => product.id),
-    });
+    }>(
+      colorsOnly ? SHOPIFY_BROWSE_COLORS_QUERY : SHOPIFY_BROWSE_VARIANTS_QUERY,
+      {
+        ...context,
+        ids: batch.map((product) => product.id),
+      },
+    );
     const nodes = new Map(
       data.nodes.flatMap((node) => (node ? [[node.id, node] as const] : [])),
     );
@@ -238,14 +255,18 @@ export async function hydrateShopifyBrowseProducts(
         "Shopify changed the catalog while its variants were being read.",
       );
     }
-    const results = new Map<string, ShopifyVariantNode[]>();
+    const results = new Map<string, T[]>();
     // Complete each connection before accepting any results. Three batch workers bound concurrency.
     for (const product of batch) {
       const variants = await collectConnectionNodes(
         nodes.get(product.id)!.variants,
         async (after) => {
-          const page = await load<ShopifyProductVariantsData>(
-            SHOPIFY_PRODUCT_VARIANTS_QUERY,
+          const page = await load<{
+            product: { id: string; variants: ShopifyConnection<T> } | null;
+          }>(
+            colorsOnly
+              ? SHOPIFY_VARIANT_COLORS_QUERY
+              : SHOPIFY_PRODUCT_VARIANTS_QUERY,
             {
               ...context,
               id: product.id,
@@ -276,7 +297,11 @@ export async function hydrateShopifyBrowseProducts(
   async function worker() {
     while (nextBatch < batches.length) {
       const batch = batches[nextBatch++];
-      const localized = await readBatch(batch, locale);
+      const localized = await readBatch<ShopifyVariantNode>(
+        batch,
+        locale,
+        false,
+      );
       // Translate labels independently; matching identities must remain in the default language.
       const needsCanonicalColors =
         locale !== "en-US" &&
@@ -284,7 +309,7 @@ export async function hydrateShopifyBrowseProducts(
           variants.some((variant) => variant.colors),
         );
       const canonical = needsCanonicalColors
-        ? await readBatch(batch, "en-US")
+        ? await readBatch<ShopifyVariantColorsNode>(batch, "en-US", true)
         : localized;
       for (const product of batch) {
         const variants = localized.get(product.id)!;
@@ -385,7 +410,7 @@ export async function getShopifyCollection(
 
   return {
     ...mapCollectionBase(collection),
-    products: products.map(mapShopifyProduct),
+    products: products.map(mapShopifyProductSummary),
   };
 }
 
@@ -393,7 +418,7 @@ export async function searchShopifyProducts(
   query: string,
   locale: Locale,
   budget = createCatalogReadBudget(),
-): Promise<Product[]> {
+): Promise<ProductSummary[]> {
   const normalizedQuery = query.trim().slice(0, 100);
   if (!normalizedQuery) return [];
 
@@ -419,8 +444,8 @@ export async function searchShopifyProducts(
   return nodes.flatMap((node) =>
     node.__typename === "Product"
       ? [
-          mapShopifyProduct(
-            node as { __typename: "Product" } & ShopifyProductNode,
+          mapShopifyProductSummary(
+            node as { __typename: "Product" } & ShopifyProductSummaryNode,
           ),
         ]
       : [],

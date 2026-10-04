@@ -82,9 +82,9 @@ describe("Shopify catalog facade", () => {
       products: [expect.objectContaining({ handle: "crystal-bracelet" })],
     });
     await expect(
-      getProductCategory("bracelets", "us", "es-US"),
+      getProductCategory("bracelets", "us", "zh-Hant-US"),
     ).resolves.toMatchObject({
-      title: "Pulseras",
+      title: "手鏈",
     });
     await expect(
       getProductCategory("rings", "us", "en-US"),
@@ -103,13 +103,15 @@ describe("Shopify catalog facade", () => {
         { handle: "featured", title: "Featured", kind: "merchandising" },
       ],
     });
-    await expect(getCatalogNavigationData("us", "es-US")).resolves.toEqual({
-      categories: [{ handle: "bracelets", title: "Pulseras" }],
-      collections: [{ handle: "patron-saint", title: "Patron Saint" }],
-    });
+    await expect(getCatalogNavigationData("us", "zh-Hant-US")).resolves.toEqual(
+      {
+        categories: [{ handle: "bracelets", title: "手鏈" }],
+        collections: [{ handle: "patron-saint", title: "Patron Saint" }],
+      },
+    );
     expect(
       shopifyCatalogMocks.getShopifyCatalogNavigation,
-    ).toHaveBeenCalledWith("es-US", {
+    ).toHaveBeenCalledWith("zh-Hant-US", {
       buyerIp: null,
       cache: "force-cache",
       revalidate: 300,
@@ -147,7 +149,7 @@ describe("Shopify catalog facade", () => {
     ).resolves.toBeNull();
   });
 
-  it("uses one enabled US catalog for all three languages", () => {
+  it("uses one enabled US catalog for its configured languages", () => {
     expect(markets.us.regions).toEqual(["US"]);
     expect(markets.us.defaultCurrency).toBe("USD");
     expect(markets.us.currencies).toEqual(["USD"]);
@@ -185,19 +187,19 @@ describe("Shopify catalog facade", () => {
     ]);
     shopifyCatalogMocks.searchShopifyProducts.mockResolvedValue([product]);
 
-    await expect(getProducts("us", "es-US")).resolves.toEqual([product]);
+    await expect(getProducts("us", "zh-Hant-US")).resolves.toEqual([product]);
     await expect(
       getProduct("crystal-bracelet", "us", "en-US"),
     ).resolves.toEqual(product);
-    await expect(getCollections("us", "es-US")).resolves.toEqual([
+    await expect(getCollections("us", "zh-Hant-US")).resolves.toEqual([
       designCollection,
     ]);
-    await expect(searchCatalog("crystal", "us", "es-US")).resolves.toEqual([
-      product,
-    ]);
+    await expect(searchCatalog("crystal", "us", "zh-Hant-US")).resolves.toEqual(
+      [product],
+    );
 
     expect(shopifyCatalogMocks.getShopifyProducts).toHaveBeenCalledWith(
-      "es-US",
+      "zh-Hant-US",
       { cache: "no-store" },
       expect.objectContaining({ read: expect.any(Function) }),
     );
@@ -206,11 +208,11 @@ describe("Shopify catalog facade", () => {
       "en-US",
     );
     expect(shopifyCatalogMocks.getShopifyCollections).toHaveBeenCalledWith(
-      "es-US",
+      "zh-Hant-US",
     );
     expect(shopifyCatalogMocks.searchShopifyProducts).toHaveBeenCalledWith(
       "crystal",
-      "es-US",
+      "zh-Hant-US",
     );
   });
 

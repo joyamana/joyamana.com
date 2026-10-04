@@ -37,21 +37,21 @@ export async function HomePage({ locale }: { locale: Locale }) {
             >
               {copy.home.cta}
             </Link>
-            <Link
-              className="button button--ghost-light"
-              href={localePath(
-                locale,
-                availableProducts[0]
-                  ? `/products/${availableProducts[0].handle}`
-                  : "/shop",
-              )}
-            >
-              {uiText(locale, {
-                zh: "探索精選飾物",
-                en: "Discover a featured piece",
-                es: "Descubrir una pieza destacada",
-              })}
-            </Link>
+            {availableProducts[0] ? (
+              <Link
+                className="button button--ghost-light"
+                href={localePath(
+                  locale,
+                  `/products/${availableProducts[0].handle}`,
+                )}
+              >
+                {uiText(locale, {
+                  zh: "探索精選飾物",
+                  en: "Discover a featured piece",
+                  es: "Descubrir una pieza destacada",
+                })}
+              </Link>
+            ) : null}
           </div>
         </div>
       </section>
@@ -70,11 +70,21 @@ export async function HomePage({ locale }: { locale: Locale }) {
           </div>
           <p>{copy.home.featuredIntro}</p>
         </div>
-        <div className="product-grid">
-          {availableProducts.slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} />
-          ))}
-        </div>
+        {availableProducts.length ? (
+          <div className="product-grid">
+            {availableProducts.slice(0, 4).map((product) => (
+              <ProductCard key={product.id} product={product} locale={locale} />
+            ))}
+          </div>
+        ) : (
+          <p className="empty-state empty-state--compact">
+            {uiText(locale, {
+              en: "No pieces are currently available. Please check back soon.",
+              zh: "暫時沒有可購買的飾物，歡迎稍後再來瀏覽。",
+              es: "No hay piezas disponibles en este momento. Vuelve pronto.",
+            })}
+          </p>
+        )}
       </section>
 
       <section className="manifesto">

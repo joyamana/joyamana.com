@@ -297,7 +297,6 @@ describe("Shopify editorial content", () => {
       getShopifyEditorialArticle("blog", "first-story", "es-US"),
     ).resolves.toMatchObject({
       contentLocale: "en-US",
-      requestedLocale: "es-US",
       usedDefaultLanguage: true,
     });
     await expect(

@@ -7,6 +7,7 @@ import {
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
+import { editorialCopy } from "@/lib/i18n/editorial-copy";
 
 export async function EditorialIndexPage({
   locale,
@@ -15,24 +16,13 @@ export async function EditorialIndexPage({
   locale: Locale;
   kind: EditorialKind;
 }) {
-  let index = null;
-  try {
-    index = await getShopifyEditorialIndex(kind, locale);
-  } catch {
-    return <EditorialUnavailable kind={kind} locale={locale} />;
-  }
+  const index = await getShopifyEditorialIndex(kind, locale);
   if (!index?.articles.length) {
     return <EditorialUnavailable kind={kind} locale={locale} />;
   }
 
   const isBlog = kind === "blog";
-  const title = isBlog
-    ? "Blog"
-    : uiText(locale, {
-        zh: "水晶指南",
-        en: "Crystal guide",
-        es: "Guía de cristales",
-      });
+  const { title, description } = editorialCopy(kind, locale);
 
   return (
     <>
@@ -51,19 +41,8 @@ export async function EditorialIndexPage({
               })}
         </p>
         <h1 id={`${kind}-index-title`}>{title}</h1>
-        <p>
-          {index.seoDescription ||
-            (isBlog
-              ? uiText(locale, {
-                  zh: "關於水晶飾物、選購知識與個人意義的故事及實用指南。",
-                  en: "Stories and practical guidance about crystal objects, clear buying, and personal meaning.",
-                  es: "Historias y orientación práctica sobre cristales, compras claras y significado personal.",
-                })
-              : uiText(locale, {
-                  zh: "認識水晶的特質、保養方法與傳統文化寓意。",
-                  en: "A reference guide to crystal characteristics, care, and traditional associations.",
-                  es: "Una guía de referencia sobre las características, el cuidado y las asociaciones tradicionales de los cristales.",
-                }))}
+        <p lang={index.seoDescription ? index.descriptionLocale : locale}>
+          {index.seoDescription || description}
         </p>
       </header>
       {index.usedDefaultLanguage ? (
@@ -232,18 +211,9 @@ function EditorialUnavailable({
   kind: EditorialKind;
   locale: Locale;
 }) {
-  const isBlog = kind === "blog";
   return (
     <section className="editorial-hub-hero">
-      <p className="eyebrow">
-        {isBlog
-          ? "Blog"
-          : uiText(locale, {
-              zh: "水晶指南",
-              en: "Crystal guide",
-              es: "Guía de cristales",
-            })}
-      </p>
+      <p className="eyebrow">{editorialCopy(kind, locale).title}</p>
       <h1>
         {uiText(locale, {
           zh: "目前沒有文章。",

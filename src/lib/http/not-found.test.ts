@@ -3,7 +3,6 @@ import { notFoundResponse } from "./not-found";
 
 it.each([
   ["en-US", "/shop", "/", "We couldn’t find that page."],
-  ["es-US", "/es-us/shop", "/es-us", "No pudimos encontrar esta página."],
   ["zh-Hant-US", "/zh-hant-us/shop", "/zh-hant-us", "未能找到此頁面。"],
 ] as const)(
   "returns a complete localized no-JS 404: %s",

@@ -45,7 +45,6 @@ export function parseContentPageFields(fields: Map<string, ContentPageField>) {
     return null;
   return {
     title,
-    richText,
     html,
     lastUpdated,
     seoTitle,

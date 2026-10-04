@@ -9,5 +9,3 @@ export const brand = {
     tiktok: null,
   },
 } as const;
-
-export type BrandConfig = typeof brand;

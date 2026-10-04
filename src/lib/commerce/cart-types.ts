@@ -3,7 +3,10 @@ import {
   getProductQuantityMaximum,
   isValidAvailableProductQuantity,
 } from "./types";
-import type { StorefrontLanguage } from "@/config/locales";
+import type {
+  StorefrontLanguage,
+  TranslatedStorefrontLanguage,
+} from "@/config/locales";
 
 export interface CartMoney {
   amount: string;
@@ -35,7 +38,6 @@ export interface CartLineView {
   quantityAvailable: number | null;
   quantity: number;
   quantityRule: ProductQuantityRule;
-  unitPrice: CartMoney;
   totalPrice: CartMoney;
 }
 
@@ -108,7 +110,7 @@ export type CartActionErrorCode =
   | "UNAVAILABLE";
 
 const cartErrorMessages: Record<
-  StorefrontLanguage,
+  TranslatedStorefrontLanguage,
   Record<CartActionErrorCode, string>
 > = {
   ZH_TW: {
@@ -182,12 +184,16 @@ export function cartForFailure(
     result.error.code === "CART_EXPIRED" ||
     result.error.code === "CART_NOT_FOUND"
   ) {
-    return {
-      lines: [],
-      totalQuantity: 0,
-      subtotal: { amount: "0.0", currencyCode: "USD" },
-      warnings: [],
-    };
+    return emptyCartView();
   }
   return undefined;
+}
+
+export function emptyCartView(): CartView {
+  return {
+    lines: [],
+    totalQuantity: 0,
+    subtotal: { amount: "0.0", currencyCode: "USD" },
+    warnings: [],
+  };
 }

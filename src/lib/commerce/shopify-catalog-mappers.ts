@@ -3,10 +3,12 @@ import { parseVariantColors } from "./catalog-browse";
 import { compareAmounts } from "./money";
 import {
   isValidQuantityRule,
+  isValidInventory,
   type Collection,
   type CollectionKind,
   type Money,
   type Product,
+  type ProductSummary,
   type ProductImage,
   type ProductQuantityRule,
   type ProductVariant,
@@ -18,6 +20,7 @@ import {
   type ShopifyQuantityRule,
   type ShopifyVariantNode,
   type ShopifyProductNode,
+  type ShopifyProductSummaryNode,
   type ShopifyMetafield,
   type ShopifyCollectionBase,
 } from "./shopify-catalog-contract";
@@ -99,12 +102,7 @@ function mapQuantityRule(
 function mapInventory(
   variant: ShopifyVariantNode,
 ): Pick<ProductVariant, "currentlyNotInStock" | "quantityAvailable"> {
-  if (
-    typeof variant.currentlyNotInStock !== "boolean" ||
-    (variant.quantityAvailable !== null &&
-      (!Number.isInteger(variant.quantityAvailable) ||
-        variant.quantityAvailable < 0))
-  ) {
+  if (!isValidInventory(variant)) {
     throw new ShopifyCatalogError(
       "invalid-data",
       `Shopify returned invalid inventory for variant ${variant.id}.`,
@@ -149,6 +147,31 @@ export function mapVariant(
   };
 }
 
+export function mapShopifyProductSummary(
+  node: ShopifyProductSummaryNode,
+): ProductSummary {
+  return {
+    id: node.id,
+    handle: node.handle,
+    title: node.title,
+    availableForSale: node.availableForSale,
+    featuredImage: mapImage(node.featuredImage, node.title),
+    category: node.category
+      ? { id: node.category.id, name: node.category.name }
+      : null,
+    priceRange: {
+      minVariantPrice: mapMoney(
+        node.priceRange.minVariantPrice,
+        `product ${node.id} minimum price`,
+      ),
+      maxVariantPrice: mapMoney(
+        node.priceRange.maxVariantPrice,
+        `product ${node.id} maximum price`,
+      ),
+    },
+  };
+}
+
 export function mapShopifyProduct(node: ShopifyProductNode): Product {
   const images = node.images.nodes.flatMap((image) => {
     const mapped = mapImage(image, node.title);
@@ -169,31 +192,15 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
   );
 
   return {
-    id: node.id,
-    handle: node.handle,
-    title: node.title,
+    ...mapShopifyProductSummary(node),
     description: node.description,
     descriptionHtml: sanitizeShopifyHtml(node.descriptionHtml),
     seoTitle: optionalText(node.seo.title),
     seoDescription: optionalText(node.seo.description),
-    availableForSale: node.availableForSale,
-    priceRange: {
-      minVariantPrice: mapMoney(
-        node.priceRange.minVariantPrice,
-        `product ${node.id} minimum price`,
-      ),
-      maxVariantPrice: mapMoney(
-        node.priceRange.maxVariantPrice,
-        `product ${node.id} maximum price`,
-      ),
-    },
     featuredImage,
     images,
     variants,
     model: mapProductModel(node.productModel),
-    category: node.category
-      ? { id: node.category.id, name: node.category.name }
-      : null,
   };
 }
 

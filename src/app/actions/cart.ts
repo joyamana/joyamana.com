@@ -9,6 +9,7 @@ import type {
 } from "@/lib/commerce/cart-types";
 import {
   cartLineIssue,
+  emptyCartView,
   isBlockingInventoryWarning,
 } from "@/lib/commerce/cart-types";
 import {
@@ -17,7 +18,6 @@ import {
   assertValidCartQuantity,
   clearShopifyCart,
   createShopifyCart,
-  emptyCartView,
   getShopifyCart,
   isShopifyCartId,
   isShopifyCartLineId,
@@ -218,8 +218,8 @@ export async function checkoutAction(
   locale = "en-US",
 ): Promise<CheckoutActionResult> {
   try {
-    requireCheckout();
     const language = languageForLocale(locale);
+    requireCheckout();
     const { store, cartId } = await requireCartCookie();
     const cart = await getShopifyCart(cartId, language);
     if (!cart) {
@@ -250,12 +250,12 @@ export async function buyNowAction(
   locale = "en-US",
 ): Promise<CheckoutActionResult> {
   try {
+    const language = languageForLocale(locale);
     requireCheckout();
     assertValidCartQuantity(quantity);
     if (!isShopifyVariantId(merchandiseId)) {
       throw new ShopifyCartError("INVALID_INPUT");
     }
-    const language = languageForLocale(locale);
 
     // Deliberately do not read or write the persistent Bag cookie. Buy now
     // always receives a fresh, independent, one-line Shopify Cart.

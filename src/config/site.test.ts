@@ -61,11 +61,12 @@ describe("canonical site URL configuration", () => {
 
     expect(isIndexingEnabledFor("en-US", "/about")).toBe(true);
     expect(isIndexingEnabledFor("en-US", "/shop")).toBe(true);
-    expect(isIndexingEnabledFor("es-US", "/about")).toBe(true);
-    expect(isIndexingEnabledFor("es-US", "/shop")).toBe(true);
-    expect(isIndexingEnabledFor("es-US", "/products/aquamarine")).toBe(true);
+    expect(isIndexingEnabledFor("zh-Hant-US", "/shop")).toBe(true);
+    expect(isIndexingEnabledFor("es-US", "/about")).toBe(false);
+    expect(isIndexingEnabledFor("es-US", "/shop")).toBe(false);
+    expect(isIndexingEnabledFor("es-US", "/products/aquamarine")).toBe(false);
     expect(isIndexingEnabledFor("en-US", "/privacy")).toBe(true);
-    expect(isIndexingEnabledFor("es-US", "/terms")).toBe(true);
+    expect(isIndexingEnabledFor("es-US", "/terms")).toBe(false);
     expect(isIndexingEnabledFor("en-US", "/blog/story")).toBe(false);
     expect(isIndexingEnabledFor("en-US", "/future-page")).toBe(false);
   });

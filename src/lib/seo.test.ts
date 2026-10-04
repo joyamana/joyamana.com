@@ -149,4 +149,27 @@ describe("metadata titles", () => {
     });
     expect(metadata.alternates).toBeUndefined();
   });
+  it("keeps Spanish noindex even if its old matrix entry is mistakenly approved", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
+    const { buildMetadata } = await import("./seo");
+    const paused = buildMetadata({
+      title: "Paused",
+      description: "Paused locale",
+      locale: "es-US",
+      path: "/shop",
+    });
+    expect(paused.robots).toMatchObject({ index: false });
+    expect(paused.alternates).toBeUndefined();
+    const active = buildMetadata({
+      title: "Shop",
+      description: "Pieces",
+      locale: "en-US",
+      path: "/shop",
+      alternateLocales: ["en-US", "es-US"],
+    });
+    expect(active.alternates?.languages).toEqual({
+      "en-US": "https://www.joyamana.com/shop",
+    });
+  });
 });

@@ -2,7 +2,7 @@ import { compareAmounts } from "./money";
 import type { PageSearchParams } from "@/lib/seo";
 import {
   isProductVariantPurchasable,
-  type Product,
+  type CatalogProduct,
   type ProductVariant,
 } from "./types";
 
@@ -13,7 +13,7 @@ export interface CatalogQuery {
   sort: CatalogSort;
 }
 export interface CatalogCard {
-  product: Product;
+  product: CatalogProduct;
   variant: ProductVariant;
   available: boolean;
   path: string;
@@ -92,7 +92,7 @@ export function publicVariantId(id: string) {
 }
 
 export function variantPath(
-  product: Pick<Product, "handle">,
+  product: Pick<CatalogProduct, "handle">,
   variant: ProductVariant,
 ) {
   const id = publicVariantId(variant.id);
@@ -101,7 +101,7 @@ export function variantPath(
 }
 
 export function selectCatalogVariant(
-  product: Product,
+  product: CatalogProduct,
   query: CatalogQuery,
 ): ProductVariant | undefined {
   return product.variants
@@ -130,7 +130,7 @@ function compareText(a: string, b: string) {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-export function browseCatalog(products: Product[], query: CatalogQuery) {
+export function browseCatalog(products: CatalogProduct[], query: CatalogQuery) {
   const entries = products.flatMap((product, order) => {
     const variant = selectCatalogVariant(product, query);
     return variant
@@ -181,7 +181,7 @@ export function browseCatalog(products: Product[], query: CatalogQuery) {
 }
 
 export function initialProductVariant(
-  product: Product,
+  product: CatalogProduct,
   params: PageSearchParams = {},
 ) {
   if (params.variant !== undefined) {

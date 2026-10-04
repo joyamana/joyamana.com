@@ -5,7 +5,8 @@
 
 ## 本地开发
 
-使用 Node 24，pnpm 版本由 [package.json](package.json) 固定。
+先按 [.nvmrc](.nvmrc) 切到 Node 24，并用 `node --version` 确认。
+pnpm 版本由 [package.json](package.json) 固定。
 根据 [.env.example](.env.example) 创建 `.env.local`。商品与正文从 Shopify 读取；
 没有配置时显示不可用，不提供本地商品或政策后备数据。
 
@@ -25,7 +26,8 @@ pnpm test
 pnpm build
 ```
 
-`pnpm format` 修正代码排版，文档按现有 Markdown 格式维护；类型检查会先生成路由类型，build 会先运行环境预检。
+`pnpm format` 修正代码排版；文档按现有 Markdown 格式维护。类型检查先生成路由类型，
+build 先运行环境预检。构建需连接 Google Fonts 下载字体，再由站点自托管。
 GitHub [CI](.github/workflows/ci.yml) 对 PR、dev/main 提交运行上述检查，结果以 GitHub 为准。
 浏览器和 Checkout 的人工验收见 [发布手册](docs/LAUNCH_RUNBOOK.md)。
 

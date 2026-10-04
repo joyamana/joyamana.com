@@ -35,12 +35,7 @@ export async function PolicyPage({
   locale: Locale;
   kind: "shipping" | "returns" | "privacy" | "terms";
 }) {
-  let policy;
-  try {
-    policy = await getShopifyPolicy(kind, locale);
-  } catch {
-    return <PolicyUnavailable locale={locale} kind={kind} />;
-  }
+  const policy = await getShopifyPolicy(kind, locale);
 
   if (!policy) return <PolicyUnavailable locale={locale} kind={kind} />;
 

@@ -32,14 +32,4 @@ export const indexingPolicy = {
     // Blog, Crystal Guide
     editorial: false,
   },
-  "es-US": {
-    // Home, Contact, About, Accessibility
-    core: true,
-    // Shop, Category, Collection, Product
-    commerce: true,
-    // Shipping, Returns, Privacy, Terms
-    policies: true,
-    // Blog, Crystal Guide
-    editorial: false,
-  },
 } as const satisfies Record<IndexLocale, Record<IndexGroup, boolean>>;

@@ -2,7 +2,6 @@ import type { CollectionKind } from "./types";
 
 export const PRODUCT_PAGE_SIZE = 100;
 export const COLLECTION_PAGE_SIZE = 100;
-export const SUMMARY_VARIANT_PAGE_SIZE = 1;
 export const VARIANT_PAGE_SIZE = 100;
 export const SEARCH_PAGE_SIZE = 24;
 export const NAVIGATION_PRODUCT_PAGE_SIZE = 250;
@@ -64,22 +63,25 @@ export interface ShopifyVariantNode {
   colors?: { type: string; value: string } | null;
 }
 
-export interface ShopifyProductNode {
+export interface ShopifyProductSummaryNode {
   id: string;
   handle: string;
   title: string;
-  description: string;
-  descriptionHtml: string;
   availableForSale: boolean;
-  productModel: ShopifyMetafield | null;
   category: ShopifyTaxonomyCategory | null;
-  seo: ShopifySeo;
   featuredImage: ShopifyImage | null;
-  images: { nodes: ShopifyImage[] };
   priceRange: {
     minVariantPrice: ShopifyMoneyV2;
     maxVariantPrice: ShopifyMoneyV2;
   };
+}
+
+export interface ShopifyProductNode extends ShopifyProductSummaryNode {
+  description: string;
+  descriptionHtml: string;
+  productModel: ShopifyMetafield | null;
+  seo: ShopifySeo;
+  images: { nodes: ShopifyImage[] };
   variants: ShopifyConnection<ShopifyVariantNode>;
 }
 
@@ -98,11 +100,11 @@ export interface ShopifyCollectionSummaryNode extends ShopifyCollectionBase {
 }
 
 export interface ShopifyCollectionNode extends ShopifyCollectionBase {
-  products: ShopifyConnection<ShopifyProductNode>;
+  products: ShopifyConnection<ShopifyProductSummaryNode>;
 }
 
 export interface ShopifyProductsData {
-  products: ShopifyConnection<ShopifyProductNode>;
+  products: ShopifyConnection<ShopifyProductSummaryNode>;
 }
 
 export interface ShopifyProductData {
@@ -126,7 +128,7 @@ export interface ShopifyProductVariantsData {
 
 export interface ShopifySearchData {
   search: ShopifyConnection<
-    | ({ __typename: "Product" } & ShopifyProductNode)
+    | ({ __typename: "Product" } & ShopifyProductSummaryNode)
     | { __typename: string; id: string }
   >;
 }
@@ -223,7 +225,7 @@ const variantFields = `#graphql
   ${imageFields}
 `;
 
-const productFields = (variantPageSize = SUMMARY_VARIANT_PAGE_SIZE) => `#graphql
+const productFields = (variantPageSize: number) => `#graphql
   fragment CatalogProductFields on Product {
     id
     handle
@@ -271,6 +273,20 @@ const productFields = (variantPageSize = SUMMARY_VARIANT_PAGE_SIZE) => `#graphql
   ${variantFields}
 `;
 
+const productSummaryFields = `#graphql
+  fragment CatalogProductSummaryFields on Product {
+    id handle title availableForSale
+    category { id name }
+    featuredImage { ...CatalogImageFields }
+    priceRange {
+      minVariantPrice { ...CatalogMoneyFields }
+      maxVariantPrice { ...CatalogMoneyFields }
+    }
+  }
+  ${moneyFields}
+  ${imageFields}
+`;
+
 export const SHOPIFY_PRODUCTS_QUERY = `#graphql
   query CatalogProducts(
     $country: CountryCode!
@@ -280,7 +296,7 @@ export const SHOPIFY_PRODUCTS_QUERY = `#graphql
   ) @inContext(country: $country, language: $language) {
     products(first: $first, after: $after) {
       nodes {
-        ...CatalogProductFields
+        ...CatalogProductSummaryFields
       }
       pageInfo {
         hasNextPage
@@ -288,7 +304,7 @@ export const SHOPIFY_PRODUCTS_QUERY = `#graphql
       }
     }
   }
-  ${productFields()}
+  ${productSummaryFields}
 `;
 
 export const SHOPIFY_PRODUCT_QUERY = `#graphql
@@ -391,7 +407,7 @@ export const SHOPIFY_COLLECTION_QUERY = `#graphql
       }
       products(first: $first, after: $after) {
         nodes {
-          ...CatalogProductFields
+          ...CatalogProductSummaryFields
         }
         pageInfo {
           hasNextPage
@@ -400,7 +416,7 @@ export const SHOPIFY_COLLECTION_QUERY = `#graphql
       }
     }
   }
-  ${productFields()}
+  ${productSummaryFields}
 `;
 
 export const SHOPIFY_SEARCH_QUERY = `#graphql
@@ -415,7 +431,7 @@ export const SHOPIFY_SEARCH_QUERY = `#graphql
       nodes {
         __typename
         ... on Product {
-          ...CatalogProductFields
+          ...CatalogProductSummaryFields
         }
       }
       pageInfo {
@@ -424,7 +440,7 @@ export const SHOPIFY_SEARCH_QUERY = `#graphql
       }
     }
   }
-  ${productFields()}
+  ${productSummaryFields}
 `;
 
 export const SHOPIFY_NAVIGATION_PRODUCTS_QUERY = `#graphql
@@ -487,4 +503,35 @@ export const SHOPIFY_BROWSE_VARIANTS_QUERY = `#graphql
     }
   }
   ${variantFields}
+`;
+
+export type ShopifyVariantColorsNode = Pick<
+  ShopifyVariantNode,
+  "id" | "colors"
+>;
+const colorFields = `fragment CatalogVariantColors on ProductVariant {
+  id colors: metafield(namespace: "custom", key: "colors") { type value }
+}`;
+
+export const SHOPIFY_BROWSE_COLORS_QUERY = `#graphql
+  query CatalogBrowseColors($country: CountryCode!, $language: LanguageCode!, $ids: [ID!]!)
+  @inContext(country: $country, language: $language) {
+    nodes(ids: $ids) { ... on Product {
+      id variants(first: ${VARIANT_PAGE_SIZE}, sortKey: POSITION, reverse: false) {
+        nodes { ...CatalogVariantColors } pageInfo { hasNextPage endCursor }
+      }
+    } }
+  }
+  ${colorFields}
+`;
+export const SHOPIFY_VARIANT_COLORS_QUERY = `#graphql
+  query CatalogVariantColorsPage($country: CountryCode!, $language: LanguageCode!, $id: ID!, $first: Int!, $after: String!)
+  @inContext(country: $country, language: $language) {
+    product(id: $id) {
+      id variants(first: $first, after: $after, sortKey: POSITION, reverse: false) {
+        nodes { ...CatalogVariantColors } pageInfo { hasNextPage endCursor }
+      }
+    }
+  }
+  ${colorFields}
 `;

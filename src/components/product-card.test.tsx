@@ -53,7 +53,7 @@ describe("Product card", () => {
     const entry = browseCatalog([item], parseCatalogQuery({ color: "purple" }))
       .entries[0];
     const html = renderToStaticMarkup(
-      <ProductCard product={item} presentation={entry} locale="en-US" />,
+      <ProductCard presentation={entry} locale="en-US" />,
     );
     expect(
       html.match(/href="\/products\/bracelet\?variant=123"/g),
@@ -67,11 +67,7 @@ describe("Product card", () => {
       variant: { ...entry.variant, image: null },
     };
     const unavailable = renderToStaticMarkup(
-      <ProductCard
-        product={{ ...item, featuredImage: entry.variant.image }}
-        presentation={missingImage}
-        locale="en-US"
-      />,
+      <ProductCard presentation={missingImage} locale="en-US" />,
     );
     expect(unavailable).toContain("Image unavailable");
     expect(unavailable).not.toContain("purple.jpg");
@@ -82,12 +78,12 @@ describe("Product card", () => {
       <ProductCard product={product} locale="en-US" />,
     );
 
-    expect(html).toContain("product-card--available");
+    expect(html).toContain("product-card--options");
     expect(html).toContain('class="product-card__meta"');
-    expect(html).toContain("product-card__availability--available");
-    expect(html).toContain("product-card__availability-dot");
+    expect(html).toContain("product-card__availability--options");
+    expect(html).not.toContain("product-card__availability-dot");
     expect(html).toContain('class="product-card__price"');
-    expect(html).toContain("Available");
+    expect(html).toContain("View options");
     expect(html).toContain("Tiger&#x27;s Eye Bracelet, Multicolour — 14 mm");
     expect(html).not.toContain("Shopify");
   });
@@ -105,4 +101,12 @@ describe("Product card", () => {
     expect(html).toContain("product-card__availability-badge");
     expect(html).toContain("Unavailable");
   });
+});
+
+it("does not claim summary merchandise can satisfy a purchase quantity", () => {
+  const html = renderToStaticMarkup(
+    <ProductCard product={product} locale="en-US" />,
+  );
+  expect(html).toContain("View options");
+  expect(html).not.toContain(">Available<");
 });

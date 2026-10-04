@@ -17,7 +17,6 @@ function page(
     title,
     navigationTitle: title,
     summary: `${title} summary.`,
-    richText: "{}",
     html: `<p>${title} body.</p>`,
     lastUpdated: "2026-08-31",
     seoTitle: title,
@@ -27,7 +26,6 @@ function page(
     navigationLocale: overrides.contentLocale ?? "en-US",
     translationReady: !overrides.usedDefaultLanguage,
     contentLocale: "en-US",
-    requestedLocale: "en-US",
     usedDefaultLanguage: false,
     ...overrides,
   };
@@ -36,7 +34,6 @@ function page(
 describe("About content page", () => {
   it("keeps all Chinese child links and readable English fallback", () => {
     const fallback = {
-      requestedLocale: "zh-Hant-US",
       contentLocale: "en-US",
       usedDefaultLanguage: true,
     } as const;
@@ -106,45 +103,41 @@ describe("About content page", () => {
   });
 
   it("localizes child URLs and marks the child page as current", () => {
-    const root = page("about", "Sobre Joya Mana", {
-      contentLocale: "es-US",
-      requestedLocale: "es-US",
+    const root = page("about", "關於 Joya Mana", {
+      contentLocale: "zh-Hant-US",
     });
-    const approach = page("our-approach", "Nuestro enfoque", {
-      contentLocale: "es-US",
-      requestedLocale: "es-US",
+    const approach = page("our-approach", "我們的理念", {
+      contentLocale: "zh-Hant-US",
     });
     const tree: StorefrontAboutTree = { root, children: [approach] };
     const html = renderToStaticMarkup(
       <AboutContentPage
         handle="our-approach"
-        locale="es-US"
+        locale="zh-Hant-US"
         page={approach}
         tree={tree}
       />,
     );
 
-    expect(html).toContain('href="/es-us/about"');
+    expect(html).toContain('href="/zh-hant-us/about"');
     expect(html).toMatch(
-      /<a(?=[^>]*aria-current="page")(?=[^>]*href="\/es-us\/about\/our-approach")[^>]*>/,
+      /<a(?=[^>]*aria-current="page")(?=[^>]*href="\/zh-hant-us\/about\/our-approach")[^>]*>/,
     );
   });
 
-  it("keeps untranslated children out of root navigation", () => {
-    const root = page("about", "Sobre Joya Mana", {
-      contentLocale: "es-US",
-      requestedLocale: "es-US",
+  it("keeps English fallback child links in Chinese navigation", () => {
+    const root = page("about", "關於 Joya Mana", {
+      contentLocale: "zh-Hant-US",
     });
     const fallback = page("product-standards", "Product Standards", {
-      requestedLocale: "es-US",
       usedDefaultLanguage: true,
     });
     const tree: StorefrontAboutTree = { root, children: [fallback] };
     const html = renderToStaticMarkup(
-      <AboutContentPage locale="es-US" page={root} tree={tree} />,
+      <AboutContentPage locale="zh-Hant-US" page={root} tree={tree} />,
     );
 
-    expect(html).not.toContain("about-tabs");
-    expect(html).not.toContain("Product Standards");
+    expect(html).toContain("about-tabs");
+    expect(html).toContain("Product Standards");
   });
 });

@@ -6,7 +6,7 @@ import { CatalogFilters } from "./catalog-filters";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 describe("instant catalog filters", () => {
-  it.each(["en-US", "es-US", "zh-Hant-US"] as const)(
+  it.each(["en-US", "zh-Hant-US"] as const)(
     "renders direct filter links and a removable stale color on %s",
     (locale) => {
       const html = renderToStaticMarkup(

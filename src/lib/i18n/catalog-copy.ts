@@ -1,4 +1,4 @@
-import type { EnabledLocale as Locale } from "@/config/locales";
+import type { TranslatedLocale as Locale } from "@/config/locales";
 
 const english = {
   filter: "Filter & sort",

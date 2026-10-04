@@ -1,6 +1,7 @@
 import { markets, type MarketId } from "@/config/markets";
 import {
   localeRegistry,
+  isEnabledLocale,
   type SupportedLocale,
   type EnabledLocale,
 } from "@/config/locales";
@@ -28,10 +29,7 @@ export function marketIdForLocale(locale: Locale): MarketId {
 }
 
 export function isLocaleEnabled(locale: Locale): locale is EnabledLocale {
-  return (
-    localeRegistry[locale].enabled &&
-    marketForLocale(locale).status !== "planned"
-  );
+  return isEnabledLocale(locale);
 }
 
 export const enabledLocales = locales.filter(isLocaleEnabled);

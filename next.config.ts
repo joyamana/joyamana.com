@@ -38,12 +38,6 @@ const nextConfig: NextConfig = {
         destination: "/category/:handle",
         permanent: true,
       },
-      {
-        source:
-          "/es-us/collections/:handle(bracelets|rings|necklaces|earrings)",
-        destination: "/es-us/category/:handle",
-        permanent: true,
-      },
     ];
   },
 };

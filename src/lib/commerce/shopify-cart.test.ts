@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { cartLineIssue } from "./cart-types";
 import type { ShopifyCart } from "./shopify-cart";
 import {
   ShopifyCartError,
@@ -57,7 +58,6 @@ function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
               height: 1200,
             },
             quantityRule: { minimum: 1, maximum: null, increment: 1 },
-            price: { amount: "68.00", currencyCode: "USD" },
             product: {
               handle: "aquamarine-bracelet-9-mm",
               title: "Aquamarine Bracelet",
@@ -113,7 +113,6 @@ describe("Shopify Cart mapper and validation", () => {
           currentlyNotInStock: false,
           quantityAvailable: 2,
           quantityRule: { minimum: 1, maximum: null, increment: 1 },
-          unitPrice: { amount: "68.00", currencyCode: "USD" },
         },
       ],
       warnings: [
@@ -290,14 +289,14 @@ describe("Shopify Cart Storefront operations", () => {
   it("reads the latest Cart without caching the query", async () => {
     mocks.shopifyFetch.mockResolvedValueOnce({ cart: makeCart() });
 
-    const cart = await getShopifyCart(cartId, "ES");
+    const cart = await getShopifyCart(cartId, "ZH_TW");
 
     expect(cart?.id).toBe(cartId);
     const [query, variables, options] = mocks.shopifyFetch.mock.calls[0];
     expect(query).toContain("query JoyaManaCart");
     expect(query).toContain("language: $language");
     expect(query).toContain("quantityAvailable");
-    expect(variables).toEqual({ id: cartId, language: "ES" });
+    expect(variables).toEqual({ id: cartId, language: "ZH_TW" });
     expect(options).toEqual({ cache: "no-store" });
   });
 
@@ -532,10 +531,10 @@ describe("Shopify Checkout boundary", () => {
 
     expect(
       validateCheckoutUrl(
-        "https://joya-mana.myshopify.com/es/cart/c/token?key=secret",
+        "https://joya-mana.myshopify.com/zh-tw/cart/c/token?key=secret",
         { storeDomain: "joya-mana.myshopify.com" },
       ),
-    ).toBe("https://joya-mana.myshopify.com/es/cart/c/token?key=secret");
+    ).toBe("https://joya-mana.myshopify.com/zh-tw/cart/c/token?key=secret");
   });
 
   it.each([
@@ -575,4 +574,22 @@ describe("Shopify Checkout boundary", () => {
     });
     expect(JSON.stringify(failure)).not.toContain("cart-secret");
   });
+});
+
+describe("negative Shopify inventory", () => {
+  it.each([true, false])(
+    "keeps a negative-stock bag readable (backorder=%s)",
+    (backorder) => {
+      const cart = makeCart();
+      cart.lines.nodes[0].merchandise.quantityAvailable = -1;
+      cart.lines.nodes[0].merchandise.currentlyNotInStock = backorder;
+      const view = mapShopifyCart(cart);
+      expect(view.lines[0].quantityAvailable).toBe(-1);
+      expect(cartLineIssue(view.lines[0])).toBe(
+        backorder ? null : "INVALID_QUANTITY",
+      );
+      cart.lines.nodes[0].merchandise.availableForSale = false;
+      expect(cartLineIssue(mapShopifyCart(cart).lines[0])).toBe("UNAVAILABLE");
+    },
+  );
 });

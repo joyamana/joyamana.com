@@ -26,7 +26,6 @@ function contentPage(language: "EN" | "ES", translated = false) {
     id: "gid://shopify/Metaobject/1",
     type: "content_page",
     handle: "accessibility",
-    updatedAt: "2026-08-30T12:00:00Z",
     fields: [
       {
         key: "internal_name",
@@ -261,7 +260,6 @@ describe("Shopify content pages", () => {
       getShopifyContentPage("accessibility", "es-US"),
     ).resolves.toMatchObject({
       contentLocale: "en-US",
-      requestedLocale: "es-US",
       usedDefaultLanguage: true,
     });
     await expect(getPublishedShopifyContentPagePaths("es-US")).resolves.toEqual(

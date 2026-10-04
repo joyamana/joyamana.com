@@ -25,13 +25,7 @@ export async function AboutPage({
   locale: Locale;
   searchParams?: PageSearchParams;
 }) {
-  let tree: StorefrontAboutTree | null;
-  try {
-    tree = await getShopifyAboutTree(locale);
-  } catch (error) {
-    if (handle) throw error;
-    return <AboutUnavailable locale={locale} />;
-  }
+  const tree = await getShopifyAboutTree(locale);
 
   if (!tree) {
     if (handle) notFound();
@@ -164,15 +158,9 @@ function AboutSectionNavigation({
   locale: Locale;
   tree: StorefrontAboutTree;
 }) {
-  const children = tree.children.filter(
-    (page) =>
-      locale === "zh-Hant-US" ||
-      !page.usedDefaultLanguage ||
-      page.handle === activeHandle,
-  );
-  if (!children.length) return null;
+  if (!tree.children.length) return null;
 
-  const items = [tree.root, ...children];
+  const items = [tree.root, ...tree.children];
   return (
     <nav
       aria-label={uiText(locale, {

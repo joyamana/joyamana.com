@@ -1,77 +1,56 @@
 # 项目说明
 
-## 目标与范围
+## 范围
 
-Joya Mana 是面向美国市场的水晶 DTC 品牌，收入来自自有商品销售。品牌内容帮助顾客
-理解商品、建立信任并完成购买；不依赖广告变现。优先级见 [AGENTS.md](../AGENTS.md)。
+Joya Mana 是面向美国市场的水晶品牌站，收入来自商品销售。优先做好品牌体验与信任，
+其次是可靠购买、搜索可见性和未来扩展。购买不要求注册、问卷或营销订阅，不放广告。
 
-当前只运营 US / US Catalog / USD，语言为 en-US、es-US、zh-Hant-US，分别使用根路径、
-`/es-us/`、`/zh-hant-us/`。繁中采用香港书面语；三种语言共享商品、价格、库存和政策。
-Canada 仅有未启用配置，其他市场也不提前公开。
+当前只运营 US / US Catalog / USD。英语 en-US 使用根路径，香港繁中 zh-Hant-US 使用
+`/zh-hant-us/`，两种语言共享商品、库存、价格和政策。西语 es-US 暂停上线：不展示入口，
+旧地址返回 404/noindex；语言映射和共享译文保留，恢复前须重新批准。Canada 只保留
+未启用配置。URL 和索引规则见 [内容与索引](CONTENT_SEO_GEO_SPEC.md)。
 
-生产站点为 `https://www.joyamana.com`，apex 对应路径永久 308 至 www；托管结账使用
+生产站点为 `https://www.joyamana.com`，apex 对应路径 308 至 www；Shopify 托管结账使用
 `checkout.joyamana.com`。dev 对应 Vercel Preview，main 对应 Production。
-部署是否成功、译文是否通过审校，须以实际验收为准。
 
-## 用户流程
+## 用户流程与当前能力
 
-| 任务 | 流程 |
+| 顾客任务 | 当前流程 |
 |---|---|
-| 直接购物 | 首页 → Shop/类别/设计系列 → 商品 → Bag → Shopify Checkout |
-| 内容辅助选择 | Crystal Guide/Blog → 相关商品或类别 → 商品 → Bag → Checkout |
-| 礼赠 | 浏览商品 → 核对包装、配送与退换 → Bag → Checkout |
-| 订单后服务 | Shopify 确认与 Order Status → 必要时联系客服 |
+| 购物 | 首页 → Shop/类别/设计系列 → 商品选款 → Bag → Shopify Checkout |
+| 了解商品 | Crystal Guide/Blog → 相关目录或商品 → 购买 |
+| 礼赠 | 核对商品、包装、配送与退换 → Bag → Checkout |
+| 订单后服务 | Shopify 确认邮件与 Order Status → 必要时电邮客服 |
 
-购买不要求注册、问卷或营销同意，不使用 AdSense 或预留广告布局。
-账户、订阅、Wishlist、Loyalty、Referral 和实时定制器不在当前实现范围；
-是否启用由真实需求和业务批准决定。
+网站已有英语和繁中页面、商品搜索、同款颜色/可购买筛选、展示款价格排序、选款深链接、
+数量规则和图库。Bag 支持恢复、修改、完整分页、独立 Buy now 和结账前检查。
+About、Accessibility、政策和文章从 Shopify 读取。metadata、sitemap、适用 JSON-LD
+受部署、页面组和内容条件控制。工程使用 Node 24、固定依赖和 GitHub CI。
 
-## 当前能力
-
-| 领域 | 已实现 |
-|---|---|
-| 浏览 | 三语言首页、Shop、商品类别、设计系列、商品详情和商品搜索 |
-| 商品选择 | 同款颜色/可购买筛选、展示款价格排序、卡片与 PDP 精确选款、数量规则与图库 |
-| 购物 | Shopify Cart 创建/读取/修改/恢复、完整分页、独立 Buy now、结账前校验和失败恢复 |
-| 内容 | Shopify About 一级子页、Accessibility、Policies、Blog 与 Crystal Guide |
-| 搜索可见性 | metadata、canonical、hreflang、robots、sitemap、适用页面 JSON-LD 与参数排除 |
-| 工程 | Node 24、固定依赖、预检、格式检查、lint、类型检查、Vitest 和 GitHub CI |
-
-技术边界见 [技术规格](TECH_SPEC.md)，商品行为见 [交易规格](COMMERCE_SPEC.md)，
-索引与内容来源见 [内容与索引规格](CONTENT_SEO_GEO_SPEC.md)。
+各领域规则分别见 [技术](TECH_SPEC.md)、[交易](COMMERCE_SPEC.md)、
+[内容与索引](CONTENT_SEO_GEO_SPEC.md)、[设计](DESIGN_SYSTEM.md)。
 
 ## 当前限制
 
-- Product knowledge 字段、图片代表性披露、商品与内容关联、设计系列故事/lookbook 尚未接入。
-- 正文翻译允许默认英文回退；已识别的内容回退页不索引。商品/系列尚不能自动检测
-  回退，每次发布需人工检查 ES/繁中正文和 metadata。
-- 真实禁止超卖事实尚未提供，准确低库存提示暂停；普通库存、数量和可购买判断仍正常。
-- 搜索只检索商品。Editorial 保持关闭索引，测试文章不能当成正式上线内容。
-- Contact 只提供 Email，不收集或投递表单留言。
-- Organization/Site Settings、Home/Contact/政策 Schema、Analytics、营销 consent 和
-  Headless 隐私偏好流程尚未实现。Google verification 配置不等于账号已经验证。
-- 动态缺失商品/内容页的初始 404 正文仍受 Next 限制，详见技术规格。
-- 人工设备、辅助技术、译文、实际购物袋与 Checkout 验收须按每次发布范围执行。
-  单元测试、HTTP 检查和本地浏览器检查不能替代真实支付验收。
+- 商品知识、图片代表性披露、内容关联和系列故事尚未完整接入。
+- 缺译正文可回退英文；已识别的回退内容不索引。商品/系列尚无自动回退检测，
+  上线前仍需逐页检查繁中正文和 metadata。
+- 准确低库存文案暂停；库存、数量和可购买判断继续运行。
+- 搜索只检索商品；Editorial 关闭索引，测试文章不能当正式内容。
+- 客服只通过电邮联系。账户、订阅、Wishlist、Reviews、积分、推荐奖励和实时定制器未实现。
+- Organization/Site Settings、Home/Contact/政策 Schema、Analytics 和营销隐私流程未实现。
+  Google verification 配置不能证明账号已验证。
+- 动态缺失详情的初始 404 正文存在框架限制，见技术规格。
 
-业务方已确认下单支付能力和 Payment test mode 流程。生产启用范围仍由各部署配置和
-当次验收决定；该确认不代表已执行真实扣款、退款或 payout 对账。
+业务方已确认支付能力、Payment test mode 流程、法律实体、履约方式、政策审批责任和
+客服流程。品牌资产归设计规范，商品随附内容和现行配送退换承诺归交易规格。
+仓库不复制非公开商标、成本、利润或法律记录。
 
-## 内容与业务输入
+## 上线要求
 
-已确认的品牌名称、字体、配色和真实摄影由设计规范维护；商品随附专属 guidebook、
-Shipping/Returns 的现行承诺及客服渠道由交易规格维护。法律实体、履约模式和政策审批
-责任已由业务方确认，仓库不复制非公开商标、成本、利润或法律记录。
+顾客无需注册即可购买；页面、购物袋、metadata 和适用 Schema 的事实须一致。
+索引页初始 HTML 可读，手机和键盘核心流程可用，内容和译文经过人工检查。
+支付批准不代表已执行真实扣款、退款或到账核对；每次部署仍须验收自己的启用范围。
 
-未决配送范围、费率和税费，以及所有代码/后台待办，统一见 [Roadmap](ROADMAP.md)。
-这些问题只影响各自能力，不能自动扩大为全站阻塞。
-
-## 完成标准
-
-- 顾客能从品牌内容或目录发现商品，无需注册完成 Bag → Shopify Checkout。
-- UI、购物袋、metadata 和适用 Schema 的商品事实一致，政策与真实运营一致。
-- 索引页初始 HTML 可读，移动端、键盘和辅助技术核心流程可用。
-- 不虚构商品、作者、评论、来源、紧迫性或医疗功效。
-- 新工具的收益、隐私、性能和退出方式明确；不提前建设未来市场或大型功能。
-
-发布的可执行检查统一见 [发布手册](LAUNCH_RUNBOOK.md)。
+剩余代码工作、未决运营输入和候选只维护在 [Roadmap](ROADMAP.md)，
+实际发布检查见 [发布手册](LAUNCH_RUNBOOK.md)。

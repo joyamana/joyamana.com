@@ -13,7 +13,7 @@ function escapeHtml(value: string) {
 }
 
 /** Unknown URLs need a complete 404 document even without JavaScript.
- * Keep this independent of dynamic page rendering until Next fixes #97000.
+ * Keep this independent of dynamic page rendering, which may stream the 404 shell.
  * Only trusted locale copy and generated paths enter the document.
  */
 export function notFoundResponse(locale: EnabledLocale) {

@@ -1,4 +1,5 @@
 import { markets } from "./markets";
+import { isEnabledLocale } from "./locales";
 import { indexingPolicy, type IndexGroup } from "./indexing";
 
 import { resolveSiteUrl } from "./environment.mjs";
@@ -11,8 +12,9 @@ const indexScopeEnabled: Readonly<
 
 const anyIndexingEnabled =
   indexingMasterEnabled &&
-  Object.values(indexScopeEnabled).some((groups) =>
-    Object.values(groups).some(Boolean),
+  Object.entries(indexScopeEnabled).some(
+    ([locale, groups]) =>
+      isEnabledLocale(locale) && Object.values(groups).some(Boolean),
   );
 
 export function indexGroupForPath(path: string): IndexGroup | null {
@@ -54,7 +56,11 @@ export function indexGroupForPath(path: string): IndexGroup | null {
 }
 
 export function isIndexGroupEnabled(locale: string, group: IndexGroup) {
-  return Boolean(indexingMasterEnabled && indexScopeEnabled[locale]?.[group]);
+  return Boolean(
+    indexingMasterEnabled &&
+    isEnabledLocale(locale) &&
+    indexScopeEnabled[locale]?.[group],
+  );
 }
 
 export function isIndexingEnabledFor(locale: string, path: string) {
