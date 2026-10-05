@@ -9,7 +9,7 @@
 
 品牌/客服配置见 [brand.ts](../src/config/brand.ts)，色值/字号以
 [globals.css](../src/app/globals.css) 为唯一来源，不在文档复制数值表。
-米白为主背景，理念区用暖灰米色，浅紫用于选中，深棕用于操作和细节，花卉色为辅助。
+米白为主背景，理念区沿用同一背景，浅紫用于选中，深棕用于操作和细节，花卉色为辅助。
 语义文字和错误色独立于装饰色，大内容区不铺满深棕。
 
 正式资源在 [public/brand](../public/brand/)，来自获批 `【最终】joya mana logo.ai`：
@@ -19,16 +19,17 @@
 | 资源 | 当前用途 |
 |---|---|
 | `wordmark-rust.svg` / `wordmark-lavender.svg` | 原版字标；Header 与手机菜单使用赭棕版 |
-| `symbol-rust.svg` / `symbol-lavender.svg` | 独立图形；首页理念区在浅紫底上使用赭棕版 |
+| `symbol-rust.svg` / `symbol-lavender.svg` | 独立图形；首页理念标题旁使用小尺寸赭棕版 |
 | `lockup-rust.svg` / `lockup-lavender.svg` | 原稿上下组合；深棕 Footer 使用浅紫版 |
-| `pattern-lavender.svg` | 第三页连续纹样；Footer 上方窄带，仅作装饰 |
+| `pattern-lavender.svg` | 保留第三页连续纹样资源；当前网页不展示 |
 | `icon.svg` / `favicon.ico` / `apple-touch-icon.png` | 方形画布中的原版独立图形；两种语言共用 |
 | 同名透明 PNG、`symbol-square-rust.png` | Shopify 品牌、Checkout 与通知资产；操作见 [Shopify 维护](SHOPIFY_CATALOG_SETUP.md#品牌资产与-checkout) |
 
 [BrandLogo](../src/components/brand-logo.tsx)集中管理字标、图形、完整组合和深浅版本，
 提供稳定图片尺寸。尺寸由 CSS 控制：桌面字标约 160–180px，手机约 120–140px，
-Footer 完整组合 180px；保留留白，窄屏优先保证操作区至少 44px。
-已有 aria-label 的品牌链接内图片用空 alt，其余品牌展示读作 Joya Mana；理念图形和纹样为装饰。
+理念图形桌面 56px、手机 48px，Footer 完整组合桌面 160px、手机 150px；
+保留留白，窄屏优先保证操作区至少 44px。
+已有 aria-label 的品牌链接内图片用空 alt，其余品牌展示读作 Joya Mana；理念图形为装饰。
 图标保留原轮廓，发布时检查 16/32px 与手机收藏显示；未来小尺寸简化版须先确认。
 
 - 主 CTA 深棕底白字，次 CTA 深棕 outline，focus 清晰；深色背景提供隔离环。
@@ -58,7 +59,9 @@ wordmark / Search+Bag，全屏菜单底部切语言。原生 `<dialog>` 锁定�
 
 首页采用 [获批抽象矿物背景](../public/images/joya-mana-home-hero.webp)，不充当商品、产地
 或工艺摄影；不用 Blog 推荐或系列条带。没有可售候选时隐藏精选入口，显示准确空态。
-理念区桌面为文字/原版独立图形两栏，手机上下排列并控制图形面板高度；沿用已确认文案。
+理念区沿用已确认文案，桌面左侧为标题和故事链接，右侧为介绍及三条理念；标题控制行长，
+原版独立图形只作标题旁的小标记。手机依次为标题、介绍与理念、故事链接，使用同一米白背景。
+Footer 直接衔接内容，不加纹样带；深棕背景保留浅紫完整组合，地区、语言和版权在底部。
 Guide 用资料目录，Blog 用精选文章与编辑列表，真实链接/摘要由服务端输出；没图则用排版。
 
 About 的文字导航后直接是左对齐正文，不另建纯文字 Hero。无子页不显示单独 root tab，

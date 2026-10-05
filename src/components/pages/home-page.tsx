@@ -88,72 +88,91 @@ export async function HomePage({ locale }: { locale: Locale }) {
         )}
       </section>
 
-      <section className="manifesto">
-        <div className="manifesto__copy">
-          <p className="eyebrow">
-            {uiText(locale, {
-              zh: "我們的初衷",
-              en: "Our intention",
-              es: "Nuestro propósito",
-            })}
-          </p>
-          <h2>
-            {uiText(locale, {
-              zh: "一顆水晶，也可以是回到自己的起點。",
-              en: "A crystal can be a way back to yourself.",
-              es: "Un cristal puede ser una forma de volver a ti.",
-            })}
-          </h2>
-          <p>
-            {uiText(locale, {
-              zh: "我們不將水晶視為個人選擇或行動的替代品，而是富有意義的物件，讓人留意內心、梳理意念，覺察當下。",
-              en: "We see crystals not as substitutes for personal choice or action, but as meaningful objects that invite reflection, intention, and awareness.",
-              es: "No vemos los cristales como sustitutos de las decisiones o las acciones personales, sino como objetos significativos que invitan a la reflexión, la intención y la conciencia.",
-            })}
-          </p>
-          <dl className="principle-list">
-            <div>
-              <dt>01</dt>
-              <dd>
+      <section className="manifesto" aria-labelledby="home-intention-heading">
+        <div className="manifesto__inner">
+          <div className="manifesto__heading">
+            <div className="manifesto__signature">
+              <BrandLogo variant="symbol" decorative />
+              <p className="eyebrow">
                 {uiText(locale, {
-                  zh: "停一停，回到此時此刻。",
-                  en: "Pause and return to the present moment.",
-                  es: "Haz una pausa y vuelve al momento presente.",
+                  zh: "我們的初衷",
+                  en: "Our intention",
+                  es: "Nuestro propósito",
                 })}
-              </dd>
+              </p>
             </div>
-            <div>
-              <dt>02</dt>
-              <dd>
-                {uiText(locale, {
-                  zh: "細心聆聽自己的感受。",
-                  en: "Listen more closely to what you are feeling.",
-                  es: "Escucha con más atención lo que estás sintiendo.",
-                })}
-              </dd>
-            </div>
-            <div>
-              <dt>03</dt>
-              <dd>
-                {uiText(locale, {
-                  zh: "讓覺察引導你的選擇與行動。",
-                  en: "Let awareness shape your choices and actions.",
-                  es: "Deja que la conciencia oriente tus decisiones y acciones.",
-                })}
-              </dd>
-            </div>
-          </dl>
-          <Link className="text-link" href={localePath(locale, "/about")}>
-            {uiText(locale, {
-              zh: "閱讀我們的故事",
-              en: "Read our story",
-              es: "Conoce nuestra historia",
-            })}{" "}
-            →
+            <h2 id="home-intention-heading">
+              {uiText(locale, {
+                zh: "一顆水晶，也可以是回到自己的起點。",
+                en: "A crystal can be a way back to yourself.",
+                es: "Un cristal puede ser una forma de volver a ti.",
+              })}
+            </h2>
+          </div>
+          <div className="manifesto__copy">
+            <p>
+              {uiText(locale, {
+                zh: "我們不將水晶視為個人選擇或行動的替代品，而是富有意義的物件，讓人留意內心、梳理意念，覺察當下。",
+                en: "We see crystals not as substitutes for personal choice or action, but as meaningful objects that invite reflection, intention, and awareness.",
+                es: "No vemos los cristales como sustitutos de las decisiones o las acciones personales, sino como objetos significativos que invitan a la reflexión, la intención y la conciencia.",
+              })}
+            </p>
+            <dl className="principle-list">
+              <div>
+                <dt>01</dt>
+                <dd>
+                  {uiText(locale, {
+                    zh: "停一停，回到此時此刻。",
+                    en: "Pause and return to the present moment.",
+                    es: "Haz una pausa y vuelve al momento presente.",
+                  })}
+                </dd>
+              </div>
+              <div>
+                <dt>02</dt>
+                <dd>
+                  {uiText(locale, {
+                    zh: "細心聆聽自己的感受。",
+                    en: "Listen more closely to what you are feeling.",
+                    es: "Escucha con más atención lo que estás sintiendo.",
+                  })}
+                </dd>
+              </div>
+              <div>
+                <dt>03</dt>
+                <dd>
+                  {uiText(locale, {
+                    zh: "讓覺察引導你的選擇與行動。",
+                    en: "Let awareness shape your choices and actions.",
+                    es: "Deja que la conciencia oriente tus decisiones y acciones.",
+                  })}
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <Link
+            className="text-link manifesto__link"
+            href={localePath(locale, "/about")}
+          >
+            <span>
+              {uiText(locale, {
+                zh: "閱讀我們的故事",
+                en: "Read our story",
+                es: "Conoce nuestra historia",
+              })}
+            </span>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              aria-hidden="true"
+            >
+              <path d="M4 12h15m-6-6 6 6-6 6" />
+            </svg>
           </Link>
-        </div>
-        <div className="manifesto__symbol" aria-hidden="true">
-          <BrandLogo variant="symbol" decorative />
         </div>
       </section>
     </>
