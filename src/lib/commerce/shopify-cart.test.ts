@@ -80,7 +80,7 @@ afterEach(() => {
 });
 
 describe("Shopify Cart mapper and validation", () => {
-  it.each([5, 100])(
+  it.each([0, 5, 100])(
     "preserves a saved quantity %i when current purchase rules no longer permit it",
     (quantity) => {
       const cart = makeCart({ totalQuantity: quantity });

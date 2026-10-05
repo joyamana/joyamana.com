@@ -51,25 +51,35 @@ type CartLineQuantity = Pick<
 >;
 
 /** Existing lines remain readable even when stock or purchase rules change. */
-export function cartLineIssue(line: CartLineQuantity) {
+export function cartLineIssue(line: CartLineQuantity, otherQuantity = 0) {
   if (!line.availableForSale) return "UNAVAILABLE" as const;
   return isValidAvailableProductQuantity(
     line.quantity,
     line.quantityRule,
     line.quantityAvailable,
     line.currentlyNotInStock,
-  )
+  ) &&
+    line.quantity + otherQuantity <=
+      getProductQuantityMaximum(
+        line.quantityRule,
+        line.quantityAvailable,
+        line.currentlyNotInStock,
+      )
     ? null
     : ("INVALID_QUANTITY" as const);
 }
 
-export function cartLineCorrection(line: CartLineQuantity) {
+export function cartLineCorrection(line: CartLineQuantity, otherQuantity = 0) {
   if (!line.availableForSale) return null;
-  const maximum = getProductQuantityMaximum(
-    line.quantityRule,
-    line.quantityAvailable,
-    line.currentlyNotInStock,
-  );
+  const remaining =
+    getProductQuantityMaximum(
+      line.quantityRule,
+      line.quantityAvailable,
+      line.currentlyNotInStock,
+    ) - otherQuantity;
+  const maximum =
+    Math.floor(remaining / line.quantityRule.increment) *
+    line.quantityRule.increment;
   if (maximum < line.quantityRule.minimum) return null;
   return Math.min(
     maximum,
@@ -78,6 +88,20 @@ export function cartLineCorrection(line: CartLineQuantity) {
       Math.floor(line.quantity / line.quantityRule.increment) *
         line.quantityRule.increment,
     ),
+  );
+}
+
+export function otherVariantQuantity(
+  lines: CartLineView[],
+  line: CartLineView,
+) {
+  return lines.reduce(
+    (total, saved) =>
+      total +
+      (saved.id !== line.id && saved.merchandiseId === line.merchandiseId
+        ? saved.quantity
+        : 0),
+    0,
   );
 }
 

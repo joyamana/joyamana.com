@@ -13,6 +13,7 @@ import type {
 } from "@/lib/commerce/cart-types";
 import {
   cartLineIssue,
+  otherVariantQuantity,
   emptyCartView,
   isBlockingInventoryWarning,
 } from "@/lib/commerce/cart-types";
@@ -163,6 +164,19 @@ export async function updateCartLineAction(
     const language = languageForLocale(locale);
 
     const { store, cartId } = await requireCartCookie();
+    const current = await getShopifyCart(cartId, language);
+    if (!current) {
+      store.delete(cartCookieName);
+      return { ...failure("CART_EXPIRED", language), cart: emptyCartView() };
+    }
+    const view = mapShopifyCart(current);
+    const line = view.lines.find((saved) => saved.id === lineId);
+    if (!line) return { ...failure("INVALID_INPUT", language), cart: view };
+    const issue = cartLineIssue(
+      { ...line, quantity },
+      otherVariantQuantity(view.lines, line),
+    );
+    if (issue) return { ...failure(issue, language), cart: view };
     const result = await updateShopifyCartLines(
       cartId,
       [{ id: lineId, quantity }],
@@ -233,7 +247,11 @@ export async function checkoutAction(
       return { ...failure("EMPTY_CART", language), cart: mapShopifyCart(cart) };
     }
     const view = mapShopifyCart(cart);
-    const issue = view.lines.map(cartLineIssue).find(Boolean);
+    const issue = view.lines
+      .map((line) =>
+        cartLineIssue(line, otherVariantQuantity(view.lines, line)),
+      )
+      .find(Boolean);
     if (issue) {
       return { ...failure(issue, language), cart: view };
     }

@@ -17,6 +17,13 @@ function line(overrides: Partial<Parameters<typeof cartLineIssue>[0]> = {}) {
 }
 
 describe("saved Bag quantity recovery", () => {
+  it("counts quantities on other lines of the same variant when offering a correction", () => {
+    const saved = line({ quantity: 50, quantityAvailable: null });
+    expect(cartLineIssue(saved, 50)).toBe("INVALID_QUANTITY");
+    expect(cartLineCorrection(saved, 50)).toBe(49);
+    expect(cartLineIssue({ ...saved, quantity: 49 }, 50)).toBeNull();
+    expect(cartLineCorrection(saved, 99)).toBeNull();
+  });
   it("drops stale lines for an expired or missing Cart but preserves them on a connection failure", () => {
     for (const code of ["CART_EXPIRED", "CART_NOT_FOUND"] as const) {
       expect(

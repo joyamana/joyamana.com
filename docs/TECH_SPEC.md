@@ -25,6 +25,8 @@ Client Components。页面、metadata 和 JSON-LD 共用校验后的数据。
 Node 保持 24，精确 pnpm 和依赖版本以 [package.json](../package.json) / lockfile 为准。
 安装使用 frozen lockfile，依赖变更后显式安装。ESLint / TypeScript 的兼容性须在升级前
 核对，不覆盖 peer 声明或禁用检查；保留 `verifyDepsBeforeRun: warn`。
+当前 React/无障碍 lint 插件尚未支持 ESLint 10，TypeScript parser 要求 `<6.1`，
+因此保留兼容的 ESLint 9 / TypeScript 6。
 
 样式用 global CSS 和变量，不引入 UI kit、GraphQL codegen 或独立 CMS。
 字体用 next/font：构建下载、站点自托管，繁中按字符分片、按需加载，英语不请求中文字体。
@@ -46,7 +48,8 @@ Node 保持 24，精确 pnpm 和依赖版本以 [package.json](../package.json) 
 - buyer IP 只信任 Vercel 保护的 `x-vercel-forwarded-for`，校验后转发，不保存。
   其他部署先确定可信代理，不信任客户端可伪造 header。
 
-API 版本由环境固定，维护时核对支持窗口及字段。官方说明：
+API 默认 `2026-10`，可由环境固定；升级时核对支持窗口、字段及实际店铺只读响应。
+Cart 操作仍须在批准的测试环境验收。官方说明：
 [Storefront API](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api)、
 [inContext](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/in-context)。
 

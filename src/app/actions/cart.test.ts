@@ -289,6 +289,8 @@ describe("Bag server actions", () => {
     const store = cookieStore(oldCartId);
     const cart = makeCart({ id: oldCartId });
     mocks.cookies.mockResolvedValue(store);
+    mocks.getCart.mockResolvedValue(cart);
+    cart.lines.nodes[0].merchandise.quantityAvailable = 2;
     mocks.updateLines.mockResolvedValue({ cart, warnings: [] });
     mocks.removeLines.mockResolvedValue({ cart, warnings: [] });
     mocks.clearCart.mockResolvedValue({ cart, warnings: [] });
@@ -550,4 +552,68 @@ describe("Checkout server actions", () => {
     });
     expect(mocks.cookies).not.toHaveBeenCalled();
   });
+});
+
+it("rejects a same-variant split-line update above the combined limit before mutating", async () => {
+  const cart = makeCart({ id: oldCartId, totalQuantity: 98 });
+  const first = cart.lines.nodes[0];
+  first.quantity = 50;
+  first.merchandise.quantityAvailable = null;
+  cart.lines.nodes.push({
+    ...first,
+    id: "gid://shopify/CartLine/second",
+    quantity: 48,
+  });
+  mocks.cookies.mockResolvedValue(cookieStore(oldCartId));
+  mocks.getCart.mockResolvedValue(cart);
+  const result = await updateCartLineAction(lineId, 99);
+  expect(result).toMatchObject({
+    ok: false,
+    error: { code: "INVALID_QUANTITY" },
+    cart: { totalQuantity: 98 },
+  });
+  expect(mocks.updateLines).not.toHaveBeenCalled();
+});
+
+it("clears a confirmed expired Cart before attempting an update", async () => {
+  const store = cookieStore(oldCartId);
+  mocks.cookies.mockResolvedValue(store);
+  mocks.getCart.mockResolvedValue(null);
+  expect(await updateCartLineAction(lineId, 1)).toMatchObject({
+    ok: false,
+    error: { code: "CART_EXPIRED" },
+    cart: { lines: [] },
+  });
+  expect(store.delete).toHaveBeenCalled();
+  expect(mocks.updateLines).not.toHaveBeenCalled();
+});
+
+it("keeps the cookie and avoids mutation when the update pre-read fails", async () => {
+  const store = cookieStore(oldCartId);
+  mocks.cookies.mockResolvedValue(store);
+  mocks.getCart.mockRejectedValue(new Error("Connection lost."));
+  expect(await updateCartLineAction(lineId, 1)).toMatchObject({
+    ok: false,
+    error: { code: "SHOPIFY_ERROR" },
+  });
+  expect(store.delete).not.toHaveBeenCalled();
+  expect(mocks.updateLines).not.toHaveBeenCalled();
+});
+
+it("blocks checkout when individually valid split lines exceed the variant limit together", async () => {
+  process.env.SHOPIFY_CHECKOUT_ENABLED = "true";
+  const cart = makeCart({ id: oldCartId, totalQuantity: 100 });
+  const first = cart.lines.nodes[0];
+  first.quantity = 50;
+  first.merchandise.quantityAvailable = null;
+  cart.lines.nodes.push({ ...first, id: "gid://shopify/CartLine/second" });
+  mocks.cookies.mockResolvedValue(cookieStore(oldCartId));
+  mocks.getCart.mockResolvedValue(cart);
+  const result = await checkoutAction();
+  expect(result).toMatchObject({
+    ok: false,
+    error: { code: "INVALID_QUANTITY" },
+    cart: { totalQuantity: 100 },
+  });
+  expect(JSON.stringify(result)).not.toContain("checkout-secret");
 });

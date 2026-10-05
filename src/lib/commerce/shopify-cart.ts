@@ -333,7 +333,7 @@ function mapCartLine(line: ShopifyCartLine) {
   const quantityRule = normalizeQuantityRule(line.merchandise.quantityRule);
   if (
     !Number.isInteger(line.quantity) ||
-    line.quantity < 1 ||
+    line.quantity < 0 ||
     line.quantity > SHOPIFY_MAX_QUANTITY
   ) {
     throw new ShopifyCartError("SHOPIFY_ERROR");

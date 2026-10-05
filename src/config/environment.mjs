@@ -2,7 +2,7 @@ export const defaultSiteUrl = "http://localhost:3000";
 export const productionSiteUrl = "https://www.joyamana.com";
 export const shopifyStoreDomainPattern = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
 export const shopifyApiVersionPattern = /^\d{4}-(?:01|04|07|10)$/;
-export const defaultShopifyApiVersion = "2026-07";
+export const defaultShopifyApiVersion = "2026-10";
 
 export function isLocalHostname(hostname) {
   return (

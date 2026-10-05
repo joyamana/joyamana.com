@@ -10,9 +10,9 @@ import {
   cartErrorMessage,
   cartLineCorrection,
   cartLineIssue,
+  otherVariantQuantity,
   isBlockingInventoryWarning,
 } from "@/lib/commerce/cart-types";
-import { isValidAvailableProductQuantity } from "@/lib/commerce/types";
 import { publicVariantId } from "@/lib/commerce/catalog-browse";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath } from "@/lib/i18n/locales";
@@ -186,8 +186,11 @@ export function CartView({ locale }: { locale: Locale }) {
           </p>
         ) : null}
         {cart.lines.map((line) => {
-          const issue = cartLineIssue(line);
-          const correction = issue ? cartLineCorrection(line) : null;
+          const otherQuantity = otherVariantQuantity(cart.lines, line);
+          const issue = cartLineIssue(line, otherQuantity);
+          const correction = issue
+            ? cartLineCorrection(line, otherQuantity)
+            : null;
           const variantId = publicVariantId(line.merchandiseId);
           const productPath =
             localePath(locale, `/products/${line.productHandle}`) +
@@ -289,12 +292,10 @@ export function CartView({ locale }: { locale: Locale }) {
                       type="button"
                       disabled={
                         busy ||
-                        !isValidAvailableProductQuantity(
-                          decreaseQuantity,
-                          line.quantityRule,
-                          line.quantityAvailable,
-                          line.currentlyNotInStock,
-                        )
+                        cartLineIssue(
+                          { ...line, quantity: decreaseQuantity },
+                          otherQuantity,
+                        ) !== null
                       }
                       aria-label={uiText(locale, {
                         zh: "減少數量",
@@ -310,12 +311,10 @@ export function CartView({ locale }: { locale: Locale }) {
                       type="button"
                       disabled={
                         busy ||
-                        !isValidAvailableProductQuantity(
-                          increaseQuantity,
-                          line.quantityRule,
-                          line.quantityAvailable,
-                          line.currentlyNotInStock,
-                        )
+                        cartLineIssue(
+                          { ...line, quantity: increaseQuantity },
+                          otherQuantity,
+                        ) !== null
                       }
                       aria-label={uiText(locale, {
                         zh: "增加數量",
@@ -374,7 +373,11 @@ export function CartView({ locale }: { locale: Locale }) {
           disabled={
             !checkoutEnabled ||
             busy ||
-            cart.lines.some((line) => cartLineIssue(line) !== null)
+            cart.lines.some(
+              (line) =>
+                cartLineIssue(line, otherVariantQuantity(cart.lines, line)) !==
+                null,
+            )
           }
           onClick={async () => {
             clearError();

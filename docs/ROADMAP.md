@@ -42,6 +42,10 @@
 
 ## 工程与验收
 
+- 更新 lint 的 `braces` 传递依赖以解决 [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)。
+  当前官方没有补丁，依赖仅用于开发期 ESLint glob；生产依赖审计不包含此项。
+  上游修复后更新并重跑 lint/audit。ESLint 10、TypeScript 7 升级须先满足插件支持范围。
+
 - 按 [Shopify 品牌资产操作](SHOPIFY_CATALOG_SETUP.md#品牌资产与-checkout)上传已准备的 PNG，
   配置并验收 Hosted Checkout、Order Status 与通知的正式字标；前台 SVG 不会自动同步后台。
 - 手机菜单、数量输入、横向缩略图和矮屏 sticky 须完成真实手机、读屏与 200% zoom 验收；Bag 和 Checkout
