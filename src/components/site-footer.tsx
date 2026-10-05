@@ -6,6 +6,12 @@ import { uiText } from "@/lib/i18n/text";
 import { BrandLogo } from "./brand-logo";
 
 export function SiteFooter({ locale }: { locale: Locale }) {
+  const legalLabel = uiText(locale, {
+    en: "Legal",
+    es: "Legal",
+    zh: "法律資訊",
+  });
+
   return (
     <footer className="site-footer">
       <div className="footer-inner">
@@ -66,10 +72,11 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             })}
           </Link>
         </div>
-        <div className="footer-column footer-column--legal">
-          <p className="footer-heading">
-            {uiText(locale, { en: "Legal", es: "Legal", zh: "法律資訊" })}
-          </p>
+        <nav
+          className="footer-column footer-column--legal"
+          aria-label={legalLabel}
+        >
+          <p className="footer-heading">{legalLabel}</p>
           <Link href={localePath(locale, "/privacy")}>
             {uiText(locale, { zh: "私隱", en: "Privacy", es: "Privacidad" })}
           </Link>
@@ -83,19 +90,21 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               es: "Accesibilidad",
             })}
           </Link>
-        </div>
+        </nav>
         <div className="footer-bottom">
           <p className="footer-note">
             © {new Date().getFullYear()} {brand.name}.
           </p>
           <p className="footer-markets">
             <span>
-              {uiText(locale, {
-                zh: "國家／地區",
-                en: "Country/region",
-                es: "País/región",
-              })}
-              :{" "}
+              <span className="footer-markets__label">
+                {uiText(locale, {
+                  zh: "國家／地區",
+                  en: "Country/region",
+                  es: "País/región",
+                })}
+                :{" "}
+              </span>
               {uiText(locale, {
                 en: "United States",
                 es: "Estados Unidos",
@@ -110,6 +119,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
                     href={localePath(item.locale)}
                     hrefLang={item.locale}
                     lang={item.locale}
+                    aria-current={item.locale === locale ? "true" : undefined}
                   >
                     {item.shortLabel}
                   </Link>
