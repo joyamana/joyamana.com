@@ -7,6 +7,7 @@ import type {
 } from "./cart-types";
 import { cartErrorMessage } from "./cart-types";
 import { shopifyFetch } from "./shopify";
+import { compareAmounts } from "./money";
 import type { StorefrontLanguage } from "@/config/locales";
 import {
   STOREFRONT_MAX_QUANTITY,
@@ -57,6 +58,7 @@ interface ShopifyCartLine {
 
 export interface ShopifyCart {
   id: string;
+  updatedAt: string;
   checkoutUrl: string;
   totalQuantity: number;
   cost: {
@@ -110,6 +112,12 @@ export class ShopifyCartError extends Error {
   }
 }
 
+class CartChangedError extends ShopifyCartError {
+  constructor() {
+    super("SHOPIFY_ERROR");
+  }
+}
+
 const cartLineFields = `#graphql
 id
 quantity
@@ -133,6 +141,7 @@ merchandise {
 const cartFields = `#graphql
   fragment JoyaManaCartFields on Cart {
     id
+    updatedAt
     checkoutUrl
     totalQuantity
     cost {
@@ -434,7 +443,9 @@ const cartLinesPageQuery = `#graphql
     @inContext(country: US, language: $language) {
     cart(id: $id) {
       id
+      updatedAt
       totalQuantity
+      cost { subtotalAmount { amount currencyCode } }
       lines(first: ${CART_PAGE_SIZE}, after: $after) {
         pageInfo { hasNextPage endCursor }
         nodes { ${cartLineFields} }
@@ -444,6 +455,9 @@ const cartLinesPageQuery = `#graphql
 `;
 
 async function completeCart(cart: ShopifyCart, language: ShopifyCartLanguage) {
+  if (!Number.isFinite(Date.parse(cart.updatedAt)))
+    throw new ShopifyCartError("SHOPIFY_ERROR");
+  const subtotal = normalizeMoney(cart.cost.subtotalAmount);
   const nodes = [...cart.lines.nodes];
   const ids = new Set(nodes.map((line) => line.id));
   const cursors = new Set<string>();
@@ -462,17 +476,27 @@ async function completeCart(cart: ShopifyCart, language: ShopifyCartLanguage) {
     }
     cursors.add(after);
     const data = await shopifyFetch<{
-      cart: Pick<ShopifyCart, "id" | "totalQuantity" | "lines"> | null;
+      cart: Pick<
+        ShopifyCart,
+        "id" | "updatedAt" | "cost" | "totalQuantity" | "lines"
+      > | null;
     }>(cartLinesPageQuery, { id: cart.id, after, language }, noStore);
     const page = data.cart;
     if (
       !page ||
       page.id !== cart.id ||
-      page.totalQuantity !== cart.totalQuantity ||
-      !page.lines.nodes.length
+      !Number.isFinite(Date.parse(page.updatedAt))
     ) {
       throw new ShopifyCartError("SHOPIFY_ERROR");
     }
+    const pageSubtotal = normalizeMoney(page.cost.subtotalAmount);
+    if (
+      page.updatedAt !== cart.updatedAt ||
+      page.totalQuantity !== cart.totalQuantity ||
+      compareAmounts(pageSubtotal.amount, subtotal.amount) !== 0
+    )
+      throw new CartChangedError();
+    if (!page.lines.nodes.length) throw new ShopifyCartError("SHOPIFY_ERROR");
     for (const line of page.lines.nodes) {
       if (ids.has(line.id)) throw new ShopifyCartError("SHOPIFY_ERROR");
       ids.add(line.id);
@@ -482,15 +506,36 @@ async function completeCart(cart: ShopifyCart, language: ShopifyCartLanguage) {
     if (typeof pageInfo.hasNextPage !== "boolean")
       throw new ShopifyCartError("SHOPIFY_ERROR");
   }
-  if (
-    ids.size !== nodes.length ||
-    nodes.length > MAX_CART_LINES ||
-    nodes.reduce((total, line) => total + line.quantity, 0) !==
-      cart.totalQuantity
-  ) {
+  if (ids.size !== nodes.length || nodes.length > MAX_CART_LINES) {
     throw new ShopifyCartError("SHOPIFY_ERROR");
   }
+  if (
+    nodes.reduce((total, line) => total + line.quantity, 0) !==
+    cart.totalQuantity
+  )
+    throw new CartChangedError();
   return { ...cart, lines: { nodes, pageInfo } };
+}
+
+async function completeCartWithRecovery(
+  cart: ShopifyCart,
+  language: ShopifyCartLanguage,
+) {
+  try {
+    return await completeCart(cart, language);
+  } catch (error) {
+    if (!(error instanceof CartChangedError)) throw error;
+    // Re-read once after a detected change. Never replay the mutation that
+    // produced this Cart, and never expose a mixture of its page versions.
+    const data = await shopifyFetch<{ cart: ShopifyCart | null }>(
+      cartQuery,
+      { id: cart.id, language },
+      noStore,
+    );
+    if (!data.cart) throw new ShopifyCartError("CART_EXPIRED");
+    if (data.cart.id !== cart.id) throw new ShopifyCartError("SHOPIFY_ERROR");
+    return completeCart(data.cart, language);
+  }
 }
 
 async function completeMutation(
@@ -498,7 +543,10 @@ async function completeMutation(
   language: ShopifyCartLanguage,
 ) {
   const result = unwrapMutation(payload);
-  return { ...result, cart: await completeCart(result.cart, language) };
+  return {
+    ...result,
+    cart: await completeCartWithRecovery(result.cart, language),
+  };
 }
 
 export async function getShopifyCart(
@@ -511,7 +559,7 @@ export async function getShopifyCart(
     { id: cartId, language },
     noStore,
   );
-  return data.cart ? completeCart(data.cart, language) : null;
+  return data.cart ? completeCartWithRecovery(data.cart, language) : null;
 }
 
 export async function createShopifyCart(

@@ -47,6 +47,7 @@ const merchandiseId = "gid://shopify/ProductVariant/123456789";
 function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
   return {
     id: newCartId,
+    updatedAt: "2026-10-05T00:00:00Z",
     checkoutUrl:
       "https://joya-mana.myshopify.com/cart/c/checkout-token?key=checkout-secret",
     totalQuantity: 1,

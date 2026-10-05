@@ -30,6 +30,7 @@ const merchandiseId = "gid://shopify/ProductVariant/123456789";
 function makeCart(overrides: Partial<ShopifyCart> = {}): ShopifyCart {
   return {
     id: cartId,
+    updatedAt: "2026-10-05T00:00:00Z",
     checkoutUrl:
       "https://joya-mana.myshopify.com/cart/c/checkout-token?key=checkout-secret",
     totalQuantity: 2,
@@ -226,6 +227,8 @@ describe("Shopify Cart Storefront operations", () => {
         .mockResolvedValueOnce({
           cart: {
             id: cartId,
+            updatedAt: makeCart().updatedAt,
+            cost: makeCart().cost,
             totalQuantity: count,
             lines: {
               nodes: lines.slice(250),
@@ -455,6 +458,121 @@ describe("Shopify Cart Storefront operations", () => {
 });
 
 describe("Cart pagination failures", () => {
+  function pages() {
+    const first = makeCart();
+    first.lines.nodes[0].quantity = 1;
+    first.lines.pageInfo = { hasNextPage: true, endCursor: "next" };
+    const last = makeCart({
+      lines: {
+        nodes: [{ ...first.lines.nodes[0], id: `${lineId}-second` }],
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    });
+    return { first, last };
+  }
+
+  it.each(["version", "subtotal", "quantity"])(
+    "discards mixed pages and reads once more when the %s changes",
+    async (change) => {
+      const { first, last } = pages();
+      const changed = {
+        ...last,
+        ...(change === "version" ? { updatedAt: "2026-10-05T00:00:01Z" } : {}),
+        ...(change === "subtotal"
+          ? { cost: { subtotalAmount: { amount: "140", currencyCode: "USD" } } }
+          : {}),
+        ...(change === "quantity" ? { totalQuantity: 3 } : {}),
+      };
+      mocks.shopifyFetch
+        .mockResolvedValueOnce({ cart: first })
+        .mockResolvedValueOnce({ cart: changed })
+        .mockResolvedValueOnce({ cart: first })
+        .mockResolvedValueOnce({ cart: last });
+      const cart = await getShopifyCart(cartId);
+      expect(cart?.lines.nodes.map((line) => line.id)).toEqual([
+        lineId,
+        `${lineId}-second`,
+      ]);
+      expect(mocks.shopifyFetch).toHaveBeenCalledTimes(4);
+      expect(mocks.shopifyFetch.mock.calls[2][1]).toEqual({
+        id: cartId,
+        language: "EN",
+      });
+    },
+  );
+
+  it("stops after the one allowed re-read when the Bag keeps changing", async () => {
+    const { first, last } = pages();
+    const changed = { ...last, updatedAt: "2026-10-05T00:00:01Z" };
+    mocks.shopifyFetch
+      .mockResolvedValueOnce({ cart: first })
+      .mockResolvedValueOnce({ cart: changed })
+      .mockResolvedValueOnce({ cart: first })
+      .mockResolvedValueOnce({ cart: changed });
+    await expect(getShopifyCart(cartId)).rejects.toMatchObject({
+      code: "SHOPIFY_ERROR",
+    });
+    expect(mocks.shopifyFetch).toHaveBeenCalledTimes(4);
+  });
+
+  it("retains mutation warnings and only repeats reads after a page changes", async () => {
+    const { first, last } = pages();
+    const warnings = [
+      { code: "MERCHANDISE_NOT_ENOUGH_STOCK", message: "Review quantity." },
+    ];
+    mocks.shopifyFetch
+      .mockResolvedValueOnce({
+        cartCreate: { ...mutationPayload(first), warnings },
+      })
+      .mockResolvedValueOnce({
+        cart: { ...last, updatedAt: "2026-10-05T00:00:01Z" },
+      })
+      .mockResolvedValueOnce({ cart: first })
+      .mockResolvedValueOnce({ cart: last });
+    const result = await createShopifyCart([{ merchandiseId, quantity: 2 }]);
+    expect(result.warnings).toEqual(warnings);
+    expect(result.cart.lines.nodes).toHaveLength(2);
+    const queries = mocks.shopifyFetch.mock.calls.map(
+      (call) => call[0] as string,
+    );
+    expect(
+      queries.filter((query) => query.includes("mutation JoyaManaCartCreate")),
+    ).toHaveLength(1);
+    expect(queries.slice(1).every((query) => !query.includes("mutation"))).toBe(
+      true,
+    );
+  });
+
+  it("rejects mismatched identities and invalid version data without recovery", async () => {
+    for (const updatedAt of ["invalid", "2026-10-05T00:00:00Z"]) {
+      mocks.shopifyFetch.mockReset();
+      const { first, last } = pages();
+      mocks.shopifyFetch
+        .mockResolvedValueOnce({ cart: first })
+        .mockResolvedValueOnce({
+          cart: {
+            ...last,
+            updatedAt,
+            id: "gid://shopify/Cart/another?key=opaque",
+          },
+        });
+      await expect(getShopifyCart(cartId)).rejects.toMatchObject({
+        code: "SHOPIFY_ERROR",
+      });
+      expect(mocks.shopifyFetch).toHaveBeenCalledTimes(2);
+    }
+  });
+
+  it("compares decimal subtotals without requiring identical formatting", async () => {
+    const { first, last } = pages();
+    last.cost = { subtotalAmount: { amount: "136.0", currencyCode: "USD" } };
+    mocks.shopifyFetch
+      .mockResolvedValueOnce({ cart: first })
+      .mockResolvedValueOnce({ cart: last });
+    expect((await getShopifyCart(cartId))?.lines.nodes).toHaveLength(2);
+    expect(mocks.shopifyFetch).toHaveBeenCalledTimes(2);
+  });
+
   it.each([null, " "])(
     "rejects a missing next-page cursor: %s",
     async (endCursor) => {

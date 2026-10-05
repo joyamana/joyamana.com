@@ -37,6 +37,8 @@ Node 保持 24，精确 pnpm 和依赖版本以 [package.json](../package.json) 
   字符串，统一比较/格式化，不用浮点数决定商业金额。
 - 请求最多 10 秒；区分配置、超时、限流、网络、HTTP、GraphQL 与 mutation user errors。
   不自动重放可能重复执行的 Cart mutation。
+- Bag 跨页核对更新时间、小计、身份和数量。检测到变化后从第一页最多重读一次；仍变化
+  则报错。mutation 后只重读返回的 Cart，保留 warnings，不重放 mutation。
 - 需要全量的数据须完整分页，校验 cursor、重复 ID、归属和数量。每次目录读取共用
   最多 100 次请求、20 秒预算，包含基础页和款式补读；超限报错，不返回部分目录。
 - PDP 首批 100 个 Variant；摘要不读 Variant，浏览筛选按批次完整补齐。繁中颜色补读
