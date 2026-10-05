@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import { getProducts } from "@/lib/commerce/catalog";
 import { getCopy } from "@/lib/i18n/copy";
 import type { EnabledLocale as Locale } from "@/config/locales";
@@ -15,19 +15,54 @@ export async function HomePage({ locale }: { locale: Locale }) {
   const availableProducts = products.filter(
     (product) => product.availableForSale,
   );
+  const heroImageOptions = {
+    alt: "",
+    fill: true,
+    className: "hero__image",
+    sizes: "100vw",
+    loading: "eager" as const,
+    fetchPriority: "high" as const,
+  };
+  const landscape = getImageProps({
+    ...heroImageOptions,
+    src: "/images/joya-mana-home-hero-still-life.webp",
+  }).props;
+  const portrait = getImageProps({
+    ...heroImageOptions,
+    src: "/images/joya-mana-home-hero-still-life-mobile.webp",
+  }).props;
+  const portraitMedia = "(max-width: 760px)";
 
   return (
     <>
+      <link
+        rel="preload"
+        as="image"
+        href={portrait.src}
+        imageSrcSet={portrait.srcSet}
+        imageSizes={portrait.sizes}
+        fetchPriority="high"
+        media={portraitMedia}
+      />
+      <link
+        rel="preload"
+        as="image"
+        href={landscape.src}
+        imageSrcSet={landscape.srcSet}
+        imageSizes={landscape.sizes}
+        fetchPriority="high"
+        media="(width > 760px)"
+      />
       <section className="hero">
         <div className="hero__media">
-          <Image
-            className="hero__image"
-            src="/images/joya-mana-home-hero-still-life.webp"
-            alt=""
-            fill
-            preload
-            sizes="100vw"
-          />
+          <picture>
+            <source
+              media={portraitMedia}
+              srcSet={portrait.srcSet}
+              sizes={portrait.sizes}
+            />
+            <img {...landscape} alt="" />
+          </picture>
         </div>
         <div className="hero__inner">
           <div className="hero__content">
@@ -64,13 +99,6 @@ export async function HomePage({ locale }: { locale: Locale }) {
       <section className="section">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">
-              {uiText(locale, {
-                zh: "美國商品目錄 · USD",
-                en: "US catalog · USD",
-                es: "Catálogo de EE. UU. · USD",
-              })}
-            </p>
             <h2>{copy.home.featured}</h2>
           </div>
           <p>{copy.home.featuredIntro}</p>

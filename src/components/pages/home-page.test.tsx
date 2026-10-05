@@ -59,6 +59,32 @@ describe("Home page", () => {
     expect(html).not.toContain("Discover a featured piece");
     expect(html).toContain("No pieces are currently available.");
     expect(html).toContain("joya-mana-home-hero-still-life.webp");
+    expect(html).toContain("joya-mana-home-hero-still-life-mobile.webp");
+    const picture = html.match(/<picture>.*?<\/picture>/)?.[0] ?? "";
+    const portraitSource = picture.match(/<source[^>]*>/)?.[0] ?? "";
+    const heroImage = picture.match(/<img[^>]*>/)?.[0] ?? "";
+    expect(portraitSource).toContain('media="(max-width: 760px)"');
+    expect(portraitSource).toContain(
+      "joya-mana-home-hero-still-life-mobile.webp",
+    );
+    expect(portraitSource).toContain('sizes="100vw"');
+    expect(heroImage).toContain("joya-mana-home-hero-still-life.webp");
+    expect(heroImage).toContain('loading="eager"');
+    expect(heroImage).toContain('fetchPriority="high"');
+    const imagePreloads = (html.match(/<link[^>]*>/g) ?? []).filter(
+      (tag) => tag.includes('rel="preload"') && tag.includes('as="image"'),
+    );
+    expect(imagePreloads).toHaveLength(2);
+    expect(
+      imagePreloads.find((tag) =>
+        tag.includes("joya-mana-home-hero-still-life-mobile.webp"),
+      ),
+    ).toContain('media="(max-width: 760px)"');
+    expect(
+      imagePreloads.find((tag) =>
+        tag.includes("joya-mana-home-hero-still-life.webp"),
+      ),
+    ).toContain('media="(width &gt; 760px)"');
     expect(html).not.toContain("bling-omen-editorial-hero.png");
     expect(html).not.toContain("From the blog");
     expect(html).not.toContain("collection-strip");

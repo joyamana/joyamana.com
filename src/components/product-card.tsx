@@ -43,11 +43,7 @@ export function ProductCard({ locale, ...input }: ProductCardProps) {
           en: "Available",
           es: "Disponible",
         })
-      : uiText(locale, {
-          zh: "查看款式",
-          en: "View options",
-          es: "Ver opciones",
-        });
+      : null;
 
   return (
     <article className={`product-card product-card--${state}`}>
@@ -82,17 +78,17 @@ export function ProductCard({ locale, ...input }: ProductCardProps) {
       </Link>
       <div className="product-card__body">
         <div className="product-card__meta">
-          <p
-            className={`product-card__availability product-card__availability--${state}`}
-          >
-            {state !== "options" ? (
+          {availabilityLabel ? (
+            <p
+              className={`product-card__availability product-card__availability--${state}`}
+            >
               <span
                 className="product-card__availability-dot"
                 aria-hidden="true"
               />
-            ) : null}
-            {availabilityLabel}
-          </p>
+              {availabilityLabel}
+            </p>
+          ) : null}
           <p className="product-card__price">
             {presentation
               ? formatMoney(presentation.variant.price, locale)

@@ -60,6 +60,7 @@ describe("Product card", () => {
     ).toHaveLength(2);
     expect(decodeURIComponent(html)).toContain("purple.jpg");
     expect(html).toContain("$60 USD");
+    expect(html).toContain(">Available<");
     expect(html).not.toContain("$35 USD");
     expect(html).toContain("product-card__variant");
     const missingImage = {
@@ -73,17 +74,21 @@ describe("Product card", () => {
     expect(unavailable).not.toContain("purple.jpg");
   });
 
-  it("groups availability and price above a full-width product title", () => {
+  it("shows a summary price above a full-width product title", () => {
     const html = renderToStaticMarkup(
       <ProductCard product={product} locale="en-US" />,
     );
 
     expect(html).toContain("product-card--options");
     expect(html).toContain('class="product-card__meta"');
-    expect(html).toContain("product-card__availability--options");
+    expect(html).not.toContain("product-card__availability--options");
     expect(html).not.toContain("product-card__availability-dot");
     expect(html).toContain('class="product-card__price"');
-    expect(html).toContain("View options");
+    expect(html).not.toContain("View options");
+    expect(html).toContain("$35 USD");
+    expect(
+      html.match(/href="\/products\/tigers-eye-bracelet-multicolour-14-mm"/g),
+    ).toHaveLength(2);
     expect(html).toContain("Tiger&#x27;s Eye Bracelet, Multicolour — 14 mm");
     expect(html).not.toContain("Shopify");
   });
@@ -107,6 +112,11 @@ it("does not claim summary merchandise can satisfy a purchase quantity", () => {
   const html = renderToStaticMarkup(
     <ProductCard product={product} locale="en-US" />,
   );
-  expect(html).toContain("View options");
+  expect(html).not.toContain("View options");
   expect(html).not.toContain(">Available<");
+  const chinese = renderToStaticMarkup(
+    <ProductCard product={product} locale="zh-Hant-US" />,
+  );
+  expect(chinese).not.toContain("查看款式");
+  expect(chinese).not.toContain("可購買");
 });
