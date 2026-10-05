@@ -44,7 +44,10 @@ Node 保持 24，精确 pnpm 和依赖版本以 [package.json](../package.json) 
 - 需要全量的数据须完整分页，校验 cursor、重复 ID、归属和数量。每次目录读取共用
   最多 100 次请求、20 秒预算，包含基础页和款式补读；超限报错，不返回部分目录。
 - 商品详情首批 100 个 Variant；摘要不读 Variant，浏览筛选按批次完整补齐。繁中颜色补读
-  默认语言时只取 Variant ID/colors 与必要分页字段。推荐读取失败可省略推荐，商品失败进入错误边界。
+  默认语言时只取 Variant ID/colors 与必要分页字段。
+- PDP 相关商品按 handle 调用 `productRecommendations(intent: RELATED)`，一次最多十件，
+  只取摘要字段，与商品及完整摘要目录并行读取，沿用当前 country/language 和请求预算。
+  推荐与目录分别容错，排序和补充规则见交易规格；无候选省略推荐，商品失败进入错误边界。
 - buyer IP 只信任 Vercel 保护的 `x-vercel-forwarded-for`，校验后转发，不保存。
   其他部署先确定可信代理，不信任客户端可伪造 header。
 
@@ -57,7 +60,7 @@ Cart 操作仍须在批准的测试环境验收。官方说明：
 
 | 数据 | fetch 策略 |
 |---|---|
-| 商品、目录、价格、库存、搜索、Cart、Checkout | `no-store` |
+| 商品、目录、推荐、价格、库存、搜索、Cart、Checkout | `no-store` |
 | About、Accessibility、Policies、Blog/Guide | `revalidate: 300` |
 | Header 导航 | 独立轻量查询，`revalidate: 300` |
 | sitemap | 动态汇总，沿用来源策略 |

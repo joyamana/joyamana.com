@@ -59,7 +59,7 @@ export function ProductCard({ locale, ...input }: ProductCardProps) {
             alt={image.altText || product.title}
             width={image.width}
             height={image.height}
-            sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 25vw"
+            sizes="(width < 320px) calc(100vw - 32px), (max-width: 760px) calc(50vw - 22px), (width < 900px) 50vw, 25vw"
           />
         ) : (
           <span className="product-media-unavailable product-media-unavailable--compact">

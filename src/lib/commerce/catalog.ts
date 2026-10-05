@@ -20,6 +20,7 @@ import {
   getShopifyCollections,
   getShopifyCatalogNavigation,
   getShopifyProduct,
+  getShopifyProductRecommendations,
   getShopifyProducts,
   hydrateShopifyBrowseProducts,
   searchShopifyProducts,
@@ -102,6 +103,18 @@ export const getProduct = cache(async function getProduct(
 
   return getShopifyProduct(handle, locale);
 });
+
+export const getProductRecommendations = cache(
+  async (
+    handle: string,
+    marketId: MarketId = "us",
+    locale: Locale = "en-US",
+  ): Promise<ProductSummary[]> => {
+    if (marketId === "ca") return [];
+    assertEnabledUsLocale(locale);
+    return getShopifyProductRecommendations(handle, locale);
+  },
+);
 
 export const getBrowseProducts = cache(
   async (marketId: MarketId, locale: Locale) => {

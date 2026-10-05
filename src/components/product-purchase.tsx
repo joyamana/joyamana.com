@@ -335,7 +335,7 @@ function ProductPurchaseOption({
 
         <div className="purchase-actions">
           <AddToCart
-            key={selected.id}
+            key={`add-to-cart:${selected.id}`}
             variantId={selected.id}
             quantity={quantity}
             available={available && quantityValid}
@@ -362,7 +362,7 @@ function ProductPurchaseOption({
             })}
           />
           <BuyNow
-            key={selected.id}
+            key={`buy-now:${selected.id}`}
             variantId={selected.id}
             quantity={quantity}
             available={available && quantityValid}

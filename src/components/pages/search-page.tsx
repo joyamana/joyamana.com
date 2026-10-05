@@ -57,7 +57,7 @@ export async function SearchPage({
               es: `${results.length} ${results.length === 1 ? "resultado de producto" : "resultados de productos"} para “${query}”`,
             })}
           </p>
-          <div className="product-grid product-grid--three">
+          <div className="product-grid">
             {results.map((product) => (
               <ProductCard key={product.id} product={product} locale={locale} />
             ))}

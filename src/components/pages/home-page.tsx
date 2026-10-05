@@ -96,7 +96,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section section--products">
         <div className="section-heading">
           <div>
             <h2>{copy.home.featured}</h2>

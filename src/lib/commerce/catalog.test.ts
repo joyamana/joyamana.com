@@ -7,6 +7,7 @@ const shopifyCatalogMocks = vi.hoisted(() => ({
   getShopifyCollection: vi.fn(),
   getShopifyCollections: vi.fn(),
   getShopifyProduct: vi.fn(),
+  getShopifyProductRecommendations: vi.fn(),
   getShopifyProducts: vi.fn(),
   searchShopifyProducts: vi.fn(),
 }));
@@ -23,6 +24,7 @@ import {
   getDesignCollection,
   getDesignCollections,
   getProduct,
+  getProductRecommendations,
   getProductCategory,
   getProducts,
   searchCatalog,
@@ -160,6 +162,9 @@ describe("Shopify catalog facade", () => {
   it("keeps planned Canada empty without consulting Shopify", async () => {
     await expect(getProducts("ca", "en-CA")).resolves.toEqual([]);
     await expect(getProduct("anything", "ca", "en-CA")).resolves.toBeNull();
+    await expect(
+      getProductRecommendations("anything", "ca", "en-CA"),
+    ).resolves.toEqual([]);
     await expect(getCollections("ca", "fr-CA")).resolves.toEqual([]);
     await expect(getCollection("anything", "ca", "fr-CA")).resolves.toBeNull();
     await expect(searchCatalog("quartz", "ca", "en-CA")).resolves.toEqual([]);
@@ -174,6 +179,9 @@ describe("Shopify catalog facade", () => {
       shopifyCatalogMocks.getShopifyCatalogNavigation,
     ).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyProduct).not.toHaveBeenCalled();
+    expect(
+      shopifyCatalogMocks.getShopifyProductRecommendations,
+    ).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyCollections).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.getShopifyCollection).not.toHaveBeenCalled();
     expect(shopifyCatalogMocks.searchShopifyProducts).not.toHaveBeenCalled();
@@ -182,6 +190,9 @@ describe("Shopify catalog facade", () => {
   it("always dispatches Shopify with the requested locale", async () => {
     shopifyCatalogMocks.getShopifyProducts.mockResolvedValue([product]);
     shopifyCatalogMocks.getShopifyProduct.mockResolvedValue(product);
+    shopifyCatalogMocks.getShopifyProductRecommendations.mockResolvedValue([
+      product,
+    ]);
     shopifyCatalogMocks.getShopifyCollections.mockResolvedValue([
       designCollection,
     ]);
@@ -191,6 +202,9 @@ describe("Shopify catalog facade", () => {
     await expect(
       getProduct("crystal-bracelet", "us", "en-US"),
     ).resolves.toEqual(product);
+    await expect(
+      getProductRecommendations("crystal-bracelet", "us", "zh-Hant-US"),
+    ).resolves.toEqual([product]);
     await expect(getCollections("us", "zh-Hant-US")).resolves.toEqual([
       designCollection,
     ]);
@@ -207,6 +221,9 @@ describe("Shopify catalog facade", () => {
       "crystal-bracelet",
       "en-US",
     );
+    expect(
+      shopifyCatalogMocks.getShopifyProductRecommendations,
+    ).toHaveBeenCalledWith("crystal-bracelet", "zh-Hant-US");
     expect(shopifyCatalogMocks.getShopifyCollections).toHaveBeenCalledWith(
       "zh-Hant-US",
     );
@@ -227,5 +244,14 @@ describe("Shopify catalog facade", () => {
     await expect(getCatalogNavigationData("us", "en-US")).rejects.toBe(
       upstreamError,
     );
+  });
+
+  it("rejects disabled recommendation locales before contacting Shopify", async () => {
+    await expect(
+      getProductRecommendations("bracelet", "us", "es-US"),
+    ).rejects.toMatchObject({ kind: "configuration" });
+    expect(
+      shopifyCatalogMocks.getShopifyProductRecommendations,
+    ).not.toHaveBeenCalled();
   });
 });

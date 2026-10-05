@@ -4,7 +4,12 @@ import {
   localizeProductCategory,
   productCategoryDefinitionForTaxonomyId,
 } from "@/config/catalog";
-import { getProduct, getProducts } from "@/lib/commerce/catalog";
+import {
+  getProduct,
+  getProductRecommendations,
+  getProducts,
+} from "@/lib/commerce/catalog";
+import { selectRelatedProducts } from "@/lib/commerce/product-recommendations";
 import { getCopy } from "@/lib/i18n/copy";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
@@ -29,11 +34,17 @@ export async function ProductPage({
   searchParams?: PageSearchParams;
 }) {
   const marketId = marketIdForLocale(locale);
-  const [product, allProducts] = await Promise.all([
+  const [product, allProducts, relatedProducts] = await Promise.all([
     getProduct(handle, marketId, locale),
     getProducts(marketId, locale).catch(() => []),
+    getProductRecommendations(handle, marketId, locale).catch(() => []),
   ]);
   if (!product) notFound();
+  const recommendations = selectRelatedProducts({
+    product,
+    relatedProducts,
+    catalogProducts: allProducts,
+  });
   const initialVariant = initialProductVariant(product, searchParams);
   const copy = getCopy(locale);
   const homeLabel = uiText(locale, {
@@ -106,18 +117,15 @@ export async function ProductPage({
         locale={locale}
         initialVariantId={initialVariant?.id ?? null}
       />
-      {allProducts.some((item) => item.id !== product.id) ? (
-        <section className="section section--bordered">
+      {recommendations.length ? (
+        <section className="section section--bordered section--products">
           <div className="section-heading">
             <h2>{copy.labels.related}</h2>
           </div>
-          <div className="product-grid product-grid--three">
-            {allProducts
-              .filter((item) => item.id !== product.id)
-              .slice(0, 3)
-              .map((item) => (
-                <ProductCard key={item.id} product={item} locale={locale} />
-              ))}
+          <div className="product-grid">
+            {recommendations.map((item) => (
+              <ProductCard key={item.id} product={item} locale={locale} />
+            ))}
           </div>
         </section>
       ) : null}

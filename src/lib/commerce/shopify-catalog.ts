@@ -25,6 +25,7 @@ import {
   NAVIGATION_COLLECTION_PAGE_SIZE,
   SHOPIFY_PRODUCTS_QUERY,
   SHOPIFY_PRODUCT_QUERY,
+  SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY,
   SHOPIFY_PRODUCT_VARIANTS_QUERY,
   SHOPIFY_BROWSE_VARIANTS_QUERY,
   SHOPIFY_BROWSE_COLORS_QUERY,
@@ -40,6 +41,7 @@ import {
   type ShopifyVariantColorsNode,
   type ShopifyProductsData,
   type ShopifyProductData,
+  type ShopifyProductRecommendationsData,
   type ShopifyProductVariantsData,
   type ShopifyVariantNode,
   type ShopifyCollectionsData,
@@ -207,6 +209,41 @@ export async function getShopifyProduct(
   return mapShopifyProduct({
     ...product,
     variants: { ...product.variants, nodes: variants },
+  });
+}
+
+export async function getShopifyProductRecommendations(
+  handle: string,
+  locale: Locale,
+  budget = createCatalogReadBudget(),
+): Promise<ProductSummary[]> {
+  const context = shopifyContext(locale);
+  const normalizedHandle = handle.trim();
+  if (!normalizedHandle) return [];
+
+  const data = await budget.read<ShopifyProductRecommendationsData>(
+    SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY,
+    { ...context, handle: normalizedHandle },
+    { cache: "no-store" },
+  );
+  const nodes = data.productRecommendations;
+  if (nodes === null) return [];
+  if (!Array.isArray(nodes) || nodes.length > 10) {
+    throw new ShopifyCatalogError(
+      "invalid-data",
+      "Shopify returned invalid product recommendations.",
+    );
+  }
+  const seenIds = new Set<string>();
+  return nodes.map((node) => {
+    if (!node?.id || seenIds.has(node.id)) {
+      throw new ShopifyCatalogError(
+        "invalid-data",
+        "Shopify returned duplicate or invalid recommended products.",
+      );
+    }
+    seenIds.add(node.id);
+    return mapShopifyProductSummary(node);
   });
 }
 

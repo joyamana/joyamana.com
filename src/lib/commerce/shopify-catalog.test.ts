@@ -9,6 +9,7 @@ import {
   getShopifyCollection,
   getShopifyCollections,
   getShopifyProduct,
+  getShopifyProductRecommendations,
   getShopifyProducts,
   hydrateShopifyBrowseProducts,
   searchShopifyProducts,
@@ -25,6 +26,7 @@ import {
   SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
   SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
   SHOPIFY_PRODUCT_QUERY,
+  SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY,
   SHOPIFY_PRODUCT_VARIANTS_QUERY,
   SHOPIFY_PRODUCTS_QUERY,
   SHOPIFY_SEARCH_QUERY,
@@ -84,6 +86,7 @@ describe("complete catalog request budget", () => {
     expect(SHOPIFY_PRODUCTS_QUERY).not.toContain("variants(");
     for (const query of [
       SHOPIFY_PRODUCTS_QUERY,
+      SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY,
       SHOPIFY_SEARCH_QUERY,
       SHOPIFY_COLLECTION_QUERY,
     ]) {
@@ -190,6 +193,78 @@ function secondProductFixture() {
     },
   };
 }
+
+describe("Shopify related product summaries", () => {
+  it("uses the requested US language and bounded no-store RELATED query, preserving relevance", async () => {
+    shopifyFetchMock.mockResolvedValueOnce({
+      productRecommendations: [secondProductFixture(), productFixture()],
+    });
+    const products = await getShopifyProductRecommendations(
+      " bracelet ",
+      "zh-Hant-US",
+    );
+    expect(products.map((product) => product.id)).toEqual([
+      "gid://shopify/Product/2",
+      "gid://shopify/Product/1",
+    ]);
+    expect(products[0]).not.toHaveProperty("variants");
+    expect(products[0].priceRange.minVariantPrice.currencyCode).toBe("USD");
+    expect(shopifyFetchMock).toHaveBeenCalledWith(
+      SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY,
+      { country: "US", language: "ZH_TW", handle: "bracelet" },
+      expect.objectContaining({ cache: "no-store", timeoutMs: 10_000 }),
+    );
+    expect(SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY).toContain("intent: RELATED");
+  });
+
+  it.each([null, []])(
+    "accepts an empty recommendation result: %j",
+    async (result) => {
+      shopifyFetchMock.mockResolvedValueOnce({
+        productRecommendations: result,
+      });
+      await expect(
+        getShopifyProductRecommendations("bracelet", "en-US"),
+      ).resolves.toEqual([]);
+    },
+  );
+
+  it.each([
+    {},
+    { productRecommendations: {} },
+    { productRecommendations: [productFixture(), productFixture()] },
+    { productRecommendations: [null] },
+  ])(
+    "rejects malformed or duplicate recommendation data: %j",
+    async (result) => {
+      shopifyFetchMock.mockResolvedValueOnce(result);
+      await expect(
+        getShopifyProductRecommendations("bracelet", "en-US"),
+      ).rejects.toMatchObject({ kind: "invalid-data" });
+    },
+  );
+
+  it("rejects recommendations outside the USD context", async () => {
+    const product = secondProductFixture();
+    product.priceRange.minVariantPrice.currencyCode = "CAD";
+    shopifyFetchMock.mockResolvedValueOnce({
+      productRecommendations: [product],
+    });
+    await expect(
+      getShopifyProductRecommendations("bracelet", "en-US"),
+    ).rejects.toMatchObject({ kind: "invalid-data" });
+  });
+
+  it("does not send blank handles or disabled languages to Shopify", async () => {
+    await expect(
+      getShopifyProductRecommendations(" ", "en-US"),
+    ).resolves.toEqual([]);
+    await expect(
+      getShopifyProductRecommendations("bracelet", "es-US"),
+    ).rejects.toMatchObject({ kind: "unsupported-locale" });
+    expect(shopifyFetchMock).not.toHaveBeenCalled();
+  });
+});
 
 afterEach(() => {
   vi.clearAllMocks();

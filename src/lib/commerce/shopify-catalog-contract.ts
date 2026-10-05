@@ -111,6 +111,10 @@ export interface ShopifyProductData {
   product: ShopifyProductNode | null;
 }
 
+export interface ShopifyProductRecommendationsData {
+  productRecommendations: ShopifyProductSummaryNode[] | null;
+}
+
 export interface ShopifyCollectionsData {
   collections: ShopifyConnection<ShopifyCollectionSummaryNode>;
 }
@@ -318,6 +322,19 @@ export const SHOPIFY_PRODUCT_QUERY = `#graphql
     }
   }
   ${productFields(VARIANT_PAGE_SIZE)}
+`;
+
+export const SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY = `#graphql
+  query CatalogProductRecommendations(
+    $country: CountryCode!
+    $language: LanguageCode!
+    $handle: String!
+  ) @inContext(country: $country, language: $language) {
+    productRecommendations(productHandle: $handle, intent: RELATED) {
+      ...CatalogProductSummaryFields
+    }
+  }
+  ${productSummaryFields}
 `;
 
 export const SHOPIFY_PRODUCT_VARIANTS_QUERY = `#graphql
