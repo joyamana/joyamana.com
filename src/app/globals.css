@@ -15,7 +15,6 @@
   --floral-terracotta: #da6e51;
   --media-surface: color-mix(in srgb, var(--floral-peach) 14%, var(--paper));
   --inverse-surface: #321708;
-  --hero-overlay: 33, 20, 12;
   --status-error: #8f2f28;
   --status-available: #4f614e;
   --status-unavailable: #754340;
@@ -80,8 +79,7 @@ a {
   outline-offset: 4px;
 }
 
-.site-footer :focus-visible,
-.hero :focus-visible {
+.site-footer :focus-visible {
   box-shadow: 0 0 0 2px var(--paper);
 }
 
@@ -614,21 +612,23 @@ h3 {
   min-height: min(760px, calc(100vh - 78px));
   align-items: center;
   overflow: hidden;
-  color: white;
-  background: var(--inverse-surface);
+  color: var(--ink);
+  background: var(--paper);
 }
 
-.hero::after {
+.hero__media {
   position: absolute;
-  z-index: 1;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(var(--hero-overlay), 0.78) 0%,
-      rgba(var(--hero-overlay), 0.48) 48%,
-      rgba(var(--hero-overlay), 0.08) 100%
-    ),
-    linear-gradient(0deg, rgba(var(--hero-overlay), 0.3) 0%, transparent 45%);
+  inset: 0;
+}
+
+.hero__media::after {
+  position: absolute;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--paper) 94%, transparent) 0%,
+    color-mix(in srgb, var(--paper) 82%, transparent) 42%,
+    transparent 64%
+  );
   content: "";
   inset: 0;
   pointer-events: none;
@@ -636,30 +636,39 @@ h3 {
 
 .hero__image {
   object-fit: cover;
-  object-position: center;
+  object-position: right 65%;
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, var(--content));
+  margin-inline: auto;
+  padding: clamp(4rem, 8vw, 7rem) var(--page);
 }
 
 .hero__content {
-  position: relative;
-  z-index: 2;
-  width: min(770px, 86vw);
-  margin-left: var(--page);
+  width: min(49%, 620px);
+}
+
+.hero .eyebrow {
+  color: var(--brand);
 }
 
 .hero h1 {
-  max-width: 780px;
+  max-width: 12ch;
   margin-bottom: 1.2rem;
-  font-size: clamp(3.25rem, 6.2vw, 6.75rem);
+  font-size: clamp(3rem, 5vw, 5.5rem);
   letter-spacing: -0.055em;
   line-height: 0.94;
   text-wrap: balance;
 }
 
 .hero__content > p:not(.eyebrow) {
-  max-width: 610px;
+  max-width: 510px;
   margin-bottom: 2.1rem;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  color: var(--ink);
+  font-size: clamp(1rem, 1.2vw, 1.125rem);
 }
 
 .eyebrow,
@@ -723,18 +732,6 @@ h3 {
 .button--secondary:not(:disabled):hover {
   color: var(--brand);
   background: var(--brand-soft);
-}
-
-.button--light {
-  color: var(--ink);
-  border-color: white;
-  background: white;
-}
-
-.button--ghost-light {
-  color: white;
-  border-color: rgba(255, 255, 255, 0.5);
-  background: transparent;
 }
 
 .button--wide {
@@ -2560,6 +2557,34 @@ input {
 }
 
 @media (max-width: 1050px) {
+  .hero {
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero__inner {
+    order: -1;
+    padding-block: 3rem 1.75rem;
+  }
+
+  .hero__media {
+    position: relative;
+    aspect-ratio: 16 / 7;
+  }
+
+  .hero__media::after {
+    display: none;
+  }
+
+  .hero__content {
+    width: 100%;
+  }
+
+  .hero__image {
+    object-position: right center;
+  }
+
   .site-header {
     grid-template-columns: minmax(88px, 1fr) minmax(0, auto) minmax(88px, 1fr);
   }
@@ -2664,24 +2689,13 @@ input {
     min-height: 68px;
   }
 
-  .hero {
-    min-height: 680px;
-    align-items: flex-end;
-    padding-bottom: 5rem;
-  }
-
-  .hero__content {
-    width: auto;
-    margin: 0 var(--page);
-  }
-
-  .hero__image {
-    object-position: 70% center;
+  .hero__media {
+    aspect-ratio: 4 / 3;
   }
 
   .hero h1 {
     max-width: 12ch;
-    font-size: clamp(2.9rem, 12.5vw, 4rem);
+    font-size: clamp(2.75rem, 10vw, 3.75rem);
     line-height: 0.96;
   }
 
@@ -2837,8 +2851,8 @@ html[lang="zh-Hant-US"] .manifesto h2 {
 }
 
 html[lang="zh-Hant-US"] .hero h1 {
-  max-width: 12em;
-  font-size: clamp(2.5rem, 5.3vw, 5.5rem);
+  max-width: 9em;
+  font-size: clamp(2.5rem, 4.5vw, 5rem);
   line-height: 1.25;
 }
 

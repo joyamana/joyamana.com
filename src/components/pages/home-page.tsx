@@ -19,40 +19,44 @@ export async function HomePage({ locale }: { locale: Locale }) {
   return (
     <>
       <section className="hero">
-        <Image
-          className="hero__image"
-          src="/images/joya-mana-home-hero.webp"
-          alt=""
-          fill
-          preload
-          sizes="100vw"
-        />
-        <div className="hero__content">
-          <p className="eyebrow">{copy.home.eyebrow}</p>
-          <h1>{copy.home.title}</h1>
-          <p>{copy.home.intro}</p>
-          <div className="button-row">
-            <Link
-              className="button button--light"
-              href={localePath(locale, "/shop")}
-            >
-              {copy.home.cta}
-            </Link>
-            {availableProducts[0] ? (
+        <div className="hero__media">
+          <Image
+            className="hero__image"
+            src="/images/joya-mana-home-hero-still-life.webp"
+            alt=""
+            fill
+            preload
+            sizes="100vw"
+          />
+        </div>
+        <div className="hero__inner">
+          <div className="hero__content">
+            <p className="eyebrow">{copy.home.eyebrow}</p>
+            <h1>{copy.home.title}</h1>
+            <p>{copy.home.intro}</p>
+            <div className="button-row">
               <Link
-                className="button button--ghost-light"
-                href={localePath(
-                  locale,
-                  `/products/${availableProducts[0].handle}`,
-                )}
+                className="button button--primary"
+                href={localePath(locale, "/shop")}
               >
-                {uiText(locale, {
-                  zh: "探索精選飾物",
-                  en: "Discover a featured piece",
-                  es: "Descubrir una pieza destacada",
-                })}
+                {copy.home.cta}
               </Link>
-            ) : null}
+              {availableProducts[0] ? (
+                <Link
+                  className="button button--secondary"
+                  href={localePath(
+                    locale,
+                    `/products/${availableProducts[0].handle}`,
+                  )}
+                >
+                  {uiText(locale, {
+                    zh: "探索精選飾物",
+                    en: "Discover a featured piece",
+                    es: "Descubrir una pieza destacada",
+                  })}
+                </Link>
+              ) : null}
+            </div>
           </div>
         </div>
       </section>

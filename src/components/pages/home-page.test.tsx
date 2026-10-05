@@ -58,7 +58,7 @@ describe("Home page", () => {
     expect(html).toContain("Explore Joya Mana");
     expect(html).not.toContain("Discover a featured piece");
     expect(html).toContain("No pieces are currently available.");
-    expect(html).toContain("joya-mana-home-hero.webp");
+    expect(html).toContain("joya-mana-home-hero-still-life.webp");
     expect(html).not.toContain("bling-omen-editorial-hero.png");
     expect(html).not.toContain("From the blog");
     expect(html).not.toContain("collection-strip");
