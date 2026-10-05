@@ -24,6 +24,7 @@ import { AboutPage } from "./about-page";
 import { AccessibilityPage } from "./accessibility-page";
 import { PolicyPage } from "./policy-page";
 import { EditorialIndexPage } from "./editorial-index-page";
+import { editorialArticle, editorialIndex } from "./editorial-index.fixtures";
 
 afterEach(() => vi.resetAllMocks());
 
@@ -45,22 +46,24 @@ it("keeps an empty editorial index readable and marks its real description langu
     await EditorialIndexPage({ locale: "zh-Hant-US", kind: "blog" }),
   );
   expect(empty).toContain("目前沒有文章。");
-  mocks.index.mockResolvedValue({
-    seoDescription: "English section description.",
-    descriptionLocale: "en-US",
-    articles: [
-      {
-        handle: "story",
-        title: "Story",
-        titleLocale: "en-US",
-        excerpt: "An excerpt.",
-        excerptLocale: "en-US",
-        tags: [],
-      },
-    ],
-    usedDefaultLanguage: true,
-    translationReady: false,
-  });
+  mocks.index.mockResolvedValue(
+    editorialIndex({
+      seoDescription: "English section description.",
+      descriptionLocale: "en-US",
+      articles: [
+        editorialArticle(1, {
+          handle: "story",
+          title: "Story",
+          titleLocale: "en-US",
+          excerpt: "An excerpt.",
+          excerptLocale: "en-US",
+          tags: [],
+        }),
+      ],
+      usedDefaultLanguage: true,
+      translationReady: false,
+    }),
+  );
   const recovered = renderToStaticMarkup(
     await EditorialIndexPage({ locale: "zh-Hant-US", kind: "blog" }),
   );
@@ -68,19 +71,21 @@ it("keeps an empty editorial index readable and marks its real description langu
     '<p lang="en-US">English section description.</p>',
   );
   expect(recovered).toContain('href="/zh-hant-us/blog/story"');
-  mocks.index.mockResolvedValue({
-    seoDescription: "",
-    articles: [
-      {
-        handle: "story",
-        title: "Story",
-        titleLocale: "en-US",
-        excerpt: "An excerpt.",
-        excerptLocale: "en-US",
-        tags: [],
-      },
-    ],
-  });
+  mocks.index.mockResolvedValue(
+    editorialIndex({
+      seoDescription: "",
+      articles: [
+        editorialArticle(1, {
+          handle: "story",
+          title: "Story",
+          titleLocale: "en-US",
+          excerpt: "An excerpt.",
+          excerptLocale: "en-US",
+          tags: [],
+        }),
+      ],
+    }),
+  );
   const fallback = renderToStaticMarkup(
     await EditorialIndexPage({ locale: "zh-Hant-US", kind: "blog" }),
   );

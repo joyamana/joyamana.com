@@ -25,3 +25,21 @@ export function editorialCopy(kind: EditorialKind, locale: EnabledLocale) {
         }),
   };
 }
+
+export function editorialIndexCount(
+  kind: EditorialKind,
+  count: number,
+  locale: EnabledLocale,
+) {
+  return kind === "blog"
+    ? uiText(locale, {
+        zh: `共 ${count} 篇文章`,
+        en: `${count} article${count === 1 ? "" : "s"}`,
+        es: `${count} artículo${count === 1 ? "" : "s"}`,
+      })
+    : uiText(locale, {
+        zh: `共 ${count} 個條目`,
+        en: `${count} guide${count === 1 ? "" : "s"}`,
+        es: `${count} guía${count === 1 ? "" : "s"}`,
+      });
+}
