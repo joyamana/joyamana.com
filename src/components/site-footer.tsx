@@ -66,7 +66,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             })}
           </Link>
         </div>
-        <div className="footer-column">
+        <div className="footer-column footer-column--legal">
           <p className="footer-heading">
             {uiText(locale, { en: "Legal", es: "Legal", zh: "法律資訊" })}
           </p>
