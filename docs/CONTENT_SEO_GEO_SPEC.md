@@ -20,7 +20,9 @@
 | `/crystals`、`/crystals/{handle}` | Blog `crystals` / Article | Editorial |
 | `/search`、`/cart` | 商品搜索 / 私有 Bag | 始终 noindex |
 
-正文只从 Shopify 读取。必需内容缺失时详情 404；上游失败提供可重试错误，不造本地后备正文。
+正文只从 Shopify 读取。缺失商品、文章和 About 子页返回 404；About 首页、固定政策和 Accessibility
+缺正文时显示暂不可用，保持 200/noindex，不输出 Schema 或进 sitemap。上游失败
+提供可重试错误，不造本地后备正文。
 Blog 是唯一名称，不建 Journal/Diario 别名。当前无 `/category` hub、FAQ、Disclaimer、独立
 Product Care 或账户页；护理归 PDP，声明归相关内容/Terms。当前路由不从 Shopify Page 取正文。
 
@@ -31,8 +33,8 @@ Product Care 或账户页；护理归 PDP，声明归相关内容/Terms。当前
 且不重复时展示，SEO description 缺失取正文摘要。不完整条目不进 sitemap/Schema。
 
 About root handle 固定 `about`，只公开其有序 `child_pages` 直接引用的完整可见子页。
-重复、自引用、错误类型、不完整或未引用条目拒绝，不递归生成深层 URL。root 为导航首项，
-无有效子页隐藏 tabs；有效繁中子页即使正文回退英文也保留真实链接。
+重复、自引用、错误类型、不完整或未引用条目拒绝，不递归生成深层 URL。
+有效繁中子页即使正文回退英文也保留真实链接；导航交互见设计规范。
 
 Policy/Article 清洗后须有可见正文，空标签、单独标题和危险标签不构成内容。
 Article 日期须有效，图片只用允许的 Shopify CDN 路径；分页异常不能发布部分目录。
@@ -40,7 +42,18 @@ Rich text 忽略非法节点，链接限制协议，外开链接附安全 rel。
 
 同一 US 市场各语言保持身份、handle、币种、库存、引用关系和政策事实。
 缺译允许默认英语回退；标题、正文、摘要、导航、栏目简介和文章标签分别标注实际语言。
-About 的摘要/SEO 回退不把已译正文标成英文，但页面仍不索引；Accessibility 要求正文、标题和搜索信息译完；Article 的标题、正文、摘要及搜索信息须完成翻译，栏目简介回退时目录不索引；各类型比较清洗后的可见正文，翻译标题或换格式不能掩盖正文回退。品牌名、作者和文章品牌标签不要求改写。
+正文语言与索引资格分别判断：
+
+| 内容 | 翻译完成条件 |
+|---|---|
+| Policy | 清洗后的可见正文已译 |
+| About | 正文、已有摘要及搜索摘要已译；搜索标题须译，品牌标题可保留 |
+| Accessibility | 标题、正文、搜索标题和摘要已译 |
+| Article | 标题、正文、摘要、搜索标题和摘要已译 |
+| Blog/Guide 目录 | 至少有合格文章，已有栏目搜索标题和简介已译；Blog 等栏目名称可保留 |
+
+各类型比较可见正文，换粗体、段落、空白或链接包装不能掩盖英文回退。
+摘要或搜索信息回退不会把已译正文标成英文。品牌名、作者和品牌标签不要求改写。
 
 已识别回退或翻译不完整的 About、Accessibility、Policy、Article 不进对应索引、sitemap、
 hreflang、Schema。文本比较不能证明译文质量；商品/系列尚无自动检测，发布时人工检查
@@ -59,7 +72,7 @@ hreflang、Schema。文本比较不能证明译文质量；商品/系列尚无�
 | Organization/Site Settings | 获批公开名称、Logo、客服、真实社交与政策；不填占位事实 |
 
 Guide/Blog 用原生 Article，必要扩展用 Article metafields，不再复制同主题 Crystal 正文。
-系列故事、商品知识、作者/来源扩展和 Organization 尚未完整接入，待办归 Roadmap。
+相关接入待办见 Roadmap。
 项目负责人审核事实与最终发布；AI 草稿不代表作者资历。已有 About/Philosophy/Approach/
 Founder 的 EN/ES 正文及经历已获确认，暂停西语不撤销该确认。新增团队、工艺、产地、
 采购、认证、经历或健康信息须有真实资料与批准。

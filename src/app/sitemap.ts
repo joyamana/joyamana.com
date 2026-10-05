@@ -105,7 +105,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .filter((path) => isIndexingEnabledFor(locale, path))
         .map((path) => ({
           url: new URL(localePath(locale, path), siteConfig.url).toString(),
-          changeFrequency: "weekly" as const,
         }));
     },
   );

@@ -1,6 +1,6 @@
 "use client";
 import type { CartActionFailure } from "@/lib/commerce/cart-types";
-import { isEnabledLocale, localeRegistry } from "@/config/locales";
+import { localeRegistry } from "@/config/locales";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -175,9 +175,7 @@ export function CartView({ locale }: { locale: Locale }) {
             {isBlockingInventoryWarning(warning.code)
               ? cartErrorMessage(
                   "UNAVAILABLE",
-                  isEnabledLocale(locale)
-                    ? localeRegistry[locale].shopify.language
-                    : "EN",
+                  localeRegistry[locale].shopify.language,
                 )
               : warning.message}
           </p>

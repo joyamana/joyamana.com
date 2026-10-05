@@ -40,9 +40,10 @@ Collection 管理 URL/SEO/成员；Product reference 和 Design Series Metaobjec
 - Variant `custom.colors` 是文本列表，校验 JSON 数组，trim/NFC/大小写规范化去重。
   默认语言原值是稳定键，按 Variant ID 补取；词典只翻译显示，未知颜色保留原标签。
   颜色不从图、名称、tag 或品牌配色推断，不合并别名或复制各语言商品。
-- Shop/Category/系列完整读取范围内 Variant：颜色组内 OR，颜色与可购买条件 AND，
-  必须同款命中。默认保留售罄，无结果返回 200。
-- 每个 Product 一张卡，按可购买优先、Shopify POSITION、ID 固定选款。
+- Shop/Category/系列完整读取范围内 Variant：选多个颜色时，符合其中一种即可；
+  同时开启可购买筛选时，两个条件须命中同一个款式。默认保留售罄，无结果返回 200。
+  超过 32 个颜色、单值超过 100 字符或空值视为无效筛选，返回零结果；清除后恢复。
+- 每件商品一张卡，先选可购买款，再按 Shopify 的款式顺序和 ID 选定。
   按展示款十进制 USD 单价排序，平价按来源/ID；排序不换款，不拿商品最低价替代。
 - 选款卡的图、价、状态、链接和适用 Schema 共用该 Variant，下一次 no-store 请求更新事实。
   首页、搜索、推荐只用摘要：显示价格范围，图片与名称链接到商品详情；可售摘要卡不显示
@@ -82,14 +83,14 @@ Collection 管理 URL/SEO/成员；Product reference 和 Design Series Metaobjec
 Bag 支持创建、读取、加购、改数量、移除、恢复、清空；行总价和小计来自 Shopify，
 税与运费在 Checkout 确认。商品链接保留 Variant 和当前语言。
 
-- 最多 500 行，单页/单次 mutation input 最多 250，清空分批。校验 cursor、重复行、
-  Cart 一致性和总数量，不能只显示前 250 行。
+- 最多 500 行，每页/每次操作最多 250 行，清空分批。完整读取与变化检查见技术规格。
 - 已存行保持可读，库存/规则变化显示行级问题，允许调整到有效数量；无法满足 minimum 时
   提示移除或重选。新加购校验同款合并后不超过 99，不能只依赖按钮。
 - mutation 业务失败或响应丢失后只读刷新实际内容并保留错误，不重放操作。重读失败保留袋，
   确认过期才清空；过期 Cart 可在加购时重建。首次读取失败显示重试，不宣称空袋。
 - Checkout 点击后重读最新 Cart，校验所有行并取最新 URL；失败返回安全 Bag 供修正，
   上游空袋清除旧显示，问题行不能进入结账。
+- 加购、Buy now 和结账各自保留本次操作错误，不借用其他操作的提示。
 - Buy now 使用独立单商品 Cart，核对所选 Variant/数量、实际返回行与阻塞警告，
   不读写已有 Bag cookie。Checkout URL 按获准 host/locale 校验，不手工改写。
 - 英语和繁中共享 US cookie。停用语言 Action 拒绝输入，不调用 Shopify 或改动 cookie。
@@ -115,9 +116,6 @@ Checkout/Account Email 用于交易或服务，不等于 Newsletter/SMS 同意�
 记录来源、时间、语言和版本，并能取消订阅/改偏好；不预勾选，不因拒绝营销阻断购买，
 不把未订阅订单邮箱直接导入营销。弃单、复购、cross-sell、review request 按获批规则执行。
 技术与跨域隐私要求见技术规格，接入待办见 Roadmap。
-
-当前没有 Reviews。以后须有真实来源、采集审核、激励披露、删除导出与评分规则；不虚构
-评论、空星级、认证或不当压低真实负评，只有页面可见评分才能进 Schema。
 
 实际商品、Bag、游客结账与订单后流程按 [发布手册](LAUNCH_RUNBOOK.md)验收，
 单元测试不能证明支付已验收。

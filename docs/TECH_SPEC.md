@@ -18,7 +18,7 @@ Client Components。页面、metadata 和 JSON-LD 共用校验后的数据。
 | `src/lib/http/`、`i18n/`、`navigation/` | 404、语言路径、文案和导航 |
 
 商品摘要只含卡片所需身份、图、价格范围、类别和可售性；完整目录另补齐 Variant，
-PDP 再读取正文、SEO 和图库。类型在 `types.ts` / `cart-types.ts`，不能把摘要当完整选款数据。
+商品详情页再读取正文、搜索信息和图库。类型在 `types.ts` / `cart-types.ts`，不能把摘要当完整选款数据。
 
 ## 工具与字体
 
@@ -41,7 +41,7 @@ Node 保持 24，精确 pnpm 和依赖版本以 [package.json](../package.json) 
   则报错。mutation 后只重读返回的 Cart，保留 warnings，不重放 mutation。
 - 需要全量的数据须完整分页，校验 cursor、重复 ID、归属和数量。每次目录读取共用
   最多 100 次请求、20 秒预算，包含基础页和款式补读；超限报错，不返回部分目录。
-- PDP 首批 100 个 Variant；摘要不读 Variant，浏览筛选按批次完整补齐。繁中颜色补读
+- 商品详情首批 100 个 Variant；摘要不读 Variant，浏览筛选按批次完整补齐。繁中颜色补读
   默认语言时只取 Variant ID/colors 与必要分页字段。推荐读取失败可省略推荐，商品失败进入错误边界。
 - buyer IP 只信任 Vercel 保护的 `x-vercel-forwarded-for`，校验后转发，不保存。
   其他部署先确定可信代理，不信任客户端可伪造 header。
@@ -80,8 +80,7 @@ Header 失败仍保留 Shop All、Search、Bag、语言入口与正文。真实�
 
 未知路径、暂停西语和未启用市场由 catch-all 返回完整 404/noindex/no-store 文档。
 动态缺失商品、文章和 About 子页继续用 `notFound()`；当前返回 404/noindex，但初始 HTML
-缺少可见错误正文，需要 JavaScript 恢复。保留现有恢复方式，每次部署仍须复验。[#97000](https://github.com/vercel/next.js/issues/97000)因复现链接无效关闭，
-不能据此认定问题已修复，不使用框架内部补丁或实验性 API。
+缺少可见错误正文，需要 JavaScript 恢复。每次部署复验状态、初始正文和客户端恢复；不使用框架内部补丁或实验性 API。
 
 环境说明集中在 [.env.example](../.env.example)，预检与运行时共用校验。
 布尔值不接受空格，开索引须有合法非本机 HTTPS origin。Vercel 要求站点和 Shopify 配置，
@@ -100,10 +99,10 @@ Production origin 精确为 `https://www.joyamana.com`，预检拒绝 Preview �
 - 端点校验输入、Origin、方法与权限。安全响应头见 [next.config.ts](../next.config.ts)。
 - 新工具先说明目的、负责人、数据接收方、保留/删除/导出、成本、性能和移除办法。
 
-当前没有 Analytics、Customer Events 或 consent UI。启用前按 [交易规格](COMMERCE_SPEC.md#交易身份与营销)
-批准同意分类和地区范围；非必要脚本按同意加载，API 失败则关闭。隐私偏好须可拒绝、修改
-和重开，核对 GPC 与 Checkout 跨域行为。Customer Privacy API 使用独立最小权限 public token，
-不能复用 private token。事件只在成功后发送，purchase 每单一次并与 Shopify 对账，不含 PII/Cart secret。
+营销、测量和隐私流程的启用前置条件见 [交易规格](COMMERCE_SPEC.md#交易身份与营销)
+与 Roadmap。接入时非必要脚本按同意加载，失败时关闭；可拒绝、修改和重开偏好，并核对
+GPC 与 Checkout 跨域行为。Customer Privacy API 使用独立最小权限 public token。
+事件只在成功后发送，purchase 每单一次并与 Shopify 对账，不含 PII/Cart secret。
 
 检查命令见 [README](../README.md)，发布验收见 [发布手册](LAUNCH_RUNBOOK.md)。CI 使用固定
 Node/pnpm，对 PR、dev/main 做无生产凭证的安装与检查，不写 Shopify、不部署。

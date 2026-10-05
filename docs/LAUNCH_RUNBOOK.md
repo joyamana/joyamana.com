@@ -1,7 +1,7 @@
 # 发布与回滚
 
 按实际改动验收。代码推送、后台保存和本地 build 都不等于部署完成。
-dev 对应受保护 Vercel Preview，main 对应 Production；历史查 Git、CI、Vercel，不建流水文档。
+dev 对应受保护 Vercel Preview，main 对应 Production。
 
 ## 发布前
 
@@ -23,7 +23,8 @@ dev 对应受保护 Vercel Preview，main 对应 Production；历史查 Git、CI
 - 筛选/排序、深链接、切款、刷新、返回/前进与切语言指向同款。
 - 数量能清空再输入，非法草稿禁购，切款后按新规则重置；最小数量超过库存时不可购买。
 - 游客加购、重复操作、刷新恢复、修改/移除/清空；库存变化和负库存不令整袋不可读。
-- 网络故障保留 Bag，确认过期/上游空袋清除旧显示，部分失败返回实际剩余行。
+- 初读失败显示重试；操作响应丢失只读重取，不重复执行。重读失败保留 Bag，
+  确认过期/上游空袋清除旧显示，部分失败返回实际剩余行。
 - Buy now 不改已有 Bag；Checkout 重读并校验最新行，使用 Shopify 最新 URL。
 - 小计/折扣与结账一致，政策、订单邮件、Order Status、通知与客服符合实际运营。
 - 核对 Shopify 托管结账自身的语言入口与 URL，不能从本站配置推断后台西语已关闭。
@@ -39,8 +40,11 @@ dev 对应受保护 Vercel Preview，main 对应 Production；历史查 Git、CI
 - sitemap 只列合格干净页；空目录、Search/Cart、参数、Preview、未来市场和回退页排除。
 - 参数页无 hreflang/Schema，canonical 按规则回到同语言干净页。
 - 人工检查繁中商品/系列正文与 metadata、各部分实际 lang、内容回退和双向 hreflang。
-- `/es-us`、商品/政策/内容旧地址、旧 Collection 别名、带参数地址：GET/HEAD 均 404，
-  HTML/响应头 noindex、no-store，无西语导航/sitemap/hreflang/Schema，恢复链接可用。
+- `/es-us` 及子路径、未来市场和没有等价迁移的旧地址：带/不带参数的 GET/HEAD 均 404；
+  HTML/响应头 noindex、no-store，恢复链接可用，无对应导航、sitemap、hreflang 或 Schema。
+- 英语/繁中的 `/collections/bracelets|rings|necklaces|earrings`：GET/HEAD 均 308 到
+  同语言 `/category/*`，保留查询参数；目标按正常类别页规则验收。
+- 缺正文的固定政策/Accessibility 显示不可用并 noindex；缺失动态详情检查 404。
 - 检查索引矩阵与本次批准内容；Editorial 仍关闭，测试文章不参与正式索引。
 - JSON-LD 可解析且图价/状态与可见内容一致。未知路径有无 JS 的完整 404；动态缺失详情
   另查正文和客户端恢复，框架限制见技术规格。

@@ -1,7 +1,11 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { isEnabledLocale, localeRegistry } from "@/config/locales";
+import {
+  isEnabledLocale,
+  localeRegistry,
+  type StorefrontLanguage,
+} from "@/config/locales";
 import type {
   CartActionFailure,
   CartActionResult,
@@ -27,7 +31,6 @@ import {
   toSafeCartFailure,
   updateShopifyCartLines,
   validateCheckoutUrl,
-  type ShopifyCartLanguage,
 } from "@/lib/commerce/shopify-cart";
 
 const cartCookieName = "joya-mana-shopify-cart-us";
@@ -37,7 +40,7 @@ function isCheckoutEnabled() {
   return process.env.SHOPIFY_CHECKOUT_ENABLED === "true";
 }
 
-function safeLanguageForLocale(locale: string): ShopifyCartLanguage {
+function safeLanguageForLocale(locale: string): StorefrontLanguage {
   return isEnabledLocale(locale)
     ? localeRegistry[locale].shopify.language
     : "EN";
@@ -45,7 +48,7 @@ function safeLanguageForLocale(locale: string): ShopifyCartLanguage {
 
 function failure(
   code: CartActionFailure["error"]["code"],
-  language: ShopifyCartLanguage,
+  language: StorefrontLanguage,
 ): CartActionFailure {
   return toSafeCartFailure(new ShopifyCartError(code), language);
 }
@@ -56,7 +59,7 @@ function requireCheckout() {
   }
 }
 
-function languageForLocale(locale: string): ShopifyCartLanguage {
+function languageForLocale(locale: string): StorefrontLanguage {
   if (isEnabledLocale(locale)) return localeRegistry[locale].shopify.language;
   throw new ShopifyCartError("INVALID_INPUT");
 }

@@ -78,14 +78,7 @@ function mapQuantityRule(
   rule: ShopifyQuantityRule | null | undefined,
   variantId: string,
 ): ProductQuantityRule {
-  if (!rule) {
-    throw new ShopifyCatalogError(
-      "invalid-data",
-      `Shopify returned an invalid quantity rule for variant ${variantId}.`,
-    );
-  }
-
-  if (!isValidQuantityRule(rule)) {
+  if (!rule || !isValidQuantityRule(rule)) {
     throw new ShopifyCatalogError(
       "invalid-data",
       `Shopify returned an invalid quantity rule for variant ${variantId}.`,

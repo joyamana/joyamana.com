@@ -1,4 +1,4 @@
-import { markets, type MarketId } from "@/config/markets";
+import type { MarketId } from "@/config/markets";
 import {
   localeRegistry,
   isEnabledLocale,
@@ -18,10 +18,6 @@ export function localePath(locale: Locale, path = "/") {
   const prefix = localePrefixes[locale];
   const normalizedPath = path === "/" ? "" : path;
   return prefix ? `${prefix}${normalizedPath}` || prefix : path;
-}
-
-export function marketForLocale(locale: Locale) {
-  return markets[localeRegistry[locale].market];
 }
 
 export function marketIdForLocale(locale: Locale): MarketId {

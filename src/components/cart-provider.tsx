@@ -139,20 +139,25 @@ export function CartProvider({
     [language],
   );
 
+  const readCart = useCallback(async () => {
+    try {
+      return await getCartAction(locale);
+    } catch {
+      return connectionFailure;
+    }
+  }, [connectionFailure, locale]);
+
   const refresh = useCallback(
     () =>
       enqueueOperation(async () => {
         setStatus("loading");
         try {
-          const result = await getCartAction(locale);
-          return applyResult(result).ok;
-        } catch {
-          return applyResult(connectionFailure).ok;
+          return applyResult(await readCart()).ok;
         } finally {
           setStatus("ready");
         }
       }),
-    [applyResult, connectionFailure, enqueueOperation, locale],
+    [applyResult, enqueueOperation, readCart],
   );
 
   useEffect(() => {
@@ -160,25 +165,16 @@ export function CartProvider({
     void enqueueOperation(async () => {
       if (!active) return;
       setStatus("loading");
-      try {
-        const result = await getCartAction(locale);
-        if (active) {
-          applyResult(result);
-        }
-      } catch {
-        if (active) {
-          applyResult(connectionFailure);
-        }
-      } finally {
-        if (active) {
-          setStatus("ready");
-        }
+      const result = await readCart();
+      if (active) {
+        applyResult(result);
+        setStatus("ready");
       }
     });
     return () => {
       active = false;
     };
-  }, [applyResult, connectionFailure, enqueueOperation, locale]);
+  }, [applyResult, enqueueOperation, readCart]);
 
   const runCartMutation = useCallback(
     (action: () => Promise<CartActionResult>) =>
@@ -187,7 +183,7 @@ export function CartProvider({
         try {
           const result = await recoverCartMutation(
             action,
-            () => getCartAction(locale),
+            readCart,
             connectionFailure,
           );
           return applyResult(result);
@@ -195,7 +191,7 @@ export function CartProvider({
           setStatus("ready");
         }
       }),
-    [applyResult, connectionFailure, enqueueOperation, locale],
+    [applyResult, connectionFailure, enqueueOperation, readCart],
   );
 
   const addItem = useCallback(

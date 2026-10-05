@@ -33,8 +33,9 @@ export function parseContentPageFields(fields: Map<string, ContentPageField>) {
     "seo_title",
     "single_line_text_field",
   );
-  const html = renderShopifyRichText(richText);
-  const excerpt = richTextExcerpt(richText);
+  const root = parseRichText(richText);
+  const html = renderNode(root).trim();
+  const excerpt = excerptFromNode(root);
   if (
     !title ||
     !hasHtmlBody(html) ||
@@ -128,30 +129,30 @@ function renderNode(value: unknown, depth = 0): string {
   return "";
 }
 
-export function renderShopifyRichText(source: string) {
-  let parsed: unknown;
+function parseRichText(source: string): RichTextNode | null {
   try {
-    parsed = JSON.parse(source);
+    const parsed: unknown = JSON.parse(source);
+    return parsed &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed) &&
+      "type" in parsed &&
+      parsed.type === "root"
+      ? (parsed as RichTextNode)
+      : null;
   } catch {
-    return "";
+    return null;
   }
+}
 
-  return parsed &&
-    typeof parsed === "object" &&
-    "type" in parsed &&
-    parsed.type === "root"
-    ? renderNode(parsed).trim()
-    : "";
+export function renderShopifyRichText(source: string) {
+  return renderNode(parseRichText(source)).trim();
 }
 
 export function richTextExcerpt(source: string, maximumLength = 180) {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(source);
-  } catch {
-    return "";
-  }
+  return excerptFromNode(parseRichText(source), maximumLength);
+}
 
+function excerptFromNode(parsed: RichTextNode | null, maximumLength = 180) {
   function textNodes(value: unknown, depth = 0): string[] {
     if (!value || typeof value !== "object" || depth > 64) return [];
     const node = value as {

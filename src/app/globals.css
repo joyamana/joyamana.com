@@ -1766,14 +1766,14 @@ h3 {
 }
 
 .product-description ul,
-.product-description ol {
+.product-description ol,
+.about-rich-text ul,
+.about-rich-text ol {
   padding-left: 1.35rem;
 }
 
 .product-description a {
   color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
 }
 
 .product-description blockquote {
@@ -1781,7 +1781,8 @@ h3 {
   border-left: 1px solid var(--line);
 }
 
-.product-description table {
+.product-description table,
+.policy-rich-text table {
   width: 100%;
   border-collapse: collapse;
 }
@@ -1796,12 +1797,6 @@ h3 {
 
 .product-description > :first-child {
   margin-top: 0;
-}
-
-.lede {
-  margin: 2rem 0;
-  color: var(--muted);
-  font-size: 1.05rem;
 }
 
 .checkout-note {
@@ -2060,7 +2055,9 @@ h3 {
   height: auto;
 }
 
-.article-body a {
+.article-body a,
+.about-rich-text a,
+.product-description a {
   text-decoration: underline;
   text-underline-offset: 0.18em;
 }
@@ -2178,16 +2175,6 @@ h3 {
 .about-rich-text ul,
 .about-rich-text ol {
   margin: 0 0 1.4rem;
-}
-
-.about-rich-text ul,
-.about-rich-text ol {
-  padding-left: 1.35rem;
-}
-
-.about-rich-text a {
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
 }
 
 .contact-page {
@@ -2328,11 +2315,6 @@ input {
 .policy-rich-text a {
   text-decoration: underline;
   text-underline-offset: 0.16em;
-}
-
-.policy-rich-text table {
-  width: 100%;
-  border-collapse: collapse;
 }
 
 .policy-rich-text th,

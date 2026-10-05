@@ -9,7 +9,7 @@
 商品、Collection、Article、Metaobject/字段须发布并允许 Storefront 读取。
 Policies 保持真实获批正文；翻译不改变业务事实、价格、库存或引用关系。
 
-本次公开范围只核对英语和香港繁中 title、description、SEO、options、alt 与正文。
+当前公开语言为英语和香港繁中，核对 title、description、SEO、options、alt 与正文。
 西语暂停本站上线，保留已有译文；本站配置不会自动修改 Shopify/Checkout 的语言设置。
 繁中后台语言 `zh-TW`，Storefront `ZH_TW`，本站 `zh-Hant-US`，交易仍为 US/USD。
 语言发布或页面 200 不能证明译文正确；Checkout、Order Status、通知另外审校香港措辞。
@@ -24,7 +24,7 @@ Policies 保持真实获批正文；翻译不改变业务事实、价格、库�
 1. Settings → General → Brand assets → Manage：默认 Logo 使用
    [lockup-rust.png](../public/brand/lockup-rust.png)，方形 Logo 使用
    [symbol-square-rust.png](../public/brand/symbol-square-rust.png)。默认资产为透明 PNG、
-   2048px 宽；方形图为透明 PNG、1024×1024，符合后台最低尺寸要求。
+   2048px 宽；方形图为透明 PNG、1024×1024。
 2. Settings → Checkout → Configurations → Edit → Settings → Logo：选择
    [wordmark-rust.png](../public/brand/wordmark-rust.png)，调整 Width 与 Alignment，
    保持字标原比例，分别预览桌面和手机。表单用浅底，按钮和强调色沿用设计规范的正式颜色，
@@ -100,7 +100,7 @@ Blog handle `blog` 对应 `/blog`，`crystals` 对应 `/crystals`。Article 填�
 ## 操作后核对
 
 - Headless 发布、Category、模型、价格/库存/数量规则和媒体正确。
-- API 可读颜色，核对多色 OR、颜色+可购买同款 AND、展示价排序、卡片/PDP/Bag 同款。
+- API 可读颜色；多选颜色、可购买筛选和展示价排序符合交易规格，卡片/详情/Bag 同款。
 - 深链接、切款、刷新、返回/前进与公开语言切换一致。
 - 系列类型/成员/正文/SEO、导航数量阈值，About 引用/顺序/日期和实际译文正确。
 - 检查 Shopify 正文是否残留 `/es-us` 链接，在来源内容修正，不由 HTML 清洗器猜测替换。

@@ -19,7 +19,6 @@ import {
 
 const CART_PAGE_SIZE = 250;
 const MAX_CART_LINES = 500;
-export type ShopifyCartLanguage = StorefrontLanguage;
 
 interface ShopifyMoney {
   amount: string;
@@ -454,7 +453,7 @@ const cartLinesPageQuery = `#graphql
   }
 `;
 
-async function completeCart(cart: ShopifyCart, language: ShopifyCartLanguage) {
+async function completeCart(cart: ShopifyCart, language: StorefrontLanguage) {
   if (!Number.isFinite(Date.parse(cart.updatedAt)))
     throw new ShopifyCartError("SHOPIFY_ERROR");
   const subtotal = normalizeMoney(cart.cost.subtotalAmount);
@@ -519,7 +518,7 @@ async function completeCart(cart: ShopifyCart, language: ShopifyCartLanguage) {
 
 async function completeCartWithRecovery(
   cart: ShopifyCart,
-  language: ShopifyCartLanguage,
+  language: StorefrontLanguage,
 ) {
   try {
     return await completeCart(cart, language);
@@ -540,7 +539,7 @@ async function completeCartWithRecovery(
 
 async function completeMutation(
   payload: ShopifyCartMutationPayload,
-  language: ShopifyCartLanguage,
+  language: StorefrontLanguage,
 ) {
   const result = unwrapMutation(payload);
   return {
@@ -551,7 +550,7 @@ async function completeMutation(
 
 export async function getShopifyCart(
   cartId: string,
-  language: ShopifyCartLanguage = "EN",
+  language: StorefrontLanguage = "EN",
 ) {
   assertCartId(cartId);
   const data = await shopifyFetch<{ cart: ShopifyCart | null }>(
@@ -564,7 +563,7 @@ export async function getShopifyCart(
 
 export async function createShopifyCart(
   lines: ShopifyCartLineInput[] = [],
-  language: ShopifyCartLanguage = "EN",
+  language: StorefrontLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   lines.forEach(assertLineInput);
   if (lines.length > CART_PAGE_SIZE)
@@ -590,7 +589,7 @@ export async function createShopifyCart(
 export async function addShopifyCartLines(
   cartId: string,
   lines: ShopifyCartLineInput[],
-  language: ShopifyCartLanguage = "EN",
+  language: StorefrontLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   assertCartId(cartId);
   if (lines.length === 0 || lines.length > CART_PAGE_SIZE)
@@ -607,7 +606,7 @@ export async function addShopifyCartLines(
 export async function updateShopifyCartLines(
   cartId: string,
   lines: ShopifyCartLineUpdateInput[],
-  language: ShopifyCartLanguage = "EN",
+  language: StorefrontLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   assertCartId(cartId);
   if (lines.length === 0 || lines.length > CART_PAGE_SIZE)
@@ -627,7 +626,7 @@ export async function updateShopifyCartLines(
 export async function removeShopifyCartLines(
   cartId: string,
   lineIds: string[],
-  language: ShopifyCartLanguage = "EN",
+  language: StorefrontLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   assertCartId(cartId);
   if (lineIds.length === 0 || lineIds.length > CART_PAGE_SIZE)
@@ -643,7 +642,7 @@ export async function removeShopifyCartLines(
 
 export async function clearShopifyCart(
   cartId: string,
-  language: ShopifyCartLanguage = "EN",
+  language: StorefrontLanguage = "EN",
 ) {
   const cart = await getShopifyCart(cartId, language);
   if (!cart) throw new ShopifyCartError("CART_EXPIRED");
@@ -669,7 +668,7 @@ export async function clearShopifyCart(
 export async function addShopifyCartLineWithRecovery(
   cartId: string | null,
   line: ShopifyCartLineInput,
-  language: ShopifyCartLanguage = "EN",
+  language: StorefrontLanguage = "EN",
 ): Promise<ShopifyCartMutationResult> {
   assertLineInput(line);
 
@@ -749,7 +748,7 @@ export function validateCheckoutUrl(
 
 export function toSafeCartFailure(
   error: unknown,
-  language: ShopifyCartLanguage = "EN",
+  language: StorefrontLanguage = "EN",
 ): CartActionFailure {
   const code = error instanceof ShopifyCartError ? error.code : "SHOPIFY_ERROR";
   return {

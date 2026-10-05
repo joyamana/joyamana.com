@@ -32,15 +32,9 @@ About、Accessibility、政策和文章从 Shopify 读取。metadata、sitemap�
 
 ## 当前限制
 
-- 商品知识、图片代表性披露、内容关联和系列故事尚未完整接入。
-- 缺译正文可回退英文；已识别的回退内容不索引。商品/系列尚无自动回退检测，
-  上线前仍需逐页检查繁中正文和 metadata。
-- 准确低库存文案暂停；库存、数量和可购买判断继续运行。
-- 搜索只检索商品；Editorial 关闭索引，测试文章不能当正式内容。
-- 客服只通过电邮联系。账户、订阅、Wishlist、Reviews、积分、推荐奖励和实时定制器未实现。
-- Organization/Site Settings、Home/Contact/政策 Schema、Analytics 和营销隐私流程未实现。
-  Google verification 配置不能证明账号已验证。
-- 动态缺失详情的初始 404 正文存在框架限制，见技术规格。
+商品知识、图片代表性披露和系列故事仍需补齐。缺译页面可读英文；商品和系列的繁中
+仍靠人工检查。Editorial 索引关闭，客服只用电邮，账户和营销服务尚未接入。
+完整待办与启用条件集中在 [Roadmap](ROADMAP.md)。
 
 业务方已确认支付能力、Payment test mode 流程、法律实体、履约方式、政策审批责任和
 客服流程。品牌资产归设计规范，商品随附内容和现行配送退换承诺归交易规格。
@@ -52,5 +46,4 @@ About、Accessibility、政策和文章从 Shopify 读取。metadata、sitemap�
 索引页初始 HTML 可读，手机和键盘核心流程可用，内容和译文经过人工检查。
 支付批准不代表已执行真实扣款、退款或到账核对；每次部署仍须验收自己的启用范围。
 
-剩余代码工作、未决运营输入和候选只维护在 [Roadmap](ROADMAP.md)，
 实际发布检查见 [发布手册](LAUNCH_RUNBOOK.md)。

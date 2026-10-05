@@ -33,7 +33,6 @@ interface ShopifyArticleNode {
   handle: string;
   title: string;
   excerpt: string | null;
-  content: string;
   contentHtml: string;
   publishedAt: string;
   image: ShopifyImageNode | null;
@@ -113,7 +112,6 @@ const ARTICLE_FIELDS = `#graphql
     handle
     title
     excerpt
-    content
     contentHtml
     publishedAt
     image { url altText width height }
