@@ -914,7 +914,7 @@ h3 {
 
 .manifesto__inner {
   display: grid;
-  width: min(100%, 1200px);
+  width: min(100%, var(--content));
   grid-template-areas: "heading copy" "link copy";
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: clamp(3.5rem, 7vw, 6rem);
@@ -2482,7 +2482,7 @@ input {
 
 .footer-inner {
   display: grid;
-  width: min(100%, 1200px);
+  width: min(100%, var(--content));
   grid-template-columns: minmax(0, 1.65fr) repeat(3, minmax(0, 1fr));
   column-gap: clamp(1.5rem, 3vw, 2.5rem);
   row-gap: 3rem;
