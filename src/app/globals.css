@@ -2685,8 +2685,12 @@ input {
   }
 
   .hero {
-    min-height: clamp(680px, calc(25vw + 590px), 780px);
+    min-height: clamp(620px, calc(25vw + 530px), 720px);
     align-items: flex-start;
+  }
+
+  .hero__media {
+    bottom: -60px;
   }
 
   .hero__inner {
@@ -2708,7 +2712,7 @@ input {
   }
 
   .hero__image {
-    object-position: center bottom;
+    object-position: center 80%;
   }
 
   .hero .eyebrow {
