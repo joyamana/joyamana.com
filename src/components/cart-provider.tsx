@@ -31,6 +31,7 @@ import type {
   CartView,
   CheckoutActionResult,
 } from "@/lib/commerce/cart-types";
+import { recoverCartMutation } from "@/lib/commerce/cart-recovery";
 import {
   cartErrorMessage,
   cartForFailure,
@@ -44,6 +45,7 @@ interface CartContextValue {
   cart: CartView;
   count: number;
   status: CartStatus;
+  hasLoaded: boolean;
   error: CartActionFailure["error"] | null;
   checkoutEnabled: boolean;
   refresh: () => Promise<boolean>;
@@ -89,6 +91,7 @@ export function CartProvider({
     [language],
   );
   const [cart, setCart] = useState<CartView>(emptyCartView);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [status, setStatus] = useState<CartStatus>("loading");
   const [error, setError] = useState<CartActionFailure["error"] | null>(null);
   const operationQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -109,6 +112,7 @@ export function CartProvider({
     (result: CartActionResult) => {
       if (result.ok) {
         setCart(result.cart);
+        setHasLoaded(true);
         const stockWarning = result.cart.warnings.find((warning) =>
           isBlockingInventoryWarning(warning.code),
         );
@@ -125,7 +129,10 @@ export function CartProvider({
 
       setError(result.error);
       const latest = cartForFailure(result);
-      if (latest) setCart(latest);
+      if (latest) {
+        setCart(latest);
+        setHasLoaded(true);
+      }
       return false;
     },
     [language],
@@ -177,23 +184,12 @@ export function CartProvider({
       enqueueOperation(async () => {
         setStatus("updating");
         try {
-          const result = await action();
-          if (!result.ok && result.error.code !== "CART_EXPIRED") {
-            // A mutation may partially succeed upstream. Show the actual Bag
-            // while retaining the failure message and recovery controls.
-            try {
-              const latest = await getCartAction(locale);
-              const latestCart = latest.ok
-                ? latest.cart
-                : cartForFailure(latest);
-              if (latestCart) setCart(latestCart);
-            } catch {
-              // Preserve the original mutation failure if refresh also fails.
-            }
-          }
+          const result = await recoverCartMutation(
+            action,
+            () => getCartAction(locale),
+            connectionFailure,
+          );
           return applyResult(result);
-        } catch {
-          return applyResult(connectionFailure);
         } finally {
           setStatus("ready");
         }
@@ -256,6 +252,7 @@ export function CartProvider({
       cart,
       count: cart.totalQuantity,
       status,
+      hasLoaded,
       error,
       checkoutEnabled,
       refresh,
@@ -277,6 +274,7 @@ export function CartProvider({
       clearError,
       error,
       refresh,
+      hasLoaded,
       removeItem,
       status,
       updateItem,

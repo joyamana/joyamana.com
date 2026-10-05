@@ -26,6 +26,7 @@ export function CartView({ locale }: { locale: Locale }) {
     clear,
     clearError,
     error,
+    hasLoaded,
     refresh,
     removeItem,
     status,
@@ -35,7 +36,7 @@ export function CartView({ locale }: { locale: Locale }) {
   const checkoutErrorId = useId();
   const busy = status !== "ready";
 
-  if (status === "loading") {
+  if (status === "loading" && !hasLoaded) {
     return (
       <div className="empty-state" aria-live="polite">
         <p className="eyebrow">
@@ -52,6 +53,32 @@ export function CartView({ locale }: { locale: Locale }) {
             es: "Cargando tu bolsa…",
           })}
         </h1>
+      </div>
+    );
+  }
+
+  if (!hasLoaded) {
+    return (
+      <div className="empty-state">
+        <h1>
+          {uiText(locale, {
+            zh: "暫時未能載入購物袋。",
+            en: "We couldn’t load your bag.",
+            es: "No pudimos cargar tu bolsa.",
+          })}
+        </h1>
+        {error ? (
+          <p className="cart-feedback" role="alert">
+            {error.message}
+          </p>
+        ) : null}
+        <button className="button" type="button" onClick={() => refresh()}>
+          {uiText(locale, {
+            zh: "再試一次",
+            en: "Try again",
+            es: "Intentar de nuevo",
+          })}
+        </button>
       </div>
     );
   }
