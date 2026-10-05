@@ -19,7 +19,7 @@ import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 import { LanguageSwitch } from "./language-switch";
 import { BrandLogo } from "./brand-logo";
-import { commerceLanguageQueryFromSearch } from "@/lib/commerce/catalog-browse";
+import { languageHref } from "@/lib/i18n/language-href";
 
 function MenuIcon() {
   return (
@@ -283,9 +283,7 @@ export function SiteHeader({
           aria-label={menuLabel}
           className="mobile-menu-trigger"
           onClick={() => {
-            setLanguageQuery(
-              commerceLanguageQueryFromSearch(basePath, window.location.search),
-            );
+            setLanguageQuery(window.location.search);
             setMenuOpen(true);
           }}
           ref={menuButtonRef}
@@ -499,7 +497,7 @@ export function SiteHeader({
               {languageOptionsFor(locale).map((item) => (
                 <Link
                   aria-current={item.locale === locale ? "page" : undefined}
-                  href={`${localePath(item.locale, basePath)}${languageQuery ? `?${languageQuery}` : ""}`}
+                  href={languageHref(item.locale, pathname, languageQuery)}
                   hrefLang={item.locale}
                   key={item.locale}
                   lang={item.locale}

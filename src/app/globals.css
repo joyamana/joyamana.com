@@ -885,7 +885,7 @@ h3 {
 
 .product-media-unavailable {
   display: grid;
-  min-height: 640px;
+  min-height: var(--unavailable-media-height, 640px);
   place-items: center;
   padding: 1rem;
   color: var(--muted);
@@ -897,11 +897,11 @@ h3 {
 }
 
 .product-media-unavailable--compact {
-  min-height: 420px;
+  --unavailable-media-height: 420px;
 }
 
 .product-media-unavailable--cart {
-  min-height: 150px;
+  --unavailable-media-height: 150px;
 }
 
 .manifesto {
@@ -2386,7 +2386,7 @@ input {
 
 .cart-line {
   display: grid;
-  grid-template-columns: 150px 1fr;
+  grid-template-columns: 150px minmax(0, 1fr);
   gap: 1.5rem;
   padding: 1.5rem 0;
   border-top: 1px solid var(--line);
@@ -2399,6 +2399,7 @@ input {
 }
 
 .cart-line h2 {
+  overflow-wrap: anywhere;
   margin-bottom: 0.7rem;
   font-size: 2rem;
 }
@@ -2430,8 +2431,9 @@ input {
 }
 
 .text-button {
+  min-height: 44px;
   margin-top: 1rem;
-  padding: 0;
+  padding: 0.5rem 0;
   border: 0;
   border-bottom: 1px solid currentColor;
   cursor: pointer;
@@ -2647,12 +2649,14 @@ input {
     grid-template-columns: 1fr 1fr;
   }
 
-  .product-media-unavailable {
-    min-height: 520px;
+  .product-media-unavailable:not(.product-media-unavailable--compact):not(
+      .product-media-unavailable--cart
+    ) {
+    --unavailable-media-height: 520px;
   }
 
   .product-media-unavailable--compact {
-    min-height: 460px;
+    --unavailable-media-height: 460px;
   }
 }
 
@@ -2764,6 +2768,24 @@ input {
 
   .section-heading {
     gap: 1rem;
+  }
+
+  .cart-line {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .product-media-unavailable--cart {
+    --unavailable-media-height: 88px;
+    padding: 0.5rem;
+  }
+
+  .cart-line h2 {
+    font-size: 1.5rem;
+  }
+
+  .cart-summary {
+    padding: 1.5rem;
   }
 
   .manifesto {

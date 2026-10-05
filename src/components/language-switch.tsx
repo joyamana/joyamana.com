@@ -4,15 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import type { EnabledLocale as Locale } from "@/config/locales";
-import {
-  localePath,
-  languageOptionsFor,
-  stripLocalePrefix,
-} from "@/lib/i18n/locales";
+import { languageOptionsFor } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 
 import { localeRegistry } from "@/config/locales";
-import { commerceLanguageQueryFromSearch } from "@/lib/commerce/catalog-browse";
+import { languageHref } from "@/lib/i18n/language-href";
 
 function LanguageIcon() {
   return (
@@ -33,7 +29,6 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
   const panelId = useId();
   const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
-  const basePath = stripLocalePrefix(pathname);
   const options = languageOptionsFor(locale);
   const selectorLabel = uiText(locale, {
     zh: "選擇語言",
@@ -82,9 +77,7 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
         className="language-switch__trigger"
         type="button"
         onClick={() => {
-          setCommerceQuery(
-            commerceLanguageQueryFromSearch(basePath, window.location.search),
-          );
+          setCommerceQuery(window.location.search);
           setOpen((current) => !current);
         }}
       >
@@ -106,7 +99,7 @@ export function LanguageSwitch({ locale }: { locale: Locale }) {
             {options.map((item) => (
               <Link
                 aria-current={item.locale === locale ? "page" : undefined}
-                href={`${localePath(item.locale, basePath)}${commerceQuery ? `?${commerceQuery}` : ""}`}
+                href={languageHref(item.locale, pathname, commerceQuery)}
                 hrefLang={item.locale}
                 key={item.locale}
                 lang={item.locale}

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { brand } from "@/config/brand";
 import type { EnabledLocale as Locale } from "@/config/locales";
-import { localePath, languageOptionsFor } from "@/lib/i18n/locales";
+import { localePath } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 import { BrandLogo } from "./brand-logo";
+import { FooterLanguages } from "./footer-languages";
 
 export function SiteFooter({ locale }: { locale: Locale }) {
   const legalLabel = uiText(locale, {
@@ -111,21 +112,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
                 zh: "美國",
               })}
             </span>
-            <span className="footer-markets__languages">
-              {languageOptionsFor(locale).map((item, index) => (
-                <span key={item.locale}>
-                  {index > 0 ? " / " : ""}
-                  <Link
-                    href={localePath(item.locale)}
-                    hrefLang={item.locale}
-                    lang={item.locale}
-                    aria-current={item.locale === locale ? "true" : undefined}
-                  >
-                    {item.shortLabel}
-                  </Link>
-                </span>
-              ))}
-            </span>
+            <FooterLanguages locale={locale} />
           </p>
         </div>
       </div>
