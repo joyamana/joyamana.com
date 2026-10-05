@@ -909,7 +909,7 @@ h3 {
 
 .manifesto {
   padding-block: 5.5rem 6rem;
-  background: var(--paper);
+  background: var(--surface);
 }
 
 .manifesto__inner {
