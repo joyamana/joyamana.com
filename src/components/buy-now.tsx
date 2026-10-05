@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { uiText } from "@/lib/i18n/text";
+import type { CartActionFailure } from "@/lib/commerce/cart-types";
 import { useCart } from "./cart-provider";
 
 export function checkoutDisabledNote(locale: Locale) {
@@ -24,8 +25,8 @@ export function BuyNow({
   available: boolean;
   locale: Locale;
 }) {
-  const { buyNow, checkoutEnabled, clearError, error, status } = useCart();
-  const [failed, setFailed] = useState(false);
+  const { buyNow, checkoutEnabled, clearError, status } = useCart();
+  const [error, setError] = useState<CartActionFailure["error"] | null>(null);
   const noteId = useId();
   const errorId = useId();
   const busy = status !== "ready";
@@ -34,16 +35,16 @@ export function BuyNow({
     <div className="purchase-action">
       <button
         aria-busy={busy}
-        aria-describedby={`${noteId}${failed ? ` ${errorId}` : ""}`}
+        aria-describedby={`${noteId}${error ? ` ${errorId}` : ""}`}
         className="button button--secondary button--wide"
         type="button"
         disabled={!available || !checkoutEnabled || busy}
         onClick={async () => {
           clearError();
-          setFailed(false);
+          setError(null);
           const result = await buyNow(variantId, quantity);
           if (!result.ok) {
-            setFailed(true);
+            setError(result.error);
             return;
           }
           window.location.assign(result.checkoutUrl);
@@ -64,7 +65,7 @@ export function BuyNow({
             })
           : checkoutDisabledNote(locale)}
       </p>
-      {failed && error ? (
+      {error ? (
         <p className="action-error" id={errorId} role="alert">
           {error.message}
         </p>

@@ -59,6 +59,7 @@ it("keeps an empty editorial index readable and marks its real description langu
       },
     ],
     usedDefaultLanguage: true,
+    translationReady: false,
   });
   const recovered = renderToStaticMarkup(
     await EditorialIndexPage({ locale: "zh-Hant-US", kind: "blog" }),

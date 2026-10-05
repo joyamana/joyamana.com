@@ -38,7 +38,7 @@ export async function EditorialDetailPage({
           es: "Guía de cristales",
         });
   const path = `${basePath}/${entry.handle}`;
-  const structuredData = entry.usedDefaultLanguage
+  const structuredData = !entry.translationReady
     ? null
     : serializeIndexableStructuredData(
         buildEditorialStructuredData({

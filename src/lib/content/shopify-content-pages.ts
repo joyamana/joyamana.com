@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { visibleHtmlText } from "./shopify-html";
 import {
   shopifyContextForLocale,
   defaultLocaleForMarket,
@@ -111,9 +112,11 @@ export const getShopifyContentPage = cache(async function getShopifyContentPage(
   const defaultPage = defaultData
     ? parseContentPage(defaultData, handle)
     : requestedPage;
+  if (locale !== defaultLocale && !defaultPage) return null;
   const fallback = locale !== defaultLocale && defaultPage !== null;
   const usedDefaultLanguage = Boolean(
-    fallback && requestedPage.html === defaultPage.html,
+    fallback &&
+    visibleHtmlText(requestedPage.html) === visibleHtmlText(defaultPage.html),
   );
   const titleFallback = Boolean(
     fallback && requestedPage.title === defaultPage.title,
@@ -123,7 +126,14 @@ export const getShopifyContentPage = cache(async function getShopifyContentPage(
     ...requestedPage,
     contentLocale: usedDefaultLanguage ? defaultLocale : locale,
     titleLocale: titleFallback ? defaultLocale : locale,
-    translationReady: !usedDefaultLanguage && !titleFallback,
+    translationReady:
+      !usedDefaultLanguage &&
+      !titleFallback &&
+      !(
+        fallback &&
+        (requestedPage.seoTitle === defaultPage.seoTitle ||
+          requestedPage.seoDescription === defaultPage.seoDescription)
+      ),
     usedDefaultLanguage,
   };
 });

@@ -1,7 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { safeContentHref, sanitizeShopifyHtml } from "./shopify-html";
+import {
+  hasHtmlBody,
+  visibleHtmlText,
+  safeContentHref,
+  sanitizeShopifyHtml,
+} from "./shopify-html";
 
 describe("merchant HTML boundary", () => {
+  it("compares visible text across paragraph and line-break formatting", () => {
+    expect(visibleHtmlText("<p>Hello</p><p><strong>world</strong></p>")).toBe(
+      visibleHtmlText("<p>Hello<br>world</p>"),
+    );
+  });
+  it.each([
+    "Plain body.",
+    "<h2>Title</h2><p>Body</p>",
+    "<ul><li>Body</li></ul>",
+    "<table><tr><td>Body</td></tr></table>",
+  ])("accepts real body text: %s", (source) =>
+    expect(hasHtmlBody(sanitizeShopifyHtml(source))).toBe(true),
+  );
+  it.each([
+    "<h1>Title</h1>",
+    "<h2>Title</h2><h3>Subtitle</h3>",
+    "<p> </p><h1>Title</h1>",
+    "<script>Body</script>",
+  ])("rejects incomplete bodies: %s", (source) =>
+    expect(hasHtmlBody(sanitizeShopifyHtml(source))).toBe(false),
+  );
   it("handles named entities, double escaping and malformed Unicode without crashing", () => {
     expect(sanitizeShopifyHtml("<p>A &copy; B &ndash; C &amp;copy;</p>")).toBe(
       "<p>A © B – C &amp;copy;</p>",

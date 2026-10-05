@@ -49,10 +49,10 @@ interface CartContextValue {
   error: CartActionFailure["error"] | null;
   checkoutEnabled: boolean;
   refresh: () => Promise<boolean>;
-  addItem: (variantId: string, quantity?: number) => Promise<boolean>;
-  updateItem: (lineId: string, quantity: number) => Promise<boolean>;
-  removeItem: (lineId: string) => Promise<boolean>;
-  clear: () => Promise<boolean>;
+  addItem: (variantId: string, quantity?: number) => Promise<CartActionResult>;
+  updateItem: (lineId: string, quantity: number) => Promise<CartActionResult>;
+  removeItem: (lineId: string) => Promise<CartActionResult>;
+  clear: () => Promise<CartActionResult>;
   checkout: () => Promise<CheckoutActionResult>;
   buyNow: (
     variantId: string,
@@ -109,7 +109,7 @@ export function CartProvider({
   );
 
   const applyResult = useCallback(
-    (result: CartActionResult) => {
+    (result: CartActionResult): CartActionResult => {
       if (result.ok) {
         setCart(result.cart);
         setHasLoaded(true);
@@ -117,14 +117,15 @@ export function CartProvider({
           isBlockingInventoryWarning(warning.code),
         );
         if (stockWarning) {
-          setError({
-            code: "UNAVAILABLE",
+          const warningError = {
+            code: "UNAVAILABLE" as const,
             message: cartErrorMessage("UNAVAILABLE", language),
-          });
-          return false;
+          };
+          setError(warningError);
+          return { ok: false, error: warningError, cart: result.cart };
         }
         setError(null);
-        return true;
+        return result;
       }
 
       setError(result.error);
@@ -133,7 +134,7 @@ export function CartProvider({
         setCart(latest);
         setHasLoaded(true);
       }
-      return false;
+      return result;
     },
     [language],
   );
@@ -144,9 +145,9 @@ export function CartProvider({
         setStatus("loading");
         try {
           const result = await getCartAction(locale);
-          return applyResult(result);
+          return applyResult(result).ok;
         } catch {
-          return applyResult(connectionFailure);
+          return applyResult(connectionFailure).ok;
         } finally {
           setStatus("ready");
         }

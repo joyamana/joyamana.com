@@ -34,6 +34,7 @@ vi.mock("@/lib/content/shopify-editorial", () => ({
       tagsLocale: locale,
       contentLocale: locale,
       usedDefaultLanguage: false,
+      translationReady: true,
     }),
   ),
 }));

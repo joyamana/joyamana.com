@@ -21,7 +21,8 @@ export function CatalogGrid({
   query: CatalogQuery;
 }) {
   const copy = catalogCopy(locale);
-  const filtered = query.availableOnly || query.colors.length > 0;
+  const filtered =
+    query.availableOnly || query.colors.length > 0 || query.invalidColors;
   return entries.length ? (
     <div className="product-grid">
       {entries.map((entry) => (

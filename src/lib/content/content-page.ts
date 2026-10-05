@@ -1,4 +1,4 @@
-import { safeContentHref } from "./shopify-html";
+import { hasHtmlBody, safeContentHref } from "./shopify-html";
 
 export interface ContentPageField {
   key: string;
@@ -37,7 +37,7 @@ export function parseContentPageFields(fields: Map<string, ContentPageField>) {
   const excerpt = richTextExcerpt(richText);
   if (
     !title ||
-    !html ||
+    !hasHtmlBody(html) ||
     !excerpt ||
     !validContentDate(lastUpdated) ||
     !seoTitle

@@ -7,7 +7,8 @@ import { shopifyFetch } from "@/lib/commerce/shopify";
 import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
 import {
-  hasVisibleHtmlText,
+  hasHtmlBody,
+  visibleHtmlText,
   safeShopifyImageSource,
   sanitizeShopifyHtml,
 } from "./shopify-html";
@@ -95,12 +96,14 @@ export interface StorefrontEditorialArticle extends ParsedArticle {
   titleLocale: Locale;
   excerptLocale: Locale;
   tagsLocale: Locale;
+  translationReady: boolean;
   usedDefaultLanguage: boolean;
 }
 
 export interface StorefrontEditorialIndex extends Omit<ParsedBlog, "articles"> {
   descriptionLocale: Locale;
   articles: StorefrontEditorialArticle[];
+  translationReady: boolean;
   usedDefaultLanguage: boolean;
 }
 
@@ -189,13 +192,14 @@ function parseArticle(node: ShopifyArticleNode | null | undefined) {
     allowImages: true,
   });
   if (
-    !hasVisibleHtmlText(contentHtml) ||
+    !hasHtmlBody(contentHtml) ||
     !Number.isFinite(Date.parse(node.publishedAt))
   )
     return null;
 
   const excerpt =
-    normalizedText(node.excerpt) || excerptFromContent(node.content);
+    normalizedText(node.excerpt) ||
+    excerptFromContent(visibleHtmlText(contentHtml));
   if (!excerpt) return null;
 
   const author = normalizedText(node.authorV2?.name);
@@ -346,7 +350,10 @@ function usesDefaultLanguage(
   defaultLocale: Locale,
 ) {
   if (locale === defaultLocale || !defaultArticle) return false;
-  return requested.contentHtml === defaultArticle.contentHtml;
+  return (
+    visibleHtmlText(requested.contentHtml) ===
+    visibleHtmlText(defaultArticle.contentHtml)
+  );
 }
 
 function localizeArticle(
@@ -377,6 +384,16 @@ function localizeArticle(
       JSON.stringify(requested.tags) === JSON.stringify(defaultArticle?.tags)
         ? defaultLocale
         : locale,
+    translationReady:
+      locale === defaultLocale ||
+      Boolean(
+        defaultArticle &&
+        !usedDefaultLanguage &&
+        requested.title !== defaultArticle.title &&
+        requested.excerpt !== defaultArticle.excerpt &&
+        requested.seoTitle !== defaultArticle.seoTitle &&
+        requested.seoDescription !== defaultArticle.seoDescription,
+      ),
     usedDefaultLanguage,
   };
 }
@@ -392,6 +409,7 @@ export const getShopifyEditorialIndex = cache(
       locale === defaultLocale ? null : fetchBlog(kind, defaultLocale),
     ]);
     if (!requestedBlog) return null;
+    if (locale !== defaultLocale && !defaultBlog) return null;
     const canonicalBlog = defaultBlog ?? requestedBlog;
     const defaultArticles = new Map(
       canonicalBlog.articles.map((article) => [article.handle, article]),
@@ -418,6 +436,17 @@ export const getShopifyEditorialIndex = cache(
           ? defaultLocale
           : locale,
       articles,
+      translationReady:
+        articles.some((article) => article.translationReady) &&
+        (locale === defaultLocale ||
+          ((!canonicalBlog.seoTitle ||
+            requestedBlog.seoTitle !== canonicalBlog.seoTitle ||
+            requestedBlog.seoTitle === requestedBlog.title) &&
+            (!canonicalBlog.seoDescription ||
+              Boolean(
+                requestedBlog.seoDescription &&
+                requestedBlog.seoDescription !== canonicalBlog.seoDescription,
+              )))),
       usedDefaultLanguage,
     };
   },
@@ -456,11 +485,11 @@ export async function getPublishedShopifyEditorialPaths(
   if (!index) return [];
   const basePath = kind === "blog" ? "/blog" : "/crystals";
   const publishedArticles = index.articles.filter(
-    (article) => !article.usedDefaultLanguage,
+    (article) => article.translationReady,
   );
   if (!publishedArticles.length) return [];
   return [
-    basePath,
+    ...(index.translationReady ? [basePath] : []),
     ...publishedArticles.map((article) => `${basePath}/${article.handle}`),
   ];
 }

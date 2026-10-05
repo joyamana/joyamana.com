@@ -189,6 +189,26 @@ describe("catalog variant matching", () => {
 });
 
 describe("color list and URL contracts", () => {
+  it.each([Array(33).fill("red"), "x".repeat(101), " "])(
+    "rejects invalid colors without using a real color as an error marker",
+    (color) => {
+      const query = parseCatalogQuery({ color, sort: "price-asc" });
+      const item = product([
+        variant("11", { colors: ["invalid-color-filter"] }),
+      ]);
+      expect(query.invalidColors).toBe(true);
+      expect(query.colors).toEqual([]);
+      expect(browseCatalog([item], query).entries).toEqual([]);
+      expect(
+        browseCatalog([item], query).colors.map((facet) => facet.key),
+      ).toEqual(["invalid-color-filter"]);
+      const serialized = catalogQueryString(query);
+      expect(commerceLanguageQueryFromSearch("/shop", serialized)).toBe(
+        serialized,
+      );
+      expect(serialized).toBe("color=&sort=price-asc");
+    },
+  );
   it("parses only JSON text lists, trims and deduplicates without splitting comma-containing labels", () => {
     expect(
       parseVariantColors({

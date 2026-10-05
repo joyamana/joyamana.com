@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { visibleHtmlText } from "./shopify-html";
 import {
   shopifyContextForLocale,
   defaultLocaleForMarket,
@@ -152,8 +153,10 @@ function translationIncomplete(
   // summary, and SEO description must be independently translated before the
   // localized page is allowed into hreflang or the sitemap.
   return (
-    requested.html === defaultPage.html ||
+    visibleHtmlText(requested.html) === visibleHtmlText(defaultPage.html) ||
     requested.seoDescription === defaultPage.seoDescription ||
+    (requested.seoTitle === defaultPage.seoTitle &&
+      requested.seoTitle !== requested.title) ||
     Boolean(
       defaultPage.summary &&
       (!requested.summary || requested.summary === defaultPage.summary),
@@ -169,7 +172,8 @@ function localizePage(
 ): StorefrontAboutPage {
   const fallback = locale !== defaultLocale && defaultPage !== null;
   const usedDefaultLanguage = Boolean(
-    fallback && requested.html === defaultPage.html,
+    fallback &&
+    visibleHtmlText(requested.html) === visibleHtmlText(defaultPage.html),
   );
   const fieldLocale = (value: string, defaultValue: string | undefined) =>
     fallback && value === defaultValue ? defaultLocale : locale;

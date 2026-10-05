@@ -7,7 +7,7 @@ import type { Locale } from "@/lib/i18n/locales";
 import { marketIdForLocale } from "@/lib/i18n/locales";
 import { shopifyFetch } from "@/lib/commerce/shopify";
 import {
-  hasVisibleHtmlText,
+  hasHtmlBody,
   visibleHtmlText,
   sanitizeShopifyHtml,
 } from "./shopify-html";
@@ -113,7 +113,7 @@ export const getShopifyPolicies = cache(async function getShopifyPolicies(
       }
 
       const html = sanitizeShopifyPolicyHtml(requestedPolicy.body);
-      if (!hasVisibleHtmlText(html)) return [kind, null];
+      if (!hasHtmlBody(html)) return [kind, null];
 
       const defaultPolicy = defaultData
         ? selectedPolicy(defaultData, kind)

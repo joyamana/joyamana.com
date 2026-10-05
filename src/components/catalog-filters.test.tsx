@@ -6,6 +6,21 @@ import { CatalogFilters } from "./catalog-filters";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 describe("instant catalog filters", () => {
+  it("preserves invalid input through sorting and exposes a clear action without a fake color", () => {
+    const html = renderToStaticMarkup(
+      <CatalogFilters
+        path="/shop"
+        locale="en-US"
+        query={parseCatalogQuery({ color: "x".repeat(101) })}
+        colors={[]}
+        count={0}
+      />,
+    );
+    expect(html).not.toContain("invalid-color-filter");
+    expect(html).toContain('href="/shop?color=&amp;sort=price-asc"');
+    expect(html).toContain('class="catalog-text-action"');
+    expect(html).toContain('href="/shop"');
+  });
   it.each(["en-US", "zh-Hant-US"] as const)(
     "renders direct filter links and a removable stale color on %s",
     (locale) => {

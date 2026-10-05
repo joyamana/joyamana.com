@@ -29,10 +29,7 @@ export async function buildEditorialIndexMetadata({
   const { title, description } = editorialCopy(kind, locale);
   try {
     const index = await getShopifyEditorialIndex(kind, locale);
-    if (
-      index &&
-      index.articles.some((article) => !article.usedDefaultLanguage)
-    ) {
+    if (index?.translationReady) {
       return buildMetadata({
         title: index.seoTitle || title,
         description: index.seoDescription || description,
@@ -47,11 +44,7 @@ export async function buildEditorialIndexMetadata({
               kind,
               candidate,
             );
-            return Boolean(
-              candidateIndex?.articles.some(
-                (entry) => !entry.usedDefaultLanguage,
-              ),
-            );
+            return Boolean(candidateIndex?.translationReady);
           },
         ),
         searchParams,
@@ -77,7 +70,7 @@ export async function buildEditorialArticleMetadata({
   const { title, description } = editorialCopy(kind, locale);
   try {
     const article = await getShopifyEditorialArticle(kind, handle, locale);
-    if (article && !article.usedDefaultLanguage) {
+    if (article?.translationReady) {
       return buildMetadata({
         title: article.seoTitle,
         description: article.seoDescription,
@@ -93,9 +86,7 @@ export async function buildEditorialArticleMetadata({
               handle,
               candidate,
             );
-            return Boolean(
-              candidateArticle && !candidateArticle.usedDefaultLanguage,
-            );
+            return Boolean(candidateArticle?.translationReady);
           },
         ),
         searchParams,

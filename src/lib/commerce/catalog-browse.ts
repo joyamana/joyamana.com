@@ -10,6 +10,7 @@ export type CatalogSort = "default" | "price-asc" | "price-desc";
 export interface CatalogQuery {
   availableOnly: boolean;
   colors: string[];
+  invalidColors: boolean;
   sort: CatalogSort;
 }
 export interface CatalogCard {
@@ -55,18 +56,17 @@ export function parseVariantColors(
 export function parseCatalogQuery(params: PageSearchParams = {}): CatalogQuery {
   const rawColors = Array.isArray(params.color)
     ? params.color
-    : params.color
-      ? [params.color]
-      : [];
+    : params.color === undefined
+      ? []
+      : [params.color];
   // An oversized query fails closed instead of silently broadening a filter.
   const invalidColors =
     rawColors.length > 32 ||
     rawColors.some((value) => value.length > 100 || !colorKey(value));
   return {
     availableOnly: params.available === "1",
-    colors: invalidColors
-      ? ["invalid-color-filter"]
-      : [...new Set(rawColors.map(colorKey))].sort(),
+    colors: invalidColors ? [] : [...new Set(rawColors.map(colorKey))].sort(),
+    invalidColors,
     sort:
       params.sort === "price-asc" || params.sort === "price-desc"
         ? params.sort
@@ -77,6 +77,7 @@ export function parseCatalogQuery(params: PageSearchParams = {}): CatalogQuery {
 export function catalogQueryString(query: CatalogQuery) {
   const params = new URLSearchParams();
   if (query.availableOnly) params.set("available", "1");
+  if (query.invalidColors) params.append("color", "");
   for (const color of query.colors) params.append("color", color);
   if (query.sort !== "default") params.set("sort", query.sort);
   return params.toString();
@@ -104,6 +105,7 @@ export function selectCatalogVariant(
   product: CatalogProduct,
   query: CatalogQuery,
 ): ProductVariant | undefined {
+  if (query.invalidColors) return undefined;
   return product.variants
     .map((variant, index) => ({
       variant,

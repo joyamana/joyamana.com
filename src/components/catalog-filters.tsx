@@ -64,8 +64,16 @@ export function CatalogFilters({
   const colorsRef = useRef<HTMLDetailsElement>(null);
   const sortRef = useRef<HTMLDetailsElement>(null);
   const id = useId();
-  const hasFilters = selection.availableOnly || selection.colors.length > 0;
-  const withoutFilters = { ...selection, availableOnly: false, colors: [] };
+  const hasFilters =
+    selection.availableOnly ||
+    selection.colors.length > 0 ||
+    selection.invalidColors;
+  const withoutFilters = {
+    ...selection,
+    availableOnly: false,
+    colors: [],
+    invalidColors: false,
+  };
   const sorts = [
     { value: "default", label: copy.defaultSort, short: copy.defaultSortShort },
     { value: "price-asc", label: copy.priceAsc, short: copy.priceAscShort },
@@ -178,14 +186,22 @@ export function CatalogFilters({
             <div className="catalog-popover__panel" id={`${id}-colors`}>
               <div className="catalog-popover__heading">
                 <span>{copy.colors}</span>
-                {selection.colors.length ? (
+                {selection.colors.length || selection.invalidColors ? (
                   <Link
                     className="catalog-text-action"
                     scroll={false}
-                    href={catalogPath(path, { ...selection, colors: [] })}
+                    href={catalogPath(path, {
+                      ...selection,
+                      colors: [],
+                      invalidColors: false,
+                    })}
                     onClick={(event) => {
                       focusSummary(colorsRef.current);
-                      navigate(event, { ...selection, colors: [] });
+                      navigate(event, {
+                        ...selection,
+                        colors: [],
+                        invalidColors: false,
+                      });
                     }}
                   >
                     {copy.clearColors}
@@ -202,6 +218,7 @@ export function CatalogFilters({
                     const checked = selection.colors.includes(color.key);
                     const next = {
                       ...selection,
+                      invalidColors: false,
                       colors: checked
                         ? selection.colors.filter((key) => key !== color.key)
                         : [...selection.colors, color.key].sort(),

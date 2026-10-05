@@ -1,4 +1,5 @@
 "use client";
+import type { CartActionFailure } from "@/lib/commerce/cart-types";
 import { isEnabledLocale, localeRegistry } from "@/config/locales";
 
 import Image from "next/image";
@@ -32,7 +33,9 @@ export function CartView({ locale }: { locale: Locale }) {
     status,
     updateItem,
   } = useCart();
-  const [checkoutFailed, setCheckoutFailed] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<
+    CartActionFailure["error"] | null
+  >(null);
   const checkoutErrorId = useId();
   const busy = status !== "ready";
 
@@ -368,7 +371,7 @@ export function CartView({ locale }: { locale: Locale }) {
           })}
         </p>
         <button
-          aria-describedby={checkoutFailed ? checkoutErrorId : undefined}
+          aria-describedby={checkoutError ? checkoutErrorId : undefined}
           className="button button--primary button--wide"
           disabled={
             !checkoutEnabled ||
@@ -377,10 +380,10 @@ export function CartView({ locale }: { locale: Locale }) {
           }
           onClick={async () => {
             clearError();
-            setCheckoutFailed(false);
+            setCheckoutError(null);
             const result = await checkout();
             if (!result.ok) {
-              setCheckoutFailed(true);
+              setCheckoutError(result.error);
               return;
             }
             window.location.assign(result.checkoutUrl);
@@ -408,9 +411,9 @@ export function CartView({ locale }: { locale: Locale }) {
             })}
           </p>
         ) : null}
-        {checkoutFailed && error ? (
+        {checkoutError ? (
           <p className="action-error" id={checkoutErrorId} role="alert">
-            {error.message}
+            {checkoutError.message}
           </p>
         ) : null}
         <button

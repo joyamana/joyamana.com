@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { CartActionFailure } from "@/lib/commerce/cart-types";
 import { useCart } from "./cart-provider";
 
 export function AddToCart({
@@ -22,9 +23,16 @@ export function AddToCart({
   limitReachedLabel: string;
   addedLabel?: string;
 }) {
-  const { addItem, cart, clearError, error, status } = useCart();
+  const { addItem, cart, clearError, status } = useCart();
   const [added, setAdded] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [error, setError] = useState<CartActionFailure["error"] | null>(null);
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (addedTimer.current) clearTimeout(addedTimer.current);
+    },
+    [],
+  );
   const errorId = useId();
   const busy = status !== "ready";
   const quantityInBag = cart.lines
@@ -36,21 +44,22 @@ export function AddToCart({
     <div className="purchase-action">
       <button
         aria-busy={busy}
-        aria-describedby={failed ? errorId : undefined}
+        aria-describedby={error ? errorId : undefined}
         className="button button--primary button--wide"
         type="button"
         disabled={!canAdd || busy}
         onClick={async () => {
           clearError();
-          setFailed(false);
+          setError(null);
+          if (addedTimer.current) clearTimeout(addedTimer.current);
           setAdded(false);
-          const success = await addItem(variantId, quantity);
-          if (!success) {
-            setFailed(true);
+          const result = await addItem(variantId, quantity);
+          if (!result.ok) {
+            setError(result.error);
             return;
           }
           setAdded(true);
-          window.setTimeout(() => setAdded(false), 1600);
+          addedTimer.current = setTimeout(() => setAdded(false), 1600);
         }}
       >
         {!available
@@ -61,7 +70,7 @@ export function AddToCart({
               ? label
               : limitReachedLabel}
       </button>
-      {failed && error ? (
+      {error ? (
         <p className="action-error" id={errorId} role="alert">
           {error.message}
         </p>
