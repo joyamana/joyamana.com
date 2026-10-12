@@ -2,9 +2,9 @@ import { isEnabledLocale } from "@/config/locales";
 import { cache } from "react";
 import type { ShopifyCatalogNavigationSnapshot } from "./shopify-catalog-contract";
 import {
-  localizeProductCategory,
-  productCategoryDefinitionForHandle,
-  productCategoryDefinitions,
+  compareProductCategories,
+  isProductCategoryHandle,
+  resolveProductCategory,
 } from "@/config/catalog";
 import type { MarketId } from "@/config/markets";
 import type { Locale } from "@/lib/i18n/locales";
@@ -53,13 +53,13 @@ function catalogNavigationFromSnapshot(
   locale: Locale,
 ): CatalogNavigationData {
   return {
-    categories: productCategoryDefinitions.flatMap((definition) => {
-      if (!navigation.productCategoryIds.includes(definition.taxonomyId)) {
-        return [];
-      }
-      const { handle, title } = localizeProductCategory(definition, locale);
-      return [{ handle, title }];
-    }),
+    categories: navigation.productCategories
+      .flatMap((category) => {
+        const resolved = resolveProductCategory(category, locale);
+        return resolved ? [resolved] : [];
+      })
+      .sort(compareProductCategories)
+      .map(({ handle, title }) => ({ handle, title })),
     collections: navigation.collections
       .filter((collection) => collection.kind === "design_series")
       .map(({ handle, title }) => ({ handle, title })),
@@ -128,13 +128,16 @@ export const getBrowseProducts = cache(
 
 export const getBrowseCategory = cache(
   async (handle: string, marketId: MarketId, locale: Locale) => {
-    const definition = productCategoryDefinitionForHandle(handle);
-    if (!definition) return null;
+    if (marketId === "ca") return null;
+    assertEnabledUsLocale(locale);
+    if (!isProductCategoryHandle(handle)) return null;
     const { products, budget } = await getProductCatalogSnapshot(
       marketId,
       locale,
     );
-    const category = mapStorefrontCategory(definition, products, locale);
+    const category = productCategoriesForProducts(products, locale).find(
+      (candidate) => candidate.handle === handle,
+    );
     return category
       ? {
           ...category,
@@ -245,28 +248,20 @@ export const getDesignCollection = cache(async function getDesignCollection(
   return collection?.kind === "design_series" ? collection : null;
 });
 
-function mapStorefrontCategory(
-  definition: (typeof productCategoryDefinitions)[number],
-  products: ProductSummary[],
-  locale: Locale,
-): StorefrontProductCategory | null {
-  const categoryProducts = products.filter(
-    (product) => product.category?.id === definition.taxonomyId,
-  );
-  if (!categoryProducts.length) return null;
-
-  const localized = localizeProductCategory(definition, locale);
-  return { ...localized, products: categoryProducts };
-}
-
 export function productCategoriesForProducts(
   products: ProductSummary[],
   locale: Locale,
 ): StorefrontProductCategory[] {
-  return productCategoryDefinitions.flatMap((definition) => {
-    const category = mapStorefrontCategory(definition, products, locale);
-    return category ? [category] : [];
-  });
+  const categories = new Map<string, StorefrontProductCategory>();
+  for (const product of products) {
+    const resolved = resolveProductCategory(product.category, locale);
+    if (!resolved) continue;
+    const existing = categories.get(resolved.taxonomyId);
+    if (existing) existing.products.push(product);
+    else
+      categories.set(resolved.taxonomyId, { ...resolved, products: [product] });
+  }
+  return [...categories.values()].sort(compareProductCategories);
 }
 
 export const getProductCategory = cache(async function getProductCategory(
@@ -274,13 +269,15 @@ export const getProductCategory = cache(async function getProductCategory(
   marketId: MarketId = "us",
   locale: Locale = "en-US",
 ): Promise<StorefrontProductCategory | null> {
-  const definition = productCategoryDefinitionForHandle(handle);
-  if (!definition) return null;
+  if (marketId === "ca") return null;
+  assertEnabledUsLocale(locale);
+  if (!isProductCategoryHandle(handle)) return null;
 
-  return mapStorefrontCategory(
-    definition,
-    await getProducts(marketId, locale),
-    locale,
+  return (
+    productCategoriesForProducts(
+      await getProducts(marketId, locale),
+      locale,
+    ).find((category) => category.handle === handle) ?? null
   );
 });
 

@@ -49,6 +49,22 @@ beforeEach(() => {
 afterEach(() => vi.resetAllMocks());
 
 describe("product detail availability", () => {
+  it("links a newly discovered Shopify category in the initial product HTML", async () => {
+    catalog.getProduct.mockResolvedValue({
+      ...product,
+      category: {
+        id: "gid://shopify/TaxonomyCategory/rc-2",
+        name: "宗教物品",
+      },
+    });
+    const html = renderToStaticMarkup(
+      await ProductPage({ locale: "zh-Hant-US", handle: "bracelet" }),
+    );
+    expect(html).toContain('href="/zh-hant-us/category/taxonomy-rc-2"');
+    expect(html).toContain("宗教物品</a>");
+    expect(html).toContain("Purchase controls");
+  });
+
   it("keeps a valid product purchasable when recommendations fail", async () => {
     catalog.getProducts.mockRejectedValue(new Error("Catalog unavailable"));
     catalog.getProductRecommendations.mockRejectedValue(

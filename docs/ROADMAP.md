@@ -7,6 +7,7 @@
 
 | 工作 | 需要完成的内容 | 影响范围 |
 |---|---|---|
+| 商品类别 | 在 Shopify 为尚未设置 Category 的商品选择真实、最具体的 Standard Product Category，并核对两种公开语言名称 | 自动类别入口；未分类商品仍可浏览购买 |
 | 颜色与图片 | Shopify 填真实 Variant `custom.colors`，检查权限、默认语言标签、款式图片、排序和公开语言控件 | 真实颜色筛选与图片验收 |
 | 商品知识 | 建字段、填值、翻译并接入材料、尺寸/fit、care、可验证来源/处理、package contents、内容关联 | 商品透明度、PDP 与适用 Schema；不制造本地资料 |
 | 商品模型与披露 | 补全 `custom.product_model`，实现 exact item/representative image 披露 | 标准商品与独件的图片、履约说明；未知模型不阻止正常购买 |

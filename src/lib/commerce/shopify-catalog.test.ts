@@ -664,11 +664,28 @@ describe("Shopify catalog mapper and queries", () => {
         products: connection([
           {
             id: "gid://shopify/Product/1",
-            category: { id: "gid://shopify/TaxonomyCategory/aa-6-3" },
+            category: {
+              id: "gid://shopify/TaxonomyCategory/aa-6-3",
+              name: "Bracelets",
+            },
           },
           {
             id: "gid://shopify/Product/2",
-            category: { id: "gid://shopify/TaxonomyCategory/aa-6-3" },
+            category: {
+              id: "gid://shopify/TaxonomyCategory/aa-6-3",
+              name: "Bracelets",
+            },
+          },
+          {
+            id: "gid://shopify/Product/3",
+            category: {
+              id: "gid://shopify/TaxonomyCategory/rc-2",
+              name: "Religious Items",
+            },
+          },
+          {
+            id: "gid://shopify/Product/4",
+            category: null,
           },
         ]),
       })
@@ -694,7 +711,10 @@ describe("Shopify catalog mapper and queries", () => {
     await expect(
       getShopifyCatalogNavigation("en-US", fetchOptions),
     ).resolves.toEqual({
-      productCategoryIds: ["gid://shopify/TaxonomyCategory/aa-6-3"],
+      productCategories: [
+        { id: "gid://shopify/TaxonomyCategory/aa-6-3", name: "Bracelets" },
+        { id: "gid://shopify/TaxonomyCategory/rc-2", name: "Religious Items" },
+      ],
       collections: [
         {
           handle: "patron-saint",
@@ -704,7 +724,7 @@ describe("Shopify catalog mapper and queries", () => {
       ],
     });
 
-    expect(SHOPIFY_NAVIGATION_PRODUCTS_QUERY).toContain("category { id }");
+    expect(SHOPIFY_NAVIGATION_PRODUCTS_QUERY).toContain("category { id name }");
     expect(SHOPIFY_NAVIGATION_PRODUCTS_QUERY).not.toContain("priceRange");
     expect(SHOPIFY_NAVIGATION_PRODUCTS_QUERY).not.toContain("availableForSale");
     expect(SHOPIFY_NAVIGATION_COLLECTIONS_QUERY).not.toContain("description");

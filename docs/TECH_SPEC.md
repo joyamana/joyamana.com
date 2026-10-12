@@ -65,6 +65,10 @@ Cart 操作仍须在批准的测试环境验收。官方说明：
 | Header 导航 | 独立轻量查询，`revalidate: 300` |
 | sitemap | 动态汇总，沿用来源策略 |
 
+类别从完整当前目录的 Product.category ID/name 自动聚合；Header 轻量查询只增加
+taxonomy name，不读取价格、库存或 Variant。类别身份、URL、文案与排列规则由
+交易规格和内容与索引规格定义，所有消费者使用同一解析逻辑。
+
 商品与公开内容读取使用模块级 React `cache`，以字符串参数在一次服务器渲染内复用；
 跨请求缓存只由 fetch 管理，Cart 和 mutation 不接入 React cache。sitemap 属 Route Handler，
 不依赖渲染缓存。metadata 先判断索引/参数条件，再读取其他语言的内容，复用当前语言结果。

@@ -9,6 +9,7 @@ const shopifyCatalogMocks = vi.hoisted(() => ({
   getShopifyProduct: vi.fn(),
   getShopifyProductRecommendations: vi.fn(),
   getShopifyProducts: vi.fn(),
+  hydrateShopifyBrowseProducts: vi.fn(),
   searchShopifyProducts: vi.fn(),
 }));
 
@@ -19,6 +20,7 @@ vi.mock("./shopify-catalog", async (importOriginal) => ({
 
 import {
   getCatalogNavigationData,
+  getBrowseCategory,
   getCollection,
   getCollections,
   getDesignCollection,
@@ -27,6 +29,7 @@ import {
   getProductRecommendations,
   getProductCategory,
   getProducts,
+  productCategoriesForProducts,
   searchCatalog,
 } from "./catalog";
 
@@ -57,6 +60,16 @@ const designCollection: Collection = {
   description: "A design series.",
   image: null,
   kind: "design_series",
+};
+
+const religiousProduct: Product = {
+  ...product,
+  id: "gid://shopify/Product/2",
+  handle: "guardian-figure",
+  category: {
+    id: "gid://shopify/TaxonomyCategory/rc-2",
+    name: "Religious Items",
+  },
 };
 
 const merchandisingCollection: Collection = {
@@ -95,7 +108,13 @@ describe("Shopify catalog facade", () => {
 
   it("uses only the public navigation fetch cache and returns link fields", async () => {
     shopifyCatalogMocks.getShopifyCatalogNavigation.mockResolvedValue({
-      productCategoryIds: ["gid://shopify/TaxonomyCategory/aa-6-3"],
+      productCategories: [
+        { id: "gid://shopify/TaxonomyCategory/rc-2", name: "宗教物品" },
+        { id: "gid://shopify/TaxonomyCategory/aa-6-3", name: "手鏈" },
+        { id: "gid://shopify/TaxonomyCategory/rc-3", name: "另一類別" },
+        { id: "gid://shopify/Product/not-taxonomy", name: "Invalid" },
+        { id: "gid://shopify/TaxonomyCategory/rc-4", name: " " },
+      ],
       collections: [
         {
           handle: "patron-saint",
@@ -107,7 +126,11 @@ describe("Shopify catalog facade", () => {
     });
     await expect(getCatalogNavigationData("us", "zh-Hant-US")).resolves.toEqual(
       {
-        categories: [{ handle: "bracelets", title: "手鏈" }],
+        categories: [
+          { handle: "bracelets", title: "手鏈" },
+          { handle: "taxonomy-rc-2", title: "宗教物品" },
+          { handle: "taxonomy-rc-3", title: "另一類別" },
+        ],
         collections: [{ handle: "patron-saint", title: "Patron Saint" }],
       },
     );
@@ -119,6 +142,155 @@ describe("Shopify catalog facade", () => {
       revalidate: 300,
       tags: ["shopify-catalog-navigation"],
     });
+  });
+
+  it("discovers new categories and keeps sold-out published products without inventing categories", () => {
+    const soldOut = {
+      ...religiousProduct,
+      id: "gid://shopify/Product/3",
+      availableForSale: false,
+    };
+    const gemstones = {
+      ...product,
+      id: "gid://shopify/Product/4",
+      category: {
+        id: "gid://shopify/TaxonomyCategory/ae-2-2-6-2",
+        name: "Gemstones",
+      },
+    };
+    const otherCategory = {
+      ...product,
+      id: "gid://shopify/Product/5",
+      category: {
+        id: "gid://shopify/TaxonomyCategory/rc-3",
+        name: "Religious Items",
+      },
+    };
+    const uncategorized = {
+      ...product,
+      id: "gid://shopify/Product/6",
+      category: null,
+    };
+    const categories = productCategoriesForProducts(
+      [
+        otherCategory,
+        religiousProduct,
+        soldOut,
+        uncategorized,
+        gemstones,
+        product,
+      ],
+      "en-US",
+    );
+    expect(categories.map(({ handle }) => handle)).toEqual([
+      "bracelets",
+      "gemstones",
+      "taxonomy-rc-2",
+      "taxonomy-rc-3",
+    ]);
+    expect(categories[2].products).toEqual([religiousProduct, soldOut]);
+    expect(categories[3].products).toEqual([otherCategory]);
+    expect(productCategoriesForProducts([uncategorized], "en-US")).toEqual([]);
+  });
+
+  it("resolves new category pages in both languages and removes empty categories", async () => {
+    shopifyCatalogMocks.getShopifyProducts.mockImplementation(
+      async (locale) => [
+        {
+          ...religiousProduct,
+          category: {
+            ...religiousProduct.category,
+            name: locale === "zh-Hant-US" ? "宗教物品" : "Religious Items",
+          },
+        },
+      ],
+    );
+    await expect(
+      getProductCategory("taxonomy-rc-2", "us", "en-US"),
+    ).resolves.toMatchObject({
+      handle: "taxonomy-rc-2",
+      title: "Religious Items",
+      products: [expect.objectContaining({ id: religiousProduct.id })],
+    });
+    await expect(
+      getProductCategory("taxonomy-rc-2", "us", "zh-Hant-US"),
+    ).resolves.toMatchObject({
+      handle: "taxonomy-rc-2",
+      title: "宗教物品",
+    });
+    shopifyCatalogMocks.getShopifyProducts.mockResolvedValue([]);
+    await expect(
+      getProductCategory("taxonomy-rc-2", "us", "en-US"),
+    ).resolves.toBeNull();
+    await expect(
+      getBrowseCategory("taxonomy-rc-2", "us", "en-US"),
+    ).resolves.toBeNull();
+    expect(
+      shopifyCatalogMocks.hydrateShopifyBrowseProducts,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("hydrates only members of a new browse category with the shared catalog budget", async () => {
+    shopifyCatalogMocks.getShopifyProducts.mockResolvedValue([
+      product,
+      religiousProduct,
+    ]);
+    shopifyCatalogMocks.hydrateShopifyBrowseProducts.mockResolvedValue([
+      religiousProduct,
+    ]);
+    await expect(
+      getBrowseCategory("taxonomy-rc-2", "us", "en-US"),
+    ).resolves.toMatchObject({
+      handle: "taxonomy-rc-2",
+      products: [religiousProduct],
+    });
+    expect(
+      shopifyCatalogMocks.hydrateShopifyBrowseProducts,
+    ).toHaveBeenCalledWith(
+      [religiousProduct],
+      "en-US",
+      expect.objectContaining({ read: expect.any(Function) }),
+    );
+    expect(shopifyCatalogMocks.getShopifyProducts).toHaveBeenCalledWith(
+      "en-US",
+      { cache: "no-store" },
+      expect.objectContaining({ read: expect.any(Function) }),
+    );
+  });
+
+  it("rejects malformed category handles and established URL aliases before querying Shopify", async () => {
+    for (const handle of [
+      "religious-items",
+      "taxonomy-aa-6-3",
+      "taxonomy-rc-2/other",
+    ]) {
+      await expect(
+        getProductCategory(handle, "us", "en-US"),
+      ).resolves.toBeNull();
+      await expect(
+        getBrowseCategory(handle, "us", "en-US"),
+      ).resolves.toBeNull();
+    }
+    expect(shopifyCatalogMocks.getShopifyProducts).not.toHaveBeenCalled();
+    expect(
+      shopifyCatalogMocks.hydrateShopifyBrowseProducts,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("keeps new categories unavailable in planned markets and paused languages", async () => {
+    await expect(
+      getProductCategory("taxonomy-rc-2", "ca", "en-CA"),
+    ).resolves.toBeNull();
+    await expect(
+      getBrowseCategory("taxonomy-rc-2", "ca", "fr-CA"),
+    ).resolves.toBeNull();
+    await expect(
+      getProductCategory("taxonomy-rc-2", "us", "es-US"),
+    ).rejects.toMatchObject({ kind: "configuration" });
+    await expect(
+      getBrowseCategory("taxonomy-rc-2", "us", "es-US"),
+    ).rejects.toMatchObject({ kind: "configuration" });
+    expect(shopifyCatalogMocks.getShopifyProducts).not.toHaveBeenCalled();
   });
 
   it("exposes only Shopify collections marked as design series", async () => {

@@ -50,6 +50,7 @@ import {
   type ShopifyNavigationProductsData,
   type ShopifyNavigationCollectionsData,
   type ShopifyCatalogNavigationSnapshot,
+  type ShopifyTaxonomyCategory,
 } from "./shopify-catalog-contract";
 
 export function createCatalogReadBudget() {
@@ -524,14 +525,19 @@ export async function getShopifyCatalogNavigation(
     ),
   ]);
 
+  const productCategories = new Map<string, ShopifyTaxonomyCategory>();
+  for (const { category } of products) {
+    if (
+      category?.id &&
+      optionalText(category.name) &&
+      !productCategories.has(category.id)
+    ) {
+      productCategories.set(category.id, category);
+    }
+  }
+
   return {
-    productCategoryIds: [
-      ...new Set(
-        products.flatMap((product) =>
-          product.category?.id ? [product.category.id] : [],
-        ),
-      ),
-    ],
+    productCategories: [...productCategories.values()],
     collections: collections.flatMap((collection) => {
       const handle = optionalText(collection.handle);
       const title = optionalText(collection.title);

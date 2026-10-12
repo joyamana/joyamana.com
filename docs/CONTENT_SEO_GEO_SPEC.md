@@ -92,6 +92,13 @@ URL 小写短横线、无尾斜杠、不含 Currency，不强制 IP 跳转。`/`
 未来市场不生成入口或路径。英语/繁中的 `/collections/bracelets|rings|necklaces|earrings`
 永久跳到对应 `/category/*`。
 
+Category 自动发现范围见交易规格。既有 `/category/bracelets|rings|necklaces|earrings|gemstones`
+保持原地址；新增类别使用 `/category/taxonomy-{taxonomy ID token}`，例如真实 ID `rc-2`
+对应 `/category/taxonomy-rc-2`。两种语言共用 handle，不从名称或译文生成 URL，Shopify
+名称调整不改变地址。已有 override 的 taxonomy 不再提供 `taxonomy-*` 别名；只有当前
+Catalog 中非空类别才公开，沿用 Commerce 的部署、参数、canonical 和 sitemap 条件。
+新增 override 或改变已公开 handle 前仍须确定等价迁移。
+
 暂停西语的 `/es-us` 及全部子路径返回完整 404 文档，HTML 与 `X-Robots-Tag` 均 noindex，
 `Cache-Control: no-store`，提供英语恢复链接。没有西语类别跳转、canonical、hreflang 或
 Schema，不用 robots 禁抓阻止搜索引擎看到状态。未来恢复须重新批准并验收路由和译文。

@@ -25,9 +25,16 @@ GTIN/MPN 仅填真实值。前端暂不保留 vendor、Product Type/tags、Varia
 
 ## 类别与设计系列
 
-`/shop` 为全商品，`/category/{handle}` 按 Shopify Standard Product Category 的 taxonomy ID
-allowlist 分类，`/collections/{handle}` 为原创设计系列；不按 tag、标题或 Product Type 猜测。
-公开类别须非空，旧类别地址迁移见内容与索引规格。
+`/shop` 为全商品，`/category/{handle}` 自动聚合当前 US Catalog 可见商品的 Shopify Standard
+Product Category，按真实 taxonomy ID 精确分类；`/collections/{handle}` 为原创设计系列。
+不按 tag、标题或 Product Type 猜测，不把子类别合并进父类别。无 Category 的商品继续在
+Shop/PDP 可见，不造类别；售罄但仍发布的商品保留类别，最后一件可见商品移除后入口消失、
+类别页返回 404。Header、Shop、PDP、metadata、Schema 和 sitemap 共用类别解析。
+
+既有类别配置只作稳定 URL/已审文案 override，不再限制新类别。新增类别名称直接使用
+Shopify 当前请求语言的 taxonomy name，缺译允许 Shopify 英语回退；简介仅说明此类别的
+已发布商品，不推断材质、功效或运营承诺。既有类别先按配置顺序排列，新类别按稳定
+taxonomy ID 排列。URL 与旧类别迁移规则见内容与索引规格，读取与缓存见技术规格。
 
 系列须 Headless 可见、非空且 `custom.collection_kind=design_series`。
 Collection 管理 URL/SEO/成员；Product reference 和 Design Series Metaobject 用于后续归集、

@@ -38,7 +38,8 @@ Policies 保持真实获批正文；翻译不改变业务事实、价格、库�
 
 ## 商品类别与字段
 
-Product 使用最具体的 Shopify Standard Product Category；公开 taxonomy allowlist 见
+Product 使用最具体的 Shopify Standard Product Category。当前 Catalog 可见商品的非空类别
+自动生成入口，不需要逐次改代码或另建 Collection。已有稳定 URL/已审文案 override 见
 [catalog.ts](../src/config/catalog.ts)：
 
 | 类别 | 路径 |
@@ -50,7 +51,11 @@ Product 使用最具体的 Shopify Standard Product Category；公开 taxonomy a
 | Rocks & Fossils / Gemstones | `/category/gemstones` |
 
 Palm Stone/Sphere/Guardian Figure 仅在真实 taxonomy 匹配时归入 Gemstones，不用 Type/tag
-代替。至少一件当前 Catalog 可见商品匹配才显示入口。
+代替。自动归类与售罄/未分类处理见[交易规格](COMMERCE_SPEC.md#类别与设计系列)，
+新类别的稳定 URL 见[内容与索引](CONTENT_SEO_GEO_SPEC.md#链接与下架)。
+后台为商品填入真实 Category 并发布至 US Catalog/Headless 后，Shop 和类别页下次读取
+即反映变化，Header 沿用五分钟再验证；上游故障可能保留旧菜单，不承诺精确更新时间。
+核对真实英语和香港繁中 taxonomy 名称；前台不会按商品标题猜测或自行写入后台类别。
 
 | Owner | Key | 类型与值 | 前台状态 |
 |---|---|---|---|

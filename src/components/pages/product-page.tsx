@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  localizeProductCategory,
-  productCategoryDefinitionForTaxonomyId,
-} from "@/config/catalog";
+import { resolveProductCategory } from "@/config/catalog";
 import {
   getProduct,
   getProductRecommendations,
@@ -57,12 +54,7 @@ export async function ProductPage({
     en: "Shop",
     es: "Comprar",
   });
-  const categoryDefinition = product.category
-    ? productCategoryDefinitionForTaxonomyId(product.category.id)
-    : undefined;
-  const category = categoryDefinition
-    ? localizeProductCategory(categoryDefinition, locale)
-    : null;
+  const category = resolveProductCategory(product.category, locale);
   const breadcrumbs: StructuredBreadcrumb[] = [
     { name: homeLabel, path: "/" },
     { name: shopLabel, path: "/shop" },

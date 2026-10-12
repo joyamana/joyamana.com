@@ -1,5 +1,6 @@
 import { isEnabledLocale, type TranslatedLocale } from "./locales";
 import type { Locale } from "@/lib/i18n/locales";
+import type { ProductCategory } from "@/lib/commerce/types";
 
 export interface ProductCategoryDefinition {
   handle: string;
@@ -8,10 +9,16 @@ export interface ProductCategoryDefinition {
   description: Record<TranslatedLocale, string>;
 }
 
+export interface ResolvedProductCategory {
+  handle: string;
+  taxonomyId: string;
+  title: string;
+  description: string;
+}
+
 /**
- * Public category routes are an intentionally small merchandising allowlist.
- * Shopify's stable taxonomy ID remains the source used to assign products;
- * these records only map that identity to a storefront URL and approved copy.
+ * Preserve established category URLs and approved copy. Other Shopify taxonomy
+ * categories use their stable identity for the URL and their real display name.
  */
 export const productCategoryDefinitions = [
   {
@@ -93,4 +100,69 @@ export function productCategoryDefinitionForTaxonomyId(taxonomyId: string) {
   return productCategoryDefinitions.find(
     (definition) => definition.taxonomyId === taxonomyId,
   );
+}
+
+const taxonomyIdPattern =
+  /^gid:\/\/shopify\/TaxonomyCategory\/([a-z]{2}(?:-\d+)*)$/;
+const taxonomyHandlePattern = /^taxonomy-([a-z]{2}(?:-\d+)*)$/;
+
+export function resolveProductCategory(
+  category: ProductCategory | null,
+  locale: Locale,
+): ResolvedProductCategory | null {
+  if (
+    !category ||
+    typeof category.id !== "string" ||
+    typeof category.name !== "string"
+  )
+    return null;
+  const match = taxonomyIdPattern.exec(category.id);
+  const token = match?.[0] === category.id ? match[1] : undefined;
+  const title = category.name.trim();
+  if (!token || !title) return null;
+
+  const definition = productCategoryDefinitionForTaxonomyId(category.id);
+  if (definition) return localizeProductCategory(definition, locale);
+
+  return {
+    handle: `taxonomy-${token}`,
+    taxonomyId: category.id,
+    title,
+    description:
+      locale === "zh-Hant-US"
+        ? "探索 Joya Mana 在此類別已發佈的商品。"
+        : "Explore published products in this category from Joya Mana.",
+  };
+}
+
+/** Reject malformed routes and aliases before reading the upstream catalog. */
+export function isProductCategoryHandle(handle: string) {
+  if (productCategoryDefinitionForHandle(handle)) return true;
+  const match = taxonomyHandlePattern.exec(handle);
+  const token = match?.[0] === handle ? match[1] : undefined;
+  return Boolean(
+    token &&
+    !productCategoryDefinitionForTaxonomyId(
+      `gid://shopify/TaxonomyCategory/${token}`,
+    ),
+  );
+}
+
+export function compareProductCategories(
+  left: Pick<ResolvedProductCategory, "taxonomyId">,
+  right: Pick<ResolvedProductCategory, "taxonomyId">,
+) {
+  const position = (taxonomyId: string) => {
+    const index = productCategoryDefinitions.findIndex(
+      (definition) => definition.taxonomyId === taxonomyId,
+    );
+    return index < 0 ? productCategoryDefinitions.length : index;
+  };
+  const difference = position(left.taxonomyId) - position(right.taxonomyId);
+  if (difference) return difference;
+  return left.taxonomyId < right.taxonomyId
+    ? -1
+    : left.taxonomyId > right.taxonomyId
+      ? 1
+      : 0;
 }

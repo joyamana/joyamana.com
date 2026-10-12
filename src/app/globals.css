@@ -1386,7 +1386,7 @@ h3 {
 
 .catalog-tools {
   position: sticky;
-  z-index: 20;
+  z-index: 10;
   top: 0;
   padding: 0.8rem var(--page);
   border-bottom: 1px solid var(--line);

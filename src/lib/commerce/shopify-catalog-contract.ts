@@ -139,7 +139,7 @@ export interface ShopifySearchData {
 
 export interface ShopifyNavigationProductNode {
   id: string;
-  category: { id: string } | null;
+  category: ShopifyTaxonomyCategory | null;
 }
 
 export interface ShopifyNavigationCollectionNode {
@@ -159,7 +159,7 @@ export interface ShopifyNavigationCollectionsData {
 }
 
 export interface ShopifyCatalogNavigationSnapshot {
-  productCategoryIds: string[];
+  productCategories: ShopifyTaxonomyCategory[];
   collections: Array<{
     handle: string;
     title: string;
@@ -470,7 +470,7 @@ export const SHOPIFY_NAVIGATION_PRODUCTS_QUERY = `#graphql
     products(first: $first, after: $after) {
       nodes {
         id
-        category { id }
+        category { id name }
       }
       pageInfo {
         hasNextPage
