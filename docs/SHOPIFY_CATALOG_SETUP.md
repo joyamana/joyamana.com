@@ -85,13 +85,16 @@ Patron Saint、Mineral Specimen 及其他 Collection 统一在 `/collections` �
 
 1. Products → 选择商品 → Media：上传真实商品视频，等待 Shopify 处理完成。
 2. 设置清晰封面和有意义的替代文字，排列图片/视频顺序；PDP 优先显示当前选款图片。
-3. 本站播放 Shopify 托管 MP4 来源；后台上传格式由 Shopify 处理。不支持本站播放 YouTube、
-   Vimeo 或 3D 媒体，也不把描述 HTML 中的 iframe 当作商品视频。
+3. 本站优先播放 Shopify 返回的 MP4；无 MP4 时尝试实际返回的 MOV，兼容性取决于浏览器和编码。
+   支持范围见 [技术规格](TECH_SPEC.md#shopify-请求)；不支持 YouTube、Vimeo 或 3D 媒体，
+   也不把描述 HTML 中的 iframe 当作商品视频。
 4. 视频绑定 Product，Variant 继续使用图片。含讲解或重要信息的视频在商品正文提供文字说明。
 5. 核对英语/繁中、手机播放/全屏、横竖画面、切图/切款停止播放和播放失败提示。
 
 上传要求以 [Shopify 产品媒体](https://help.shopify.com/en/manual/products/product-media/product-media-types)
-为准。不要将仅上传到 Files、尚未关联 Product Media 的文件视为已经出现在 PDP。
+为准。后台显示原始 MOV 不代表 Storefront 缺少 MP4；排查时核对 Product Media 关联、
+处理状态与实际 `Video.sources`，不根据后台播放器地址推断店面播放源。
+不要将仅上传到 Files、尚未关联 Product Media 的文件视为已经出现在 PDP。
 
 ## About 与 Accessibility
 

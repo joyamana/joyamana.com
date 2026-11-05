@@ -149,6 +149,23 @@ describe("PDP initial media", () => {
 });
 
 describe("native product video source", () => {
+  const mov = {
+    ...videoSource(1920, 1080),
+    url: "https://cdn.shopify.com/videos/c/o/v/stone.mov",
+    mimeType: "video/quicktime",
+    format: "mov",
+  };
+
+  it("uses a real MOV source when Shopify has no MP4 rendition", () => {
+    expect(getProductVideoSource([mov])).toEqual(mov);
+  });
+
+  it("prefers an MP4 rendition over a larger MOV regardless of input order", () => {
+    const mp4 = videoSource(1280, 720);
+    expect(getProductVideoSource([mov, mp4])).toEqual(mp4);
+    expect(getProductVideoSource([mp4, mov])).toEqual(mp4);
+  });
+
   it("chooses the largest MP4 under the long-edge cap regardless of input order", () => {
     const small = videoSource(640, 360);
     const medium = videoSource(1280, 720);
@@ -179,9 +196,12 @@ describe("native product video source", () => {
       format: "m3u8",
     };
     const missingUrl = { ...videoSource(1280, 720), url: "" };
+    const mismatchedFormat = { ...mov, mimeType: "video/mp4" };
     const mp4 = videoSource(640, 360);
     expect(getProductVideoSource([hls, missingUrl, mp4])).toEqual(mp4);
-    expect(getProductVideoSource([hls, missingUrl])).toBeUndefined();
+    expect(
+      getProductVideoSource([hls, missingUrl, mismatchedFormat]),
+    ).toBeUndefined();
     expect(getProductVideoSource([])).toBeUndefined();
   });
 });

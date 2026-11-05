@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Product, ProductImage, ProductMedia } from "@/lib/commerce/types";
 import type { EnabledLocale } from "@/config/locales";
 import { ProductGallery } from "./product-gallery";
+import { mapProductMedia } from "@/lib/commerce/shopify-catalog-mappers";
 
 const image: ProductImage = {
   url: "https://cdn.shopify.com/s/files/1/product.jpg",
@@ -161,13 +162,74 @@ describe("PDP mixed media gallery server markup", () => {
     expect(html).toContain('preload="none"');
     expect(html).toContain(`poster="${video.previewImage!.url}"`);
     expect(html).toContain('aria-label="Crystal specimen in motion"');
-    expect(html).toContain(
-      `<source src="${video.sources[0].url}" type="video/mp4"`,
+    expect(html).toMatch(
+      new RegExp(`<video[^>]+src="${video.sources[0].url}"`),
     );
     expect(html).not.toMatch(/\bautoPlay\b|\bloop\b|\bmuted\b/i);
     expect(html).not.toContain("product-gallery__video-hint");
     expect(html).not.toContain("product-gallery__thumbs");
   });
+
+  it("loads an actual MOV URL without a source MIME hint that could skip it", () => {
+    const mov = {
+      ...video.sources[0],
+      url: "https://cdn.shopify.com/videos/c/o/v/stone.mov",
+      mimeType: "video/quicktime",
+      format: "mov",
+    };
+    const html = renderGallery({
+      ...product,
+      media: [{ ...video, sources: [mov] }],
+    });
+    expect(html).toMatch(new RegExp(`<video[^>]+src="${mov.url}"`));
+    expect(html).not.toContain("<source");
+    expect(html).not.toContain('type="video/mp4"');
+    expect(html).toContain('preload="none"');
+  });
+
+  it.each(["mov", "pending"])(
+    "keeps the second video beside all five photos when its source is %s",
+    (state) => {
+      const photos = Array.from({ length: 5 }, (_, index) => ({
+        id: `photo-${index}`,
+        kind: "image" as const,
+        image: {
+          ...image,
+          url: `https://cdn.shopify.com/s/files/1/photo-${index}.jpg`,
+        },
+      }));
+      const mapped = mapProductMedia(
+        {
+          __typename: "Video",
+          id: video.id,
+          alt: video.altText,
+          previewImage: video.previewImage,
+          sources:
+            state === "pending"
+              ? []
+              : [
+                  {
+                    ...video.sources[0],
+                    url: "https://cdn.shopify.com/videos/c/o/v/b3d89c8a87b64f70a1c98516bbd09b52.mov",
+                    mimeType: "video/quicktime",
+                    format: "mov",
+                  },
+                ],
+        },
+        product.title,
+      );
+      expect(mapped).not.toBeNull();
+      const html = renderGallery({
+        ...product,
+        media: [photos[0], mapped!, ...photos.slice(1)],
+      });
+      expect(html.match(/<button\b/g)).toHaveLength(6);
+      expect(html).toContain('aria-label="View video 2"');
+      expect(html).toContain('aria-label="View image 6"');
+      expect(html).not.toContain("<video");
+      expect(html).not.toContain("b3d89c8a87b64f70a1c98516bbd09b52.mov");
+    },
+  );
 
   it("keeps a video without a poster playable and describes how to start playback", () => {
     const html = renderGallery({

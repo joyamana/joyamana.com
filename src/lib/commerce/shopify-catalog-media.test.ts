@@ -13,6 +13,13 @@ const source: ShopifyVideoSource = {
   height: 1080,
 };
 
+const movSource: ShopifyVideoSource = {
+  ...source,
+  url: "https://cdn.shopify.com/videos/c/o/v/b3d89c8a87b64f70a1c98516bbd09b52.mov",
+  mimeType: "video/quicktime",
+  format: "mov",
+};
+
 function video(): Extract<ShopifyMediaNode, { __typename: "Video" }> {
   return {
     id: "gid://shopify/Video/1",
@@ -62,6 +69,46 @@ describe("Shopify hosted product media", () => {
     expect(
       mapProductMedia({ ...video(), alt: " ", previewImage: null }, "Quartz"),
     ).toMatchObject({ kind: "video", altText: "Quartz", previewImage: null });
+  });
+
+  it("retains a Shopify MOV source without inventing an MP4 URL", () => {
+    expect(
+      mapProductMedia({ ...video(), sources: [movSource] }, "Quartz"),
+    ).toMatchObject({ kind: "video", sources: [movSource] });
+  });
+
+  it("accepts Shopify's video CDN and normalizes MIME parameters", () => {
+    const rendition = {
+      ...source,
+      url: "https://videos.shopifycdn.com/c/vp/stone/SD-360p.mp4?Expires=123",
+    };
+    expect(
+      mapProductMedia(
+        {
+          ...video(),
+          sources: [
+            {
+              ...rendition,
+              mimeType: ' VIDEO/MP4; codecs="avc1.640028" ',
+              format: "MP4",
+            },
+            { ...movSource, mimeType: "VIDEO/QUICKTIME", format: "MOV" },
+          ],
+        },
+        "Quartz",
+      ),
+    ).toMatchObject({ sources: [rendition, movSource] });
+  });
+
+  it("keeps a video and its poster when its sources are not ready", () => {
+    expect(
+      mapProductMedia({ ...video(), sources: [] }, "Quartz"),
+    ).toMatchObject({
+      id: video().id,
+      kind: "video",
+      previewImage: { url: video().previewImage!.url },
+      sources: [],
+    });
   });
 
   it("drops unsafe or invalid posters without dropping an otherwise playable video", () => {
@@ -114,6 +161,8 @@ describe("Shopify hosted product media", () => {
   it.each([
     { url: "http://cdn.shopify.com/videos/c/vp/stone.mp4" },
     { url: "https://cdn.shopify.com.evil.example/videos/c/vp/stone.mp4" },
+    { url: "https://videos.shopifycdn.com.evil.example/c/vp/stone.mp4" },
+    { url: "https://videos.shopifycdn.com/not-video/stone.mp4" },
     { url: "https://elsewhere.example/stone.mp4" },
     { url: "https://cdn.shopify.com@elsewhere.example/videos/stone.mp4" },
     { url: "https://user:password@cdn.shopify.com/videos/c/vp/stone.mp4" },
@@ -125,23 +174,24 @@ describe("Shopify hosted product media", () => {
     { url: "not a URL" },
     { url: "" },
     { mimeType: "text/html" },
+    { mimeType: "video/quicktime" },
+    { format: "mov" },
     { format: "m3u8" },
     { width: 0 },
     { height: -1 },
     { width: 1.5 },
     { height: Number.NaN },
-  ])("skips a video without any safe playable source: %j", (invalid) => {
+  ])("removes an invalid source without hiding its video: %j", (invalid) => {
     expect(
       mapProductMedia(
         { ...video(), sources: [{ ...source, ...invalid }] },
         "Quartz",
       ),
-    ).toBeNull();
+    ).toMatchObject({ kind: "video", sources: [] });
   });
 
-  it("skips unsupported and processing media while leaving other media usable", () => {
+  it("skips unsupported or malformed media while leaving other media usable", () => {
     for (const media of [
-      { ...video(), sources: [] },
       { ...video(), id: " " },
       { ...video(), __typename: "ExternalVideo" as const },
       { ...video(), __typename: "Model3d" as const },
