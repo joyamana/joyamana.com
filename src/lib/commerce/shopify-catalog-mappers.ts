@@ -83,13 +83,18 @@ function mapImage(
 
 function mapVideoSource(source: ShopifyVideoSource): ProductVideoSource | null {
   const url = optionalText(source?.url);
-  const mimeType = optionalText(source?.mimeType)?.toLowerCase();
+  const mimeType = optionalText(source?.mimeType)
+    ?.split(";", 1)[0]
+    .trim()
+    .toLowerCase();
   const format = optionalText(source?.format)?.toLowerCase();
+  const supportedFormat =
+    (mimeType === "video/mp4" && format === "mp4") ||
+    (mimeType === "video/quicktime" && format === "mov");
   if (
     !url ||
     /[\u0000-\u001f\u007f\\]/.test(url) ||
-    mimeType !== "video/mp4" ||
-    format !== "mp4" ||
+    !supportedFormat ||
     !Number.isInteger(source.width) ||
     !Number.isInteger(source.height) ||
     source.width <= 0 ||
@@ -100,13 +105,17 @@ function mapVideoSource(source: ShopifyVideoSource): ProductVideoSource | null {
 
   try {
     const parsed = new URL(url);
+    const shopifyVideoPath =
+      (parsed.hostname === "cdn.shopify.com" &&
+        parsed.pathname.startsWith("/videos/")) ||
+      (parsed.hostname === "videos.shopifycdn.com" &&
+        parsed.pathname.startsWith("/c/"));
     if (
       parsed.protocol !== "https:" ||
-      parsed.hostname !== "cdn.shopify.com" ||
+      !shopifyVideoPath ||
       parsed.username ||
       parsed.password ||
-      parsed.port ||
-      !parsed.pathname.startsWith("/videos/")
+      parsed.port
     ) {
       return null;
     }
@@ -123,7 +132,7 @@ function mapVideoSource(source: ShopifyVideoSource): ProductVideoSource | null {
   };
 }
 
-/** Unsupported or not-yet-ready media must not prevent purchasing a product. */
+/** Keep videos visible even when Shopify has no usable source yet. */
 export function mapProductMedia(
   node: ShopifyMediaNode,
   productTitle: string,
@@ -143,8 +152,6 @@ export function mapProductMedia(
     seenUrls.add(mapped.url);
     return [mapped];
   });
-  if (!sources.length) return null;
-
   const previewImage = mapImage(node.previewImage, altText);
   return {
     id: node.id,

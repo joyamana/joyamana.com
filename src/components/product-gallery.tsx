@@ -81,6 +81,7 @@ function ProductVideo({
       <video
         key={attempt}
         ref={videoRef}
+        src={source.url}
         controls
         playsInline
         preload="none"
@@ -90,11 +91,6 @@ function ProductVideo({
         onPlay={() => setStarted(true)}
         onError={() => setFailed(true)}
       >
-        <source
-          src={source.url}
-          type={source.mimeType}
-          onError={() => setFailed(true)}
-        />
         {uiText(locale, {
           zh: "你的瀏覽器不支援影片播放。你仍可查看商品詳情及選購選項。",
           en: "Your browser does not support video playback. Product details and purchasing options are still available.",

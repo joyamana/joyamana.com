@@ -65,15 +65,24 @@ export function getInitialGalleryMedia(
   );
 }
 
-/** Prefer a native MP4 with a long edge up to 1920px, without HLS dependencies. */
+/** Prefer MP4 renditions, then an actual MOV source; never guess a transcode URL. */
 export function getProductVideoSource(sources: ProductVideoSource[]) {
   const mp4 = sources.filter(
-    (source) => source.mimeType === "video/mp4" && source.url,
+    (source) =>
+      source.mimeType === "video/mp4" && source.format === "mp4" && source.url,
   );
-  const preferred = mp4.filter(
+  const native = mp4.length
+    ? mp4
+    : sources.filter(
+        (source) =>
+          source.mimeType === "video/quicktime" &&
+          source.format === "mov" &&
+          source.url,
+      );
+  const preferred = native.filter(
     (source) => Math.max(source.width, source.height) <= 1920,
   );
-  const candidates = preferred.length ? preferred : mp4;
+  const candidates = preferred.length ? preferred : native;
   return candidates.reduce<ProductVideoSource | undefined>(
     (selected, source) => {
       if (!selected) return source;

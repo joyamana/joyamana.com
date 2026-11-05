@@ -46,8 +46,14 @@ Node 保持 24，精确 pnpm 和依赖版本以 [package.json](../package.json) 
 - 商品详情首批 100 个 Variant；摘要不读 Variant，浏览筛选按批次完整补齐。繁中颜色补读
   默认语言时只取 Variant ID/colors 与必要分页字段。
 - PDP 媒体独立 cursor 分页，沿用同次目录预算和商品归属检查；图片与视频使用稳定媒体 ID。
-  类型只保留 MediaImage 与可播放的 Shopify 托管 MP4，校验来源 URL/尺寸/格式，忽略未支持
-  或未就绪条目。`Product.images` 从图片媒体派生，摘要和推荐不读取视频；不引入播放器依赖。
+  类型保留 `MediaImage` 与 Shopify `Video`，忽略其他媒体类型。`Video.sources` 为空或全部
+  被过滤时仍保留视频节点、有效封面与缩略图入口，选中后显示无可用源提示，不影响购买。
+  `Product.images` 从图片媒体派生，摘要和推荐不读取视频。
+- 视频源校验 URL、尺寸及配对的格式/MIME：仅接受 `mp4` / `video/mp4` 和
+  `mov` / `video/quicktime`，HTTPS 来源限于 `cdn.shopify.com/videos/` 与
+  `videos.shopifycdn.com/c/`。优先 MP4 并沿用清晰度选择；无有效 MP4 时才尝试实际返回的 MOV。
+  使用原生 `<video src>` 与真实 URL，MOV 能否播放取决于浏览器和编码，失败保留明确提示。
+  不推导转码 URL，不自建转码服务或引入播放器依赖；当前不支持 HLS 或 `ExternalVideo`。
 - PDP 相关商品按 handle 调用 `productRecommendations(intent: RELATED)`，一次最多十件，
   只取摘要字段，与商品及完整摘要目录并行读取，沿用当前 country/language 和请求预算。
   推荐与目录分别容错，排序和补充规则见交易规格；无候选省略推荐，商品失败进入错误边界。
