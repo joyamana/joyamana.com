@@ -5,7 +5,7 @@ import {
   siteConfig,
 } from "@/config/site";
 import {
-  getDesignCollections,
+  getCollections,
   getProducts,
   productCategoriesForProducts,
 } from "@/lib/commerce/catalog";
@@ -36,9 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         blogPaths,
         crystalPaths,
       ] = await Promise.all([
-        commerceEnabled
-          ? getDesignCollections("us", locale)
-          : Promise.resolve([]),
+        commerceEnabled ? getCollections("us", locale) : Promise.resolve([]),
         commerceEnabled ? getProducts("us", locale) : Promise.resolve([]),
         policiesEnabled
           ? getPublishedShopifyPolicyPaths(locale)

@@ -27,6 +27,7 @@ function product(
     },
     featuredImage: null,
     images: [],
+    media: [],
     variants: [],
     category: null,
   };

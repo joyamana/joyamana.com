@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
 import { CollectionPage } from "@/components/pages/collection-page";
-import { getDesignCollection } from "@/lib/commerce/catalog";
-import {
-  buildMetadata,
-  buildNoIndexMetadata,
-  getCollectionSeoDescription,
-  type PageSearchParams,
-} from "@/lib/seo";
+import { buildCollectionMetadata } from "@/lib/commerce/catalog-metadata";
+import type { PageSearchParams } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -18,21 +13,9 @@ export async function generateMetadata({
   searchParams: Promise<PageSearchParams>;
 }): Promise<Metadata> {
   const { handle } = await params;
-  const collection = await getDesignCollection(handle, "us", "zh-Hant-US");
-  const description = getCollectionSeoDescription(collection);
-  if (!collection || !description) {
-    return buildNoIndexMetadata({
-      title: collection?.title || "暫未能提供此系列",
-      description: collection
-        ? "探索此 Joya Mana 設計系列的商品。"
-        : "此系列目前未能提供。",
-    });
-  }
-  return buildMetadata({
-    title: collection.seoTitle || collection.title,
-    description,
+  return buildCollectionMetadata({
+    handle,
     locale: "zh-Hant-US",
-    path: `/collections/${handle}`,
     searchParams: await searchParams,
   });
 }

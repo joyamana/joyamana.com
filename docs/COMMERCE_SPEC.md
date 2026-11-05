@@ -23,10 +23,11 @@ GTIN/MPN 仅填真实值。前端暂不保留 vendor、Product Type/tags、Varia
 制作事实、实物/代表图、包装、care/安全和相关内容。这些知识字段及图片披露尚未完整接入，
 不能由本地文案补造。缺失项统一见 [Roadmap](ROADMAP.md)。
 
-## 类别与设计系列
+## 类别与 Collections
 
 `/shop` 为全商品，`/category/{handle}` 自动聚合当前 US Catalog 可见商品的 Shopify Standard
-Product Category，按真实 taxonomy ID 精确分类；`/collections/{handle}` 为原创设计系列。
+Product Category，按真实 taxonomy ID 精确分类；`/collections` 汇总 Shopify Collections，
+`/collections/{handle}` 展示对应集合的真实商品成员。
 不按 tag、标题或 Product Type 猜测，不把子类别合并进父类别。无 Category 的商品继续在
 Shop/PDP 可见，不造类别；售罄但仍发布的商品保留类别，最后一件可见商品移除后入口消失、
 类别页返回 404。Header、Shop、PDP、metadata、Schema 和 sitemap 共用类别解析。
@@ -36,11 +37,23 @@ Shopify 当前请求语言的 taxonomy name，缺译允许 Shopify 英语回退�
 已发布商品，不推断材质、功效或运营承诺。既有类别先按配置顺序排列，新类别按稳定
 taxonomy ID 排列。URL 与旧类别迁移规则见内容与索引规格，读取与缓存见技术规格。
 
-系列须 Headless 可见、非空且 `custom.collection_kind=design_series`。
-Collection 管理 URL/SEO/成员；Product reference 和 Design Series Metaobject 用于后续归集、
-故事和视觉，不另建同主题索引页。当前只读 Collection 类型、描述、媒体和商品。
-运营归组 Collection 不自动公开；系列缺有效描述仍可浏览商品，但详情 noindex，
-不输出 Schema，不进 sitemap。
+所有 Headless 可访问且有有效 handle/title 的 Collection 都进入 Collections 导航与汇总页，
+不按类型、描述或是否有商品隐藏。`custom.collection_kind` 不再参与读取或公开判断；
+不写入、删除或更改 Shopify 已有字段。Collection 名称、handle、描述、封面、SEO 和成员
+仍由 Shopify 管理，列表保持 API 返回顺序，不按名字猜测分类或把它们并入 Shop 菜单。
+空集合保留可读页面和空状态；空集合或缺有效描述的详情 noindex，不输出商品 Schema、
+不进 sitemap。已下架或不可访问集合返回 404；旧类别地址的等价迁移见内容与索引规格。
+设计系列可继续作为普通 Collection 展示，reference、故事和视觉扩展另见 Roadmap。
+
+## 商品媒体
+
+PDP 使用 Product Media 中的图片和 Shopify 托管 MP4 视频，按后台顺序展示；
+选中 Variant 的图片优先，重复图片只显示一次。没有款式图时使用真实商品图片，
+没有图片时仍可显示可播放视频。视频属于 Product，不推断或新增 Variant 视频绑定。
+媒体来源、封面与替代文字来自 Shopify；缺少有效播放源或未支持的媒体不阻止商品购买。
+YouTube/Vimeo、3D、视频专属 Schema 和字幕文件接入不在当前范围。含语言或重要信息的
+视频须在商品正文提供同等文字说明，发布时人工审核无障碍内容。
+播放、按需加载与失败界面见设计规范，上传操作见 Shopify 维护。
 
 ## 选款、筛选与卡片
 

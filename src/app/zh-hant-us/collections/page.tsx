@@ -10,8 +10,8 @@ export async function generateMetadata({
   searchParams: Promise<PageSearchParams>;
 }) {
   return buildCatalogHubMetadata({
-    title: "原創設計系列",
-    description: "探索 Joya Mana 的原創設計系列與背後故事。",
+    title: "所有系列",
+    description: "瀏覽 Joya Mana 的所有系列，探索不同主題與精選商品。",
     locale: "zh-Hant-US",
     path: "/collections",
     searchParams: await searchParams,

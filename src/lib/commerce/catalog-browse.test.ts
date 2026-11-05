@@ -49,6 +49,7 @@ export function product(variants: ProductVariant[], id = "1"): Product {
     },
     featuredImage: null,
     images: [],
+    media: [],
     variants,
     category: null,
   };

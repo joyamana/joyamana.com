@@ -32,20 +32,33 @@ describe("metadata titles", () => {
   it("uses meaningful collection SEO copy and rejects empty content", () => {
     expect(getCollectionSeoDescription(null)).toBeUndefined();
     expect(
-      getCollectionSeoDescription({ description: " ", seoDescription: " " }),
+      getCollectionSeoDescription({
+        description: " ",
+        seoDescription: " ",
+        hasProducts: true,
+      }),
     ).toBeUndefined();
     expect(
       getCollectionSeoDescription({
         description: " Body ",
         seoDescription: " ",
+        hasProducts: true,
       }),
     ).toBe("Body");
     expect(
       getCollectionSeoDescription({
         description: "Body",
         seoDescription: " SEO ",
+        hasProducts: true,
       }),
     ).toBe("SEO");
+    expect(
+      getCollectionSeoDescription({
+        description: "Body",
+        seoDescription: "SEO",
+        hasProducts: false,
+      }),
+    ).toBeUndefined();
   });
 
   it("leaves the root layout as the single owner of the brand suffix", () => {

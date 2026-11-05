@@ -60,9 +60,10 @@ function catalogNavigationFromSnapshot(
       })
       .sort(compareProductCategories)
       .map(({ handle, title }) => ({ handle, title })),
-    collections: navigation.collections
-      .filter((collection) => collection.kind === "design_series")
-      .map(({ handle, title }) => ({ handle, title })),
+    collections: navigation.collections.map(({ handle, title }) => ({
+      handle,
+      title,
+    })),
   };
 }
 
@@ -153,12 +154,11 @@ export const getBrowseCategory = cache(
 
 export const getBrowseCollection = cache(
   async (handle: string, marketId: MarketId, locale: Locale) => {
-    const { collection: candidate, budget } = await getCollectionSnapshot(
+    const { collection, budget } = await getCollectionSnapshot(
       handle,
       marketId,
       locale,
     );
-    const collection = candidate?.kind === "design_series" ? candidate : null;
     return collection
       ? {
           ...collection,
@@ -202,15 +202,6 @@ export const getCollection = cache(async function getCollection(
   return (await getCollectionSnapshot(handle, marketId, locale)).collection;
 });
 
-export const getDesignCollections = cache(async function getDesignCollections(
-  marketId: MarketId = "us",
-  locale: Locale = "en-US",
-) {
-  return (await getCollections(marketId, locale)).filter(
-    (collection) => collection.kind === "design_series",
-  );
-});
-
 const getCachedShopifyCatalogNavigation = cache(
   async (locale: Locale): Promise<CatalogNavigationData> => {
     const fetchOptions = {
@@ -238,15 +229,6 @@ export async function getCatalogNavigationData(
 
   return getCachedShopifyCatalogNavigation(locale);
 }
-
-export const getDesignCollection = cache(async function getDesignCollection(
-  handle: string,
-  marketId: MarketId = "us",
-  locale: Locale = "en-US",
-): Promise<ProductCollection | null> {
-  const collection = await getCollection(handle, marketId, locale);
-  return collection?.kind === "design_series" ? collection : null;
-});
 
 export function productCategoriesForProducts(
   products: ProductSummary[],

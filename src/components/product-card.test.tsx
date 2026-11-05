@@ -20,6 +20,7 @@ const product: Product = {
   },
   featuredImage: null,
   images: [],
+  media: [],
   variants: [],
   category: null,
 };

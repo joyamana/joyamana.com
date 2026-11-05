@@ -27,6 +27,7 @@ const product: Product = {
   availableForSale: true,
   featuredImage: null,
   images: [],
+  media: [],
   variants: [],
   category: { id: "bracelets", name: "Bracelets" },
   priceRange: {

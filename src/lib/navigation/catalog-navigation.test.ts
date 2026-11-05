@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  COLLECTION_DROPDOWN_THRESHOLD,
   collectionNavigationFor,
   type CatalogNavigationLink,
 } from "./catalog-navigation";
@@ -12,26 +11,26 @@ const links: CatalogNavigationLink[] = [
 ];
 
 describe("collectionNavigationFor", () => {
-  it("hides the collections navigation when no design series is published", () => {
-    expect(collectionNavigationFor([])).toEqual({ kind: "hidden", links: [] });
-  });
+  it.each([0, 1, 2, 3])(
+    "always starts with the hub link for %i collections",
+    (count) => {
+      const hub = { href: "/collections", label: "View all collections" };
+      expect(collectionNavigationFor(links.slice(0, count), hub)).toEqual([
+        hub,
+        ...links.slice(0, count),
+      ]);
+    },
+  );
 
-  it("shows one or two design series as direct links", () => {
-    expect(collectionNavigationFor(links.slice(0, 1))).toEqual({
-      kind: "direct",
-      links: links.slice(0, 1),
-    });
-    expect(collectionNavigationFor(links.slice(0, 2))).toEqual({
-      kind: "direct",
-      links: links.slice(0, 2),
-    });
-  });
-
-  it("groups three or more design series into a dropdown", () => {
-    expect(COLLECTION_DROPDOWN_THRESHOLD).toBe(3);
-    expect(collectionNavigationFor(links)).toEqual({
-      kind: "dropdown",
-      links,
-    });
+  it("preserves every link, its order, and its localized destination", () => {
+    const hub = { href: "/zh-hant-us/collections", label: "查看所有系列" };
+    const manyLinks = Array.from({ length: 40 }, (_, index) => ({
+      href: `/zh-hant-us/collections/series-${index}`,
+      label: `系列 ${index}`,
+    }));
+    expect(collectionNavigationFor(manyLinks, hub)).toEqual([
+      hub,
+      ...manyLinks,
+    ]);
   });
 });

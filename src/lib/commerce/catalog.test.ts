@@ -21,10 +21,9 @@ vi.mock("./shopify-catalog", async (importOriginal) => ({
 import {
   getCatalogNavigationData,
   getBrowseCategory,
+  getBrowseCollection,
   getCollection,
   getCollections,
-  getDesignCollection,
-  getDesignCollections,
   getProduct,
   getProductRecommendations,
   getProductCategory,
@@ -46,6 +45,7 @@ const product: Product = {
   },
   featuredImage: null,
   images: [],
+  media: [],
   variants: [],
   category: {
     id: "gid://shopify/TaxonomyCategory/aa-6-3",
@@ -59,7 +59,7 @@ const designCollection: Collection = {
   title: "Patron Saint",
   description: "A design series.",
   image: null,
-  kind: "design_series",
+  hasProducts: true,
 };
 
 const religiousProduct: Product = {
@@ -77,7 +77,6 @@ const merchandisingCollection: Collection = {
   id: "gid://shopify/Collection/2",
   handle: "featured",
   title: "Featured",
-  kind: "merchandising",
 };
 
 afterEach(() => {
@@ -119,9 +118,9 @@ describe("Shopify catalog facade", () => {
         {
           handle: "patron-saint",
           title: "Patron Saint",
-          kind: "design_series",
         },
-        { handle: "featured", title: "Featured", kind: "merchandising" },
+        { handle: "featured", title: "Featured" },
+        { handle: "empty", title: "Coming soon" },
       ],
     });
     await expect(getCatalogNavigationData("us", "zh-Hant-US")).resolves.toEqual(
@@ -131,7 +130,11 @@ describe("Shopify catalog facade", () => {
           { handle: "taxonomy-rc-2", title: "宗教物品" },
           { handle: "taxonomy-rc-3", title: "另一類別" },
         ],
-        collections: [{ handle: "patron-saint", title: "Patron Saint" }],
+        collections: [
+          { handle: "patron-saint", title: "Patron Saint" },
+          { handle: "featured", title: "Featured" },
+          { handle: "empty", title: "Coming soon" },
+        ],
       },
     );
     expect(
@@ -293,34 +296,50 @@ describe("Shopify catalog facade", () => {
     expect(shopifyCatalogMocks.getShopifyProducts).not.toHaveBeenCalled();
   });
 
-  it("exposes only Shopify collections marked as design series", async () => {
-    shopifyCatalogMocks.getShopifyCollections.mockResolvedValue([
+  it("exposes every visible Shopify collection, including empty and undescribed collections", async () => {
+    const emptyCollection = {
+      ...designCollection,
+      id: "gid://shopify/Collection/3",
+      handle: "empty",
+      title: "Coming soon",
+      description: "",
+      hasProducts: false,
+    };
+    const collections = [
       designCollection,
       merchandisingCollection,
-    ]);
+      emptyCollection,
+    ];
+    shopifyCatalogMocks.getShopifyCollections.mockResolvedValue(collections);
+    shopifyCatalogMocks.hydrateShopifyBrowseProducts.mockImplementation(
+      async (products) => products,
+    );
     shopifyCatalogMocks.getShopifyCollection.mockImplementation(
       async (handle: string) => {
-        const collection =
-          handle === "patron-saint"
-            ? designCollection
-            : handle === "featured"
-              ? merchandisingCollection
-              : null;
+        const collection = collections.find((item) => item.handle === handle);
         return collection
-          ? ({ ...collection, products: [] } satisfies ProductCollection)
+          ? ({
+              ...collection,
+              products: collection.hasProducts ? [product] : [],
+            } satisfies ProductCollection)
           : null;
       },
     );
 
-    await expect(getDesignCollections("us", "en-US")).resolves.toEqual([
-      designCollection,
-    ]);
+    await expect(getCollections("us", "en-US")).resolves.toEqual(collections);
     await expect(
-      getDesignCollection("patron-saint", "us", "en-US"),
-    ).resolves.toMatchObject({ kind: "design_series" });
+      getCollection("featured", "us", "en-US"),
+    ).resolves.toMatchObject({
+      ...merchandisingCollection,
+      products: [product],
+    });
     await expect(
-      getDesignCollection("featured", "us", "en-US"),
-    ).resolves.toBeNull();
+      getBrowseCollection("empty", "us", "en-US"),
+    ).resolves.toMatchObject({ ...emptyCollection, products: [] });
+    expect(
+      shopifyCatalogMocks.hydrateShopifyBrowseProducts,
+    ).toHaveBeenCalledWith([], "en-US", expect.anything());
+    await expect(getCollection("missing", "us", "en-US")).resolves.toBeNull();
   });
 
   it("uses one enabled US catalog for its configured languages", () => {

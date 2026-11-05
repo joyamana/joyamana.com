@@ -49,6 +49,7 @@ const product: Product = {
   },
   featuredImage: image,
   images: [image],
+  media: [{ id: "image-1", kind: "image", image }],
   variants: [
     {
       id: "gid://shopify/ProductVariant/11",
@@ -78,6 +79,40 @@ const product: Product = {
 };
 
 describe("product structured data", () => {
+  it("keeps video sources out of product images and does not invent video metadata", () => {
+    const videoUrl = "https://cdn.shopify.com/videos/c/vp/bracelet.mp4";
+    const item: Product = {
+      ...product,
+      media: [
+        ...product.media,
+        {
+          id: "video-1",
+          kind: "video",
+          altText: "Aquamarine bracelet rotating in natural light",
+          previewImage: image,
+          sources: [
+            {
+              url: videoUrl,
+              mimeType: "video/mp4",
+              format: "mp4",
+              width: 1280,
+              height: 720,
+            },
+          ],
+        },
+      ],
+    };
+    const data = buildProductStructuredData({
+      product: item,
+      locale: "en-US",
+      breadcrumbs: [],
+    });
+    expect(data["@graph"][0]).toMatchObject({ image: [image.url] });
+    expect(JSON.stringify(data)).not.toContain(videoUrl);
+    expect(JSON.stringify(data)).not.toContain("VideoObject");
+    expect(JSON.stringify(data)).not.toContain("uploadDate");
+  });
+
   it("uses the same minimum-quantity inventory rule as the purchase UI", () => {
     const item = {
       ...product,
