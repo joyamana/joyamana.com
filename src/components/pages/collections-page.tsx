@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { getDesignCollections } from "@/lib/commerce/catalog";
+import { getCollections } from "@/lib/commerce/catalog";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
 
 export async function CollectionsPage({ locale }: { locale: Locale }) {
-  const collections = await getDesignCollections(
-    marketIdForLocale(locale),
-    locale,
-  );
+  const collections = await getCollections(marketIdForLocale(locale), locale);
   const homeLabel = uiText(locale, {
     zh: "首頁",
     en: "Home",
@@ -20,14 +17,14 @@ export async function CollectionsPage({ locale }: { locale: Locale }) {
     es: "Colecciones",
   });
   const pageTitle = uiText(locale, {
-    zh: "原創設計系列",
-    en: "Design collections",
-    es: "Colecciones de diseño",
+    zh: "所有系列",
+    en: "Collections",
+    es: "Colecciones",
   });
   const pageDescription = uiText(locale, {
-    zh: "探索 Joya Mana 的原創系列，感受每個設計概念、材質語言與視覺故事。",
-    en: "Explore original Joya Mana series shaped by a distinct design idea, material language, and visual story.",
-    es: "Explora las series originales de Joya Mana, cada una definida por una idea de diseño, un lenguaje material y una historia visual propios.",
+    zh: "瀏覽 Joya Mana 的所有系列，探索不同主題與精選商品。",
+    en: "Browse all Joya Mana collections and explore their themes and selected pieces.",
+    es: "Explora todas las colecciones de Joya Mana, sus temas y sus piezas seleccionadas.",
   });
 
   return (
@@ -67,16 +64,16 @@ export async function CollectionsPage({ locale }: { locale: Locale }) {
           <div className="empty-state empty-state--compact">
             <h2>
               {uiText(locale, {
-                zh: "目前沒有已發佈的設計系列。",
-                en: "No design collections are published yet.",
-                es: "Aún no hay colecciones de diseño publicadas.",
+                zh: "目前沒有已發佈的系列。",
+                en: "No collections are published yet.",
+                es: "Aún no hay colecciones publicadas.",
               })}
             </h2>
             <p>
               {uiText(locale, {
-                zh: "瀏覽其他商品。",
-                en: "A new design series will appear here when it is ready.",
-                es: "Una nueva serie de diseño aparecerá aquí cuando esté lista.",
+                zh: "新系列發佈後將會顯示於此。",
+                en: "New collections will appear here when they are published.",
+                es: "Las nuevas colecciones aparecerán aquí cuando se publiquen.",
               })}
             </p>
           </div>

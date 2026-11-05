@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { productCategoryDefinitionForHandle } from "@/config/catalog";
-import { getBrowseCollection } from "@/lib/commerce/catalog";
+import {
+  getBrowseCollection,
+  getProductCategory,
+} from "@/lib/commerce/catalog";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { localePath, marketIdForLocale } from "@/lib/i18n/locales";
 import { uiText } from "@/lib/i18n/text";
@@ -28,16 +31,28 @@ export async function CollectionPage({
   handle: string;
   searchParams?: PageSearchParams;
 }) {
-  if (productCategoryDefinitionForHandle(handle)) {
-    permanentRedirect(localePath(locale, `/category/${handle}`));
-  }
-
   const collection = await getBrowseCollection(
     handle,
     marketIdForLocale(locale),
     locale,
   );
-  if (!collection) notFound();
+  if (!collection) {
+    if (
+      productCategoryDefinitionForHandle(handle) &&
+      (await getProductCategory(handle, marketIdForLocale(locale), locale))
+    ) {
+      const parameters = new URLSearchParams();
+      for (const [name, value] of Object.entries(searchParams)) {
+        if (typeof value === "string") parameters.append(name, value);
+        else if (value) value.forEach((item) => parameters.append(name, item));
+      }
+      const queryString = parameters.toString();
+      permanentRedirect(
+        `${localePath(locale, `/category/${handle}`)}${queryString ? `?${queryString}` : ""}`,
+      );
+    }
+    notFound();
+  }
   const query = parseCatalogQuery(searchParams);
   const result = browseCatalog(collection.products, query);
   const browsePath = localePath(locale, `/collections/${collection.handle}`);
@@ -101,9 +116,9 @@ export async function CollectionPage({
       <header className="page-hero catalog-heading">
         <p className="eyebrow">
           {uiText(locale, {
-            zh: "設計系列",
-            en: "Design collection",
-            es: "Colección de diseño",
+            zh: "系列",
+            en: "Collection",
+            es: "Colección",
           })}
         </p>
         <h1>{collection.title}</h1>

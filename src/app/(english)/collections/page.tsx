@@ -10,8 +10,9 @@ export async function generateMetadata({
   searchParams: Promise<PageSearchParams>;
 }) {
   return buildCatalogHubMetadata({
-    title: "Design collections",
-    description: "Explore original Joya Mana design series and their stories.",
+    title: "Collections",
+    description:
+      "Browse all Joya Mana collections and explore their themes and selected pieces.",
     locale: "en-US",
     path: "/collections",
     searchParams: await searchParams,

@@ -17,13 +17,14 @@ Joya Mana 是面向美国市场的水晶品牌站，收入来自商品销售。�
 
 | 顾客任务 | 当前流程 |
 |---|---|
-| 购物 | 首页 → Shop/类别/设计系列 → 商品选款 → Bag → Shopify Checkout |
+| 购物 | 首页 → Shop/类别/Collections → 商品选款 → Bag → Shopify Checkout |
 | 了解商品 | Crystal Guide/Blog → 相关目录或商品 → 购买 |
 | 礼赠 | 核对商品、包装、配送与退换 → Bag → Checkout |
 | 订单后服务 | Shopify 确认邮件与 Order Status → 必要时电邮客服 |
 
 网站已有英语和繁中页面、商品搜索、同款颜色/可购买筛选、展示款价格排序、选款深链接、
-数量规则和图库。Bag 支持恢复、修改、完整分页、独立 Buy now 和结账前检查。
+数量规则和图片/托管视频图库。Collections 展示所有 Headless 可访问的商品集合，
+Header 固定提供汇总入口与完整集合列表。Bag 支持恢复、修改、完整分页、独立 Buy now 和结账前检查。
 About、Accessibility、政策和文章从 Shopify 读取。metadata、sitemap、适用 JSON-LD
 受部署、页面组和内容条件控制。工程使用 Node 24、固定依赖和 GitHub CI。
 

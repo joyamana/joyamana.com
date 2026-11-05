@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProductSummary } from "@/lib/commerce/types";
 
 const mocks = vi.hoisted(() => ({
-  getDesignCollections: vi.fn(),
+  getCollections: vi.fn(),
   getProducts: vi.fn(),
   getPublishedShopifyEditorialPaths: vi.fn(),
   getPublishedShopifyAboutPaths: vi.fn(),
@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/commerce/catalog", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/commerce/catalog")>()),
-  getDesignCollections: mocks.getDesignCollections,
+  getCollections: mocks.getCollections,
   getProducts: mocks.getProducts,
 }));
 vi.mock("@/lib/content/shopify-editorial", () => ({
@@ -55,7 +55,7 @@ vi.mock("@/config/indexing", () => policy);
 
 beforeEach(() => {
   mocks.getProducts.mockResolvedValue([]);
-  mocks.getDesignCollections.mockResolvedValue([]);
+  mocks.getCollections.mockResolvedValue([]);
   mocks.getPublishedShopifyAboutPaths.mockResolvedValue([]);
   mocks.getPublishedShopifyContentPagePaths.mockResolvedValue([]);
 });
@@ -87,7 +87,7 @@ describe("granular sitemap gates", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
     policy.indexingPolicy["en-US"].commerce = true;
     mocks.getProducts.mockResolvedValue([]);
-    mocks.getDesignCollections.mockResolvedValue([]);
+    mocks.getCollections.mockResolvedValue([]);
     mocks.getPublishedShopifyAboutPaths.mockResolvedValue([]);
     mocks.getPublishedShopifyContentPagePaths.mockResolvedValue([]);
     const { default: sitemap } = await import("./sitemap");
@@ -102,13 +102,28 @@ describe("granular sitemap gates", () => {
     mocks.getProducts.mockResolvedValue([]);
     mocks.getPublishedShopifyAboutPaths.mockResolvedValue([]);
     mocks.getPublishedShopifyContentPagePaths.mockResolvedValue([]);
-    mocks.getDesignCollections.mockResolvedValue([
-      { handle: "thin-series", description: " ", seoDescription: " " },
-      { handle: "body-series", description: "Collection story" },
+    mocks.getCollections.mockResolvedValue([
+      {
+        handle: "thin-series",
+        description: " ",
+        seoDescription: " ",
+        hasProducts: true,
+      },
+      {
+        handle: "body-series",
+        description: "Collection story",
+        hasProducts: true,
+      },
+      {
+        handle: "empty-series",
+        description: "Collection story",
+        hasProducts: false,
+      },
       {
         handle: "seo-series",
         description: "",
         seoDescription: "Series introduction",
+        hasProducts: true,
       },
     ]);
 
@@ -120,6 +135,36 @@ describe("granular sitemap gates", () => {
     expect(urls).not.toContain(
       "https://www.joyamana.com/collections/thin-series",
     );
+    expect(urls).not.toContain(
+      "https://www.joyamana.com/collections/empty-series",
+    );
+  });
+
+  it("includes the hub but excludes empty localized collection details", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_INDEXABLE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.joyamana.com");
+    policy.indexingPolicy["en-US"].commerce = true;
+    policy.indexingPolicy["zh-Hant-US"].commerce = true;
+    mocks.getCollections.mockImplementation(async (_market, locale) => [
+      {
+        handle: "mineral-specimens",
+        description: "Natural forms and textures.",
+        hasProducts: locale === "en-US",
+      },
+    ]);
+    const { default: sitemap } = await import("./sitemap");
+    const entries = await sitemap();
+    expect(entries.map((entry) => entry.url)).toContain(
+      "https://www.joyamana.com/zh-hant-us/collections",
+    );
+    expect(entries.map((entry) => entry.url)).not.toContain(
+      "https://www.joyamana.com/zh-hant-us/collections/mineral-specimens",
+    );
+    const detail = entries.find(
+      (entry) =>
+        entry.url === "https://www.joyamana.com/collections/mineral-specimens",
+    );
+    expect(detail).toBeDefined();
   });
 
   it("loads and publishes only the enabled locale and page group", async () => {
@@ -142,7 +187,7 @@ describe("granular sitemap gates", () => {
     expect(mocks.getPublishedShopifyAboutPaths).toHaveBeenCalledOnce();
     expect(mocks.getPublishedShopifyAboutPaths).toHaveBeenCalledWith("en-US");
     expect(mocks.getProducts).not.toHaveBeenCalled();
-    expect(mocks.getDesignCollections).not.toHaveBeenCalled();
+    expect(mocks.getCollections).not.toHaveBeenCalled();
     expect(mocks.getPublishedShopifyPolicyPaths).not.toHaveBeenCalled();
     expect(mocks.getPublishedShopifyEditorialPaths).not.toHaveBeenCalled();
   });

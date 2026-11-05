@@ -17,6 +17,7 @@ import {
 } from "./shopify-catalog";
 import { mapShopifyProduct } from "./shopify-catalog-mappers";
 import {
+  type ShopifyMediaNode,
   type ShopifyProductNode,
   SHOPIFY_BROWSE_VARIANTS_QUERY,
   SHOPIFY_BROWSE_COLORS_QUERY,
@@ -28,6 +29,7 @@ import {
   SHOPIFY_PRODUCT_QUERY,
   SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY,
   SHOPIFY_PRODUCT_VARIANTS_QUERY,
+  SHOPIFY_PRODUCT_MEDIA_QUERY,
   SHOPIFY_PRODUCTS_QUERY,
   SHOPIFY_SEARCH_QUERY,
   ShopifyCatalogError,
@@ -83,6 +85,9 @@ describe("complete catalog request budget", () => {
 
   it("reads a full initial variant page on the PDP while keeping summary queries small", () => {
     expect(SHOPIFY_PRODUCT_QUERY).toContain("variants(first: 100,");
+    expect(SHOPIFY_PRODUCT_QUERY).toContain(
+      "media(first: 100, sortKey: POSITION, reverse: false)",
+    );
     expect(SHOPIFY_PRODUCTS_QUERY).not.toContain("variants(");
     for (const query of [
       SHOPIFY_PRODUCTS_QUERY,
@@ -91,7 +96,7 @@ describe("complete catalog request budget", () => {
       SHOPIFY_COLLECTION_QUERY,
     ]) {
       expect(query).not.toMatch(
-        /descriptionHtml|quantityRule|quantityAvailable|productModel|images\(/,
+        /descriptionHtml|quantityRule|quantityAvailable|productModel|images\(|media\(/,
       );
       expect(query).toContain("priceRange");
     }
@@ -136,22 +141,32 @@ function productFixture(): ShopifyProductNode {
       width: 1200,
       height: 1200,
     },
-    images: {
-      nodes: [
-        {
+    media: connection([
+      {
+        id: "gid://shopify/MediaImage/1",
+        __typename: "MediaImage",
+        alt: null,
+        previewImage: null,
+        image: {
           url: "https://cdn.shopify.com/one.jpg",
           altText: "Front view",
           width: 1200,
           height: 1200,
         },
-        {
+      },
+      {
+        id: "gid://shopify/MediaImage/2",
+        __typename: "MediaImage",
+        alt: null,
+        previewImage: null,
+        image: {
           url: "https://cdn.shopify.com/two.jpg",
           altText: null,
           width: 900,
           height: 1200,
         },
-      ],
-    },
+      },
+    ]),
     priceRange: {
       minVariantPrice: { amount: "68.50", currencyCode: "USD" },
       maxVariantPrice: { amount: "72.00", currencyCode: "USD" },
@@ -191,6 +206,24 @@ function secondProductFixture() {
         title: "Clear Quartz",
       })),
     },
+  };
+}
+
+function videoFixture(): ShopifyMediaNode {
+  return {
+    id: "gid://shopify/Video/3",
+    __typename: "Video",
+    alt: "Bracelet in daylight",
+    previewImage: null,
+    sources: [
+      {
+        url: "https://cdn.shopify.com/videos/c/vp/bracelet.mp4",
+        mimeType: "video/mp4",
+        format: "mp4",
+        width: 1920,
+        height: 1080,
+      },
+    ],
   };
 }
 
@@ -460,6 +493,35 @@ describe("Shopify catalog mapper and queries", () => {
     expect(product).not.toHaveProperty("facts");
   });
 
+  it("retains mixed media order while projecting only images for metadata", () => {
+    const fixture = productFixture();
+    fixture.media.nodes.splice(1, 0, videoFixture());
+    const product = mapShopifyProduct(fixture);
+    expect(product.media.map((media) => [media.id, media.kind])).toEqual([
+      ["gid://shopify/MediaImage/1", "image"],
+      ["gid://shopify/Video/3", "video"],
+      ["gid://shopify/MediaImage/2", "image"],
+    ]);
+    expect(product.images).toHaveLength(2);
+    expect(product.images.map((image) => image.url)).toEqual([
+      "https://cdn.shopify.com/one.jpg",
+      "https://cdn.shopify.com/two.jpg",
+    ]);
+  });
+
+  it("preserves purchasable products with no supported media", () => {
+    const fixture = productFixture();
+    fixture.featuredImage = null;
+    fixture.media = connection([
+      { ...videoFixture(), __typename: "ExternalVideo" },
+    ]);
+    const product = mapShopifyProduct(fixture);
+    expect(product.media).toEqual([]);
+    expect(product.images).toEqual([]);
+    expect(product.featuredImage).toBeNull();
+    expect(product.variants).toHaveLength(1);
+  });
+
   it.each([
     ["standard", "standard"],
     ["natural_variation", "natural-variation"],
@@ -581,7 +643,113 @@ describe("Shopify catalog mapper and queries", () => {
     );
   });
 
-  it("returns only collections that contain Storefront-visible products", async () => {
+  it("reads a video beyond the first media page in Shopify order and locale", async () => {
+    const fixture = productFixture();
+    fixture.media.pageInfo = { hasNextPage: true, endCursor: "media-page-1" };
+    shopifyFetchMock
+      .mockResolvedValueOnce({ product: fixture })
+      .mockResolvedValueOnce({
+        product: { id: fixture.id, media: connection([videoFixture()]) },
+      });
+
+    const product = await getShopifyProduct(fixture.handle, "zh-Hant-US");
+    expect(product?.media.map((media) => media.kind)).toEqual([
+      "image",
+      "image",
+      "video",
+    ]);
+    expect(product?.images).toHaveLength(2);
+    expect(shopifyFetchMock).toHaveBeenNthCalledWith(
+      2,
+      SHOPIFY_PRODUCT_MEDIA_QUERY,
+      {
+        country: "US",
+        language: "ZH_TW",
+        id: fixture.id,
+        first: 100,
+        after: "media-page-1",
+      },
+      expect.objectContaining({ cache: "no-store" }),
+    );
+    expect(SHOPIFY_PRODUCT_MEDIA_QUERY).toContain(
+      "media(first: $first, after: $after, sortKey: POSITION, reverse: false)",
+    );
+    expect(SHOPIFY_PRODUCT_MEDIA_QUERY).not.toContain("variants(");
+  });
+
+  it("shares the request budget between PDP media and variants", async () => {
+    const budget = createCatalogReadBudget();
+    shopifyFetchMock.mockResolvedValue({});
+    for (let request = 0; request < 98; request++)
+      await budget.read("query", {});
+    const fixture = productFixture();
+    fixture.media.pageInfo = { hasNextPage: true, endCursor: "media-next" };
+    fixture.variants.pageInfo = {
+      hasNextPage: true,
+      endCursor: "variants-next",
+    };
+    shopifyFetchMock
+      .mockResolvedValueOnce({ product: fixture })
+      .mockResolvedValueOnce({
+        product: {
+          id: fixture.id,
+          variants: connection([
+            {
+              ...fixture.variants.nodes[0],
+              id: "gid://shopify/ProductVariant/12",
+            },
+          ]),
+        },
+      });
+    await expect(
+      getShopifyProduct(fixture.handle, "en-US", budget),
+    ).rejects.toMatchObject({ kind: "invalid-data" });
+    expect(shopifyFetchMock).toHaveBeenCalledTimes(100);
+  });
+
+  it.each([
+    [
+      "duplicate media ID",
+      {
+        id: "gid://shopify/Product/1",
+        media: connection(productFixture().media.nodes),
+      },
+    ],
+    [
+      "repeated cursor",
+      {
+        id: "gid://shopify/Product/1",
+        media: connection([videoFixture()], true, "media-next"),
+      },
+    ],
+    [
+      "missing cursor",
+      {
+        id: "gid://shopify/Product/1",
+        media: connection([videoFixture()], true),
+      },
+    ],
+    [
+      "changed owner",
+      {
+        id: "gid://shopify/Product/different",
+        media: connection([videoFixture()]),
+      },
+    ],
+    ["disappeared owner", null],
+  ])("rejects incomplete media pagination: %s", async (_name, nextProduct) => {
+    const fixture = productFixture();
+    fixture.media.pageInfo = { hasNextPage: true, endCursor: "media-next" };
+    shopifyFetchMock
+      .mockResolvedValueOnce({ product: fixture })
+      .mockResolvedValueOnce({ product: nextProduct });
+    await expect(
+      getShopifyProduct(fixture.handle, "en-US"),
+    ).rejects.toMatchObject({ kind: "invalid-data" });
+    expect(shopifyFetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns every Storefront-visible collection, including empty collections", async () => {
     shopifyFetchMock
       .mockResolvedValueOnce({
         collections: connection(
@@ -593,7 +761,6 @@ describe("Shopify catalog mapper and queries", () => {
               description: "",
               seo: { title: null, description: null },
               image: null,
-              collectionKind: null,
               products: { nodes: [] },
             },
           ],
@@ -615,7 +782,6 @@ describe("Shopify catalog mapper and queries", () => {
               width: 1600,
               height: 900,
             },
-            collectionKind: { value: "design_series" },
             products: { nodes: [{ id: "gid://shopify/Product/1" }] },
           },
         ]),
@@ -623,9 +789,14 @@ describe("Shopify catalog mapper and queries", () => {
 
     await expect(getShopifyCollections("en-US")).resolves.toEqual([
       expect.objectContaining({
+        handle: "empty",
+        title: "Empty",
+        hasProducts: false,
+      }),
+      expect.objectContaining({
         handle: "seven-chakra",
         title: "Seven Chakra",
-        kind: "design_series",
+        hasProducts: true,
         image: expect.objectContaining({
           altText: "Seven Chakra",
           width: 1600,
@@ -690,20 +861,29 @@ describe("Shopify catalog mapper and queries", () => {
         ]),
       })
       .mockResolvedValueOnce({
+        collections: connection(
+          [
+            {
+              id: "gid://shopify/Collection/1",
+              handle: "patron-saint",
+              title: "Patron Saint",
+            },
+            {
+              id: "gid://shopify/Collection/empty",
+              handle: "empty",
+              title: "Empty",
+            },
+          ],
+          true,
+          "navigation-collections-page-1",
+        ),
+      })
+      .mockResolvedValueOnce({
         collections: connection([
           {
-            id: "gid://shopify/Collection/1",
-            handle: "patron-saint",
-            title: "Patron Saint",
-            collectionKind: { value: "design_series" },
-            products: { nodes: [{ id: "gid://shopify/Product/1" }] },
-          },
-          {
-            id: "gid://shopify/Collection/empty",
-            handle: "empty",
-            title: "Empty",
-            collectionKind: { value: "design_series" },
-            products: { nodes: [] },
+            id: "gid://shopify/Collection/specimens",
+            handle: "mineral-specimens",
+            title: "Mineral Specimens",
           },
         ]),
       });
@@ -719,8 +899,9 @@ describe("Shopify catalog mapper and queries", () => {
         {
           handle: "patron-saint",
           title: "Patron Saint",
-          kind: "design_series",
         },
+        { handle: "empty", title: "Empty" },
+        { handle: "mineral-specimens", title: "Mineral Specimens" },
       ],
     });
 
@@ -729,6 +910,13 @@ describe("Shopify catalog mapper and queries", () => {
     expect(SHOPIFY_NAVIGATION_PRODUCTS_QUERY).not.toContain("availableForSale");
     expect(SHOPIFY_NAVIGATION_COLLECTIONS_QUERY).not.toContain("description");
     expect(SHOPIFY_NAVIGATION_COLLECTIONS_QUERY).not.toContain("image {");
+    expect(SHOPIFY_NAVIGATION_COLLECTIONS_QUERY).not.toContain("products(");
+    for (const query of [
+      SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
+      SHOPIFY_COLLECTIONS_QUERY,
+      SHOPIFY_COLLECTION_QUERY,
+    ])
+      expect(query).not.toContain("collection_kind");
     expect(shopifyFetchMock).toHaveBeenNthCalledWith(
       1,
       SHOPIFY_NAVIGATION_PRODUCTS_QUERY,
@@ -741,9 +929,75 @@ describe("Shopify catalog mapper and queries", () => {
       { country: "US", language: "EN", first: 100, after: null },
       expect.objectContaining(fetchOptions),
     );
+    expect(shopifyFetchMock).toHaveBeenNthCalledWith(
+      3,
+      SHOPIFY_NAVIGATION_COLLECTIONS_QUERY,
+      {
+        country: "US",
+        language: "EN",
+        first: 100,
+        after: "navigation-collections-page-1",
+      },
+      expect.objectContaining(fetchOptions),
+    );
   });
 
-  it("treats an empty collection as unavailable", async () => {
+  it.each([
+    ["valid identity", "  mineral-specimens  ", "  Mineral Specimens  ", true],
+    ["blank handle", " ", "Mineral Specimens", false],
+    ["blank title", "mineral-specimens", " ", false],
+  ])(
+    "uses the same collection identity rules in all entry points: %s",
+    async (_name, handle, title, valid) => {
+      const collection = {
+        id: "gid://shopify/Collection/specimens",
+        handle,
+        title,
+        description: "",
+        seo: { title: null, description: null },
+        image: null,
+        products: connection([]),
+      };
+      shopifyFetchMock
+        .mockResolvedValueOnce({ collections: connection([collection]) })
+        .mockResolvedValueOnce({ collection })
+        .mockResolvedValueOnce({ products: connection([]) })
+        .mockResolvedValueOnce({ collections: connection([collection]) });
+      const list = await getShopifyCollections("en-US");
+      const detail = await getShopifyCollection("mineral-specimens", "en-US");
+      const navigation = await getShopifyCatalogNavigation("en-US", {
+        cache: "no-store",
+      });
+      if (valid) {
+        const identity = {
+          handle: "mineral-specimens",
+          title: "Mineral Specimens",
+        };
+        expect(list).toEqual([
+          expect.objectContaining({ ...identity, hasProducts: false }),
+        ]);
+        expect(detail).toMatchObject({
+          ...identity,
+          hasProducts: false,
+          products: [],
+        });
+        expect(navigation.collections).toEqual([identity]);
+      } else {
+        expect(list).toEqual([]);
+        expect(detail).toBeNull();
+        expect(navigation.collections).toEqual([]);
+      }
+    },
+  );
+
+  it("keeps unpublished or missing collection handles unavailable", async () => {
+    shopifyFetchMock.mockResolvedValueOnce({ collection: null });
+    await expect(
+      getShopifyCollection("unpublished", "en-US"),
+    ).resolves.toBeNull();
+  });
+
+  it("keeps an empty collection available with an explicit empty state", async () => {
     shopifyFetchMock.mockResolvedValueOnce({
       collection: {
         id: "gid://shopify/Collection/empty",
@@ -752,12 +1006,18 @@ describe("Shopify catalog mapper and queries", () => {
         description: "",
         seo: { title: null, description: null },
         image: null,
-        collectionKind: null,
         products: connection([]),
       },
     });
 
-    await expect(getShopifyCollection("empty", "en-US")).resolves.toBeNull();
+    await expect(getShopifyCollection("empty", "en-US")).resolves.toMatchObject(
+      {
+        handle: "empty",
+        title: "Empty",
+        hasProducts: false,
+        products: [],
+      },
+    );
   });
 
   it("paginates all products assigned to one collection", async () => {
@@ -768,7 +1028,6 @@ describe("Shopify catalog mapper and queries", () => {
       description: "A real collection.",
       seo: { title: null, description: null },
       image: null,
-      collectionKind: { value: "category" },
       products: connection(
         [productFixture()],
         true,
@@ -787,7 +1046,7 @@ describe("Shopify catalog mapper and queries", () => {
     const result = await getShopifyCollection("bracelets", "zh-Hant-US");
 
     expect(result?.products).toHaveLength(2);
-    expect(result?.kind).toBe("category");
+    expect(result?.hasProducts).toBe(true);
     expect(SHOPIFY_COLLECTION_QUERY).toContain(
       "products(first: $first, after: $after)",
     );

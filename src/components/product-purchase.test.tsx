@@ -23,6 +23,7 @@ const product: Product = {
   category: null,
   featuredImage: null,
   images: [],
+  media: [],
   priceRange: {
     minVariantPrice: { amount: "20", currencyCode: "USD" },
     maxVariantPrice: { amount: "60", currencyCode: "USD" },

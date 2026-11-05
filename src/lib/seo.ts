@@ -9,11 +9,15 @@ export type PageSearchParams = Record<string, string | string[] | undefined>;
 
 /** Shared by collection metadata, sitemap eligibility, and structured data. */
 export function getCollectionSeoDescription(
-  collection: Pick<Collection, "description" | "seoDescription"> | null,
+  collection: Pick<
+    Collection,
+    "description" | "seoDescription" | "hasProducts"
+  > | null,
 ) {
+  if (!collection?.hasProducts) return undefined;
   return (
-    collection?.seoDescription?.trim() ||
-    collection?.description.trim() ||
+    collection.seoDescription?.trim() ||
+    collection.description.trim() ||
     undefined
   );
 }

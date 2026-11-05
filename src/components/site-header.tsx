@@ -221,18 +221,14 @@ export function SiteHeader({
     },
     ...categoryLinks,
   ];
-  const collectionsNavigation = collectionNavigationFor(collectionLinks);
-  const collectionDropdownLinks: CatalogNavigationLink[] = [
-    {
-      href: localePath(locale, "/collections"),
-      label: uiText(locale, {
-        zh: "查看全部",
-        en: "View all",
-        es: "Ver todas",
-      }),
-    },
-    ...collectionLinks,
-  ];
+  const collectionDropdownLinks = collectionNavigationFor(collectionLinks, {
+    href: localePath(locale, "/collections"),
+    label: uiText(locale, {
+      zh: "查看所有系列",
+      en: "View all collections",
+      es: "Ver todas las colecciones",
+    }),
+  });
   const handleDesktopMenuChange = useCallback(
     (id: DesktopMenuId, open: boolean) => {
       setOpenDesktopMenu((current) => {
@@ -240,7 +236,7 @@ export function SiteHeader({
         return current === id ? null : current;
       });
     },
-    [],
+    [setOpenDesktopMenu],
   );
 
   const closeMenu = useCallback(() => {
@@ -323,32 +319,19 @@ export function SiteHeader({
             onOpenChange={handleDesktopMenuChange}
             open={openDesktopMenu === "shop"}
           />
-          {collectionsNavigation.kind === "direct"
-            ? collectionsNavigation.links.map((link) => (
-                <Link
-                  href={link.href}
-                  key={link.href}
-                  onMouseEnter={() => setOpenDesktopMenu(null)}
-                >
-                  {link.label}
-                </Link>
-              ))
-            : null}
-          {collectionsNavigation.kind === "dropdown" ? (
-            <DesktopNavDropdown
-              active={basePath.startsWith("/collections")}
-              groupLabel={uiText(locale, {
-                zh: "系列",
-                en: "Collections",
-                es: "Colecciones",
-              })}
-              id="collections"
-              label={copy.nav.collections}
-              links={collectionDropdownLinks}
-              onOpenChange={handleDesktopMenuChange}
-              open={openDesktopMenu === "collections"}
-            />
-          ) : null}
+          <DesktopNavDropdown
+            active={basePath.startsWith("/collections")}
+            groupLabel={uiText(locale, {
+              zh: "系列",
+              en: "Collections",
+              es: "Colecciones",
+            })}
+            id="collections"
+            label={copy.nav.collections}
+            links={collectionDropdownLinks}
+            onOpenChange={handleDesktopMenuChange}
+            open={openDesktopMenu === "collections"}
+          />
           <Link
             href={localePath(locale, "/crystals")}
             onMouseEnter={() => setOpenDesktopMenu(null)}
@@ -448,24 +431,11 @@ export function SiteHeader({
               links={shopLinks}
               onNavigate={closeMenu}
             />
-            {collectionsNavigation.kind === "direct"
-              ? collectionsNavigation.links.map((link) => (
-                  <Link
-                    href={link.href}
-                    key={link.href}
-                    onClick={() => closeMenu()}
-                  >
-                    {link.label}
-                  </Link>
-                ))
-              : null}
-            {collectionsNavigation.kind === "dropdown" ? (
-              <MobileNavDropdown
-                label={copy.nav.collections}
-                links={collectionDropdownLinks}
-                onNavigate={closeMenu}
-              />
-            ) : null}
+            <MobileNavDropdown
+              label={copy.nav.collections}
+              links={collectionDropdownLinks}
+              onNavigate={closeMenu}
+            />
             <Link
               href={localePath(locale, "/crystals")}
               onClick={() => closeMenu()}

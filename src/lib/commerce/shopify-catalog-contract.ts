@@ -1,8 +1,7 @@
-import type { CollectionKind } from "./types";
-
 export const PRODUCT_PAGE_SIZE = 100;
 export const COLLECTION_PAGE_SIZE = 100;
 export const VARIANT_PAGE_SIZE = 100;
+export const MEDIA_PAGE_SIZE = 100;
 export const SEARCH_PAGE_SIZE = 24;
 export const NAVIGATION_PRODUCT_PAGE_SIZE = 250;
 export const NAVIGATION_COLLECTION_PAGE_SIZE = 100;
@@ -43,6 +42,24 @@ export interface ShopifyConnection<T> {
   pageInfo: ShopifyPageInfo;
 }
 
+export interface ShopifyVideoSource {
+  url: string;
+  mimeType: string;
+  format: string;
+  width: number;
+  height: number;
+}
+
+export type ShopifyMediaNode = {
+  id: string;
+  alt: string | null;
+  previewImage: ShopifyImage | null;
+} & (
+  | { __typename: "MediaImage"; image: ShopifyImage | null }
+  | { __typename: "Video"; sources: ShopifyVideoSource[] }
+  | { __typename: "ExternalVideo" | "Model3d" }
+);
+
 export interface ShopifyQuantityRule {
   minimum: number;
   maximum: number | null;
@@ -81,7 +98,7 @@ export interface ShopifyProductNode extends ShopifyProductSummaryNode {
   descriptionHtml: string;
   productModel: ShopifyMetafield | null;
   seo: ShopifySeo;
-  images: { nodes: ShopifyImage[] };
+  media: ShopifyConnection<ShopifyMediaNode>;
   variants: ShopifyConnection<ShopifyVariantNode>;
 }
 
@@ -92,7 +109,6 @@ export interface ShopifyCollectionBase {
   description: string;
   seo: ShopifySeo;
   image: ShopifyImage | null;
-  collectionKind: ShopifyMetafield | null;
 }
 
 export interface ShopifyCollectionSummaryNode extends ShopifyCollectionBase {
@@ -130,6 +146,13 @@ export interface ShopifyProductVariantsData {
   } | null;
 }
 
+export interface ShopifyProductMediaData {
+  product: {
+    id: string;
+    media: ShopifyConnection<ShopifyMediaNode>;
+  } | null;
+}
+
 export interface ShopifySearchData {
   search: ShopifyConnection<
     | ({ __typename: "Product" } & ShopifyProductSummaryNode)
@@ -146,8 +169,6 @@ export interface ShopifyNavigationCollectionNode {
   id: string;
   handle: string;
   title: string;
-  collectionKind: ShopifyMetafield | null;
-  products: { nodes: Array<{ id: string }> };
 }
 
 export interface ShopifyNavigationProductsData {
@@ -163,7 +184,6 @@ export interface ShopifyCatalogNavigationSnapshot {
   collections: Array<{
     handle: string;
     title: string;
-    kind: CollectionKind | undefined;
   }>;
 }
 
@@ -229,6 +249,31 @@ const variantFields = `#graphql
   ${imageFields}
 `;
 
+const mediaFields = `#graphql
+  fragment CatalogMediaFields on Media {
+    __typename
+    id
+    alt
+    previewImage {
+      ...CatalogImageFields
+    }
+    ... on MediaImage {
+      image {
+        ...CatalogImageFields
+      }
+    }
+    ... on Video {
+      sources {
+        url
+        mimeType
+        format
+        width
+        height
+      }
+    }
+  }
+`;
+
 const productFields = (variantPageSize: number) => `#graphql
   fragment CatalogProductFields on Product {
     id
@@ -251,9 +296,13 @@ const productFields = (variantPageSize: number) => `#graphql
     featuredImage {
       ...CatalogImageFields
     }
-    images(first: 10) {
+    media(first: ${MEDIA_PAGE_SIZE}, sortKey: POSITION, reverse: false) {
       nodes {
-        ...CatalogImageFields
+        ...CatalogMediaFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
     priceRange {
@@ -275,6 +324,7 @@ const productFields = (variantPageSize: number) => `#graphql
     }
   }
   ${variantFields}
+  ${mediaFields}
 `;
 
 const productSummaryFields = `#graphql
@@ -361,6 +411,31 @@ export const SHOPIFY_PRODUCT_VARIANTS_QUERY = `#graphql
   ${variantFields}
 `;
 
+export const SHOPIFY_PRODUCT_MEDIA_QUERY = `#graphql
+  query CatalogProductMedia(
+    $country: CountryCode!
+    $language: LanguageCode!
+    $id: ID!
+    $first: Int!
+    $after: String!
+  ) @inContext(country: $country, language: $language) {
+    product(id: $id) {
+      id
+      media(first: $first, after: $after, sortKey: POSITION, reverse: false) {
+        nodes {
+          ...CatalogMediaFields
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+  ${mediaFields}
+  ${imageFields}
+`;
+
 export const SHOPIFY_COLLECTIONS_QUERY = `#graphql
   query CatalogCollections(
     $country: CountryCode!
@@ -380,9 +455,6 @@ export const SHOPIFY_COLLECTIONS_QUERY = `#graphql
         }
         image {
           ...CatalogImageFields
-        }
-        collectionKind: metafield(namespace: "custom", key: "collection_kind") {
-          value
         }
         products(first: 1) {
           nodes {
@@ -418,9 +490,6 @@ export const SHOPIFY_COLLECTION_QUERY = `#graphql
       }
       image {
         ...CatalogImageFields
-      }
-      collectionKind: metafield(namespace: "custom", key: "collection_kind") {
-        value
       }
       products(first: $first, after: $after) {
         nodes {
@@ -492,10 +561,6 @@ export const SHOPIFY_NAVIGATION_COLLECTIONS_QUERY = `#graphql
         id
         handle
         title
-        collectionKind: metafield(namespace: "custom", key: "collection_kind") {
-          value
-        }
-        products(first: 1) { nodes { id } }
       }
       pageInfo {
         hasNextPage

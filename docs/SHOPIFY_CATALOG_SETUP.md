@@ -51,7 +51,7 @@ Product 使用最具体的 Shopify Standard Product Category。当前 Catalog �
 | Rocks & Fossils / Gemstones | `/category/gemstones` |
 
 Palm Stone/Sphere/Guardian Figure 仅在真实 taxonomy 匹配时归入 Gemstones，不用 Type/tag
-代替。自动归类与售罄/未分类处理见[交易规格](COMMERCE_SPEC.md#类别与设计系列)，
+代替。自动归类与售罄/未分类处理见[交易规格](COMMERCE_SPEC.md#类别与-collections)，
 新类别的稳定 URL 见[内容与索引](CONTENT_SEO_GEO_SPEC.md#链接与下架)。
 后台为商品填入真实 Category 并发布至 US Catalog/Headless 后，Shop 和类别页下次读取
 即反映变化，Header 沿用五分钟再验证；上游故障可能保留旧菜单，不承诺精确更新时间。
@@ -71,12 +71,27 @@ Palm Stone/Sphere/Guardian Figure 仅在真实 taxonomy 匹配时归入 Gemstone
 逐款绑定媒体，至少比较两个颜色/价格不同的 Variant；API image 非空可能是产品图回退，
 须到后台检查专图绑定。顺序影响优先款，不能为图片问题改写商业事实。
 
-## 设计系列
+## Collections
 
-Collection 维护 `custom.collection_kind` single line text，值可为 `design_series`、`category`、
-`merchandising`。只有 design_series、Headless 可见且非空才公开；缺失/其他值不作为系列。
-维护唯一 handle、description、image、SEO，URL 为 `/collections/{handle}`。
-缺描述详情不索引，不把运营归组标成设计系列。reference、故事/lookbook 接入工作见 Roadmap。
+Patron Saint、Mineral Specimen 及其他 Collection 统一在 `/collections` 与 Header Collections
+菜单展示。维护现有真实 handle、title、description、image、SEO 和商品成员，不为上线改名或
+创建重复集合；确认 Collection 与成员商品均允许 Headless/US Catalog 访问。
+前台不再要求 `custom.collection_kind`，已有字段可以保留，不必新建、改值或删除。
+空集合仍展示可读页面；空集合或缺有效描述时详情 noindex、不进 sitemap，补齐后按索引规则处理。
+英语与香港繁中共用身份，译文在 Shopify 维护。Header 沿用五分钟再验证，操作后检查真实前台。
+设计系列的 reference、故事/lookbook 后续接入见 Roadmap。
+
+## 商品视频
+
+1. Products → 选择商品 → Media：上传真实商品视频，等待 Shopify 处理完成。
+2. 设置清晰封面和有意义的替代文字，排列图片/视频顺序；PDP 优先显示当前选款图片。
+3. 本站播放 Shopify 托管 MP4 来源；后台上传格式由 Shopify 处理。不支持本站播放 YouTube、
+   Vimeo 或 3D 媒体，也不把描述 HTML 中的 iframe 当作商品视频。
+4. 视频绑定 Product，Variant 继续使用图片。含讲解或重要信息的视频在商品正文提供文字说明。
+5. 核对英语/繁中、手机播放/全屏、横竖画面、切图/切款停止播放和播放失败提示。
+
+上传要求以 [Shopify 产品媒体](https://help.shopify.com/en/manual/products/product-media/product-media-types)
+为准。不要将仅上传到 Files、尚未关联 Product Media 的文件视为已经出现在 PDP。
 
 ## About 与 Accessibility
 
@@ -107,6 +122,6 @@ Blog handle `blog` 对应 `/blog`，`crystals` 对应 `/crystals`。Article 填�
 - Headless 发布、Category、模型、价格/库存/数量规则和媒体正确。
 - API 可读颜色；多选颜色、可购买筛选和展示价排序符合交易规格，卡片/详情/Bag 同款。
 - 深链接、切款、刷新、返回/前进与公开语言切换一致。
-- 系列类型/成员/正文/SEO、导航数量阈值，About 引用/顺序/日期和实际译文正确。
+- Collections 成员/正文/SEO、完整导航和空集合状态，About 引用/顺序/日期和实际译文正确。
 - 检查 Shopify 正文是否残留 `/es-us` 链接，在来源内容修正，不由 HTML 清洗器猜测替换。
 - 按 [发布手册](LAUNCH_RUNBOOK.md)核对 HTML、索引、设备和获批 Checkout 流程。

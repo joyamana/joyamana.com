@@ -1,6 +1,5 @@
 export type CurrencyCode = "USD" | "CAD";
 export type ProductModel = "standard" | "natural-variation" | "one-of-one";
-export type CollectionKind = "category" | "design_series" | "merchandising";
 
 /**
  * Shopify MoneyV2 amounts remain decimal strings throughout the commerce
@@ -18,6 +17,24 @@ export interface ProductImage {
   width: number;
   height: number;
 }
+
+export interface ProductVideoSource {
+  url: string;
+  mimeType: string;
+  format: string;
+  width: number;
+  height: number;
+}
+
+export type ProductMedia =
+  | { id: string; kind: "image"; image: ProductImage }
+  | {
+      id: string;
+      kind: "video";
+      altText: string;
+      previewImage: ProductImage | null;
+      sources: ProductVideoSource[];
+    };
 
 export interface SelectedOption {
   name: string;
@@ -187,6 +204,9 @@ export interface Product extends CatalogProduct {
   descriptionHtml: string;
   seoTitle?: string;
   seoDescription?: string;
+  /** Supported media in Shopify's merchandising order. */
+  media: ProductMedia[];
+  /** Image-only projection for existing cards and search metadata. */
   images: ProductImage[];
   model?: ProductModel;
 }
@@ -199,7 +219,7 @@ export interface Collection {
   seoTitle?: string;
   seoDescription?: string;
   image: ProductImage | null;
-  kind?: CollectionKind;
+  hasProducts: boolean;
 }
 
 export interface ProductCollection<

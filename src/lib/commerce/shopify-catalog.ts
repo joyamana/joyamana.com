@@ -14,12 +14,12 @@ import {
   mapShopifyProductSummary,
   mapVariant,
   mapCollectionBase,
-  mapCollectionKind,
 } from "./shopify-catalog-mappers";
 import {
   PRODUCT_PAGE_SIZE,
   COLLECTION_PAGE_SIZE,
   VARIANT_PAGE_SIZE,
+  MEDIA_PAGE_SIZE,
   SEARCH_PAGE_SIZE,
   NAVIGATION_PRODUCT_PAGE_SIZE,
   NAVIGATION_COLLECTION_PAGE_SIZE,
@@ -27,6 +27,7 @@ import {
   SHOPIFY_PRODUCT_QUERY,
   SHOPIFY_PRODUCT_RECOMMENDATIONS_QUERY,
   SHOPIFY_PRODUCT_VARIANTS_QUERY,
+  SHOPIFY_PRODUCT_MEDIA_QUERY,
   SHOPIFY_BROWSE_VARIANTS_QUERY,
   SHOPIFY_BROWSE_COLORS_QUERY,
   SHOPIFY_VARIANT_COLORS_QUERY,
@@ -43,6 +44,7 @@ import {
   type ShopifyProductData,
   type ShopifyProductRecommendationsData,
   type ShopifyProductVariantsData,
+  type ShopifyProductMediaData,
   type ShopifyVariantNode,
   type ShopifyCollectionsData,
   type ShopifyCollectionData,
@@ -84,6 +86,12 @@ function shopifyContext(locale: Locale) {
     "unsupported-locale",
     "This locale is not enabled for the Shopify catalog.",
   );
+}
+
+function collectionIdentity(collection: { handle: string; title: string }) {
+  const handle = optionalText(collection.handle);
+  const title = optionalText(collection.title);
+  return handle && title ? { handle, title } : null;
 }
 
 async function collectConnectionNodes<T extends { id: string }>(
@@ -183,7 +191,7 @@ export async function getShopifyProduct(
   if (!data.product) return null;
 
   const product = data.product;
-  const variants = await collectConnectionNodes(
+  const variantsPromise = collectConnectionNodes(
     product.variants,
     async (after) => {
       const nextPage = await budget.read<ShopifyProductVariantsData>(
@@ -206,10 +214,35 @@ export async function getShopifyProduct(
     },
     `variants for product ${product.id}`,
   );
+  const mediaPromise = collectConnectionNodes(
+    product.media,
+    async (after) => {
+      const nextPage = await budget.read<ShopifyProductMediaData>(
+        SHOPIFY_PRODUCT_MEDIA_QUERY,
+        {
+          ...context,
+          id: product.id,
+          first: MEDIA_PAGE_SIZE,
+          after,
+        },
+        { cache: "no-store" },
+      );
+      if (!nextPage.product || nextPage.product.id !== product.id) {
+        throw new ShopifyCatalogError(
+          "invalid-data",
+          "Shopify changed the product while its media were being paginated.",
+        );
+      }
+      return nextPage.product.media;
+    },
+    `media for product ${product.id}`,
+  );
+  const [variants, media] = await Promise.all([variantsPromise, mediaPromise]);
 
   return mapShopifyProduct({
     ...product,
     variants: { ...product.variants, nodes: variants },
+    media: { ...product.media, nodes: media },
   });
 }
 
@@ -401,9 +434,17 @@ export async function getShopifyCollections(
     "collections",
   );
 
-  return nodes
-    .filter((collection) => collection.products.nodes.length > 0)
-    .map(mapCollectionBase);
+  return nodes.flatMap((collection) => {
+    const identity = collectionIdentity(collection);
+    return identity
+      ? [
+          mapCollectionBase(
+            { ...collection, ...identity },
+            collection.products.nodes.length > 0,
+          ),
+        ]
+      : [];
+  });
 }
 
 export async function getShopifyCollection(
@@ -430,6 +471,8 @@ export async function getShopifyCollection(
   if (!firstPage.collection) return null;
 
   const collection = firstPage.collection;
+  const identity = collectionIdentity(collection);
+  if (!identity) return null;
   const products = await collectConnectionNodes(
     collection.products,
     async (after) => {
@@ -444,10 +487,8 @@ export async function getShopifyCollection(
     },
     `products for collection ${collection.id}`,
   );
-  if (!products.length) return null;
-
   return {
-    ...mapCollectionBase(collection),
+    ...mapCollectionBase({ ...collection, ...identity }, products.length > 0),
     products: products.map(mapShopifyProductSummary),
   };
 }
@@ -539,17 +580,8 @@ export async function getShopifyCatalogNavigation(
   return {
     productCategories: [...productCategories.values()],
     collections: collections.flatMap((collection) => {
-      const handle = optionalText(collection.handle);
-      const title = optionalText(collection.title);
-      if (!handle || !title || collection.products.nodes.length === 0)
-        return [];
-      return [
-        {
-          handle,
-          title,
-          kind: mapCollectionKind(collection.collectionKind),
-        },
-      ];
+      const identity = collectionIdentity(collection);
+      return identity ? [identity] : [];
     }),
   };
 }

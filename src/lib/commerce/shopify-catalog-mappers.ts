@@ -1,15 +1,19 @@
-import { sanitizeShopifyHtml } from "@/lib/content/shopify-html";
+import {
+  safeShopifyImageSource,
+  sanitizeShopifyHtml,
+} from "@/lib/content/shopify-html";
 import { parseVariantColors } from "./catalog-browse";
 import { compareAmounts } from "./money";
 import {
   isValidQuantityRule,
   isValidInventory,
   type Collection,
-  type CollectionKind,
   type Money,
   type Product,
   type ProductSummary,
   type ProductImage,
+  type ProductMedia,
+  type ProductVideoSource,
   type ProductQuantityRule,
   type ProductVariant,
 } from "./types";
@@ -17,6 +21,8 @@ import {
   ShopifyCatalogError,
   type ShopifyMoneyV2,
   type ShopifyImage,
+  type ShopifyMediaNode,
+  type ShopifyVideoSource,
   type ShopifyQuantityRule,
   type ShopifyVariantNode,
   type ShopifyProductNode,
@@ -26,7 +32,7 @@ import {
 } from "./shopify-catalog-contract";
 
 export function optionalText(value: string | null | undefined) {
-  const normalized = value?.trim();
+  const normalized = typeof value === "string" ? value.trim() : undefined;
   return normalized ? normalized : undefined;
 }
 
@@ -57,6 +63,7 @@ function mapImage(
 ): ProductImage | null {
   if (
     !image ||
+    typeof image.url !== "string" ||
     !image.url ||
     !Number.isInteger(image.width) ||
     !Number.isInteger(image.height) ||
@@ -71,6 +78,83 @@ function mapImage(
     altText: optionalText(image.altText) ?? fallbackAlt,
     width: image.width,
     height: image.height,
+  };
+}
+
+function mapVideoSource(source: ShopifyVideoSource): ProductVideoSource | null {
+  const url = optionalText(source?.url);
+  const mimeType = optionalText(source?.mimeType)?.toLowerCase();
+  const format = optionalText(source?.format)?.toLowerCase();
+  if (
+    !url ||
+    /[\u0000-\u001f\u007f\\]/.test(url) ||
+    mimeType !== "video/mp4" ||
+    format !== "mp4" ||
+    !Number.isInteger(source.width) ||
+    !Number.isInteger(source.height) ||
+    source.width <= 0 ||
+    source.height <= 0
+  ) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(url);
+    if (
+      parsed.protocol !== "https:" ||
+      parsed.hostname !== "cdn.shopify.com" ||
+      parsed.username ||
+      parsed.password ||
+      parsed.port ||
+      !parsed.pathname.startsWith("/videos/")
+    ) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  return {
+    url,
+    mimeType,
+    format,
+    width: source.width,
+    height: source.height,
+  };
+}
+
+/** Unsupported or not-yet-ready media must not prevent purchasing a product. */
+export function mapProductMedia(
+  node: ShopifyMediaNode,
+  productTitle: string,
+): ProductMedia | null {
+  if (typeof node?.id !== "string" || !node.id.trim()) return null;
+  const altText = optionalText(node.alt) ?? productTitle;
+  if (node.__typename === "MediaImage") {
+    const image = mapImage(node.image, altText);
+    return image ? { id: node.id, kind: "image", image } : null;
+  }
+  if (node.__typename !== "Video" || !Array.isArray(node.sources)) return null;
+
+  const seenUrls = new Set<string>();
+  const sources = node.sources.flatMap((source) => {
+    const mapped = mapVideoSource(source);
+    if (!mapped || seenUrls.has(mapped.url)) return [];
+    seenUrls.add(mapped.url);
+    return [mapped];
+  });
+  if (!sources.length) return null;
+
+  const previewImage = mapImage(node.previewImage, altText);
+  return {
+    id: node.id,
+    kind: "video",
+    altText,
+    previewImage:
+      previewImage && safeShopifyImageSource(previewImage.url)
+        ? previewImage
+        : null,
+    sources,
   };
 }
 
@@ -166,10 +250,13 @@ export function mapShopifyProductSummary(
 }
 
 export function mapShopifyProduct(node: ShopifyProductNode): Product {
-  const images = node.images.nodes.flatMap((image) => {
-    const mapped = mapImage(image, node.title);
+  const media = node.media.nodes.flatMap((item) => {
+    const mapped = mapProductMedia(item, node.title);
     return mapped ? [mapped] : [];
   });
+  const images = media.flatMap((item) =>
+    item.kind === "image" ? [item.image] : [],
+  );
   const featuredImage =
     mapImage(node.featuredImage, node.title) ?? images[0] ?? null;
 
@@ -191,6 +278,7 @@ export function mapShopifyProduct(node: ShopifyProductNode): Product {
     seoTitle: optionalText(node.seo.title),
     seoDescription: optionalText(node.seo.description),
     featuredImage,
+    media,
     images,
     variants,
     model: mapProductModel(node.productModel),
@@ -207,18 +295,10 @@ function mapProductModel(
   return undefined;
 }
 
-export function mapCollectionKind(
-  metafield: ShopifyMetafield | null | undefined,
-): CollectionKind | undefined {
-  const value = optionalText(metafield?.value);
-  return value === "category" ||
-    value === "design_series" ||
-    value === "merchandising"
-    ? value
-    : undefined;
-}
-
-export function mapCollectionBase(node: ShopifyCollectionBase): Collection {
+export function mapCollectionBase(
+  node: ShopifyCollectionBase,
+  hasProducts: boolean,
+): Collection {
   const image = mapImage(node.image, node.title);
   return {
     id: node.id,
@@ -228,6 +308,6 @@ export function mapCollectionBase(node: ShopifyCollectionBase): Collection {
     seoTitle: optionalText(node.seo.title),
     seoDescription: optionalText(node.seo.description),
     image,
-    kind: mapCollectionKind(node.collectionKind),
+    hasProducts,
   };
 }

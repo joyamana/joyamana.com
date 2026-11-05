@@ -12,7 +12,8 @@
 | 商品知识 | 建字段、填值、翻译并接入材料、尺寸/fit、care、可验证来源/处理、package contents、内容关联 | 商品透明度、PDP 与适用 Schema；不制造本地资料 |
 | 商品模型与披露 | 补全 `custom.product_model`，实现 exact item/representative image 披露 | 标准商品与独件的图片、履约说明；未知模型不阻止正常购买 |
 | 低库存提示 | 若要恢复准确提示，先提供可靠的 Shopify 禁止超卖事实并验证 | 仅准确库存文案；现有库存和购买判断继续使用 |
-| 设计系列 | 复核 Patron Saint 等正式 Collection 描述/SEO，建立 Design Series/reference 并接入 story/lookbook | 完整系列叙事和索引 |
+| Collection 内容 | 复核 Patron Saint、Mineral Specimen 等已发布集合的成员、封面、描述/SEO 和译文；设计系列的 reference/story/lookbook 另行接入 | 真实集合展示、完整叙事和索引 |
+| 商品视频验收 | Shopify Product Media 上传真实视频、设置封面/替代文字并等待处理；完成手机播放、切款停止和含语言内容的正文说明检查 | PDP 视频内容与真实设备验收 |
 | 译文 | 补齐并人工审校香港繁中商品、内容、政策、Checkout 与通知，清理来源正文的 `/es-us` 残留链接；西语恢复另行批准 | 翻译质量及对应索引；允许英文回退的页面仍可访问 |
 | 正式 Editorial | 审核真实文章、作者、引用、声明与图片，替换或撤下测试内容 | Blog/Guide 索引；准备前保持关闭 |
 

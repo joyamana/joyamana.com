@@ -13,7 +13,7 @@
 | `/`、`/contact` | 品牌界面与客服配置 | Core |
 | `/about`、`/about/{handle}`、`/accessibility` | Shopify `content_page` | Core |
 | `/shop`、`/category/{handle}` | 当前 Catalog / Standard Product Category | Commerce |
-| `/collections`、`/collections/{handle}` | 非空 `design_series` Collection | Commerce |
+| `/collections`、`/collections/{handle}` | 所有 Headless 可访问的 Shopify Collection；空集合详情 noindex | Commerce |
 | `/products/{handle}` | Product/Variant | Commerce |
 | `/shipping`、`/returns`、`/privacy`、`/terms` | Shopify Policies | Policies |
 | `/blog`、`/blog/{handle}` | Blog `blog` / Article | Editorial |
@@ -89,8 +89,9 @@ FAQ/审核者/来源清单。商品事实、矿物护理事实、传统观点和
 
 内链只连真正相关内容，anchor 说明目标；自动推荐须有业务规则或人工确认。
 URL 小写短横线、无尾斜杠、不含 Currency，不强制 IP 跳转。`/` 为 en-US，不建 `/en-us/`；
-未来市场不生成入口或路径。英语/繁中的 `/collections/bracelets|rings|necklaces|earrings`
-永久跳到对应 `/category/*`。
+未来市场不生成入口或路径。真实 Collection 保留 Shopify handle，包括与类别相同的 handle。
+旧 `/collections/*` 类别别名仅在对应 Collection 不存在、类别目标仍有效时永久跳转，
+保留同语言和查询参数；不再用全局 redirect 拦截真实 Collection。
 
 Category 自动发现范围见交易规格。既有 `/category/bracelets|rings|necklaces|earrings|gemstones`
 保持原地址；新增类别使用 `/category/taxonomy-{taxonomy ID token}`，例如真实 ID `rc-2`
@@ -117,6 +118,8 @@ Schema，不用 robots 禁抓阻止搜索引擎看到状态。未来恢复须重
   noindex；内容/origin 合格时指向同语言干净 canonical，不输出 hreflang/Schema。
 - 空 Shop/Collections hub 有空态但 noindex、无商品 Schema、不进 sitemap；筛选零结果
   不改变干净目录是否有内容的判断，不为筛选生成颜色索引页。
+- Collection 的展示资格不等于索引资格：全部可访问集合可进入汇总和导航，详情须有当前
+  市场可见商品和有效描述才索引、输出商品 Schema 或进入 sitemap。翻译版本分别检查。
 - Search、Cart、内部/预览、账户/登录/回调、暂停语言、未来市场与已识别回退页排除。
   noindex 页允许抓取；私有内容靠认证保护。
 - sitemap 只列 200、已发布、干净、可索引且当前市场可见的 URL；lastmod 只表示实质更新，
@@ -139,6 +142,8 @@ Schema，不用 robots 禁抓阻止搜索引擎看到状态。未来恢复须重
 
 不发明 Crystal type；变体 Schema 按真实 URL/选款方式，不为它拆近重复 PDP。
 评论与 Shipping/Returns 只有展示且与事实一致时才加入，不承诺 rich result。
+托管视频用于商品展示；当前 Product Schema 的图片仍来自真实图片媒体，不把视频播放地址
+放进 image。未取得完整可信视频资料前不生成 VideoObject，不用商品创建日期充当视频上传日期。
 官方指南：[Product](https://developers.google.com/search/docs/appearance/structured-data/product)、
 [variants](https://developers.google.com/search/docs/appearance/structured-data/product-variants)。
 

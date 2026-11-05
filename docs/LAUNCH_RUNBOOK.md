@@ -20,6 +20,9 @@ dev 对应受保护 Vercel Preview，main 对应 Production。
 在获批环境用受影响的真实商品按 [交易规格](COMMERCE_SPEC.md)检查：
 
 - 资料/媒体、Category、所选 Variant、价格/币种、数量规则和披露。
+- Product Media 图片与托管视频顺序、缩略图、播放/失败、切款停止；无视频商品保持原图库。
+- Header Collections 固定显示；汇总和详情包含全部可访问集合，不依赖类型字段。
+  核对 Patron Saint、Mineral Specimen、空集合、无描述集合和未来新增集合。
 - 筛选/排序、深链接、切款、刷新、返回/前进与切语言指向同款。
 - 数量能清空再输入，非法草稿禁购，切款后按新规则重置；最小数量超过库存时不可购买。
 - 游客加购、重复操作、刷新恢复、修改/移除/清空；库存变化和负库存不令整袋不可读。
@@ -42,8 +45,8 @@ dev 对应受保护 Vercel Preview，main 对应 Production。
 - 人工检查繁中商品/系列正文与 metadata、各部分实际 lang、内容回退和双向 hreflang。
 - `/es-us` 及子路径、未来市场和没有等价迁移的旧地址：带/不带参数的 GET/HEAD 均 404；
   HTML/响应头 noindex、no-store，恢复链接可用，无对应导航、sitemap、hreflang 或 Schema。
-- 英语/繁中的 `/collections/bracelets|rings|necklaces|earrings`：GET/HEAD 均 308 到
-  同语言 `/category/*`，保留查询参数；目标按正常类别页规则验收。
+- 同 handle 的真实 Collection 不被旧类别跳转拦截；仅不存在 Collection 且类别目标有效
+  的旧地址执行永久跳转，保留同语言/查询参数。空集合有 200 空态但 noindex，不进 sitemap/Schema。
 - 缺正文的固定政策/Accessibility 显示不可用并 noindex；缺失动态详情检查 404。
 - 检查索引矩阵与本次批准内容；Editorial 仍关闭，测试文章不参与正式索引。
 - JSON-LD 可解析且图价/状态与可见内容一致。未知路径有无 JS 的完整 404；动态缺失详情
@@ -58,6 +61,8 @@ dev 对应受保护 Vercel Preview，main 对应 Production。
 - 手机菜单背景不可操作，Tab 留在菜单，关闭/Escape/改宽度后焦点可见；桌面语言下拉随焦点关闭。
 - 数量输入/错误和 Cart 状态可理解，图库 1/5/6/20 张图及矮桌面窗口可用，缩略图横向
   滚动可键盘访问，sticky 在推荐前释放，主要按钮至少 44px。
+- 视频不自动播放，非当前视频不加载播放器；切图/切款停止。横竖画面不裁切、无封面仍可操作，
+  手机内嵌/全屏和键盘原生控件可用。含语言的视频检查同等正文说明，不宣称字幕已接入。
 - 图片 alt、首屏加载、字体、布局跳动、bundle 与脚本。真实移动 p75 目标：
   LCP ≤ 2.5s、INP ≤ 200ms、CLS ≤ 0.1；没采集不宣称达到。
 
