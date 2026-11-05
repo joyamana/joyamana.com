@@ -50,8 +50,9 @@ Node 保持 24，精确 pnpm 和依赖版本以 [package.json](../package.json) 
   被过滤时仍保留视频节点、有效封面与缩略图入口，选中后显示无可用源提示，不影响购买。
   `Product.images` 从图片媒体派生，摘要和推荐不读取视频。
 - 视频源校验 URL、尺寸及配对的格式/MIME：仅接受 `mp4` / `video/mp4` 和
-  `mov` / `video/quicktime`，HTTPS 来源限于 `cdn.shopify.com/videos/` 与
-  `videos.shopifycdn.com/c/`。优先 MP4 并沿用清晰度选择；无有效 MP4 时才尝试实际返回的 MOV。
+  `mov` / `video/quicktime`，HTTPS 来源限于 `cdn.shopify.com/videos/`、
+  `videos.shopifycdn.com/c/` 和 `checkout.joyamana.com/cdn/shop/videos/`。优先 MP4 并沿用
+  清晰度选择；无有效 MP4 时才尝试实际返回的 MOV。
   使用原生 `<video src>` 与真实 URL，MOV 能否播放取决于浏览器和编码，失败保留明确提示。
   不推导转码 URL，不自建转码服务或引入播放器依赖；当前不支持 HLS 或 `ExternalVideo`。
 - PDP 相关商品按 handle 调用 `productRecommendations(intent: RELATED)`，一次最多十件，
