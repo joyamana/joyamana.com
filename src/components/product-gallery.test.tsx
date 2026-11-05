@@ -170,6 +170,31 @@ describe("PDP mixed media gallery server markup", () => {
     expect(html).not.toContain("product-gallery__thumbs");
   });
 
+  it("renders a Shopify MP4 served from the branded checkout domain", () => {
+    const source = {
+      url: "https://checkout.joyamana.com/cdn/shop/videos/c/vp/stone/HD-1080p.mp4",
+      mimeType: "video/mp4",
+      format: "mp4",
+      width: 1920,
+      height: 1080,
+    };
+    const mapped = mapProductMedia(
+      {
+        __typename: "Video",
+        id: video.id,
+        alt: video.altText,
+        previewImage: video.previewImage,
+        sources: [source],
+      },
+      product.title,
+    );
+    expect(mapped?.kind).toBe("video");
+    const html = renderGallery({ ...product, media: [mapped!] });
+    expect(html).toContain(`src="${source.url}"`);
+    expect(html).toContain("<video");
+    expect(html).not.toContain("This video is unavailable");
+  });
+
   it("loads an actual MOV URL without a source MIME hint that could skip it", () => {
     const mov = {
       ...video.sources[0],

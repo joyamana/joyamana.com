@@ -109,7 +109,9 @@ function mapVideoSource(source: ShopifyVideoSource): ProductVideoSource | null {
       (parsed.hostname === "cdn.shopify.com" &&
         parsed.pathname.startsWith("/videos/")) ||
       (parsed.hostname === "videos.shopifycdn.com" &&
-        parsed.pathname.startsWith("/c/"));
+        parsed.pathname.startsWith("/c/")) ||
+      (parsed.hostname === "checkout.joyamana.com" &&
+        parsed.pathname.startsWith("/cdn/shop/videos/"));
     if (
       parsed.protocol !== "https:" ||
       !shopifyVideoPath ||

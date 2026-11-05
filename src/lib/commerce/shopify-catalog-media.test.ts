@@ -100,6 +100,23 @@ describe("Shopify hosted product media", () => {
     ).toMatchObject({ sources: [rendition, movSource] });
   });
 
+  it("keeps Shopify videos served from the branded checkout domain", () => {
+    const brandedMp4 = {
+      ...source,
+      url: "https://checkout.joyamana.com/cdn/shop/videos/c/vp/stone/HD-1080p.mp4",
+    };
+    const brandedMov = {
+      ...movSource,
+      url: "https://checkout.joyamana.com/cdn/shop/videos/c/o/v/stone.mov",
+    };
+    expect(
+      mapProductMedia(
+        { ...video(), sources: [brandedMp4, brandedMov] },
+        "Quartz",
+      ),
+    ).toMatchObject({ sources: [brandedMp4, brandedMov] });
+  });
+
   it("keeps a video and its poster when its sources are not ready", () => {
     expect(
       mapProductMedia({ ...video(), sources: [] }, "Quartz"),
@@ -163,6 +180,24 @@ describe("Shopify hosted product media", () => {
     { url: "https://cdn.shopify.com.evil.example/videos/c/vp/stone.mp4" },
     { url: "https://videos.shopifycdn.com.evil.example/c/vp/stone.mp4" },
     { url: "https://videos.shopifycdn.com/not-video/stone.mp4" },
+    { url: "http://checkout.joyamana.com/cdn/shop/videos/c/vp/stone.mp4" },
+    {
+      url: "https://checkout.joyamana.com.evil.example/cdn/shop/videos/c/vp/stone.mp4",
+    },
+    {
+      url: "https://checkout.joyamana.com@elsewhere.example/cdn/shop/videos/c/vp/stone.mp4",
+    },
+    {
+      url: "https://user:password@checkout.joyamana.com/cdn/shop/videos/c/vp/stone.mp4",
+    },
+    {
+      url: "https://checkout.joyamana.com:8080/cdn/shop/videos/c/vp/stone.mp4",
+    },
+    { url: "https://checkout.joyamana.com/cdn/shop/images/stone.mp4" },
+    { url: "https://checkout.joyamana.com/cdn/shop/videos-other/stone.mp4" },
+    {
+      url: "https://checkout.joyamana.com/cdn/shop/videos/../images/stone.mp4",
+    },
     { url: "https://elsewhere.example/stone.mp4" },
     { url: "https://cdn.shopify.com@elsewhere.example/videos/stone.mp4" },
     { url: "https://user:password@cdn.shopify.com/videos/c/vp/stone.mp4" },
