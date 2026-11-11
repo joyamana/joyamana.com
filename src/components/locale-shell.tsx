@@ -2,7 +2,10 @@ import { marketIdForLocale } from "@/lib/i18n/locales";
 import type { EnabledLocale as Locale } from "@/config/locales";
 import { getCatalogNavigationData } from "@/lib/commerce/catalog";
 import { localePath } from "@/lib/i18n/locales";
-import type { CatalogNavigationLink } from "@/lib/navigation/catalog-navigation";
+import {
+  categoryNavigationIcon,
+  type CatalogNavigationLink,
+} from "@/lib/navigation/catalog-navigation";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
@@ -21,6 +24,7 @@ export async function LocaleShell({
   const categoryLinks: CatalogNavigationLink[] = categories.map(
     ({ handle, title }) => ({
       href: localePath(locale, `/category/${handle}`),
+      icon: categoryNavigationIcon(handle),
       label: title,
     }),
   );

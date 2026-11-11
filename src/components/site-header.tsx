@@ -19,6 +19,7 @@ import { uiText } from "@/lib/i18n/text";
 import { useCart } from "./cart-provider";
 import { LanguageSwitch } from "./language-switch";
 import { BrandLogo } from "./brand-logo";
+import { NavigationIcon } from "./navigation-icon";
 import { languageHref } from "@/lib/i18n/language-href";
 
 function MenuIcon() {
@@ -146,6 +147,7 @@ function DesktopNavDropdown({
                   key={link.href}
                   onClick={() => onOpenChange(id, false)}
                 >
+                  <NavigationIcon name={link.icon} />
                   {link.label}
                 </Link>
               ))}
@@ -177,6 +179,7 @@ function MobileNavDropdown({
       <div className="mobile-nav-dropdown__links">
         {links.map((link) => (
           <Link href={link.href} key={link.href} onClick={onNavigate}>
+            <NavigationIcon name={link.icon} />
             {link.label}
           </Link>
         ))}
@@ -213,6 +216,7 @@ export function SiteHeader({
   const shopLinks: CatalogNavigationLink[] = [
     {
       href: localePath(locale, "/shop"),
+      icon: "all",
       label: uiText(locale, {
         zh: "選購所有商品",
         en: "Shop all",
@@ -223,6 +227,7 @@ export function SiteHeader({
   ];
   const collectionDropdownLinks = collectionNavigationFor(collectionLinks, {
     href: localePath(locale, "/collections"),
+    icon: "all",
     label: uiText(locale, {
       zh: "查看所有系列",
       en: "View all collections",

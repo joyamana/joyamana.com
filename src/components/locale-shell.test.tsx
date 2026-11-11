@@ -34,4 +34,37 @@ describe("LocaleShell", () => {
       locale: "en-US",
     });
   });
+
+  it("gives category links their handle icon and leaves collections neutral", async () => {
+    getCatalogNavigationData.mockResolvedValue({
+      categories: [
+        { handle: "bracelets", title: "手鏈" },
+        { handle: "taxonomy-rc-2", title: "Religious Items" },
+      ],
+      collections: [{ handle: "patron-saint", title: "Patron Saint" }],
+    });
+
+    const shell = await LocaleShell({
+      locale: "zh-Hant-US",
+      children: <p>Page content</p>,
+    });
+
+    expect(shell.props.children[0].props).toMatchObject({
+      categoryLinks: [
+        {
+          href: "/zh-hant-us/category/bracelets",
+          icon: "bracelet",
+          label: "手鏈",
+        },
+        {
+          href: "/zh-hant-us/category/taxonomy-rc-2",
+          icon: "sparkle",
+          label: "Religious Items",
+        },
+      ],
+      collectionLinks: [
+        { href: "/zh-hant-us/collections/patron-saint", label: "Patron Saint" },
+      ],
+    });
+  });
 });
