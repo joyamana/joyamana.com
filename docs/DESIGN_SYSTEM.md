@@ -42,6 +42,8 @@ Header 保留 Shop All 和非空 taxonomy 类别。Collections 始终使用独�
 第一项 View all collections 进入汇总页，其后列出全部可访问 Collection；不因数量少而
 用 Patron Saint 等单个名称替换 Header 标签。没有集合或导航读取失败时仍保留汇总入口。
 桌面与手机共用数据，Shop 类别与 Collections 分开；长列表可滚动，长名称可换行。
+下拉和手机折叠列表的每个链接前有一个装饰性线条图标：汇总入口用网格，类别按稳定 handle
+映射，未映射的类别和全部 Collection 用中性星芒；图标不朗读、不替代文字，也不按名称猜测。
 New 入口须有至少 4–6 个近期商品和稳定上新后再评估。
 
 桌面工具依次 Search、Language、Bag；手机图标有可读名称。英语用 Bag/Add to bag，
