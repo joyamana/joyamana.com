@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  categoryNavigationIcon,
   collectionNavigationFor,
   type CatalogNavigationLink,
 } from "./catalog-navigation";
@@ -33,4 +34,24 @@ describe("collectionNavigationFor", () => {
       ...manyLinks,
     ]);
   });
+});
+
+describe("categoryNavigationIcon", () => {
+  it.each([
+    ["bracelets", "bracelet"],
+    ["rings", "ring"],
+    ["necklaces", "necklace"],
+    ["earrings", "earrings"],
+    ["gemstones", "gemstone"],
+    ["taxonomy-bi-22-8", "display"],
+  ])("maps the stable handle %s to %s", (handle, icon) => {
+    expect(categoryNavigationIcon(handle)).toBe(icon);
+  });
+
+  it.each(["taxonomy-rc-2", "Bracelets", "constructor", ""])(
+    "keeps the neutral icon for the unmapped handle %j",
+    (handle) => {
+      expect(categoryNavigationIcon(handle)).toBe("sparkle");
+    },
+  );
 });
